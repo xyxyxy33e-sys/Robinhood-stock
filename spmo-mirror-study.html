@@ -1,0 +1,366 @@
+<title>SPMO Mirror Study</title>
+<style>
+  :root{
+    --ground:#FBFBFC; --surface:#FFFFFF; --surface-2:#F4F5F8;
+    --ink:#14181F; --ink-2:#39414F; --muted:#5B6472; --faint:#8A93A2;
+    --line:#E3E6EC; --line-strong:#CBD1DA;
+    --accent:#A9762B; --accent-soft:#F0E4CE;
+    --pos:#12836A; --neg:#B23C2C;
+    --pos-wash:#12836A26; --neg-wash:#B23C2C26;
+    --display:Georgia,"Iowan Old Style","Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --measure:64ch;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0E1116; --surface:#171B22; --surface-2:#1D222B;
+      --ink:#E9ECF1; --ink-2:#C3CAD5; --muted:#9AA3B2; --faint:#6E7889;
+      --line:#262C36; --line-strong:#38414F;
+      --accent:#D6A24E; --accent-soft:#3A2F1C;
+      --pos:#279A8C; --neg:#D75A4A;
+      --pos-wash:#279A8C2E; --neg-wash:#D75A4A2E;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E1116; --surface:#171B22; --surface-2:#1D222B;
+    --ink:#E9ECF1; --ink-2:#C3CAD5; --muted:#9AA3B2; --faint:#6E7889;
+    --line:#262C36; --line-strong:#38414F;
+    --accent:#D6A24E; --accent-soft:#3A2F1C;
+    --pos:#279A8C; --neg:#D75A4A;
+    --pos-wash:#279A8C2E; --neg-wash:#D75A4A2E;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px; margin:0 auto; padding:clamp(28px,5vw,72px) clamp(18px,4vw,48px) 96px}
+  .col{max-width:var(--measure)}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--display); font-weight:600; letter-spacing:-.015em;
+    font-size:clamp(38px,6vw,60px); line-height:1.04; margin:0 0 18px; text-wrap:balance;
+  }
+  h2{
+    font-family:var(--display); font-weight:600; font-size:clamp(23px,3vw,30px);
+    line-height:1.18; margin:0 0 14px; text-wrap:balance; letter-spacing:-.01em;
+  }
+  h3{font-family:var(--sans); font-weight:650; font-size:16px; margin:0 0 6px; letter-spacing:-.005em}
+  p{margin:0 0 16px; color:var(--ink-2)}
+  strong{color:var(--ink); font-weight:650}
+  a{color:var(--accent)}
+  .lede{font-size:clamp(17px,2.1vw,20px); line-height:1.55; color:var(--ink-2)}
+  .lede strong{color:var(--ink)}
+
+  header.head{border-bottom:1px solid var(--line-strong); padding-bottom:26px; margin-bottom:34px}
+  .meta{
+    display:flex; flex-wrap:wrap; gap:8px 26px; margin-top:22px;
+    font-family:var(--mono); font-size:11.5px; color:var(--muted); letter-spacing:.03em;
+  }
+  .meta b{color:var(--ink-2); font-weight:500}
+
+  section{margin:52px 0 0}
+  .rule{display:flex; align-items:baseline; gap:14px; margin-bottom:20px; border-top:1px solid var(--line); padding-top:16px}
+  .rule .eyebrow{margin:0; white-space:nowrap}
+  .rule .spacer{flex:1; height:1px}
+
+  /* verdict */
+  .verdict{
+    background:var(--surface); border:1px solid var(--line-strong);
+    border-left:3px solid var(--accent); border-radius:3px;
+    padding:clamp(20px,3vw,30px); margin-top:8px;
+  }
+  .verdict h2{margin-bottom:8px}
+  .tiles{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1px; background:var(--line); border:1px solid var(--line);
+    margin-top:24px; border-radius:2px; overflow:hidden;
+  }
+  .tile{background:var(--surface); padding:16px 18px}
+  .tile .k{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
+  .tile .v{
+    font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:clamp(24px,3.4vw,30px);
+    font-weight:600; letter-spacing:-.02em; margin-top:6px; color:var(--ink);
+  }
+  .tile .c{font-family:var(--mono); font-size:11px; color:var(--faint); margin-top:3px}
+  .tile.hero .v{color:var(--accent)}
+
+  /* bar chart */
+  figure{margin:0}
+  figcaption{font-size:13.5px; color:var(--muted); margin-top:14px; max-width:var(--measure)}
+  .bars{display:flex; flex-direction:column; gap:2px; margin-top:6px}
+  .bar-row{
+    display:grid; grid-template-columns:minmax(132px,190px) 1fr; align-items:center; gap:14px;
+    padding:5px 6px 5px 0; border-radius:2px;
+  }
+  .bar-row:hover{background:var(--surface-2)}
+  .bar-row .lbl{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; letter-spacing:.01em}
+  .bar-row.pick .lbl{color:var(--accent); font-weight:600}
+  .track{display:flex; align-items:center; gap:9px}
+  .fill{height:15px; border-radius:0 4px 4px 0; background:var(--accent); opacity:.42}
+  .bar-row.pick .fill{opacity:1}
+  .bar-row.bench .fill{background:var(--muted); opacity:.34}
+  .bar-row:hover .fill{opacity:.72}
+  .bar-row.pick:hover .fill{opacity:1}
+  .val{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--ink-2); white-space:nowrap}
+  .bar-row.pick .val{color:var(--ink); font-weight:600}
+
+  /* tables */
+  .scroll{overflow-x:auto; border:1px solid var(--line); border-radius:3px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; font-size:13px}
+  th,td{padding:9px 12px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--line)}
+  th{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted); font-weight:500; background:var(--surface-2); position:sticky; top:0;
+  }
+  th.l,td.l{text-align:left}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--surface-2)}
+  tr.total td{border-top:2px solid var(--line-strong); border-bottom:none; font-weight:650; background:var(--surface-2)}
+  .win{font-family:var(--mono); font-size:12px; color:var(--ink)}
+  .leaders{font-size:12px; color:var(--muted); max-width:190px; white-space:normal}
+  .up{color:var(--pos)} .dn{color:var(--neg)}
+  td.pick{background:var(--accent-soft)}
+  tr:hover td.pick{background:var(--accent-soft)}
+  th.pick{color:var(--accent)}
+
+  /* diverging bar cell */
+  .dv{width:132px; min-width:132px}
+  .dv-track{position:relative; height:16px; width:100%}
+  .dv-track::before{content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--line-strong)}
+  .dv-fill{position:absolute; top:2px; height:12px; border-radius:2px}
+  .dv-fill.p{left:50%; background:var(--pos)}
+  .dv-fill.n{right:50%; background:var(--neg)}
+
+  /* findings */
+  .findings{display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:3px; overflow:hidden}
+  .finding{background:var(--surface); padding:20px}
+  .finding .n{font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:.1em}
+  .finding p{font-size:14px; margin:8px 0 0; color:var(--muted); line-height:1.55}
+
+  /* method */
+  ol.steps{margin:0; padding:0; list-style:none; counter-reset:s}
+  ol.steps li{
+    counter-increment:s; position:relative; padding:0 0 18px 40px; margin:0;
+    border-left:1px solid var(--line); margin-left:11px;
+  }
+  ol.steps li:last-child{border-left-color:transparent; padding-bottom:0}
+  ol.steps li::before{
+    content:counter(s,decimal-leading-zero); position:absolute; left:-11px; top:0;
+    width:22px; height:22px; border-radius:50%; background:var(--surface); border:1px solid var(--line-strong);
+    font-family:var(--mono); font-size:10px; color:var(--muted);
+    display:grid; place-items:center;
+  }
+  ol.steps p{font-size:14.5px; margin:2px 0 0; color:var(--muted)}
+
+  .notes{border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:clamp(18px,2.6vw,26px)}
+  .notes dl{margin:0; display:grid; gap:16px}
+  .notes dt{font-family:var(--mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); margin-bottom:4px}
+  .notes dd{margin:0; font-size:14.5px; color:var(--muted); line-height:1.56}
+
+  .callout{border-left:2px solid var(--line-strong); padding:2px 0 2px 18px; margin:22px 0; color:var(--muted); font-size:15px}
+
+  footer{margin-top:64px; padding-top:20px; border-top:1px solid var(--line); font-family:var(--mono); font-size:11.5px; color:var(--faint); line-height:1.8}
+
+  @media (max-width:640px){
+    .bar-row{grid-template-columns:1fr; gap:3px}
+    .bar-row .lbl{text-align:left}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+<header class="head">
+  <div class="col">
+    <p class="eyebrow">Strategy Research · August 2026</p>
+    <h1>SPMO Mirror Study</h1>
+    <p class="lede">Mirroring the top holdings of Invesco's S&amp;P 500 Momentum ETF beats the fund itself — but only <strong>cap-weighted</strong>, and the portfolio size that wins is <strong>fifteen</strong>, not ten. Ten semi-annual rebalance cohorts, reconstructed from SEC filings.</p>
+  </div>
+  <div class="meta">
+    <span><b>Period</b> Sep 2021 – Aug 2026</span>
+    <span><b>Cohorts</b> 10 semi-annual</span>
+    <span><b>Holdings source</b> SEC N-PORT · CIK 1378872</span>
+    <span><b>Prices</b> split-adjusted closes</span>
+  </div>
+</header>
+
+<section style="margin-top:0">
+  <div class="verdict">
+    <p class="eyebrow">The chosen configuration</p>
+    <h2>Top 15 companies, cap-weighted, rebalanced weekly</h2>
+    <p style="max-width:60ch;margin-bottom:0">It matches the top-10 portfolio's return with a smaller drawdown and lower volatility — the best return per unit of risk among configurations that give up nothing in return.</p>
+    <div class="tiles">
+      <div class="tile hero"><div class="k">Total return</div><div class="v">+176.9%</div><div class="c">5 years</div></div>
+      <div class="tile"><div class="k">CAGR</div><div class="v">22.6%</div><div class="c">SPMO 20.1% · SPY 12.3%</div></div>
+      <div class="tile"><div class="k">Max drawdown</div><div class="v">−23.5%</div><div class="c">SPMO −23.7%</div></div>
+      <div class="tile"><div class="k">Sharpe</div><div class="v">1.06</div><div class="c">SPMO 0.97 · SPY 0.71</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Cumulative return by configuration</p><div class="spacer"></div></div>
+  <figure>
+    <div class="bars">
+      <div class="bar-row"><div class="lbl">Top 10 · cap</div><div class="track"><div class="fill" style="width:88.4%"></div><span class="val">+178.1%</span></div></div>
+      <div class="bar-row pick"><div class="lbl">Top 15 · cap</div><div class="track"><div class="fill" style="width:87.8%"></div><span class="val">+176.9%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 20 · cap</div><div class="track"><div class="fill" style="width:86.8%"></div><span class="val">+174.8%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 10 · equal</div><div class="track"><div class="fill" style="width:76.7%"></div><span class="val">+154.4%</span></div></div>
+      <div class="bar-row bench"><div class="lbl">SPMO ETF</div><div class="track"><div class="fill" style="width:74.6%"></div><span class="val">+150.3%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 15 · equal</div><div class="track"><div class="fill" style="width:73.9%"></div><span class="val">+148.8%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 20 · equal</div><div class="track"><div class="fill" style="width:72.1%"></div><span class="val">+145.2%</span></div></div>
+      <div class="bar-row bench"><div class="lbl">SPY</div><div class="track"><div class="fill" style="width:39.2%"></div><span class="val">+78.9%</span></div></div>
+    </div>
+    <figcaption>Five-year cumulative return, Sep 2021 – Aug 2026. Strategy rows rebalance weekly within each cohort; benchmarks in grey. Every cap-weighted size beat the fund it copies; every equal-weighted size did not.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Cohort by cohort</p><div class="spacer"></div></div>
+  <div class="col"><p>The index reconstitutes twice a year, after the close on the third Friday of March and September. Each row is one cohort, held from the day it went live until the next reconstitution — no look-ahead, since the holdings were fixed before the window began.</p></div>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="l">Window</th>
+          <th class="l">Largest weights</th>
+          <th>T10 cap</th><th>T10 eq</th>
+          <th class="pick">T15 cap</th><th>T15 eq</th>
+          <th>T20 cap</th><th>T20 eq</th>
+          <th>SPMO</th><th>SPY</th>
+          <th class="l">T15 cap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="l win">Sep ’21 → Mar ’22</td><td class="l leaders">Berkshire, Moderna, Target</td><td class="num dn">−4.7</td><td class="num dn">−6.1</td><td class="num dn pick">−4.2</td><td class="num dn">−5.0</td><td class="num dn">−3.6</td><td class="num dn">−3.8</td><td class="num dn">−1.2</td><td class="num up">+2.4</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:5.3%"></div></div></td></tr>
+        <tr><td class="l win">Mar ’22 → Sep ’22</td><td class="l leaders">Berkshire, UnitedHealth, Chevron</td><td class="num dn">−8.8</td><td class="num dn">−8.6</td><td class="num dn pick">−7.7</td><td class="num dn">−7.0</td><td class="num dn">−8.0</td><td class="num dn">−7.6</td><td class="num dn">−12.1</td><td class="num dn">−12.6</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:9.6%"></div></div></td></tr>
+        <tr><td class="l win">Sep ’22 → Mar ’23</td><td class="l leaders">Exxon, UnitedHealth, Chevron</td><td class="num up">+1.9</td><td class="num up">+0.6</td><td class="num up pick">+2.0</td><td class="num">0.0</td><td class="num up">+1.2</td><td class="num dn">−1.4</td><td class="num dn">−1.1</td><td class="num up">+1.3</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:2.5%"></div></div></td></tr>
+        <tr><td class="l win">Mar ’23 → Sep ’23</td><td class="l leaders">Exxon, Merck, Eli Lilly</td><td class="num up">+13.3</td><td class="num up">+9.6</td><td class="num up pick">+13.0</td><td class="num up">+10.0</td><td class="num up">+12.5</td><td class="num up">+9.8</td><td class="num up">+12.1</td><td class="num up">+12.7</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:16.3%"></div></div></td></tr>
+        <tr><td class="l win">Sep ’23 → Mar ’24</td><td class="l leaders">Meta, Eli Lilly, JPMorgan</td><td class="num up">+33.7</td><td class="num up">+23.7</td><td class="num up pick">+32.4</td><td class="num up">+23.8</td><td class="num up">+29.5</td><td class="num up">+19.2</td><td class="num up">+34.0</td><td class="num up">+15.6</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:40.5%"></div></div></td></tr>
+        <tr><td class="l win">Mar ’24 → Sep ’24</td><td class="l leaders">Meta, Microsoft, Apple</td><td class="num up">+12.8</td><td class="num up">+9.6</td><td class="num up pick">+12.4</td><td class="num up">+9.5</td><td class="num up">+11.9</td><td class="num up">+8.2</td><td class="num up">+15.1</td><td class="num up">+11.1</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:15.5%"></div></div></td></tr>
+        <tr><td class="l win">Sep ’24 → Mar ’25</td><td class="l leaders">Amazon, Nvidia, Eli Lilly</td><td class="num up">+7.1</td><td class="num up">+7.8</td><td class="num up pick">+7.0</td><td class="num up">+7.4</td><td class="num up">+6.4</td><td class="num up">+5.2</td><td class="num up">+6.4</td><td class="num up">+0.8</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:8.8%"></div></div></td></tr>
+        <tr><td class="l win">Mar ’25 → Sep ’25</td><td class="l leaders">Nvidia, Amazon, Meta</td><td class="num up">+36.0</td><td class="num up">+39.4</td><td class="num up pick">+33.1</td><td class="num up">+31.3</td><td class="num up">+31.6</td><td class="num up">+27.8</td><td class="num up">+26.2</td><td class="num up">+16.2</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:41.4%"></div></div></td></tr>
+        <tr><td class="l win">Sep ’25 → Mar ’26</td><td class="l leaders">Broadcom, Nvidia, Meta</td><td class="num dn">−12.3</td><td class="num dn">−12.2</td><td class="num dn pick">−9.1</td><td class="num dn">−5.1</td><td class="num dn">−7.9</td><td class="num dn">−2.5</td><td class="num dn">−6.2</td><td class="num dn">−1.7</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:11.4%"></div></div></td></tr>
+        <tr><td class="l win">Mar ’26 → Aug ’26</td><td class="l leaders">Nvidia, Alphabet, Broadcom</td><td class="num up">+40.2</td><td class="num up">+45.9</td><td class="num up pick">+38.2</td><td class="num up">+39.7</td><td class="num up">+38.8</td><td class="num up">+40.7</td><td class="num up">+33.9</td><td class="num up">+18.5</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:47.8%"></div></div></td></tr>
+        <tr class="total"><td class="l">Cumulative</td><td class="l"></td><td class="num">+171.1</td><td class="num">+146.5</td><td class="num pick">+171.5</td><td class="num">+146.1</td><td class="num">+162.3</td><td class="num">+128.6</td><td class="num">+150.3</td><td class="num">+78.9</td><td></td></tr>
+        <tr class="total"><td class="l">Annualized</td><td class="l"></td><td class="num">22.1</td><td class="num">19.8</td><td class="num pick">22.1</td><td class="num">19.7</td><td class="num">21.3</td><td class="num">18.0</td><td class="num">20.1</td><td class="num">12.3</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>All figures percent. Cumulative rows chain the ten cohorts. The final column plots the top-15 cap-weighted return against a zero midline; bar direction and the signed number both carry the polarity.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">What the ten cohorts show</p><div class="spacer"></div></div>
+  <div class="findings">
+    <div class="finding">
+      <div class="n">10 → 15</div>
+      <h3>Nearly free risk reduction</h3>
+      <p>Cumulative return is a dead heat — +171.5% against +171.1% — while drawdown improves about a point and Sharpe rises from 0.97 to 0.99 buy-and-hold, 1.02 to 1.06 with weekly rebalancing.</p>
+    </div>
+    <div class="finding">
+      <div class="n">15 → 20</div>
+      <h3>Diversification you pay for</h3>
+      <p>Nine points of cumulative return disappear (+162.3% vs +171.5%) to buy roughly one more point of drawdown protection. The Sharpe difference, 1.07 against 1.06, sits inside the noise.</p>
+    </div>
+    <div class="finding">
+      <div class="n">Weighting</div>
+      <h3>Equal lost at every size</h3>
+      <p>+146.5% at ten names, +146.1% at fifteen, +128.6% at twenty. Adding names dilutes into weaker momentum, and equal weighting overweights precisely those names.</p>
+    </div>
+    <div class="finding">
+      <div class="n">Cadence</div>
+      <h3>Weekly rebalancing pays</h3>
+      <p>The most consistent edge in the study — it improved every variant it touched, adding six to nine points of cumulative return while trimming volatility.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Risk-adjusted</p><div class="spacer"></div></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th class="l">Configuration</th><th>Total</th><th>CAGR</th><th>Max DD</th><th>Vol</th><th>Sharpe</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Top 10 · cap · weekly</td><td class="num">+178.1</td><td class="num">22.7</td><td class="num">−24.2</td><td class="num">22.2</td><td class="num">1.02</td></tr>
+        <tr><td class="l pick"><strong>Top 15 · cap · weekly</strong></td><td class="num pick">+176.9</td><td class="num pick">22.6</td><td class="num pick">−23.5</td><td class="num pick">21.3</td><td class="num pick">1.06</td></tr>
+        <tr><td class="l">Top 20 · cap · weekly</td><td class="num">+174.8</td><td class="num">22.4</td><td class="num">−23.2</td><td class="num">20.9</td><td class="num">1.07</td></tr>
+        <tr><td class="l">Top 10 · cap · buy &amp; hold</td><td class="num">+171.6</td><td class="num">22.1</td><td class="num">−24.6</td><td class="num">22.9</td><td class="num">0.97</td></tr>
+        <tr><td class="l">Top 15 · cap · buy &amp; hold</td><td class="num">+167.8</td><td class="num">21.8</td><td class="num">−23.7</td><td class="num">22.0</td><td class="num">0.99</td></tr>
+        <tr><td class="l">Top 20 · cap · buy &amp; hold</td><td class="num">+164.8</td><td class="num">21.5</td><td class="num">−22.8</td><td class="num">21.8</td><td class="num">0.99</td></tr>
+        <tr><td class="l">Top 10 · equal · weekly</td><td class="num">+154.4</td><td class="num">20.5</td><td class="num">−25.1</td><td class="num">21.4</td><td class="num">0.96</td></tr>
+        <tr><td class="l">Top 15 · equal · weekly</td><td class="num">+148.8</td><td class="num">20.0</td><td class="num">−24.2</td><td class="num">19.9</td><td class="num">1.01</td></tr>
+        <tr><td class="l">Top 20 · equal · weekly</td><td class="num">+145.2</td><td class="num">19.6</td><td class="num">−24.0</td><td class="num">19.8</td><td class="num">0.99</td></tr>
+        <tr><td class="l">SPMO ETF · whole fund</td><td class="num">+150.3</td><td class="num">20.1</td><td class="num">−23.7</td><td class="num">20.8</td><td class="num">0.97</td></tr>
+        <tr><td class="l">SPY</td><td class="num">+78.9</td><td class="num">12.3</td><td class="num">−25.4</td><td class="num">17.3</td><td class="num">0.71</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Chained daily equity curves across all ten cohorts. Percent except Sharpe. Exxon is excluded from this panel — its daily series does not exist (see provenance).</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Why cap-weighting won</p><div class="spacer"></div></div>
+  <div class="col">
+    <p>Momentum's largest weights <em>are</em> its strongest trends, and across these ten cohorts those trends usually persisted. Meta carried a 25.5% weight into the Sep '23 cohort and returned +64%. Nvidia and Broadcom led the Mar '25 window at the top of the book and kept leading.</p>
+    <p>Equal weighting only wins when the small weights outrun the large ones. That is exactly what happened in the current cohort, where Micron (+140%) and AMD (+154%) were the two smallest positions in the top ten — and it is the exception, not the rule.</p>
+    <div class="callout">Concentration was close to free. The top-10 portfolio ran a −24.6% maximum drawdown against the full 100-stock fund's −23.7% — under a point worse, for twenty-one points more return.</div>
+    <p>The trade-off is visible at the tails. In the Sep '25 drawdown the top-10 book lost 12.3% while the top-20 lost 7.9%; in the Sep '23 melt-up the top-10 made 33.7% against the top-20's 29.5%. Wider portfolios clip both ends. Fifteen names sits where the clipping still costs nothing.</p>
+  </div>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">How the cohorts were rebuilt</p><div class="spacer"></div></div>
+  <div class="col">
+    <p>Invesco publishes only current holdings, so the historical portfolios had to be reconstructed from primary sources. The method is exact rather than approximate, and it was validated before use.</p>
+    <ol class="steps">
+      <li><h3>Pull the filings</h3><p>Ten NPORT-P filings for series S000050154, one covering each rebalance cohort — the fiscal-quarter report that falls inside the window the cohort was live.</p></li>
+      <li><h3>Take share counts, not weights</h3><p>N-PORT reports the actual share balance of every position. Creations and redemptions scale all holdings proportionally, so relative weights can be rebuilt for any date inside the window.</p></li>
+      <li><h3>Reprice at the rebalance date</h3><p>Shares × the close on the first session after each reconstitution gives the portfolio exactly as it stood when it went live — the third Friday of March or September, plus one day.</p></li>
+      <li><h3>Validate the arithmetic</h3><p>N-PORT's reported market value divided by shares must equal that day's close. Nvidia on 29 May 2026: implied $211.14, actual $211.14. Exact to the cent.</p></li>
+      <li><h3>Rank, combine, measure</h3><p>Dual share classes merge into one company — Alphabet's A and C shares are a single position — then the top 10, 15 and 20 are taken and held to the next reconstitution.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Provenance &amp; limits</p><div class="spacer"></div></div>
+  <div class="notes">
+    <dl>
+      <dt>One reconstructed price series</dt>
+      <dd>Exxon's market history does not exist before mid-2026 — its 2026 redomiciliation into ExxonMobil Holdings Corp reset the listing record, and no data source carries the earlier series. Its prices were recovered from N-PORT's market-value-over-shares instead, using the nearest quarter-end where a rebalance-date figure was unavailable. Excluding Exxon entirely moves the top-10 result from +171.1% to +171.6%, so no conclusion rests on it.</dd>
+      <dt>Two names at the top-20 boundary</dt>
+      <dd>Pioneer Natural Resources (1.07%, delisted when Exxon acquired it) and Marsh &amp; McLennan (1.23%) have no data in the price source and would each sit around the twentieth slot. The top-20 column therefore carries slightly more uncertainty than the 10 and 15 columns.</dd>
+      <dt>Price-only, cost-free</dt>
+      <dd>No dividends, which understates the 2022–23 energy and pharma cohorts by roughly 1.5–2% a year. No spreads, slippage or taxes either — and that matters most for the recommendation, since the weekly-rebalance edge is the part most exposed to trading costs, and in a taxable account every rebalance realizes short-term gains.</dd>
+      <dt>Ten cohorts, one regime</dt>
+      <dd>Five years spanning a post-pandemic recovery and an AI capital-expenditure boom. Momentum did unusually well; SPY's own 12.3% annualized was strong by historical standards. Ten observations cannot separate skill from period.</dd>
+      <dt>An earlier read this replaces</dt>
+      <dd>Tested over only the two most recent cohorts, equal weighting appeared to beat cap weighting by six points. Extended to ten, it wins five and loses five, and loses the cumulative race by twenty-four points. The two-cohort finding was a sample artifact and should be disregarded.</dd>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Decision</p><div class="spacer"></div></div>
+  <div class="col">
+    <p><strong>The live portfolio now mirrors SPMO's top 15 companies at the fund's own weights, rebalanced every Friday.</strong> Alphabet's two share classes are held as a single position in Class A. Fifteen positions on the current account size is roughly $790 each, comfortably tradeable with fractional shares.</p>
+    <p>The configuration was not chosen because it topped the return table — the top-10 book did, by 1.2 points. It was chosen because it gives that up for a smaller drawdown, lower volatility and the better Sharpe, and because the margin over ten names is well inside what ten cohorts can resolve.</p>
+  </div>
+</section>
+
+<footer>
+  Holdings: SEC EDGAR NPORT-P, Invesco Exchange-Traded Fund Trust II, CIK 1378872, series S000050154 · Current holdings: Invesco product data, effective 14 Aug 2026 · Prices: split-adjusted daily closes<br>
+  Backtest is historical and hypothetical. Past performance does not predict future returns.
+</footer>
+
+</div>
