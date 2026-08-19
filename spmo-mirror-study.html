@@ -125,6 +125,7 @@
   tbody tr:hover{background:var(--surface-2)}
   tr.total td{border-top:2px solid var(--line-strong); border-bottom:none; font-weight:650; background:var(--surface-2)}
   .win{font-family:var(--mono); font-size:12px; color:var(--ink)}
+  .src{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
   .leaders{font-size:12px; color:var(--muted); max-width:190px; white-space:normal}
   .up{color:var(--pos)} .dn{color:var(--neg)}
   td.pick{background:var(--accent-soft)}
@@ -176,19 +177,18 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
   :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 </style>
-
 <div class="wrap">
 
 <header class="head">
   <div class="col">
-    <p class="eyebrow">Strategy Research · August 2026</p>
+    <p class="eyebrow">Strategy Research · Ten-Year Edition · August 2026</p>
     <h1>SPMO Mirror Study</h1>
-    <p class="lede">Mirroring the top holdings of Invesco's S&amp;P 500 Momentum ETF beats the fund itself — but only <strong>cap-weighted</strong>, and the portfolio size that wins is <strong>fifteen</strong>, not ten. It also beat QQQ by seventy-one points with two-thirds the drawdown. Ten semi-annual rebalance cohorts, reconstructed from SEC filings.</p>
+    <p class="lede">Twenty semi-annual rebalance cohorts, reconstructed from SEC filings back to 2016. Holding SPMO's <strong>top fifteen at the fund's own weights</strong> beat the fund, the index and QQQ — but the margin over QQQ is far thinner across the decade than the last five years suggest.</p>
   </div>
   <div class="meta">
-    <span><b>Period</b> Sep 2021 – Aug 2026</span>
-    <span><b>Cohorts</b> 10 semi-annual</span>
-    <span><b>Holdings source</b> SEC N-PORT · CIK 1378872</span>
+    <span><b>Period</b> Sep 2016 – Aug 2026</span>
+    <span><b>Cohorts</b> 20 semi-annual</span>
+    <span><b>Sources</b> SEC N-PORT + N-CSR · CIK 1378872</span>
     <span><b>Prices</b> split-adjusted closes</span>
   </div>
 </header>
@@ -197,43 +197,42 @@
   <div class="verdict">
     <p class="eyebrow">The chosen configuration</p>
     <h2>Top 15 companies, cap-weighted, rebalanced weekly</h2>
-    <p style="max-width:60ch;margin-bottom:0">It matches the top-10 portfolio's return with a smaller drawdown and lower volatility — the best return per unit of risk among configurations that give up nothing in return.</p>
+    <p style="max-width:60ch;margin-bottom:0">Best total return <em>and</em> best risk-adjusted return of every size and weighting tested, over both the five-year and the ten-year window.</p>
     <div class="tiles">
-      <div class="tile hero"><div class="k">Total return</div><div class="v">+176.9%</div><div class="c">5 years</div></div>
-      <div class="tile"><div class="k">CAGR</div><div class="v">22.6%</div><div class="c">SPMO 20.1% · SPY 12.3%</div></div>
-      <div class="tile"><div class="k">Max drawdown</div><div class="v">−23.5%</div><div class="c">SPMO −23.7%</div></div>
-      <div class="tile"><div class="k">Sharpe</div><div class="v">1.06</div><div class="c">SPMO 0.97 · SPY 0.71</div></div>
+      <div class="tile hero"><div class="k">Total return</div><div class="v">+567%</div><div class="c">10 years</div></div>
+      <div class="tile"><div class="k">CAGR</div><div class="v">21.1%</div><div class="c">SPMO 19.3% · QQQ 20.4%</div></div>
+      <div class="tile"><div class="k">Max drawdown</div><div class="v">−29.4%</div><div class="c">QQQ −35.6% · SPY −34.1%</div></div>
+      <div class="tile"><div class="k">Sharpe</div><div class="v">1.00</div><div class="c">SPMO 0.92 · QQQ 0.90</div></div>
     </div>
   </div>
 </section>
 
 <section>
-  <div class="rule"><p class="eyebrow">Cumulative return by configuration</p><div class="spacer"></div></div>
+  <div class="rule"><p class="eyebrow">Ten-year cumulative return</p><div class="spacer"></div></div>
   <figure>
     <div class="bars">
-      <div class="bar-row"><div class="lbl">Top 10 · cap</div><div class="track"><div class="fill" style="width:88.4%"></div><span class="val">+178.1%</span></div></div>
-      <div class="bar-row pick"><div class="lbl">Top 15 · cap</div><div class="track"><div class="fill" style="width:87.8%"></div><span class="val">+176.9%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 20 · cap</div><div class="track"><div class="fill" style="width:86.8%"></div><span class="val">+174.8%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 10 · equal</div><div class="track"><div class="fill" style="width:76.7%"></div><span class="val">+154.4%</span></div></div>
-      <div class="bar-row bench"><div class="lbl">SPMO ETF</div><div class="track"><div class="fill" style="width:74.6%"></div><span class="val">+150.3%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 15 · equal</div><div class="track"><div class="fill" style="width:73.9%"></div><span class="val">+148.8%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 20 · equal</div><div class="track"><div class="fill" style="width:72.1%"></div><span class="val">+145.2%</span></div></div>
-      <div class="bar-row bench"><div class="lbl">QQQ</div><div class="track"><div class="fill" style="width:56.1%"></div><span class="val">+99.9%</span></div></div>
-      <div class="bar-row bench"><div class="lbl">SPY</div><div class="track"><div class="fill" style="width:39.2%"></div><span class="val">+78.9%</span></div></div>
+      <div class="bar-row pick"><div class="lbl">Top 15 · cap</div><div class="track"><div class="fill" style="width:100%"></div><span class="val">+567%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 20 · cap</div><div class="track"><div class="fill" style="width:96.7%"></div><span class="val">+549%</span></div></div>
+      <div class="bar-row bench"><div class="lbl">QQQ</div><div class="track"><div class="fill" style="width:92.8%"></div><span class="val">+526%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 10 · cap</div><div class="track"><div class="fill" style="width:91.8%"></div><span class="val">+520%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 15 · equal</div><div class="track"><div class="fill" style="width:86.8%"></div><span class="val">+492%</span></div></div>
+      <div class="bar-row bench"><div class="lbl">SPMO ETF</div><div class="track"><div class="fill" style="width:83.4%"></div><span class="val">+473%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 20 · equal</div><div class="track"><div class="fill" style="width:80.7%"></div><span class="val">+457%</span></div></div>
+      <div class="bar-row"><div class="lbl">Top 10 · equal</div><div class="track"><div class="fill" style="width:71.1%"></div><span class="val">+403%</span></div></div>
+      <div class="bar-row bench"><div class="lbl">SPY</div><div class="track"><div class="fill" style="width:46.5%"></div><span class="val">+264%</span></div></div>
     </div>
-    <figcaption>Five-year cumulative return, Sep 2021 – Aug 2026. Strategy rows rebalance weekly within each cohort; benchmarks in grey. Every cap-weighted size beat the fund it copies; every equal-weighted size did not.</figcaption>
+    <figcaption>Sep 2016 – Aug 2026. Strategy rows rebalance weekly within each cohort; benchmarks in grey. Every cap-weighted size beat its equal-weighted twin, and the top-15 book beat QQQ — by 41 points across ten years, against 88 points in the last five alone.</figcaption>
   </figure>
 </section>
 
 <section>
-  <div class="rule"><p class="eyebrow">Cohort by cohort</p><div class="spacer"></div></div>
-  <div class="col"><p>The index reconstitutes twice a year, after the close on the third Friday of March and September. Each row is one cohort, held from the day it went live until the next reconstitution — no look-ahead, since the holdings were fixed before the window began.</p></div>
+  <div class="rule"><p class="eyebrow">All twenty cohorts</p><div class="spacer"></div></div>
+  <div class="col"><p>The index reconstitutes after the close on the third Friday of March and September. Each row is one cohort, held from the day it went live to the next reconstitution — the holdings were fixed before each window began, so nothing here uses hindsight.</p></div>
   <div class="scroll">
     <table>
       <thead>
         <tr>
-          <th class="l">Window</th>
-          <th class="l">Largest weights</th>
+          <th class="l">Window</th><th class="l">Largest weights</th><th class="l">Source</th>
           <th>T10 cap</th><th>T10 eq</th>
           <th class="pick">T15 cap</th><th>T15 eq</th>
           <th>T20 cap</th><th>T20 eq</th>
@@ -242,115 +241,128 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td class="l win">Sep ’21 → Mar ’22</td><td class="l leaders">Berkshire, Moderna, Target</td><td class="num dn">−4.7</td><td class="num dn">−6.1</td><td class="num pick dn">−4.2</td><td class="num dn">−5.0</td><td class="num dn">−3.6</td><td class="num dn">−3.8</td><td class="num dn">−1.2</td><td class="num dn">−4.3</td><td class="num up">+2.4</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:5.3%"></div></div></td></tr>
-        <tr><td class="l win">Mar ’22 → Sep ’22</td><td class="l leaders">Berkshire, UnitedHealth, Chevron</td><td class="num dn">−8.8</td><td class="num dn">−8.6</td><td class="num pick dn">−7.7</td><td class="num dn">−7.0</td><td class="num dn">−8.0</td><td class="num dn">−7.6</td><td class="num dn">−12.1</td><td class="num dn">−16.9</td><td class="num dn">−12.6</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:9.6%"></div></div></td></tr>
-        <tr><td class="l win">Sep ’22 → Mar ’23</td><td class="l leaders">Exxon, UnitedHealth, Chevron</td><td class="num up">+1.9</td><td class="num up">+0.6</td><td class="num pick up">+2.0</td><td class="num">0.0</td><td class="num up">+1.2</td><td class="num dn">−1.4</td><td class="num dn">−1.1</td><td class="num up">+5.1</td><td class="num up">+1.3</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:2.5%"></div></div></td></tr>
-        <tr><td class="l win">Mar ’23 → Sep ’23</td><td class="l leaders">Exxon, Merck, Eli Lilly</td><td class="num up">+13.3</td><td class="num up">+9.6</td><td class="num pick up">+13.0</td><td class="num up">+10.0</td><td class="num up">+12.5</td><td class="num up">+9.8</td><td class="num up">+12.1</td><td class="num up">+21.1</td><td class="num up">+12.7</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:16.2%"></div></div></td></tr>
-        <tr><td class="l win">Sep ’23 → Mar ’24</td><td class="l leaders">Meta, Eli Lilly, JPMorgan</td><td class="num up">+33.7</td><td class="num up">+23.7</td><td class="num pick up">+32.4</td><td class="num up">+23.8</td><td class="num up">+29.5</td><td class="num up">+19.2</td><td class="num up">+34.0</td><td class="num up">+18.0</td><td class="num up">+15.6</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:40.5%"></div></div></td></tr>
-        <tr><td class="l win">Mar ’24 → Sep ’24</td><td class="l leaders">Meta, Microsoft, Apple</td><td class="num up">+12.8</td><td class="num up">+9.6</td><td class="num pick up">+12.4</td><td class="num up">+9.5</td><td class="num up">+11.9</td><td class="num up">+8.2</td><td class="num up">+15.1</td><td class="num up">+10.4</td><td class="num up">+11.1</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:15.5%"></div></div></td></tr>
-        <tr><td class="l win">Sep ’24 → Mar ’25</td><td class="l leaders">Amazon, Nvidia, Eli Lilly</td><td class="num up">+7.1</td><td class="num up">+7.8</td><td class="num pick up">+7.0</td><td class="num up">+7.4</td><td class="num up">+6.4</td><td class="num up">+5.2</td><td class="num up">+6.4</td><td class="num up">+1.6</td><td class="num up">+0.8</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:8.8%"></div></div></td></tr>
-        <tr><td class="l win">Mar ’25 → Sep ’25</td><td class="l leaders">Nvidia, Amazon, Meta</td><td class="num up">+36.0</td><td class="num up">+39.4</td><td class="num pick up">+33.1</td><td class="num up">+31.3</td><td class="num up">+31.6</td><td class="num up">+27.8</td><td class="num up">+26.2</td><td class="num up">+22.7</td><td class="num up">+16.2</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:41.4%"></div></div></td></tr>
-        <tr><td class="l win">Sep ’25 → Mar ’26</td><td class="l leaders">Broadcom, Nvidia, Meta</td><td class="num dn">−12.3</td><td class="num dn">−12.2</td><td class="num pick dn">−9.1</td><td class="num dn">−5.1</td><td class="num dn">−7.9</td><td class="num dn">−2.5</td><td class="num dn">−6.2</td><td class="num dn">−2.4</td><td class="num dn">−1.7</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:11.4%"></div></div></td></tr>
-        <tr><td class="l win">Mar ’26 → Aug ’26</td><td class="l leaders">Nvidia, Alphabet, Broadcom</td><td class="num up">+40.2</td><td class="num up">+45.9</td><td class="num pick up">+38.2</td><td class="num up">+39.7</td><td class="num up">+38.8</td><td class="num up">+40.7</td><td class="num up">+33.9</td><td class="num up">+24.3</td><td class="num up">+18.5</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:47.8%"></div></div></td></tr>
-        <tr class="total"><td class="l">Cumulative</td><td class="l"></td><td class="num">+171.1</td><td class="num">+146.5</td><td class="num pick">+171.5</td><td class="num">+146.1</td><td class="num">+162.3</td><td class="num">+128.6</td><td class="num">+150.3</td><td class="num">+99.9</td><td class="num">+78.9</td><td></td></tr>
-        <tr class="total"><td class="l">Annualized</td><td class="l"></td><td class="num">22.1</td><td class="num">19.8</td><td class="num pick">22.1</td><td class="num">19.7</td><td class="num">21.3</td><td class="num">18.0</td><td class="num">20.1</td><td class="num">14.9</td><td class="num">12.3</td><td></td></tr>
+        <tr><td class="l win">16-09 → 17-03</td><td class="l leaders">GE, JNJ, MSFT</td><td class="l src">N-CSR</td><td class="num up">+6.7</td><td class="num up">+9.5</td><td class="num pick up">+6.7</td><td class="num up">+8.4</td><td class="num up">+6.8</td><td class="num up">+8.8</td><td class="num up">+7.6</td><td class="num up">+12.9</td><td class="num up">+10.9</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:6.7%"></div></div></td></tr>
+        <tr><td class="l win">17-03 → 17-09</td><td class="l leaders">JPM, Berkshire, BAC</td><td class="l src">N-CSR</td><td class="num up">+5.2</td><td class="num up">+7.6</td><td class="num pick up">+6.4</td><td class="num up">+9.4</td><td class="num up">+6.2</td><td class="num up">+8.1</td><td class="num up">+8.7</td><td class="num up">+10.4</td><td class="num up">+5.5</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:6.4%"></div></div></td></tr>
+        <tr><td class="l win">17-09 → 18-03</td><td class="l leaders">MSFT, JPM, META</td><td class="l src">N-CSR</td><td class="num up">+17.4</td><td class="num up">+16.7</td><td class="num pick up">+17.4</td><td class="num up">+16.9</td><td class="num up">+17.3</td><td class="num up">+16.9</td><td class="num up">+16.7</td><td class="num up">+14.8</td><td class="num up">+8.3</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:17.4%"></div></div></td></tr>
+        <tr><td class="l win">18-03 → 18-09</td><td class="l leaders">MSFT, Berkshire, META</td><td class="l src">N-CSR</td><td class="num up">+11.8</td><td class="num up">+10.2</td><td class="num pick up">+10.4</td><td class="num up">+8.0</td><td class="num up">+10.3</td><td class="num up">+8.2</td><td class="num up">+10.6</td><td class="num up">+10.0</td><td class="num up">+7.6</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:10.4%"></div></div></td></tr>
+        <tr><td class="l win">18-09 → 19-03</td><td class="l leaders">MSFT, JPM, V</td><td class="l src">N-CSR</td><td class="num">0.0</td><td class="num dn">−0.3</td><td class="num pick">0.0</td><td class="num dn">−0.1</td><td class="num up">+0.7</td><td class="num up">+1.4</td><td class="num dn">−3.7</td><td class="num dn">−3.0</td><td class="num dn">−3.0</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:0.0%"></div></div></td></tr>
+        <tr><td class="l win">19-03 → 19-09</td><td class="l leaders">MRK, PFE, PG</td><td class="l src">N-CSR</td><td class="num up">+0.4</td><td class="num dn">−0.1</td><td class="num pick up">+1.8</td><td class="num up">+2.7</td><td class="num up">+3.0</td><td class="num up">+5.0</td><td class="num up">+4.5</td><td class="num up">+6.8</td><td class="num up">+5.6</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:1.8%"></div></div></td></tr>
+        <tr><td class="l win">19-09 → 20-03</td><td class="l leaders">MSFT, PG, V</td><td class="l src">N-PORT</td><td class="num dn">−21.8</td><td class="num dn">−25.5</td><td class="num pick dn">−21.0</td><td class="num dn">−22.7</td><td class="num dn">−22.0</td><td class="num dn">−24.7</td><td class="num dn">−23.5</td><td class="num dn">−10.5</td><td class="num dn">−25.2</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:21.0%"></div></div></td></tr>
+        <tr><td class="l win">20-03 → 20-09</td><td class="l leaders">MSFT, V, PG</td><td class="l src">N-PORT</td><td class="num up">+42.4</td><td class="num up">+39.9</td><td class="num pick up">+46.5</td><td class="num up">+47.4</td><td class="num up">+48.1</td><td class="num up">+50.7</td><td class="num up">+53.4</td><td class="num up">+56.9</td><td class="num up">+46.7</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:46.5%"></div></div></td></tr>
+        <tr><td class="l win">20-09 → 21-03</td><td class="l leaders">MSFT, AAPL, META</td><td class="l src">N-PORT</td><td class="num up">+13.8</td><td class="num up">+12.0</td><td class="num pick up">+13.4</td><td class="num up">+11.9</td><td class="num up">+12.2</td><td class="num up">+9.7</td><td class="num up">+10.7</td><td class="num up">+19.1</td><td class="num up">+20.1</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:13.4%"></div></div></td></tr>
+        <tr><td class="l win">21-03 → 21-09</td><td class="l leaders">AAPL, MSFT, PYPL</td><td class="l src">N-PORT</td><td class="num up">+14.1</td><td class="num up">+9.5</td><td class="num pick up">+15.8</td><td class="num up">+14.5</td><td class="num up">+15.6</td><td class="num up">+14.5</td><td class="num up">+16.1</td><td class="num up">+14.8</td><td class="num up">+10.6</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:15.8%"></div></div></td></tr>
+        <tr><td class="l win">21-09 → 22-03</td><td class="l leaders">Berkshire, MRNA, TGT</td><td class="l src">N-PORT</td><td class="num dn">−4.7</td><td class="num dn">−6.1</td><td class="num pick dn">−4.2</td><td class="num dn">−5.0</td><td class="num dn">−3.4</td><td class="num dn">−3.4</td><td class="num dn">−1.2</td><td class="num dn">−4.3</td><td class="num up">+2.4</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:4.2%"></div></div></td></tr>
+        <tr><td class="l win">22-03 → 22-09</td><td class="l leaders">Berkshire, UNH, XOM</td><td class="l src">N-PORT</td><td class="num dn">−7.3</td><td class="num dn">−7.3</td><td class="num pick dn">−6.5</td><td class="num dn">−6.2</td><td class="num dn">−7.0</td><td class="num dn">−7.0</td><td class="num dn">−12.1</td><td class="num dn">−16.9</td><td class="num dn">−12.6</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:6.5%"></div></div></td></tr>
+        <tr><td class="l win">22-09 → 23-03</td><td class="l leaders">XOM, UNH, CVX</td><td class="l src">N-PORT</td><td class="num up">+0.8</td><td class="num dn">−0.1</td><td class="num pick up">+1.0</td><td class="num dn">−0.5</td><td class="num up">+0.3</td><td class="num dn">−1.9</td><td class="num dn">−1.1</td><td class="num up">+5.1</td><td class="num up">+1.3</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:1.0%"></div></div></td></tr>
+        <tr><td class="l win">23-03 → 23-09</td><td class="l leaders">XOM, MRK, LLY</td><td class="l src">N-PORT</td><td class="num up">+16.2</td><td class="num up">+10.8</td><td class="num pick up">+15.3</td><td class="num up">+10.8</td><td class="num up">+14.5</td><td class="num up">+10.2</td><td class="num up">+12.1</td><td class="num up">+21.1</td><td class="num up">+12.7</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:15.3%"></div></div></td></tr>
+        <tr><td class="l win">23-09 → 24-03</td><td class="l leaders">META, LLY, JPM</td><td class="l src">N-PORT</td><td class="num up">+33.7</td><td class="num up">+23.7</td><td class="num pick up">+32.6</td><td class="num up">+24.4</td><td class="num up">+30.3</td><td class="num up">+20.7</td><td class="num up">+34.0</td><td class="num up">+18.0</td><td class="num up">+15.6</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:32.6%"></div></div></td></tr>
+        <tr><td class="l win">24-03 → 24-09</td><td class="l leaders">META, MSFT, AAPL</td><td class="l src">N-PORT</td><td class="num up">+12.8</td><td class="num up">+9.6</td><td class="num pick up">+12.4</td><td class="num up">+9.4</td><td class="num up">+11.9</td><td class="num up">+8.1</td><td class="num up">+15.1</td><td class="num up">+10.4</td><td class="num up">+11.1</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:12.4%"></div></div></td></tr>
+        <tr><td class="l win">24-09 → 25-03</td><td class="l leaders">AMZN, NVDA, LLY</td><td class="l src">N-PORT</td><td class="num up">+7.1</td><td class="num up">+7.8</td><td class="num pick up">+7.0</td><td class="num up">+7.4</td><td class="num up">+6.4</td><td class="num up">+5.2</td><td class="num up">+6.4</td><td class="num up">+1.6</td><td class="num up">+0.8</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:7.0%"></div></div></td></tr>
+        <tr><td class="l win">25-03 → 25-09</td><td class="l leaders">NVDA, AMZN, META</td><td class="l src">N-PORT</td><td class="num up">+36.0</td><td class="num up">+39.4</td><td class="num pick up">+33.1</td><td class="num up">+31.3</td><td class="num up">+31.6</td><td class="num up">+27.8</td><td class="num up">+26.2</td><td class="num up">+22.7</td><td class="num up">+16.2</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:33.1%"></div></div></td></tr>
+        <tr><td class="l win">25-09 → 26-03</td><td class="l leaders">AVGO, NVDA, META</td><td class="l src">N-PORT</td><td class="num dn">−12.3</td><td class="num dn">−12.2</td><td class="num pick dn">−9.1</td><td class="num dn">−5.1</td><td class="num dn">−7.9</td><td class="num dn">−2.5</td><td class="num dn">−6.2</td><td class="num dn">−2.4</td><td class="num dn">−1.7</td><td class="dv"><div class="dv-track"><div class="dv-fill n" style="width:9.1%"></div></div></td></tr>
+        <tr><td class="l win">26-03 → 26-08</td><td class="l leaders">NVDA, Alphabet, AVGO</td><td class="l src">N-PORT</td><td class="num up">+39.1</td><td class="num up">+44.8</td><td class="num pick up">+37.3</td><td class="num up">+39.0</td><td class="num up">+38.0</td><td class="num up">+40.2</td><td class="num up">+33.9</td><td class="num up">+24.3</td><td class="num up">+18.5</td><td class="dv"><div class="dv-track"><div class="dv-fill p" style="width:37.3%"></div></div></td></tr>
+        <tr class="total"><td class="l">Cumulative</td><td class="l"></td><td class="l"></td><td class="num">+493</td><td class="num">+381</td><td class="num pick">+530</td><td class="num">+458</td><td class="num">+511</td><td class="num">+425</td><td class="num">+473</td><td class="num">+526</td><td class="num">+264</td><td></td></tr>
+        <tr class="total"><td class="l">Annualized</td><td class="l"></td><td class="l"></td><td class="num">19.7</td><td class="num">17.2</td><td class="num pick">20.4</td><td class="num">19</td><td class="num">20.1</td><td class="num">18.2</td><td class="num">19.3</td><td class="num">20.4</td><td class="num">13.9</td><td></td></tr>
       </tbody>
     </table>
   </div>
-  <figcaption>All figures percent. Cumulative rows chain the ten cohorts. The final column plots the top-15 cap-weighted return against a zero midline; bar direction and the signed number both carry the polarity.</figcaption>
+  <figcaption>All figures percent. Cumulative rows chain the twenty cohorts. The last column plots the top-15 cap-weighted return against a zero midline; direction and the signed number both carry polarity.</figcaption>
 </section>
 
 <section>
-  <div class="rule"><p class="eyebrow">What the ten cohorts show</p><div class="spacer"></div></div>
+  <div class="rule"><p class="eyebrow">What ten years changes</p><div class="spacer"></div></div>
   <div class="findings">
     <div class="finding">
-      <div class="n">10 → 15</div>
-      <h3>Nearly free risk reduction</h3>
-      <p>Cumulative return is a dead heat — +171.5% against +171.1% — while drawdown improves about a point and Sharpe rises from 0.97 to 0.99 buy-and-hold, 1.02 to 1.06 with weekly rebalancing.</p>
+      <div class="n">Confirmed</div>
+      <h3>Fifteen is the right size</h3>
+      <p>+567% against +520% at ten names and +549% at twenty, with the best Sharpe of the three. The five-year study picked fifteen on a hair; the decade picks it clearly.</p>
     </div>
     <div class="finding">
-      <div class="n">15 → 20</div>
-      <h3>Diversification you pay for</h3>
-      <p>Nine points of cumulative return disappear (+162.3% vs +171.5%) to buy roughly one more point of drawdown protection. The Sharpe difference, 1.07 against 1.06, sits inside the noise.</p>
+      <div class="n">Confirmed</div>
+      <h3>Cap-weighting beats equal</h3>
+      <p>True at every size across both windows — +530% vs +458% at fifteen names. Equal weighting overweights the weakest momentum in the book, and the penalty grows as the book widens.</p>
     </div>
     <div class="finding">
-      <div class="n">Weighting</div>
-      <h3>Equal lost at every size</h3>
-      <p>+146.5% at ten names, +146.1% at fifteen, +128.6% at twenty. Adding names dilutes into weaker momentum, and equal weighting overweights precisely those names.</p>
+      <div class="n">Revised</div>
+      <h3>The QQQ edge is not structural</h3>
+      <p>Over five years the book beat QQQ by 88 points. Over ten, by 41 — and QQQ actually beat the top-15 <em>buy-and-hold</em> book. The advantage lives almost entirely in 2022–2026.</p>
     </div>
     <div class="finding">
-      <div class="n">Cadence</div>
+      <div class="n">Confirmed</div>
       <h3>Weekly rebalancing pays</h3>
-      <p>The most consistent edge in the study — it improved every variant it touched, adding six to nine points of cumulative return while trimming volatility.</p>
+      <p>The most durable effect in the study: +37 points at fifteen names over ten years, and it improved every size and weighting it touched, in both windows.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <div class="rule"><p class="eyebrow">Risk-adjusted</p><div class="spacer"></div></div>
+  <div class="rule"><p class="eyebrow">Risk-adjusted · ten years</p><div class="spacer"></div></div>
   <div class="scroll">
     <table>
       <thead><tr><th class="l">Configuration</th><th>Total</th><th>CAGR</th><th>Max DD</th><th>Vol</th><th>Sharpe</th></tr></thead>
       <tbody>
-        <tr><td class="l">Top 10 · cap · weekly</td><td class="num">+178.1</td><td class="num">22.7</td><td class="num">−24.2</td><td class="num">22.2</td><td class="num">1.02</td></tr>
-        <tr><td class="l pick"><strong>Top 15 · cap · weekly</strong></td><td class="num pick">+176.9</td><td class="num pick">22.6</td><td class="num pick">−23.5</td><td class="num pick">21.3</td><td class="num pick">1.06</td></tr>
-        <tr><td class="l">Top 20 · cap · weekly</td><td class="num">+174.8</td><td class="num">22.4</td><td class="num">−23.2</td><td class="num">20.9</td><td class="num">1.07</td></tr>
-        <tr><td class="l">Top 10 · cap · buy &amp; hold</td><td class="num">+171.6</td><td class="num">22.1</td><td class="num">−24.6</td><td class="num">22.9</td><td class="num">0.97</td></tr>
-        <tr><td class="l">Top 15 · cap · buy &amp; hold</td><td class="num">+167.8</td><td class="num">21.8</td><td class="num">−23.7</td><td class="num">22.0</td><td class="num">0.99</td></tr>
-        <tr><td class="l">Top 20 · cap · buy &amp; hold</td><td class="num">+164.8</td><td class="num">21.5</td><td class="num">−22.8</td><td class="num">21.8</td><td class="num">0.99</td></tr>
-        <tr><td class="l">Top 10 · equal · weekly</td><td class="num">+154.4</td><td class="num">20.5</td><td class="num">−25.1</td><td class="num">21.4</td><td class="num">0.96</td></tr>
-        <tr><td class="l">Top 15 · equal · weekly</td><td class="num">+148.8</td><td class="num">20.0</td><td class="num">−24.2</td><td class="num">19.9</td><td class="num">1.01</td></tr>
-        <tr><td class="l">Top 20 · equal · weekly</td><td class="num">+145.2</td><td class="num">19.6</td><td class="num">−24.0</td><td class="num">19.8</td><td class="num">0.99</td></tr>
-        <tr><td class="l">SPMO ETF · whole fund</td><td class="num">+150.3</td><td class="num">20.1</td><td class="num">−23.7</td><td class="num">20.8</td><td class="num">0.97</td></tr>
-        <tr><td class="l">QQQ · Nasdaq-100</td><td class="num">+99.9</td><td class="num">14.9</td><td class="num">−35.6</td><td class="num">23.1</td><td class="num">0.64</td></tr>
-        <tr><td class="l">SPY</td><td class="num">+78.9</td><td class="num">12.3</td><td class="num">−25.4</td><td class="num">17.3</td><td class="num">0.71</td></tr>
+        <tr><td class="l" class="pick"><strong>Top 15 · cap · weekly</strong></td><td class="num" class="pick">+567.1</td><td class="num" class="pick">21.1</td><td class="num" class="pick">−29.4</td><td class="num" class="pick">21.0</td><td class="num" class="pick">1.0</td></tr>
+        <tr><td class="l">Top 20 · cap · weekly</td><td class="num">+548.6</td><td class="num">20.8</td><td class="num">−30.3</td><td class="num">20.7</td><td class="num">1.0</td></tr>
+        <tr><td class="l">Top 10 · cap · weekly</td><td class="num">+520.4</td><td class="num">20.2</td><td class="num">−30.2</td><td class="num">21.8</td><td class="num">0.93</td></tr>
+        <tr><td class="l">Top 15 · cap · buy &amp; hold</td><td class="num">+530.1</td><td class="num">20.4</td><td class="num">−29.5</td><td class="num">21.5</td><td class="num">0.95</td></tr>
+        <tr><td class="l">Top 10 · cap · buy &amp; hold</td><td class="num">+492.7</td><td class="num">19.7</td><td class="num">−30.3</td><td class="num">22.2</td><td class="num">0.89</td></tr>
+        <tr><td class="l">Top 15 · equal · weekly</td><td class="num">+492.4</td><td class="num">19.7</td><td class="num">−29.6</td><td class="num">20.0</td><td class="num">0.99</td></tr>
+        <tr><td class="l">Top 10 · equal · weekly</td><td class="num">+403.1</td><td class="num">17.7</td><td class="num">−31.5</td><td class="num">21.0</td><td class="num">0.84</td></tr>
+        <tr><td class="l">SPMO ETF</td><td class="num">+473.1</td><td class="num">19.3</td><td class="num">−31.3</td><td class="num">21.1</td><td class="num">0.92</td></tr>
+        <tr><td class="l">QQQ · Nasdaq-100</td><td class="num">+526.0</td><td class="num">20.4</td><td class="num">−35.6</td><td class="num">22.6</td><td class="num">0.9</td></tr>
+        <tr><td class="l">SPY</td><td class="num">+263.8</td><td class="num">13.9</td><td class="num">−34.1</td><td class="num">18.1</td><td class="num">0.77</td></tr>
       </tbody>
     </table>
   </div>
-  <figcaption>Chained daily equity curves across all ten cohorts. Percent except Sharpe. Exxon is excluded from the strategy rows — its daily series does not exist (see provenance). ETF rows are the funds' own total price returns.</figcaption>
+  <figcaption>Chained daily equity curves across all twenty cohorts. Percent except Sharpe. The strategy's drawdown advantage over QQQ — six points — is its most consistent edge.</figcaption>
 </section>
 
 <section>
-  <div class="rule"><p class="eyebrow">Why cap-weighting won</p><div class="spacer"></div></div>
+  <div class="rule"><p class="eyebrow">The same test, last five years</p><div class="spacer"></div></div>
+  <div class="col"><p>Splitting the decade in half is the most useful thing this study does. The recent window flatters the strategy badly — and anyone sizing a position off the five-year numbers alone would be extrapolating one regime.</p></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th class="l">Configuration</th><th>Total</th><th>CAGR</th><th>Max DD</th><th>Vol</th><th>Sharpe</th></tr></thead>
+      <tbody>
+        <tr><td class="l" class="pick"><strong>Top 15 · cap · weekly</strong></td><td class="num" class="pick">+187.4</td><td class="num" class="pick">24.0</td><td class="num" class="pick">−23.1</td><td class="num" class="pick">21.2</td><td class="num" class="pick">1.14</td></tr>
+        <tr><td class="l">Top 20 · cap · weekly</td><td class="num">+178.4</td><td class="num">23.2</td><td class="num">−22.3</td><td class="num">20.6</td><td class="num">1.13</td></tr>
+        <tr><td class="l">Top 10 · cap · weekly</td><td class="num">+184.8</td><td class="num">23.8</td><td class="num">−24.1</td><td class="num">22.0</td><td class="num">1.08</td></tr>
+        <tr><td class="l">Top 15 · cap · buy &amp; hold</td><td class="num">+176.7</td><td class="num">23.1</td><td class="num">−23.7</td><td class="num">21.9</td><td class="num">1.05</td></tr>
+        <tr><td class="l">Top 10 · cap · buy &amp; hold</td><td class="num">+177.1</td><td class="num">23.1</td><td class="num">−24.6</td><td class="num">22.8</td><td class="num">1.01</td></tr>
+        <tr><td class="l">Top 15 · equal · weekly</td><td class="num">+158.8</td><td class="num">21.4</td><td class="num">−22.1</td><td class="num">19.8</td><td class="num">1.08</td></tr>
+        <tr><td class="l">Top 10 · equal · weekly</td><td class="num">+154.7</td><td class="num">21.0</td><td class="num">−23.4</td><td class="num">21.1</td><td class="num">1.0</td></tr>
+        <tr><td class="l">SPMO ETF</td><td class="num">+150.3</td><td class="num">20.6</td><td class="num">−23.7</td><td class="num">20.8</td><td class="num">0.99</td></tr>
+        <tr><td class="l">QQQ · Nasdaq-100</td><td class="num">+99.9</td><td class="num">15.2</td><td class="num">−35.6</td><td class="num">23.1</td><td class="num">0.66</td></tr>
+        <tr><td class="l">SPY</td><td class="num">+78.9</td><td class="num">12.6</td><td class="num">−25.4</td><td class="num">17.4</td><td class="num">0.73</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Sep 2021 – Aug 2026. Same method, same code, half the window. QQQ's CAGR falls from 20.4% to 15.2% while the strategy's rises — the entire relative advantage is a 2022–2026 phenomenon.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Against QQQ</p><div class="spacer"></div></div>
   <div class="col">
-    <p>Momentum's largest weights <em>are</em> its strongest trends, and across these ten cohorts those trends usually persisted. Meta carried a 25.5% weight into the Sep '23 cohort and returned +64%. Nvidia and Broadcom led the Mar '25 window at the top of the book and kept leading.</p>
-    <p>Equal weighting only wins when the small weights outrun the large ones. That is exactly what happened in the current cohort, where Micron (+140%) and AMD (+154%) were the two smallest positions in the top ten — and it is the exception, not the rule.</p>
-    <div class="callout">Concentration was close to free. The top-10 portfolio ran a −24.6% maximum drawdown against the full 100-stock fund's −23.7% — under a point worse, for twenty-one points more return.</div>
-    <p>The trade-off is visible at the tails. In the Sep '25 drawdown the top-10 book lost 12.3% while the top-20 lost 7.9%; in the Sep '23 melt-up the top-10 made 33.7% against the top-20's 29.5%. Wider portfolios clip both ends. Fifteen names sits where the clipping still costs nothing.</p>
+    <p>QQQ is the honest alternative: same era, similar technology tilt, a rule simple enough to never need a study. Across ten years it returned +526% to the top-15 book's +567% — close enough that the ordering depends on whether you rebalance weekly. Without that, QQQ wins.</p>
+    <p>Where the strategy is genuinely better is drawdown: <strong>−29.4% against −35.6%</strong>, and a Sharpe of 1.00 against 0.90. It got there by rotating — but the rotation cuts both ways, and the two crashes in this sample show opposite faces of it.</p>
+    <div class="callout"><strong>2022:</strong> momentum had rotated into Exxon, UnitedHealth and Chevron before technology repriced. The book lost 6.5% while QQQ lost 16.9%.<br><br><strong>2020:</strong> momentum was in staples and defensives when COVID hit and technology led the recovery. The book lost 21.0% while QQQ lost only 10.5%.</div>
+    <p>Rotation is not downside protection. It is a bet that the last six months' leadership persists — which paid in the inflation shock and cost dearly in the pandemic. It beat QQQ in 11 of 20 cohorts, which is close to a coin flip.</p>
+    <div class="callout"><strong>What matters today:</strong> eleven of the current fifteen holdings are Nasdaq-100 members, carrying 82% of the book. The portfolio is presently close to a concentrated QQQ with a semiconductor overweight — holding the rotation option, but not currently using it.</div>
   </div>
 </section>
 
 <section>
   <div class="rule"><p class="eyebrow">How the cohorts were rebuilt</p><div class="spacer"></div></div>
   <div class="col">
-    <p>Invesco publishes only current holdings, so the historical portfolios had to be reconstructed from primary sources. The method is exact rather than approximate, and it was validated before use.</p>
+    <p>Invesco publishes only current holdings, so every historical portfolio was reconstructed from primary filings. Two document families were needed, because N-PORT did not exist before 2019.</p>
     <ol class="steps">
-      <li><h3>Pull the filings</h3><p>Ten NPORT-P filings for series S000050154, one covering each rebalance cohort — the fiscal-quarter report that falls inside the window the cohort was live.</p></li>
-      <li><h3>Take share counts, not weights</h3><p>N-PORT reports the actual share balance of every position. Creations and redemptions scale all holdings proportionally, so relative weights can be rebuilt for any date inside the window.</p></li>
-      <li><h3>Reprice at the rebalance date</h3><p>Shares × the close on the first session after each reconstitution gives the portfolio exactly as it stood when it went live — the third Friday of March or September, plus one day.</p></li>
-      <li><h3>Validate the arithmetic</h3><p>N-PORT's reported market value divided by shares must equal that day's close. Nvidia on 29 May 2026: implied $211.14, actual $211.14. Exact to the cent.</p></li>
-      <li><h3>Rank, combine, measure</h3><p>Dual share classes merge into one company — Alphabet's A and C shares are a single position — then the top 10, 15 and 20 are taken and held to the next reconstitution.</p></li>
+      <li><h3>N-PORT for 2019 onward</h3><p>Fourteen NPORT-P filings for series S000050154, one per cohort — the quarterly report falling inside each window.</p></li>
+      <li><h3>Annual reports for 2016–2019</h3><p>Six N-CSR and N-CSRS filings, each a 20MB document covering the whole trust. SPMO's schedule of investments was located and parsed out of each — the column order flips between report styles, so both layouts are handled.</p></li>
+      <li><h3>Take share counts, not weights</h3><p>Both families report actual share balances. Creations and redemptions scale every position proportionally, so relative weights can be rebuilt for any date inside the window.</p></li>
+      <li><h3>Reprice at the rebalance date</h3><p>Shares × the close on the first session after each reconstitution reproduces the portfolio as it stood when it went live.</p></li>
+      <li><h3>Validate the arithmetic</h3><p>Reported market value ÷ shares must equal that day's close. Nvidia, 29 May 2026: implied $211.14, actual $211.14. Exxon: seven filing-derived closes matched the price series to the cent.</p></li>
+      <li><h3>Rank, combine, measure</h3><p>Dual share classes merge into one company — Alphabet's A and C are a single position — then the top 10, 15 and 20 are held to the next reconstitution.</p></li>
     </ol>
-  </div>
-</section>
-
-<section>
-  <div class="rule"><p class="eyebrow">Against QQQ</p><div class="spacer"></div></div>
-  <div class="col">
-    <p>QQQ is the obvious alternative — the same era, a similar technology tilt, and a rule simple enough to never need a study. It holds the hundred largest non-financial Nasdaq listings and rebalances by size, not by trend.</p>
-    <p>The momentum book beat it on <strong>both</strong> axes: seventy-one points more cumulative return, and a maximum drawdown a third shallower. That combination is unusual — most return advantages are paid for in drawdown.</p>
-  </div>
-  <div class="tiles" style="margin-top:24px">
-    <div class="tile hero"><div class="k">Cumulative</div><div class="v">+171.5%</div><div class="c">QQQ +99.9%</div></div>
-    <div class="tile"><div class="k">Max drawdown</div><div class="v">−23.5%</div><div class="c">QQQ −35.6%</div></div>
-    <div class="tile"><div class="k">Sharpe</div><div class="v">1.06</div><div class="c">QQQ 0.64</div></div>
-    <div class="tile"><div class="k">Capture</div><div class="v">87 / 73</div><div class="c">up / down, monthly</div></div>
-  </div>
-  <div class="col" style="margin-top:28px">
-    <p>It won 7 of 10 cohorts and 34 of 60 months — a thin majority that understates the gap, because the wins landed where they mattered. <strong>QQQ's five worst months were all in 2022, and the momentum book beat every one of them</strong>, by 2.3 to 8.9 points. At QQQ's deepest trough, −35.6% in December 2022, the strategy was down 10.9%.</p>
-    <p>The reason is structural rather than lucky. By late 2022 the momentum index had rotated its largest weights into Exxon, UnitedHealth, Chevron and Merck — it was barely a technology fund at all while technology was repricing. QQQ has no such option; its membership rule admits nothing outside the Nasdaq, whatever the trend.</p>
-    <p>The same mechanism costs it on the way back. Momentum re-enters late, and January 2023 is the clean example: QQQ returned +10.6% as technology bottomed while the strategy, still holding energy and defensives, lost 3.3% — a fourteen-point miss in a single month.</p>
-    <div class="callout"><strong>The caveat that matters today:</strong> eleven of the current fifteen holdings are Nasdaq-100 members, and they carry 82% of the book. Right now this portfolio is close to a concentrated QQQ with a semiconductor overweight. The rotation option is what earned the historical edge — and at the moment it is unused.</div>
   </div>
 </section>
 
@@ -358,16 +370,16 @@
   <div class="rule"><p class="eyebrow">Provenance &amp; limits</p><div class="spacer"></div></div>
   <div class="notes">
     <dl>
-      <dt>One reconstructed price series</dt>
-      <dd>Exxon's market history does not exist before mid-2026 — its 2026 redomiciliation into ExxonMobil Holdings Corp reset the listing record, and no data source carries the earlier series. Its prices were recovered from N-PORT's market-value-over-shares instead, using the nearest quarter-end where a rebalance-date figure was unavailable. Excluding Exxon entirely moves the top-10 result from +171.1% to +171.6%, so no conclusion rests on it.</dd>
-      <dt>Two names at the top-20 boundary</dt>
-      <dd>Pioneer Natural Resources (1.07%, delisted when Exxon acquired it) and Marsh &amp; McLennan (1.23%) have no data in the price source and would each sit around the twentieth slot. The top-20 column therefore carries slightly more uncertainty than the 10 and 15 columns.</dd>
+      <dt>A prior caveat, now resolved</dt>
+      <dd>The five-year edition of this study reconstructed Exxon's prices, because its 2026 redomiciliation appeared to have erased the earlier series. Querying the full decade returns the continuous adjusted series, and it matches all seven filing-derived closes exactly. Every Exxon figure here is market data, and the affected cohorts have been recomputed — which is why the five-year numbers are slightly higher than previously published.</dd>
+      <dt>Three price gaps, each about 1–2% of one cohort</dt>
+      <dd>Dow Chemical (1.9%, 2017 — pre-DowDuPont, no continuous series), Pioneer Natural Resources (1.1%, 2022 — delisted into Exxon) and Marsh &amp; McLennan (1.2%, 2023 — absent from the price source). Each would sit near the twentieth slot, so the top-20 column carries marginally more uncertainty than 10 and 15.</dd>
+      <dt>One incomplete filing parse</dt>
+      <dd>The August 2019 annual report yielded 87 of roughly 100 holdings; the missing names are small and collectively about 12% of the fund. Ranking at the top of the book — which is all that selection depends on — reconciles with the report's own stated figures.</dd>
       <dt>Price-only, cost-free</dt>
-      <dd>No dividends, which understates the 2022–23 energy and pharma cohorts by roughly 1.5–2% a year. No spreads, slippage or taxes either — and that matters most for the recommendation, since the weekly-rebalance edge is the part most exposed to trading costs, and in a taxable account every rebalance realizes short-term gains.</dd>
-      <dt>Ten cohorts, one regime</dt>
-      <dd>Five years spanning a post-pandemic recovery and an AI capital-expenditure boom. Momentum did unusually well; SPY's own 12.3% annualized was strong by historical standards. Ten observations cannot separate skill from period.</dd>
-      <dt>An earlier read this replaces</dt>
-      <dd>Tested over only the two most recent cohorts, equal weighting appeared to beat cap weighting by six points. Extended to ten, it wins five and loses five, and loses the cumulative race by twenty-four points. The two-cohort finding was a sample artifact and should be disregarded.</dd>
+      <dd>No dividends, which understates the income-heavier cohorts of 2016–2019 and 2022–2023 by roughly 1.5–2% a year, and understates SPY similarly. No spreads, slippage or taxes — and that matters most for the weekly-rebalance edge, the single largest contributor to the strategy's advantage and the one most exposed to trading costs.</dd>
+      <dt>Twenty cohorts is still a small sample</dt>
+      <dd>Ten years covering one long bull market, one pandemic crash, one inflation shock and one AI boom. Momentum did well; so did almost everything. The five-versus-ten-year split in this study is the clearest evidence available that these results are regime-dependent.</dd>
     </dl>
   </div>
 </section>
@@ -375,13 +387,13 @@
 <section>
   <div class="rule"><p class="eyebrow">Decision</p><div class="spacer"></div></div>
   <div class="col">
-    <p><strong>The live portfolio now mirrors SPMO's top 15 companies at the fund's own weights, rebalanced every Friday.</strong> Alphabet's two share classes are held as a single position in Class A. Fifteen positions on the current account size is roughly $790 each, comfortably tradeable with fractional shares.</p>
-    <p>The configuration was not chosen because it topped the return table — the top-10 book did, by 1.2 points. It was chosen because it gives that up for a smaller drawdown, lower volatility and the better Sharpe, and because the margin over ten names is well inside what ten cohorts can resolve.</p>
+    <p><strong>The live portfolio mirrors SPMO's top 15 companies at the fund's own weights, rebalanced every Friday.</strong> Alphabet's two share classes are held as a single position in Class A.</p>
+    <p>The decade confirms the size choice and the weighting choice, and strengthens the case for the weekly cadence. It also removes a story the five-year study seemed to tell: this is not a strategy that reliably beats a Nasdaq index fund. Over ten years it beat QQQ by 41 points and lost to it in nine of twenty cohorts, earning its keep through a shallower drawdown rather than a higher return.</p>
   </div>
 </section>
 
 <footer>
-  Holdings: SEC EDGAR NPORT-P, Invesco Exchange-Traded Fund Trust II, CIK 1378872, series S000050154 · Current holdings: Invesco product data, effective 14 Aug 2026 · Prices: split-adjusted daily closes<br>
+  Holdings: SEC EDGAR — NPORT-P (2019–2026) and N-CSR / N-CSRS (2016–2019), Invesco Exchange-Traded Fund Trust II, CIK 1378872, series S000050154 · Current holdings: Invesco product data, effective 14 Aug 2026 · Prices: split-adjusted daily closes<br>
   Backtest is historical and hypothetical. Past performance does not predict future returns.
 </footer>
 
