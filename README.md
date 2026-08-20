@@ -4,6 +4,7 @@ A stock analysis dashboard fed by MCP data pulls:
 
 - **Robinhood MCP** — real-time quotes, daily OHLCV history (1 year), fundamentals
 - **Liquid (Co-Invest MCP)** — perp positioning (long share, bias, funding, open interest), curated market news, unusual-activity screen
+- **Public.com MCP** — option chains with Greeks: 30-day ATM implied volatility, expected move (ATM straddle), put/call volume & OI ratios, 25Δ skew, highest-OI strikes
 
 Open **`dashboard.html`** in any browser (no server needed). Everything is computed
 client-side from the embedded dataset.
@@ -18,6 +19,7 @@ client-side from the embedded dataset.
 | Suggested entry range | ATR- and support-anchored pullback zone below the current price |
 | Confidence | High/Medium/Low from a 7-signal checklist (MAs, RSI, MACD, OBV) |
 | Charts | Price with SMA 50/200 + Bollinger band + entry band overlay; volume vs 30-day average — with crosshair tooltips and 1M/3M/6M/1Y ranges |
+| Options market | 30d ATM IV vs realized vol, expected move by expiry, put/call ratios, 25Δ skew, highest-OI strikes |
 | Liquid positioning | Mark price, 24h change, long share %, bias, funding, open interest |
 | Fundamentals | Market cap, P/E, P/B, dividend yield, 52-week range, volumes |
 | Market news | Recent headlines + Liquid unusual-activity movers |
@@ -38,17 +40,25 @@ and re-derivable.
 
 ## Refreshing data / adding symbols
 
-Data is a snapshot (stamped in the header). To refresh or add symbols, ask Claude
-(in a session with the Robinhood + Co-Invest MCP servers connected) to:
+Two paths:
+
+**Live, in the published artifact** — the claude.ai artifact version declares the
+`mcp` runtime capability, so a **Refresh data** button appears when viewed on
+claude.ai with the Robinhood, Co-Invest, and Public connectors available. It
+re-pulls everything through the viewer's own connectors (quotes, bars,
+fundamentals, news, positioning, option chains), recomputes in the page, and
+persists to `localStorage`. Adding a new symbol tab auto-pulls that symbol the
+same way.
+
+**Via Claude** — data is otherwise a snapshot (stamped in the header). Ask Claude
+(in a session with the Robinhood + Co-Invest + Public MCP servers connected) to:
 
 1. Pull for each symbol: `get_equity_quotes`, `get_equity_fundamentals`,
-   `get_equity_historicals` (1 year, `interval: day`), and Liquid
-   `analyze_markets_batch` + `get_news`.
+   `get_equity_historicals` (1 year, `interval: day`), Liquid
+   `analyze_markets_batch` + `get_news`, and Public `get_option_chain` for the
+   expiration nearest 30 days.
 2. Regenerate `data/analysis.json` in the documented shape (see the existing file:
    `bars` are `[date, open, high, low, close, volume]`).
 3. Run `python3 scripts/build_dashboard.py`.
-
-A symbol tab added in the UI without embedded data shows a prompt explaining
-exactly that.
 
 > Informational tool only — not investment advice.

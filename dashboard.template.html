@@ -187,6 +187,24 @@
 
   .placeholder { padding: 32px; text-align: center; color: var(--ink-2); }
   .placeholder code { background: var(--chip); border-radius: 5px; padding: 2px 6px; }
+  .refreshwrap { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; }
+  #refreshbtn {
+    display: none; align-items: center; gap: 7px;
+    padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--ink-1); font: 600 13px/1 system-ui; cursor: pointer;
+  }
+  #refreshbtn:hover { box-shadow: inset 0 0 0 1px var(--series-1); }
+  #refreshbtn:disabled { opacity: 0.6; cursor: default; }
+  #refreshbtn .spin {
+    width: 12px; height: 12px; border-radius: 50%; display: none;
+    border: 2px solid var(--meter-track); border-top-color: var(--series-1);
+    animation: spin 0.8s linear infinite;
+  }
+  #refreshbtn.busy .spin { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { #refreshbtn .spin { animation-duration: 2.4s; } }
+  #refreshstatus { color: var(--ink-3); font-size: 12px; max-width: 480px; }
+  #refreshstatus.warn { color: var(--down); }
   .footer { margin-top: 20px; color: var(--ink-3); font-size: 12px; }
   .footer details { margin-top: 6px; }
   .footer summary { cursor: pointer; color: var(--ink-2); }
@@ -197,8 +215,12 @@
   <header class="top">
     <h1>Stock Analyzer</h1>
     <span class="asof" id="asof"></span>
+    <span class="refreshwrap">
+      <span id="refreshstatus"></span>
+      <button id="refreshbtn" type="button"><span class="spin"></span><span>Refresh data</span></button>
+    </span>
   </header>
-  <p class="srcline">Prices &amp; fundamentals via Robinhood MCP · positioning &amp; news via Liquid (Co-Invest MCP). To refresh or add a symbol’s data, ask Claude to re-run the analyzer.</p>
+  <p class="srcline" id="srcline">Prices &amp; fundamentals via Robinhood · options via Public.com · positioning &amp; news via Liquid (Co-Invest). Refresh pulls live data through your claude.ai connectors; otherwise ask Claude to re-run the analyzer.</p>
 
   <nav class="tabs" id="tabs" aria-label="Saved symbols"></nav>
 
@@ -218,7 +240,8 @@
       <div class="method">
         <p><b>Quality score (0–100)</b> = trend health 30 (price vs SMA 20/50/200, SMA 50 slope) + momentum 20 (RSI band, MACD histogram) + volume &amp; liquidity 15 (up/down-day volume ratio, dollar volume) + volatility regime 15 (ATR% and Bollinger-width percentile — calmer is better) + risk geometry 10 (drawdown from 52-week high) + valuation 10 (P/E sanity; neutral where N/A).</p>
         <p><b>Entry range</b> is a pullback zone: from max(support, price − 1.75×ATR) up to price − 0.25×ATR, where support is the higher of the lower Bollinger band and the nearer of SMA 20/50. It is a patience band under the current price, not a prediction.</p>
-        <p><b>Confidence</b> counts seven independent bullish signals (price &gt; SMA 20, price &gt; SMA 50, SMA 50 &gt; SMA 200, RSI 40–70, MACD histogram positive, MACD histogram rising, OBV rising): 5+ high, 3–4 medium, else low.</p>
+        <p><b>Confidence</b> counts independent bullish signals (price &gt; SMA 20, price &gt; SMA 50, SMA 50 &gt; SMA 200, RSI 40–70, MACD histogram positive, MACD histogram rising, OBV rising — plus, when options data is present, implied vol below 1.5× realized and put/call open interest below 1.2): ≥70% aligned is high, ≥43% medium, else low.</p>
+        <p><b>Options metrics</b> (via Public.com) come from the option chain nearest 30 days out: ATM implied volatility averages the at-the-money call and put IV; the expected move is the ATM straddle mid-price; 25Δ skew is the 25-delta put IV minus the 25-delta call IV (higher = more downside fear); highest-OI strikes often act as magnets/pins near expiry.</p>
         <p>This tool is informational only and is not investment advice.</p>
       </div>
     </details>
@@ -230,7 +253,7 @@
 <script id="analysis-data" type="application/json">__ANALYSIS_DATA__</script>
 <script>
 "use strict";
-const DATA = JSON.parse(document.getElementById("analysis-data").textContent);
+let DATA = JSON.parse(document.getElementById("analysis-data").textContent);
 const SYMS = Object.keys(DATA.symbols);
 const LS_TABS = "stock-analyzer.tabs";
 const LS_ACTIVE = "stock-analyzer.active";
@@ -360,8 +383,12 @@ function analyze(d) {
     ["MACD histogram rising", m.hist[i] !== null && m.hist[i - 1] !== null && m.hist[i] > m.hist[i - 1]],
     ["OBV rising (20d)", obvSlopeUp],
   ];
+  const opt = d.options || null;
+  if (opt && opt.atmIV != null) signals.push(["IV below 1.5× realized vol", opt.atmIV < 1.5 * annVol]);
+  if (opt && opt.pcOIRatio != null) signals.push(["Put/call OI ratio below 1.2", opt.pcOIRatio < 1.2]);
   const onCount = signals.filter(s => s[1]).length;
-  const confidence = onCount >= 5 ? "High" : onCount >= 3 ? "Medium" : "Low";
+  const frac = onCount / signals.length;
+  const confidence = frac >= 0.7 ? "High" : frac >= 0.43 ? "Medium" : "Low";
 
   // --- entry range ---
   const A = a[i];
@@ -439,6 +466,7 @@ function renderTabs() {
     if (!s || !/^[A-Z.]{1,6}$/.test(s)) return;
     if (!tabs.includes(s)) tabs.push(s);
     active = s; inp.value = ""; saveTabs(); renderAll();
+    if (!DATA.symbols[s] && LIVE.mcp) pullSymbols([s]);
   };
   btn.addEventListener("click", doAdd);
   inp.addEventListener("keydown", ev => { if (ev.key === "Enter") doAdd(); });
@@ -615,12 +643,22 @@ function renderSymbol(main, sym) {
   const d = DATA.symbols[sym];
   if (!d) {
     const c = el("div", "card placeholder");
-    c.append(el("div", null, "No data pulled yet for " + sym + "."));
-    const p = el("p");
-    p.append("Ask Claude to refresh the analyzer with this symbol — e.g. ");
-    const code = el("code", null, `analyze ${sym} and rebuild the dashboard`);
-    p.appendChild(code);
-    c.appendChild(p);
+    if (LIVE.pulling.has(sym)) {
+      c.append(el("div", null, "Pulling live data for " + sym + "…"));
+    } else if (LIVE.mcp) {
+      c.append(el("div", null, "No data yet for " + sym + "."));
+      const btn = el("button", null, "Pull data now");
+      btn.style.cssText = "margin-top:10px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface-1);color:var(--ink-1);font:600 13px/1 system-ui;cursor:pointer";
+      btn.addEventListener("click", () => pullSymbols([sym]));
+      c.appendChild(btn);
+    } else {
+      c.append(el("div", null, "No data pulled yet for " + sym + "."));
+      const p = el("p");
+      p.append("Ask Claude to refresh the analyzer with this symbol — e.g. ");
+      const code = el("code", null, `analyze ${sym} and rebuild the dashboard`);
+      p.appendChild(code);
+      c.appendChild(p);
+    }
     main.appendChild(c);
     return;
   }
@@ -640,8 +678,10 @@ function renderSymbol(main, sym) {
   tiles.appendChild(tile("Quality score", an.quality + " / 100",
     an.quality >= 70 ? "Strong composite" : an.quality >= 50 ? "Moderate composite" : "Weak composite", an.quality));
   tiles.appendChild(tile("Trend", an.trend, an.trendSub));
-  tiles.appendChild(tile("Volatility", an.vol.atrPct.toFixed(2) + "% ATR",
-    `${Math.round(an.vol.annVol)}% annualized · ${an.vol.regime} regime`));
+  const volSub = d.options && d.options.atmIV != null
+    ? `${Math.round(an.vol.annVol)}% realized · ${d.options.atmIV}% implied (30d) · ${an.vol.regime} regime`
+    : `${Math.round(an.vol.annVol)}% annualized · ${an.vol.regime} regime`;
+  tiles.appendChild(tile("Volatility", an.vol.atrPct.toFixed(2) + "% ATR", volSub));
   tiles.appendChild(tile("Confidence", an.confidence, an.onCount + " of " + an.signals.length + " signals aligned"));
   const et = tile("Suggested entry range", "$" + fmtPx(an.entry.low) + " – $" + fmtPx(an.entry.high), "pullback zone vs current price");
   { const viz = el("div", "entryviz");
@@ -742,6 +782,33 @@ function renderSymbol(main, sym) {
     lq.lastChild.style.cssText = "color:var(--ink-2);font-size:13px";
   }
 
+  // options market (Public.com)
+  const op = el("div", "card");
+  op.appendChild(el("h2", "cardtitle", "Options market"));
+  if (d.options && d.options.atmIV != null) {
+    const o = d.options;
+    const sub = el("div", null, `${o.dte}-day chain · expires ${fmtDate(o.expiry)} · via Public.com`);
+    sub.style.cssText = "color:var(--ink-3);font-size:12px;margin:-6px 0 10px";
+    op.appendChild(sub);
+    const kv2 = el("div", "kv");
+    const rows2 = [
+      ["Implied vol (30d ATM)", o.atmIV.toFixed(1) + "%"],
+      ["Expected move by expiry", o.expectedMove != null ? `±$${fmtPx(o.expectedMove)} (±${o.expectedMovePct.toFixed(1)}%)` : "—"],
+      ["Put/call volume", o.pcVolRatio != null ? o.pcVolRatio.toFixed(2) : "—"],
+      ["Put/call open interest", o.pcOIRatio != null ? o.pcOIRatio.toFixed(2) : "—"],
+      ["25Δ skew (put − call)", o.skew25 != null ? (o.skew25 >= 0 ? "+" : "") + o.skew25.toFixed(1) + " pts" : "—"],
+      ["Highest-OI call strike", "$" + fmtPx(o.maxOICall) + " (" + fmtVol(o.maxOICallOI) + " OI)"],
+      ["Highest-OI put strike", "$" + fmtPx(o.maxOIPut) + " (" + fmtVol(o.maxOIPutOI) + " OI)"],
+      ["Chain volume / OI", fmtVol(o.totalVolume) + " / " + fmtVol(o.totalOI)],
+    ];
+    for (const [k, v] of rows2) { kv2.append(el("span", "k", k), el("span", "v", v)); }
+    op.appendChild(kv2);
+  } else {
+    const none = el("div", null, "No options data pulled for this symbol yet.");
+    none.style.cssText = "color:var(--ink-2);font-size:13px";
+    op.appendChild(none);
+  }
+
   // fundamentals
   const fu = el("div", "card");
   fu.appendChild(el("h2", "cardtitle", "Fundamentals"));
@@ -762,7 +829,7 @@ function renderSymbol(main, sym) {
   for (const [k, v] of rows) { kv.append(el("span", "k", k), el("span", "v", v)); }
   fu.appendChild(kv);
 
-  side.append(qb, sg, lq, fu);
+  side.append(qb, sg, op, lq, fu);
   grid.appendChild(side);
 }
 
@@ -795,14 +862,282 @@ function renderNews() {
   }
 }
 
+/* ---------- live refresh via claude.ai connectors (artifact mcp capability) ---------- */
+const LIVE = { mcp: null, servers: {}, pulling: new Set(), busy: false, publicAccount: null };
+const LS_DATA = "stock-analyzer.data.v2";
+
+function saveData() { try { localStorage.setItem(LS_DATA, JSON.stringify(DATA)); } catch (e) {} }
+function loadSavedData() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_DATA) || "null");
+    if (s && s.symbols && s.generatedAt >= DATA.generatedAt) DATA = s;
+  } catch (e) {}
+}
+
+// Connector payloads vary: object, JSON string, or {result: "<json>"} wrappers.
+function unwrap(payload) {
+  let x = payload;
+  for (let k = 0; k < 4; k++) {
+    if (typeof x === "string") { try { x = JSON.parse(x); } catch { break; } }
+    else if (x && typeof x === "object" && typeof x.result === "string") x = x.result;
+    else break;
+  }
+  return x;
+}
+
+function errMsg(e) {
+  const code = e && e.code, srv = (e && e.server) || "";
+  if (code === "needs_reauth") return `Reconnect ${srv || "the connector"} in claude.ai Settings → Connectors`;
+  if (code === "server_not_connected") return `Add ${srv || "the connector"} in claude.ai Settings → Connectors`;
+  if (code === "selection_required") return `Choose a ${srv} connector when prompted`;
+  if (code === "not_in_manifest" || code === "blocked_by_policy") return `${srv}: not permitted from this page`;
+  if (code === "approval_required") return `${srv}: requires approval`;
+  return `${srv || "connector"}: ${(e && e.message) || "call failed"}`;
+}
+
+async function call(server, tool, input) {
+  try {
+    const r = await LIVE.mcp.callTool(server, tool, input);
+    return unwrap(r.payload);
+  } catch (e) {
+    if (e && e.retryable) {
+      await new Promise(res => setTimeout(res, (e.retryAfterMs || 1500) + Math.random() * 1000));
+      const r = await LIVE.mcp.callTool(server, tool, input);
+      return unwrap(r.payload);
+    }
+    throw e;
+  }
+}
+
+const chunks = (a, n) => { const out = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
+const numOf = v => { if (v == null) return null; const n = parseFloat(v); return isFinite(n) ? n : null; };
+
+function applyRobinhood(qres, fres, hres) {
+  for (const r of qres) {
+    const sym = r.quote && r.quote.symbol; if (!sym) continue;
+    const s = DATA.symbols[sym] || (DATA.symbols[sym] = { symbol: sym, quote: {}, fundamentals: { name: sym }, liquid: null, bars: [] });
+    s.quote = {
+      last: numOf(r.quote.last_trade_price),
+      prevClose: numOf(r.quote.adjusted_previous_close != null ? r.quote.adjusted_previous_close : r.quote.previous_close),
+      bid: numOf(r.quote.bid_price), ask: numOf(r.quote.ask_price),
+    };
+  }
+  for (const r of fres) {
+    const s = DATA.symbols[r.symbol]; if (!s) continue;
+    const f = s.fundamentals || (s.fundamentals = {});
+    Object.assign(f, {
+      name: f.name || r.symbol,
+      sector: r.sector || f.sector, industry: r.industry || f.industry,
+      marketCap: numOf(r.market_cap), peRatio: numOf(r.pe_ratio), pbRatio: numOf(r.pb_ratio),
+      dividendYield: numOf(r.dividend_yield),
+      avgVolume30d: numOf(r.average_volume_30_days), avgVolume2w: numOf(r.average_volume_2_weeks),
+      todayVolume: numOf(r.volume),
+      high52w: numOf(r.high_52_weeks), high52wDate: r.high_52_weeks_date,
+      low52w: numOf(r.low_52_weeks), low52wDate: r.low_52_weeks_date,
+      sharesFloat: numOf(r.float), ceo: r.ceo || f.ceo,
+      hq: r.headquarters_city ? r.headquarters_city + ", " + r.headquarters_state : f.hq,
+    });
+  }
+  for (const r of hres) {
+    const s = DATA.symbols[r.symbol]; if (!s) continue;
+    const bars = [];
+    for (const b of r.bars || []) {
+      if (b.interpolated) continue;
+      bars.push([b.begins_at.slice(0, 10), numOf(b.open_price), numOf(b.high_price), numOf(b.low_price), numOf(b.close_price), b.volume]);
+    }
+    if (bars.length) s.bars = bars;
+  }
+}
+
+function applyNews(n) {
+  const text = typeof n === "string" ? n : (n && n.text) || "";
+  const news = [], ua = [];
+  let inUA = false;
+  for (const line of text.split("\n")) {
+    if (/unusual activity/i.test(line)) { inUA = true; continue; }
+    let m;
+    if (!inUA && (m = line.match(/^\s*\d+\.\s+(.+?)\s+—\s+(.+?)\s+\((https?:\/\/[^\s)]+)\)\s*$/)))
+      news.push({ title: m[1], source: m[2], url: m[3] });
+    else if (inUA && (m = line.match(/^\s*\d+\.\s+([A-Z0-9.]+)\s+—\s+([\d.]+)x[^(]*\((\$[\d.,]+[KMB]?)\s+last hour\)/)))
+      ua.push({ symbol: m[1], ratio: parseFloat(m[2]), lastHour: m[3] });
+  }
+  if (news.length >= 3) DATA.news = news;
+  if (ua.length) DATA.unusualActivity = ua;
+}
+
+function compactUsd(x) {
+  const n = parseFloat(String(x).replace(/[$,]/g, ""));
+  return isFinite(n) ? fmtBig(n) : String(x);
+}
+
+function applyLiquid(batch) {
+  for (const s of (batch && batch.snapshots) || []) {
+    const sym = s.displayName || (s.symbol || "").split(":").pop();
+    const d = DATA.symbols[sym]; if (!d) continue;
+    d.liquid = {
+      markPx: numOf(s.markPx), change24h: s.change24h,
+      funding: s.funding, openInterest: compactUsd(s.openInterest),
+      longSharePct: s.longSharePct, bias: s.bias, maxLeverage: s.maxLeverage, cohort: s.positioningCohort,
+    };
+  }
+}
+
+function computeOptions(chain, spot) {
+  const side = arr => (arr || []).map(c => {
+    const det = c.optionDetails || {}, g = det.greeks || {};
+    return { strike: numOf(det.strikePrice), mid: numOf(det.midPrice), iv: numOf(g.impliedVolatility),
+             delta: numOf(g.delta), vol: c.volume || 0, oi: c.openInterest || 0 };
+  });
+  const calls = side(chain && chain.calls), puts = side(chain && chain.puts);
+  if (!calls.length || !puts.length || !spot) return null;
+  const near = (a, key, t) => { const ok = a.filter(x => x[key] != null); return ok.length ? ok.reduce((p, c) => Math.abs(c[key] - t) < Math.abs(p[key] - t) ? c : p) : null; };
+  const ac = near(calls.filter(c => c.mid != null && c.iv), "strike", spot);
+  const ap = near(puts.filter(p => p.mid != null && p.iv), "strike", spot);
+  if (!ac || !ap) return null;
+  const atmIV = ((ac.iv + ap.iv) / 2) * 100;
+  const straddle = ac.strike === ap.strike ? ac.mid + ap.mid : null;
+  const sum = (a, k) => a.reduce((x, y) => x + y[k], 0);
+  const cvol = sum(calls, "vol"), pvol = sum(puts, "vol"), coi = sum(calls, "oi"), poi = sum(puts, "oi");
+  const c25 = near(calls.filter(c => c.iv), "delta", 0.25), p25 = near(puts.filter(p => p.iv), "delta", -0.25);
+  const top = a => a.reduce((p, c) => (c.oi > p.oi ? c : p));
+  const tc = top(calls), tp = top(puts);
+  return {
+    atmStrike: ac.strike, atmIV: Math.round(atmIV * 10) / 10,
+    expectedMove: straddle != null ? Math.round(straddle * 100) / 100 : null,
+    expectedMovePct: straddle != null ? Math.round(10000 * straddle / spot) / 100 : null,
+    pcVolRatio: cvol ? Math.round(100 * pvol / cvol) / 100 : null,
+    pcOIRatio: coi ? Math.round(100 * poi / coi) / 100 : null,
+    skew25: c25 && p25 ? Math.round((p25.iv - c25.iv) * 1000) / 10 : null,
+    maxOICall: tc.strike, maxOICallOI: tc.oi, maxOIPut: tp.strike, maxOIPutOI: tp.oi,
+    totalVolume: cvol + pvol, totalOI: coi + poi,
+  };
+}
+
+async function pullOptions(sym) {
+  const acct = LIVE.publicAccount;
+  const ex = await call(LIVE.servers.public, "get_option_expirations", { symbol: sym, account_id: acct });
+  const exps = (ex && ex.expirations) || [];
+  if (!exps.length) return;
+  const now = Date.now();
+  let best = null, bestScore = Infinity;
+  for (const e of exps) {
+    const dte = Math.round((new Date(e + "T20:00:00Z") - now) / 86400e3);
+    if (dte < 7) continue;
+    const score = Math.abs(dte - 30);
+    if (score < bestScore) { bestScore = score; best = { e, dte }; }
+  }
+  if (!best) return;
+  const chain = await call(LIVE.servers.public, "get_option_chain", { symbol: sym, expiration_date: best.e, account_id: acct });
+  const o = computeOptions(chain, DATA.symbols[sym].quote.last);
+  if (o) DATA.symbols[sym].options = Object.assign({ expiry: best.e, dte: best.dte }, o);
+}
+
+async function pullSymbols(symbols, isFull) {
+  if (!LIVE.mcp || LIVE.busy || !symbols.length) return;
+  LIVE.busy = true;
+  symbols.forEach(s => LIVE.pulling.add(s));
+  const btn = document.getElementById("refreshbtn"), st = document.getElementById("refreshstatus");
+  btn.classList.add("busy"); btn.disabled = true;
+  st.classList.remove("warn");
+  const problems = [];
+  const setSt = t => { st.textContent = t; };
+  renderAll();
+  try {
+    setSt("Pulling quotes, fundamentals & history…");
+    try {
+      const qres = [], fres = [], hres = [];
+      for (const grp of chunks(symbols, 10)) {
+        const [qs, fs, hs] = await Promise.all([
+          call(LIVE.servers.robinhood, "get_equity_quotes", { symbols: grp }),
+          call(LIVE.servers.robinhood, "get_equity_fundamentals", { symbols: grp }),
+          call(LIVE.servers.robinhood, "get_equity_historicals", {
+            symbols: grp,
+            start_time: new Date(Date.now() - 370 * 86400e3).toISOString(),
+            interval: "day",
+          }),
+        ]);
+        qres.push(...(((qs || {}).data || {}).results || []));
+        fres.push(...(((fs || {}).data || {}).results || []));
+        hres.push(...(((hs || {}).data || {}).results || []));
+      }
+      applyRobinhood(qres, fres, hres);
+    } catch (e) { problems.push(errMsg(e)); }
+    for (const sym of symbols) {
+      const s = DATA.symbols[sym];
+      if (s && (!s.bars || s.bars.length < 30 || s.quote.last == null)) {
+        delete DATA.symbols[sym];
+        problems.push("No usable data for " + sym);
+      }
+    }
+    setSt("Pulling news & positioning…");
+    try { applyNews(await call(LIVE.servers.coinvest, "get_news", {})); }
+    catch (e) { problems.push(errMsg(e)); }
+    const liqSyms = symbols.filter(s => DATA.symbols[s]);
+    if (liqSyms.length >= 2) {
+      try { applyLiquid(await call(LIVE.servers.coinvest, "analyze_markets_batch", { symbols: liqSyms.slice(0, 10) })); }
+      catch (e) { problems.push(errMsg(e)); }
+    }
+    try {
+      if (!LIVE.publicAccount) {
+        const acc = await call(LIVE.servers.public, "get_accounts", {});
+        const b = (((acc || {}).accounts) || []).filter(a => a.accountType === "BROKERAGE");
+        LIVE.publicAccount = b.length === 1 ? b[0].accountId : null;
+      }
+      if (LIVE.publicAccount) {
+        for (const sym of symbols) {
+          if (!DATA.symbols[sym]) continue;
+          setSt("Pulling options chain for " + sym + "…");
+          try { await pullOptions(sym); } catch (e) { problems.push(sym + " options: " + errMsg(e)); }
+        }
+      }
+    } catch (e) { problems.push(errMsg(e)); }
+
+    DATA.generatedAt = new Date().toISOString();
+    saveData();
+  } finally {
+    symbols.forEach(s => LIVE.pulling.delete(s));
+    LIVE.busy = false;
+    btn.classList.remove("busy"); btn.disabled = false;
+    document.getElementById("asof").textContent = "data as of " + new Date(DATA.generatedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+    if (problems.length) { st.classList.add("warn"); st.textContent = problems.slice(0, 2).join(" · ") + (problems.length > 2 ? " (+" + (problems.length - 2) + " more)" : ""); }
+    else setSt("Updated just now");
+    renderAll();
+  }
+}
+
+async function initLive() {
+  if (!(window.claude && window.claude.use)) return;
+  try { LIVE.mcp = await window.claude.use("mcp"); } catch (e) { LIVE.mcp = null; }
+  if (!LIVE.mcp) return;
+  try {
+    const lt = await LIVE.mcp.listTools();
+    for (const s of lt.servers || []) {
+      const k = s.server.toLowerCase();
+      if (k.includes("robinhood")) LIVE.servers.robinhood = s.server;
+      else if (k.includes("invest") || k.includes("liquid")) LIVE.servers.coinvest = s.server;
+      else if (k.includes("public")) LIVE.servers.public = s.server;
+    }
+  } catch (e) { /* fall back to manifest names below */ }
+  if (!LIVE.servers.robinhood) LIVE.servers.robinhood = "robinhood";
+  if (!LIVE.servers.coinvest) LIVE.servers.coinvest = "co-invest";
+  if (!LIVE.servers.public) LIVE.servers.public = "public";
+  const btn = document.getElementById("refreshbtn");
+  btn.style.display = "inline-flex";
+  btn.addEventListener("click", () => pullSymbols(tabs.slice(), true));
+  renderAll();
+}
+
 /* ---------- boot ---------- */
 function renderAll() {
   renderTabs();
+  renderNews();
   const main = document.getElementById("main");
   main.replaceChildren();
   renderSymbol(main, active);
 }
+loadSavedData();
 document.getElementById("asof").textContent = "data as of " + new Date(DATA.generatedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 renderNews();
 renderAll();
+initLive();
 </script>

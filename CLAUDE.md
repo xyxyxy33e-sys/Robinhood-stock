@@ -9,6 +9,11 @@ The dashboard (`dashboard.html`) is built from `dashboard.template.html` +
    and `get_equity_historicals` with `interval: "day"` and `start_time` one year back.
 2. Pull once (Co-Invest / Liquid MCP): `analyze_markets_batch` for all symbols
    (skip failures — not every equity is tradable on Liquid) and `get_news`.
+2b. Pull options (Public MCP): `get_option_chain` per symbol for the expiration
+   nearest 30 days (account: the sole BROKERAGE account from `get_accounts`).
+   Compute per-symbol `options` metrics exactly as `computeOptions()` in the
+   template does (ATM IV, straddle expected move, P/C ratios, 25Δ skew, max-OI
+   strikes) — or adapt `scratchpad` script `add_options.py` from session history.
 3. Update `data/analysis.json`, keeping the existing shape:
    - top level: `generatedAt`, `sources`, `news[] {title, source, url}`,
      `unusualActivity[] {symbol, ratio, lastHour}`, `symbols{}`
