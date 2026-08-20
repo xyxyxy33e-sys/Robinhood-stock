@@ -126,6 +126,8 @@
   tr.total td{border-top:2px solid var(--line-strong); border-bottom:none; font-weight:650; background:var(--surface-2)}
   .win{font-family:var(--mono); font-size:12px; color:var(--ink)}
   .src{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+  .bar-row.alt .fill{background:var(--muted);opacity:.55}
+  .bar-row.alt .lbl{color:var(--muted)}
   .leaders{font-size:12px; color:var(--muted); max-width:190px; white-space:normal}
   .up{color:var(--pos)} .dn{color:var(--neg)}
   td.pick{background:var(--accent-soft)}
@@ -183,7 +185,7 @@
   <div class="col">
     <p class="eyebrow">Strategy Research · Ten-Year Edition · August 2026</p>
     <h1>SPMO Mirror Study</h1>
-    <p class="lede">Twenty semi-annual rebalance cohorts, reconstructed from SEC filings back to 2016. Holding SPMO's <strong>top fifteen at the fund's own weights</strong> beat the fund, the index and QQQ — but the margin over QQQ is far thinner across the decade than the last five years suggest.</p>
+    <p class="lede">Twenty semi-annual rebalance cohorts, reconstructed from SEC filings back to 2016. Holding SPMO's <strong>top fifteen at the fund's own weights</strong> beat the fund and QQQ — but the margin over QQQ is far thinner across the decade than the last five years suggest, and a further edge available from weekly rebalancing is deliberately left on the table.</p>
   </div>
   <div class="meta">
     <span><b>Period</b> Sep 2016 – Aug 2026</span>
@@ -196,13 +198,13 @@
 <section style="margin-top:0">
   <div class="verdict">
     <p class="eyebrow">The chosen configuration</p>
-    <h2>Top 15 companies, cap-weighted, rebalanced weekly</h2>
-    <p style="max-width:60ch;margin-bottom:0">Best total return <em>and</em> best risk-adjusted return of every size and weighting tested, over both the five-year and the ten-year window.</p>
+    <h2>Top 15 companies, held at SPMO's own weights</h2>
+    <p style="max-width:60ch;margin-bottom:0">Best size and best weighting of every combination tested, across both the five-year and ten-year windows. Because the portfolio holds the same names as the fund, its weights drift exactly as the fund's do — so tracking SPMO's live weights requires almost no trading.</p>
     <div class="tiles">
-      <div class="tile hero"><div class="k">Total return</div><div class="v">+567%</div><div class="c">10 years</div></div>
-      <div class="tile"><div class="k">CAGR</div><div class="v">21.1%</div><div class="c">SPMO 19.3% · QQQ 20.4%</div></div>
-      <div class="tile"><div class="k">Max drawdown</div><div class="v">−29.4%</div><div class="c">QQQ −35.6% · SPY −34.1%</div></div>
-      <div class="tile"><div class="k">Sharpe</div><div class="v">1.00</div><div class="c">SPMO 0.92 · QQQ 0.90</div></div>
+      <div class="tile hero"><div class="k">Total return</div><div class="v">+530%</div><div class="c">10 years, as implemented</div></div>
+      <div class="tile"><div class="k">CAGR</div><div class="v">20.4%</div><div class="c">SPMO 19.3% · QQQ 20.4%</div></div>
+      <div class="tile"><div class="k">Max drawdown</div><div class="v">−29.5%</div><div class="c">QQQ −35.6% · SPY −34.1%</div></div>
+      <div class="tile"><div class="k">Sharpe</div><div class="v">0.95</div><div class="c">SPMO 0.92 · QQQ 0.90</div></div>
     </div>
   </div>
 </section>
@@ -211,17 +213,16 @@
   <div class="rule"><p class="eyebrow">Ten-year cumulative return</p><div class="spacer"></div></div>
   <figure>
     <div class="bars">
-      <div class="bar-row pick"><div class="lbl">Top 15 · cap</div><div class="track"><div class="fill" style="width:100%"></div><span class="val">+567%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 20 · cap</div><div class="track"><div class="fill" style="width:96.7%"></div><span class="val">+549%</span></div></div>
+      <div class="bar-row alt"><div class="lbl">T15 cap · weekly reset</div><div class="track"><div class="fill" style="width:100%"></div><span class="val">+567%</span></div></div>
+      <div class="bar-row pick"><div class="lbl">T15 cap · SPMO wts</div><div class="track"><div class="fill" style="width:93.5%"></div><span class="val">+530%</span></div></div>
       <div class="bar-row bench"><div class="lbl">QQQ</div><div class="track"><div class="fill" style="width:92.8%"></div><span class="val">+526%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 10 · cap</div><div class="track"><div class="fill" style="width:91.8%"></div><span class="val">+520%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 15 · equal</div><div class="track"><div class="fill" style="width:86.8%"></div><span class="val">+492%</span></div></div>
+      <div class="bar-row"><div class="lbl">T20 cap · SPMO wts</div><div class="track"><div class="fill" style="width:90.2%"></div><span class="val">+511%</span></div></div>
+      <div class="bar-row"><div class="lbl">T10 cap · SPMO wts</div><div class="track"><div class="fill" style="width:86.9%"></div><span class="val">+493%</span></div></div>
       <div class="bar-row bench"><div class="lbl">SPMO ETF</div><div class="track"><div class="fill" style="width:83.4%"></div><span class="val">+473%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 20 · equal</div><div class="track"><div class="fill" style="width:80.7%"></div><span class="val">+457%</span></div></div>
-      <div class="bar-row"><div class="lbl">Top 10 · equal</div><div class="track"><div class="fill" style="width:71.1%"></div><span class="val">+403%</span></div></div>
+      <div class="bar-row"><div class="lbl">T15 equal · SPMO wts</div><div class="track"><div class="fill" style="width:80.7%"></div><span class="val">+458%</span></div></div>
       <div class="bar-row bench"><div class="lbl">SPY</div><div class="track"><div class="fill" style="width:46.5%"></div><span class="val">+264%</span></div></div>
     </div>
-    <figcaption>Sep 2016 – Aug 2026. Strategy rows rebalance weekly within each cohort; benchmarks in grey. Every cap-weighted size beat its equal-weighted twin, and the top-15 book beat QQQ — by 41 points across ten years, against 88 points in the last five alone.</figcaption>
+    <figcaption>Sep 2016 – Aug 2026. Benchmarks in grey. <strong>“SPMO wts” is the live method</strong> — hold the fund's current weights, which requires virtually no trading. The top bar is the weekly-reset variant, shown for comparison and <em>not</em> implemented; the gap between it and the live line is the rebalancing premium discussed below.</figcaption>
   </figure>
 </section>
 
@@ -288,9 +289,9 @@
       <p>Over five years the book beat QQQ by 88 points. Over ten, by 41 — and QQQ actually beat the top-15 <em>buy-and-hold</em> book. The advantage lives almost entirely in 2022–2026.</p>
     </div>
     <div class="finding">
-      <div class="n">Confirmed</div>
-      <h3>Weekly rebalancing pays</h3>
-      <p>The most durable effect in the study: +37 points at fifteen names over ten years, and it improved every size and weighting it touched, in both windows.</p>
+      <div class="n">Not harvested</div>
+      <h3>Weekly rebalancing pays — on paper</h3>
+      <p>Resetting to the reconstitution weights each week adds 37 points over ten years. It is a real effect, but capturing it costs 59% annual turnover in a taxable account, so this portfolio deliberately forgoes it.</p>
     </div>
   </div>
 </section>
@@ -301,13 +302,13 @@
     <table>
       <thead><tr><th class="l">Configuration</th><th>Total</th><th>CAGR</th><th>Max DD</th><th>Vol</th><th>Sharpe</th></tr></thead>
       <tbody>
-        <tr><td class="l" class="pick"><strong>Top 15 · cap · weekly</strong></td><td class="num" class="pick">+567.1</td><td class="num" class="pick">21.1</td><td class="num" class="pick">−29.4</td><td class="num" class="pick">21.0</td><td class="num" class="pick">1.0</td></tr>
-        <tr><td class="l">Top 20 · cap · weekly</td><td class="num">+548.6</td><td class="num">20.8</td><td class="num">−30.3</td><td class="num">20.7</td><td class="num">1.0</td></tr>
-        <tr><td class="l">Top 10 · cap · weekly</td><td class="num">+520.4</td><td class="num">20.2</td><td class="num">−30.2</td><td class="num">21.8</td><td class="num">0.93</td></tr>
-        <tr><td class="l">Top 15 · cap · buy &amp; hold</td><td class="num">+530.1</td><td class="num">20.4</td><td class="num">−29.5</td><td class="num">21.5</td><td class="num">0.95</td></tr>
-        <tr><td class="l">Top 10 · cap · buy &amp; hold</td><td class="num">+492.7</td><td class="num">19.7</td><td class="num">−30.3</td><td class="num">22.2</td><td class="num">0.89</td></tr>
-        <tr><td class="l">Top 15 · equal · weekly</td><td class="num">+492.4</td><td class="num">19.7</td><td class="num">−29.6</td><td class="num">20.0</td><td class="num">0.99</td></tr>
-        <tr><td class="l">Top 10 · equal · weekly</td><td class="num">+403.1</td><td class="num">17.7</td><td class="num">−31.5</td><td class="num">21.0</td><td class="num">0.84</td></tr>
+        <tr><td class="l" class="pick"><strong>Top 15 · cap · weekly reset</strong></td><td class="num" class="pick">+567.1</td><td class="num" class="pick">21.1</td><td class="num" class="pick">−29.4</td><td class="num" class="pick">21.0</td><td class="num" class="pick">1.0</td></tr>
+        <tr><td class="l">Top 20 · cap · weekly reset</td><td class="num">+548.6</td><td class="num">20.8</td><td class="num">−30.3</td><td class="num">20.7</td><td class="num">1.0</td></tr>
+        <tr><td class="l">Top 10 · cap · weekly reset</td><td class="num">+520.4</td><td class="num">20.2</td><td class="num">−30.2</td><td class="num">21.8</td><td class="num">0.93</td></tr>
+        <tr><td class="l">Top 15 · cap · SPMO wts (LIVE)</td><td class="num">+530.1</td><td class="num">20.4</td><td class="num">−29.5</td><td class="num">21.5</td><td class="num">0.95</td></tr>
+        <tr><td class="l">Top 10 · cap · SPMO wts</td><td class="num">+492.7</td><td class="num">19.7</td><td class="num">−30.3</td><td class="num">22.2</td><td class="num">0.89</td></tr>
+        <tr><td class="l">Top 15 · equal · weekly reset</td><td class="num">+492.4</td><td class="num">19.7</td><td class="num">−29.6</td><td class="num">20.0</td><td class="num">0.99</td></tr>
+        <tr><td class="l">Top 10 · equal · weekly reset</td><td class="num">+403.1</td><td class="num">17.7</td><td class="num">−31.5</td><td class="num">21.0</td><td class="num">0.84</td></tr>
         <tr><td class="l">SPMO ETF</td><td class="num">+473.1</td><td class="num">19.3</td><td class="num">−31.3</td><td class="num">21.1</td><td class="num">0.92</td></tr>
         <tr><td class="l">QQQ · Nasdaq-100</td><td class="num">+526.0</td><td class="num">20.4</td><td class="num">−35.6</td><td class="num">22.6</td><td class="num">0.9</td></tr>
         <tr><td class="l">SPY</td><td class="num">+263.8</td><td class="num">13.9</td><td class="num">−34.1</td><td class="num">18.1</td><td class="num">0.77</td></tr>
@@ -324,13 +325,13 @@
     <table>
       <thead><tr><th class="l">Configuration</th><th>Total</th><th>CAGR</th><th>Max DD</th><th>Vol</th><th>Sharpe</th></tr></thead>
       <tbody>
-        <tr><td class="l" class="pick"><strong>Top 15 · cap · weekly</strong></td><td class="num" class="pick">+187.4</td><td class="num" class="pick">24.0</td><td class="num" class="pick">−23.1</td><td class="num" class="pick">21.2</td><td class="num" class="pick">1.14</td></tr>
-        <tr><td class="l">Top 20 · cap · weekly</td><td class="num">+178.4</td><td class="num">23.2</td><td class="num">−22.3</td><td class="num">20.6</td><td class="num">1.13</td></tr>
-        <tr><td class="l">Top 10 · cap · weekly</td><td class="num">+184.8</td><td class="num">23.8</td><td class="num">−24.1</td><td class="num">22.0</td><td class="num">1.08</td></tr>
-        <tr><td class="l">Top 15 · cap · buy &amp; hold</td><td class="num">+176.7</td><td class="num">23.1</td><td class="num">−23.7</td><td class="num">21.9</td><td class="num">1.05</td></tr>
-        <tr><td class="l">Top 10 · cap · buy &amp; hold</td><td class="num">+177.1</td><td class="num">23.1</td><td class="num">−24.6</td><td class="num">22.8</td><td class="num">1.01</td></tr>
-        <tr><td class="l">Top 15 · equal · weekly</td><td class="num">+158.8</td><td class="num">21.4</td><td class="num">−22.1</td><td class="num">19.8</td><td class="num">1.08</td></tr>
-        <tr><td class="l">Top 10 · equal · weekly</td><td class="num">+154.7</td><td class="num">21.0</td><td class="num">−23.4</td><td class="num">21.1</td><td class="num">1.0</td></tr>
+        <tr><td class="l" class="pick"><strong>Top 15 · cap · weekly reset</strong></td><td class="num" class="pick">+187.4</td><td class="num" class="pick">24.0</td><td class="num" class="pick">−23.1</td><td class="num" class="pick">21.2</td><td class="num" class="pick">1.14</td></tr>
+        <tr><td class="l">Top 20 · cap · weekly reset</td><td class="num">+178.4</td><td class="num">23.2</td><td class="num">−22.3</td><td class="num">20.6</td><td class="num">1.13</td></tr>
+        <tr><td class="l">Top 10 · cap · weekly reset</td><td class="num">+184.8</td><td class="num">23.8</td><td class="num">−24.1</td><td class="num">22.0</td><td class="num">1.08</td></tr>
+        <tr><td class="l">Top 15 · cap · SPMO wts (LIVE)</td><td class="num">+176.7</td><td class="num">23.1</td><td class="num">−23.7</td><td class="num">21.9</td><td class="num">1.05</td></tr>
+        <tr><td class="l">Top 10 · cap · SPMO wts</td><td class="num">+177.1</td><td class="num">23.1</td><td class="num">−24.6</td><td class="num">22.8</td><td class="num">1.01</td></tr>
+        <tr><td class="l">Top 15 · equal · weekly reset</td><td class="num">+158.8</td><td class="num">21.4</td><td class="num">−22.1</td><td class="num">19.8</td><td class="num">1.08</td></tr>
+        <tr><td class="l">Top 10 · equal · weekly reset</td><td class="num">+154.7</td><td class="num">21.0</td><td class="num">−23.4</td><td class="num">21.1</td><td class="num">1.0</td></tr>
         <tr><td class="l">SPMO ETF</td><td class="num">+150.3</td><td class="num">20.6</td><td class="num">−23.7</td><td class="num">20.8</td><td class="num">0.99</td></tr>
         <tr><td class="l">QQQ · Nasdaq-100</td><td class="num">+99.9</td><td class="num">15.2</td><td class="num">−35.6</td><td class="num">23.1</td><td class="num">0.66</td></tr>
         <tr><td class="l">SPY</td><td class="num">+78.9</td><td class="num">12.6</td><td class="num">−25.4</td><td class="num">17.4</td><td class="num">0.73</td></tr>
@@ -338,6 +339,48 @@
     </table>
   </div>
   <figcaption>Sep 2021 – Aug 2026. Same method, same code, half the window. QQQ's CAGR falls from 20.4% to 15.2% while the strategy's rises — the entire relative advantage is a 2022–2026 phenomenon.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">The rebalancing premium we leave alone</p><div class="spacer"></div></div>
+  <div class="col">
+    <p>The single largest gap between this study and the live portfolio is what "weekly rebalancing" means. In the backtest it means resetting to the weights fixed at the last <em>reconstitution</em> — an operation that sells whichever names outran the basket and buys whichever lagged it, every week. The live portfolio instead tracks SPMO's <em>current</em> weights, which drift with price exactly as our own do, so it asks for a trade that is already satisfied.</p>
+    <p>The difference is not a rounding error. It is a deliberate contrarian overlay worth 37 points over the decade, and it is worth understanding before dismissing it.</p>
+  </div>
+  <div class="scroll" style="margin-top:22px">
+    <table>
+      <thead><tr><th class="l">Cohort</th><th>Weekly reset</th><th>SPMO wts</th><th>Edge</th><th class="l">Best / worst name in cohort</th></tr></thead>
+      <tbody>
+        <tr><td class="l win">16-09-19 → 17-03-20</td><td class="num">7.0</td><td class="num">6.7</td><td class="num up">+0.25</td><td class="l leaders">MO +21% / SPG -20%</td></tr>
+        <tr><td class="l win">17-03-20 → 17-09-18</td><td class="num">6.3</td><td class="num">6.4</td><td class="num dn">−0.11</td><td class="l leaders">BA +41% / IBM -18%</td></tr>
+        <tr><td class="l win">17-09-18 → 18-03-19</td><td class="num">17.4</td><td class="num">17.4</td><td class="num up">+0.01</td><td class="l leaders">ADBE +43% / CHTR -10%</td></tr>
+        <tr><td class="l win">18-03-19 → 18-09-24</td><td class="num">10.6</td><td class="num">10.4</td><td class="num up">+0.12</td><td class="l leaders">MSFT +23% / ABBV -17%</td></tr>
+        <tr><td class="l win">18-09-24 → 19-03-18</td><td class="num">0.5</td><td class="num">0.0</td><td class="num up">+0.44</td><td class="l leaders">CSCO +10% / COP -12%</td></tr>
+        <tr><td class="l win">19-03-18 → 19-09-23</td><td class="num">1.8</td><td class="num">1.8</td><td class="num dn">−0.03</td><td class="l leaders">SBUX +28% / ELV -18%</td></tr>
+        <tr><td class="l win">19-09-23 → 20-03-23</td><td class="num">-21.1</td><td class="num">-21.0</td><td class="num dn">−0.13</td><td class="l leaders">COST -1% / SBUX -38%</td></tr>
+        <tr><td class="l win">20-03-23 → 20-09-21</td><td class="num">46.6</td><td class="num">46.5</td><td class="num up">+0.11</td><td class="l leaders">AAPL +96% / T +7%</td></tr>
+        <tr><td class="l win">20-09-21 → 21-03-22</td><td class="num">14.5</td><td class="num">13.4</td><td class="num up">+1.11</td><td class="l leaders">PYPL +33% / ADBE -5%</td></tr>
+        <tr><td class="l win">21-03-22 → 21-09-20</td><td class="num">16.2</td><td class="num">15.8</td><td class="num up">+0.41</td><td class="l leaders">DHR +45% / DE -9%</td></tr>
+        <tr><td class="l win">21-09-20 → 22-03-21</td><td class="num">-5.1</td><td class="num">-4.2</td><td class="num dn">−0.87</td><td class="l leaders">SCHW +29% / MRNA -59%</td></tr>
+        <tr><td class="l win">22-03-21 → 22-09-19</td><td class="num">-5.9</td><td class="num">-6.5</td><td class="num up">+0.57</td><td class="l leaders">XOM +13% / Berkshire -20%</td></tr>
+        <tr><td class="l win">22-09-19 → 23-03-20</td><td class="num">1.5</td><td class="num">1.0</td><td class="num up">+0.47</td><td class="l leaders">MRK +22% / CVS -27%</td></tr>
+        <tr><td class="l win">23-03-20 → 23-09-18</td><td class="num">14.2</td><td class="num">15.3</td><td class="num dn">−1.11</td><td class="l leaders">LLY +71% / BMY -13%</td></tr>
+        <tr><td class="l win">23-09-18 → 24-03-18</td><td class="num">32.6</td><td class="num">32.6</td><td class="num dn">−0.06</td><td class="l leaders">META +64% / BA -12%</td></tr>
+        <tr><td class="l win">24-03-18 → 24-09-23</td><td class="num">13.0</td><td class="num">12.4</td><td class="num up">+0.61</td><td class="l leaders">GE +38% / AMD -18%</td></tr>
+        <tr><td class="l win">24-09-23 → 25-03-24</td><td class="num">9.2</td><td class="num">7.0</td><td class="num up">+2.22</td><td class="l leaders">JPM +17% / AMGN -6%</td></tr>
+        <tr><td class="l win">25-03-24 → 25-09-22</td><td class="num">33.4</td><td class="num">33.1</td><td class="num up">+0.25</td><td class="l leaders">PLTR +85% / BSX -5%</td></tr>
+        <tr><td class="l win">25-09-22 → 26-03-23</td><td class="num">-8.5</td><td class="num">-9.1</td><td class="num up">+0.59</td><td class="l leaders">GEV +37% / ORCL -53%</td></tr>
+        <tr><td class="l win">26-03-23 → 26-08-14</td><td class="num">39.0</td><td class="num">37.3</td><td class="num up">+1.71</td><td class="l leaders">AMD +154% / XOM -1%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Percent. "Edge" is the weekly-reset return minus the live method's, in percentage points, within each six-month cohort.</figcaption>
+  <div class="col" style="margin-top:28px">
+    <p>It works in <strong>14 of 20 cohorts</strong>, with a median edge of +0.25pp per cohort — roughly +0.5pp a year. Consistent enough to be structural rather than luck, and small enough to be fragile. What it harvests is dispersion: the more volatile and less correlated the holdings, the more there is to collect, which is why a semiconductor-heavy book is close to the ideal case.</p>
+    <p>The two worst cohorts are exactly the predicted failure modes. In Mar–Sep 2023 Eli Lilly ran +71% while little else moved, so trimming it weekly meant repeatedly selling the only position that mattered (−1.11pp). In Sep 2021–Mar 2022 Moderna fell 59% in a near-straight line, so buying the dip weekly meant catching every step down (−0.87pp).</p>
+    <div class="callout"><strong>Why it is left on the table.</strong> Harvesting the premium requires roughly 59% annual turnover — about 1.14% of the portfolio traded each week. Spreads on these mega-caps make that nearly free, on the order of $3–14 a year. Tax does not. The trades systematically sell winners, so the gains realized are <em>short-term</em> and taxed as ordinary income. On a book compounding near 20%, that turnover plausibly realizes several percent of account value in short-term gains annually — comfortably more than the 0.5–0.7pp the overlay earns. The strategy is run in a taxable account, so the premium is forgone on purpose.</div>
+    <p>The calculation reverses in a tax-sheltered account, where short-term gains carry no cost and the full premium survives.</p>
+  </div>
 </section>
 
 <section>
@@ -387,8 +430,8 @@
 <section>
   <div class="rule"><p class="eyebrow">Decision</p><div class="spacer"></div></div>
   <div class="col">
-    <p><strong>The live portfolio mirrors SPMO's top 15 companies at the fund's own weights, rebalanced every Friday.</strong> Alphabet's two share classes are held as a single position in Class A.</p>
-    <p>The decade confirms the size choice and the weighting choice, and strengthens the case for the weekly cadence. It also removes a story the five-year study seemed to tell: this is not a strategy that reliably beats a Nasdaq index fund. Over ten years it beat QQQ by 41 points and lost to it in nine of twenty cohorts, earning its keep through a shallower drawdown rather than a higher return.</p>
+    <p><strong>The live portfolio mirrors SPMO's top 15 companies at the fund's own weights, checked every Friday.</strong> Alphabet's two share classes are held as a single position in Class A. Because our weights drift with the fund's, a typical Friday requires no trading at all — across ten years the top-15 membership changed mid-cohort only 23 times, leaving the set unchanged in about 96% of weeks.</p>
+    <p>The decade confirms the size choice and the weighting choice. It also removes a story the five-year study seemed to tell: this is not a strategy that reliably beats a Nasdaq index fund. Over ten years it beat QQQ by four points on the live method and lost to it in nine of twenty cohorts, earning its keep through a shallower drawdown rather than a higher return. The weekly-reset overlay would widen that margin, and is declined on tax grounds rather than performance ones.</p>
   </div>
 </section>
 
