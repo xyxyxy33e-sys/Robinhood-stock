@@ -191,6 +191,7 @@
     <span><b>Since inception</b> −3.82% (time-weighted)</span>
     <span><b>Inception</b> 17 Aug 2026</span>
     <span><b>Strategy</b> SPMO top-15, cap-weighted</span>
+    <span><b>Realized P&amp;L</b> −$11.15 since inception</span>
   </div>
 </header>
 
@@ -203,7 +204,7 @@
       <div class="tile hero"><div class="k">Account value</div><div class="v">$46.7k</div><div class="c">fully invested, $0.88 cash</div></div>
       <div class="tile"><div class="k">Return since inception</div><div class="v">−3.8%</div><div class="c">time-weighted</div></div>
       <div class="tile"><div class="k">Turnover this week</div><div class="v">0.3%</div><div class="c">$153 of $46.7k</div></div>
-      <div class="tile"><div class="k">Unrealized P&amp;L</div><div class="v">−$161</div><div class="c">across 15 positions</div></div>
+      <div class="tile"><div class="k">Unrealized P&amp;L</div><div class="v">−$165</div><div class="c">across 15 positions</div></div><div class="tile"><div class="k">Realized P&amp;L</div><div class="v">−$11</div><div class="c">strategy to date, 1 trade</div></div>
     </div>
   </div>
 </section>
@@ -276,6 +277,38 @@
     </table>
   </div>
   <figcaption>“SPMO” is each company's weight within the fund's top fifteen, normalised to 100%. “Drift” is our weight minus that target — every position is within 0.3 points, which is why so little trading was required. Alphabet's A and C shares are held as a single position in GOOGL.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Realized profit &amp; loss</p><div class="spacer"></div></div>
+  <div class="col">
+    <p>Realized P&amp;L is the tax-relevant figure — it counts only closed positions. It is tracked separately from the unrealized marks above, and separately again from the account's trading history before this strategy began.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th class="l">Since strategy inception (17 Aug 2026)</th><th>Trades</th><th>Realized</th></tr></thead>
+      <tbody>
+        <tr><td class="l win">21 Aug · LRCX partial sale (rebalance)</td><td class="num">1</td><td class="num dn">−11.15</td></tr>
+        <tr class="total"><td class="l">Strategy realized P&amp;L to date</td><td class="num">1</td><td class="num dn">−11.15</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="scroll" style="margin-top:18px">
+    <table>
+      <thead><tr><th class="l">Account history before the strategy</th><th>Trades</th><th>Realized</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Winning trades</td><td class="num">35</td><td class="num up">+9,154.35</td></tr>
+        <tr><td class="l">Losing trades</td><td class="num">63</td><td class="num dn">−12,269.67</td></tr>
+        <tr class="total"><td class="l">Prior realized P&amp;L (15 Jun – 12 Aug 2026)</td><td class="num">98</td><td class="num dn">−3,115.32</td></tr>
+        <tr class="total"><td class="l">Account lifetime realized, all activity</td><td class="num">99</td><td class="num dn">−3,126.47</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Reconciles exactly to the broker's reported lifetime total of −$3,126.47. The prior activity is discretionary trading that predates this strategy — it is shown for completeness, and is not attributable to the mirror.</figcaption>
+  <div class="col" style="margin-top:26px">
+    <div class="callout"><strong>A tax asset worth knowing about.</strong> Those earlier trades left roughly <strong>$3,115 of realized capital losses</strong> on the books for the tax year. Losses offset realized gains first, so the strategy can realize about that much in gains before any capital-gains tax is owed; beyond that, up to $3,000 of net loss a year can offset ordinary income, with the remainder carrying forward indefinitely. It also softens — temporarily — the argument against harvesting the weekly rebalancing premium, since the first several thousand dollars of short-term gains would be absorbed rather than taxed.</div>
+    <p>Rebalancing turnover on this strategy is expected to be minimal, so realized P&amp;L should stay small: this week's single trade closed 0.3% of the account. Weeks with no membership change in SPMO's top fifteen may realize nothing at all.</p>
+  </div>
 </section>
 
 <section>
