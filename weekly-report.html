@@ -1,0 +1,301 @@
+<title>Weekly Portfolio Report</title>
+<style>
+  :root{
+    --ground:#FBFBFC; --surface:#FFFFFF; --surface-2:#F4F5F8;
+    --ink:#14181F; --ink-2:#39414F; --muted:#5B6472; --faint:#8A93A2;
+    --line:#E3E6EC; --line-strong:#CBD1DA;
+    --accent:#A9762B; --accent-soft:#F0E4CE;
+    --pos:#12836A; --neg:#B23C2C;
+    --pos-wash:#12836A26; --neg-wash:#B23C2C26;
+    --display:Georgia,"Iowan Old Style","Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --measure:64ch;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0E1116; --surface:#171B22; --surface-2:#1D222B;
+      --ink:#E9ECF1; --ink-2:#C3CAD5; --muted:#9AA3B2; --faint:#6E7889;
+      --line:#262C36; --line-strong:#38414F;
+      --accent:#D6A24E; --accent-soft:#3A2F1C;
+      --pos:#279A8C; --neg:#D75A4A;
+      --pos-wash:#279A8C2E; --neg-wash:#D75A4A2E;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E1116; --surface:#171B22; --surface-2:#1D222B;
+    --ink:#E9ECF1; --ink-2:#C3CAD5; --muted:#9AA3B2; --faint:#6E7889;
+    --line:#262C36; --line-strong:#38414F;
+    --accent:#D6A24E; --accent-soft:#3A2F1C;
+    --pos:#279A8C; --neg:#D75A4A;
+    --pos-wash:#279A8C2E; --neg-wash:#D75A4A2E;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px; margin:0 auto; padding:clamp(28px,5vw,72px) clamp(18px,4vw,48px) 96px}
+  .col{max-width:var(--measure)}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--display); font-weight:600; letter-spacing:-.015em;
+    font-size:clamp(38px,6vw,60px); line-height:1.04; margin:0 0 18px; text-wrap:balance;
+  }
+  h2{
+    font-family:var(--display); font-weight:600; font-size:clamp(23px,3vw,30px);
+    line-height:1.18; margin:0 0 14px; text-wrap:balance; letter-spacing:-.01em;
+  }
+  h3{font-family:var(--sans); font-weight:650; font-size:16px; margin:0 0 6px; letter-spacing:-.005em}
+  p{margin:0 0 16px; color:var(--ink-2)}
+  strong{color:var(--ink); font-weight:650}
+  a{color:var(--accent)}
+  .lede{font-size:clamp(17px,2.1vw,20px); line-height:1.55; color:var(--ink-2)}
+  .lede strong{color:var(--ink)}
+
+  header.head{border-bottom:1px solid var(--line-strong); padding-bottom:26px; margin-bottom:34px}
+  .meta{
+    display:flex; flex-wrap:wrap; gap:8px 26px; margin-top:22px;
+    font-family:var(--mono); font-size:11.5px; color:var(--muted); letter-spacing:.03em;
+  }
+  .meta b{color:var(--ink-2); font-weight:500}
+
+  section{margin:52px 0 0}
+  .rule{display:flex; align-items:baseline; gap:14px; margin-bottom:20px; border-top:1px solid var(--line); padding-top:16px}
+  .rule .eyebrow{margin:0; white-space:nowrap}
+  .rule .spacer{flex:1; height:1px}
+
+  /* verdict */
+  .verdict{
+    background:var(--surface); border:1px solid var(--line-strong);
+    border-left:3px solid var(--accent); border-radius:3px;
+    padding:clamp(20px,3vw,30px); margin-top:8px;
+  }
+  .verdict h2{margin-bottom:8px}
+  .tiles{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1px; background:var(--line); border:1px solid var(--line);
+    margin-top:24px; border-radius:2px; overflow:hidden;
+  }
+  .tile{background:var(--surface); padding:16px 18px}
+  .tile .k{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
+  .tile .v{
+    font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:clamp(24px,3.4vw,30px);
+    font-weight:600; letter-spacing:-.02em; margin-top:6px; color:var(--ink);
+  }
+  .tile .c{font-family:var(--mono); font-size:11px; color:var(--faint); margin-top:3px}
+  .tile.hero .v{color:var(--accent)}
+
+  /* bar chart */
+  figure{margin:0}
+  figcaption{font-size:13.5px; color:var(--muted); margin-top:14px; max-width:var(--measure)}
+  .bars{display:flex; flex-direction:column; gap:2px; margin-top:6px}
+  .bar-row{
+    display:grid; grid-template-columns:minmax(132px,190px) 1fr; align-items:center; gap:14px;
+    padding:5px 6px 5px 0; border-radius:2px;
+  }
+  .bar-row:hover{background:var(--surface-2)}
+  .bar-row .lbl{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; letter-spacing:.01em}
+  .bar-row.pick .lbl{color:var(--accent); font-weight:600}
+  .track{display:flex; align-items:center; gap:9px}
+  .fill{height:15px; border-radius:0 4px 4px 0; background:var(--accent); opacity:.42}
+  .bar-row.pick .fill{opacity:1}
+  .bar-row.bench .fill{background:var(--muted); opacity:.34}
+  .bar-row:hover .fill{opacity:.72}
+  .bar-row.pick:hover .fill{opacity:1}
+  .val{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--ink-2); white-space:nowrap}
+  .bar-row.pick .val{color:var(--ink); font-weight:600}
+
+  /* tables */
+  .scroll{overflow-x:auto; border:1px solid var(--line); border-radius:3px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; font-size:13px}
+  th,td{padding:9px 12px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--line)}
+  th{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted); font-weight:500; background:var(--surface-2); position:sticky; top:0;
+  }
+  th.l,td.l{text-align:left}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--surface-2)}
+  tr.total td{border-top:2px solid var(--line-strong); border-bottom:none; font-weight:650; background:var(--surface-2)}
+  .win{font-family:var(--mono); font-size:12px; color:var(--ink)}
+  .src{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+  .bar-row.alt .fill{background:var(--muted);opacity:.55}
+  .bar-row.alt .lbl{color:var(--muted)}
+  .leaders{font-size:12px; color:var(--muted); max-width:190px; white-space:normal}
+  .up{color:var(--pos)} .dn{color:var(--neg)}
+  td.pick{background:var(--accent-soft)}
+  tr:hover td.pick{background:var(--accent-soft)}
+  th.pick{color:var(--accent)}
+
+  /* diverging bar cell */
+  .dv{width:132px; min-width:132px}
+  .dv-track{position:relative; height:16px; width:100%}
+  .dv-track::before{content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--line-strong)}
+  .dv-fill{position:absolute; top:2px; height:12px; border-radius:2px}
+  .dv-fill.p{left:50%; background:var(--pos)}
+  .dv-fill.n{right:50%; background:var(--neg)}
+
+  /* findings */
+  .findings{display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:3px; overflow:hidden}
+  .finding{background:var(--surface); padding:20px}
+  .finding .n{font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:.1em}
+  .finding p{font-size:14px; margin:8px 0 0; color:var(--muted); line-height:1.55}
+
+  /* method */
+  ol.steps{margin:0; padding:0; list-style:none; counter-reset:s}
+  ol.steps li{
+    counter-increment:s; position:relative; padding:0 0 18px 40px; margin:0;
+    border-left:1px solid var(--line); margin-left:11px;
+  }
+  ol.steps li:last-child{border-left-color:transparent; padding-bottom:0}
+  ol.steps li::before{
+    content:counter(s,decimal-leading-zero); position:absolute; left:-11px; top:0;
+    width:22px; height:22px; border-radius:50%; background:var(--surface); border:1px solid var(--line-strong);
+    font-family:var(--mono); font-size:10px; color:var(--muted);
+    display:grid; place-items:center;
+  }
+  ol.steps p{font-size:14.5px; margin:2px 0 0; color:var(--muted)}
+
+  .notes{border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:clamp(18px,2.6vw,26px)}
+  .notes dl{margin:0; display:grid; gap:16px}
+  .notes dt{font-family:var(--mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); margin-bottom:4px}
+  .notes dd{margin:0; font-size:14.5px; color:var(--muted); line-height:1.56}
+
+  .callout{border-left:2px solid var(--line-strong); padding:2px 0 2px 18px; margin:22px 0; color:var(--muted); font-size:15px}
+
+  footer{margin-top:64px; padding-top:20px; border-top:1px solid var(--line); font-family:var(--mono); font-size:11.5px; color:var(--faint); line-height:1.8}
+
+  @media (max-width:640px){
+    .bar-row{grid-template-columns:1fr; gap:3px}
+    .bar-row .lbl{text-align:left}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+</style>
+<div class="wrap">
+<header class="head">
+  <div class="col">
+    <p class="eyebrow">Robinhood “Agentic” ·  Running Log</p>
+    <h1>Weekly Portfolio Report</h1>
+    <p class="lede">A mirror of SPMO's top fifteen companies at the fund's own weights, reviewed every Friday at 3pm ET. Newest week first.</p>
+  </div>
+  <div class="meta">
+    <span><b>Account value</b> $46,696.96</span>
+    <span><b>Since inception</b> −3.82% (time-weighted)</span>
+    <span><b>Inception</b> 17 Aug 2026</span>
+    <span><b>Strategy</b> SPMO top-15, cap-weighted</span>
+  </div>
+</header>
+
+<section style="margin-top:0">
+  <div class="verdict">
+    <p class="eyebrow">Week 1 · 17–21 August 2026</p>
+    <h2>Two trades, $153 of turnover</h2>
+    <p style="max-width:62ch;margin-bottom:0">The first live rebalance behaved exactly as designed: because the portfolio holds the same names as the fund, its weights drift with the fund's, so almost nothing needed correcting. Only one position breached the trading threshold in either direction.</p>
+    <div class="tiles">
+      <div class="tile hero"><div class="k">Account value</div><div class="v">$46.7k</div><div class="c">fully invested, $0.88 cash</div></div>
+      <div class="tile"><div class="k">Return since inception</div><div class="v">−3.8%</div><div class="c">time-weighted</div></div>
+      <div class="tile"><div class="k">Turnover this week</div><div class="v">0.3%</div><div class="c">$153 of $46.7k</div></div>
+      <div class="tile"><div class="k">Unrealized P&amp;L</div><div class="v">−$161</div><div class="c">across 15 positions</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Performance</p><div class="spacer"></div></div>
+  <div class="col">
+    <p>The account opened on 17 August with $11,858.54 and received a $35,000 deposit on 19 August. Because a mid-period deposit distorts a simple return, the figure below is <strong>time-weighted</strong> — it measures the strategy, not the timing of the funding.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th class="l">Segment</th><th>Start</th><th>End</th><th>Return</th></tr></thead>
+      <tbody>
+        <tr><td class="l win">17 Aug → 19 Aug (pre-deposit)</td><td class="num">11,858.54</td><td class="num">11,311.54</td><td class="num dn">−4.61</td></tr>
+        <tr><td class="l win">19 Aug (post-deposit) → 21 Aug</td><td class="num">46,311.54</td><td class="num">46,697.63</td><td class="num up">+0.83</td></tr>
+        <tr class="total"><td class="l">Time-weighted, since inception</td><td class="num"></td><td class="num"></td><td class="num dn">−3.82</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="scroll" style="margin-top:18px">
+    <table>
+      <thead><tr><th class="l">Benchmark, 14 Aug close → 21 Aug</th><th>From</th><th>To</th><th>Return</th><th>vs us</th></tr></thead>
+      <tbody>
+        <tr><td class="l">SPMO — the fund we mirror</td><td class="num">153.31</td><td class="num">149.09</td><td class="num dn">−2.75</td><td class="num dn">−1.07</td></tr>
+        <tr><td class="l">QQQ — Nasdaq-100</td><td class="num">731.07</td><td class="num">713.53</td><td class="num dn">−2.40</td><td class="num dn">−1.42</td></tr>
+        <tr><td class="l">SPY — S&amp;P 500</td><td class="num">776.34</td><td class="num">766.20</td><td class="num dn">−1.31</td><td class="num dn">−2.51</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Percent. A losing first week, and we lost by more than the fund we track — expected behaviour, not a malfunction: holding only the top fifteen is more concentrated and more semiconductor-heavy than SPMO's full 103 names, and semiconductors led the decline.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Trades</p><div class="spacer"></div></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th class="l">Action</th><th class="l">Reason</th><th>Shares</th><th>Price</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td class="l"><strong>SELL</strong> LRCX</td><td class="l leaders">Drifted 0.33pp above target weight</td><td class="num">0.4870</td><td class="num">~314.03</td><td class="num">152.88</td></tr>
+        <tr><td class="l"><strong>BUY</strong> NVDA</td><td class="l leaders">Largest shortfall; funded by the LRCX sale</td><td class="num">0.7057</td><td class="num">~215.38</td><td class="num">152.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Only positions more than $140 (0.3% of the account) from target are traded. Thirteen of fifteen holdings were inside that band and were left alone. The sale settled instantly into the purchase — the limited-margin upgrade made on 19 August removed the T+1 wait.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Holdings after rebalance</p><div class="spacer"></div></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th class="l">Position</th><th>Shares</th><th>Price</th><th>Value</th><th>Weight</th><th>SPMO</th><th>Drift</th><th>P&amp;L $</th><th>P&amp;L %</th></tr></thead>
+      <tbody>
+        <tr><td class="l"><strong>MU</strong> <span class="leaders">Micron</span></td><td class="num">8.1569</td><td class="num">969.33</td><td class="num">7,907</td><td class="num">16.93</td><td class="num">17.13</td><td class="num ">-0.20</td><td class="num up">+196</td><td class="num up">+2.5</td></tr>
+        <tr><td class="l"><strong>NVDA</strong> <span class="leaders">NVIDIA</span></td><td class="num">29.7400</td><td class="num">215.34</td><td class="num">6,404</td><td class="num">13.71</td><td class="num">13.83</td><td class="num ">-0.11</td><td class="num dn">−161</td><td class="num dn">−2.5</td></tr>
+        <tr><td class="l"><strong>GOOGL</strong> <span class="leaders">Alphabet (A+C)</span></td><td class="num">16.4159</td><td class="num">345.27</td><td class="num">5,668</td><td class="num">12.14</td><td class="num">12.31</td><td class="num ">-0.17</td><td class="num up">+14</td><td class="num up">+0.2</td></tr>
+        <tr><td class="l"><strong>AVGO</strong> <span class="leaders">Broadcom</span></td><td class="num">12.8766</td><td class="num">367.31</td><td class="num">4,730</td><td class="num">10.13</td><td class="num">9.83</td><td class="num ">+0.30</td><td class="num dn">−56</td><td class="num dn">−1.2</td></tr>
+        <tr><td class="l"><strong>JNJ</strong> <span class="leaders">Johnson & Johnson</span></td><td class="num">12.2676</td><td class="num">271.38</td><td class="num">3,329</td><td class="num">7.13</td><td class="num">7.28</td><td class="num ">-0.15</td><td class="num up">+24</td><td class="num up">+0.7</td></tr>
+        <tr><td class="l"><strong>AMD</strong> <span class="leaders">AMD</span></td><td class="num">6.0331</td><td class="num">472.67</td><td class="num">2,852</td><td class="num">6.11</td><td class="num">6.00</td><td class="num ">+0.11</td><td class="num dn">−28</td><td class="num dn">−1.0</td></tr>
+        <tr><td class="l"><strong>LRCX</strong> <span class="leaders">Lam Research</span></td><td class="num">8.1682</td><td class="num">314.14</td><td class="num">2,566</td><td class="num">5.49</td><td class="num">5.49</td><td class="num ">+0.00</td><td class="num dn">−3</td><td class="num dn">−0.1</td></tr>
+        <tr><td class="l"><strong>XOM</strong> <span class="leaders">ExxonMobil</span></td><td class="num">13.8657</td><td class="num">165.41</td><td class="num">2,294</td><td class="num">4.91</td><td class="num">5.09</td><td class="num ">-0.18</td><td class="num up">+13</td><td class="num up">+0.6</td></tr>
+        <tr><td class="l"><strong>CAT</strong> <span class="leaders">Caterpillar</span></td><td class="num">2.2375</td><td class="num">831.13</td><td class="num">1,860</td><td class="num">3.98</td><td class="num">3.86</td><td class="num ">+0.12</td><td class="num up">+20</td><td class="num up">+1.1</td></tr>
+        <tr><td class="l"><strong>INTC</strong> <span class="leaders">Intel</span></td><td class="num">19.3485</td><td class="num">90.42</td><td class="num">1,750</td><td class="num">3.75</td><td class="num">3.78</td><td class="num ">-0.03</td><td class="num dn">−99</td><td class="num dn">−5.4</td></tr>
+        <tr><td class="l"><strong>SNDK</strong> <span class="leaders">Sandisk</span></td><td class="num">1.0906</td><td class="num">1,602.66</td><td class="num">1,748</td><td class="num">3.74</td><td class="num">3.70</td><td class="num ">+0.04</td><td class="num up">+7</td><td class="num up">+0.4</td></tr>
+        <tr><td class="l"><strong>AMAT</strong> <span class="leaders">Applied Materials</span></td><td class="num">2.9666</td><td class="num">492.25</td><td class="num">1,460</td><td class="num">3.13</td><td class="num">3.11</td><td class="num ">+0.01</td><td class="num dn">−20</td><td class="num dn">−1.3</td></tr>
+        <tr><td class="l"><strong>CSCO</strong> <span class="leaders">Cisco</span></td><td class="num">12.1067</td><td class="num">111.63</td><td class="num">1,351</td><td class="num">2.89</td><td class="num">2.92</td><td class="num ">-0.03</td><td class="num up">+1</td><td class="num up">+0.1</td></tr>
+        <tr><td class="l"><strong>STX</strong> <span class="leaders">Seagate</span></td><td class="num">1.6801</td><td class="num">855.96</td><td class="num">1,438</td><td class="num">3.08</td><td class="num">2.89</td><td class="num ">+0.19</td><td class="num dn">−34</td><td class="num dn">−2.3</td></tr>
+        <tr><td class="l"><strong>GE</strong> <span class="leaders">GE Aerospace</span></td><td class="num">3.8153</td><td class="num">351.31</td><td class="num">1,340</td><td class="num">2.87</td><td class="num">2.77</td><td class="num ">+0.10</td><td class="num dn">−38</td><td class="num dn">−2.7</td></tr>
+        <tr class="total"><td class="l">15 positions + $0.88 cash</td><td class="num"></td><td class="num"></td><td class="num">46,697</td><td class="num">100.0</td><td class="num">100.0</td><td class="num"></td><td class="num dn">−165</td><td class="num dn">−0.3</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>“SPMO” is each company's weight within the fund's top fifteen, normalised to 100%. “Drift” is our weight minus that target — every position is within 0.3 points, which is why so little trading was required. Alphabet's A and C shares are held as a single position in GOOGL.</figcaption>
+</section>
+
+<section>
+  <div class="rule"><p class="eyebrow">Notes</p><div class="spacer"></div></div>
+  <div class="notes">
+    <dl>
+      <dt>Why almost nothing traded</dt>
+      <dd>The portfolio holds the same companies as the fund, so when prices move, our weights and SPMO's move together. Tracking the fund's live weights therefore asks for a trade that is already satisfied. Over the past decade the top-fifteen membership changed mid-cohort only 23 times — the set is unchanged in roughly 96% of weeks. Expect most Fridays to look like this one.</dd>
+      <dt>Worst and best of the week</dt>
+      <dd>Intel −5.4% and NVIDIA −2.5% led the decline; Micron held up at +2.5% and is now the largest position at 16.9%. The book remains heavily semiconductor-weighted, which is faithful to the index but concentrates risk in a single theme.</dd>
+      <dt>Settlement</dt>
+      <dd>First rebalance since the limited-margin upgrade. The LRCX proceeds were available for the NVIDIA purchase immediately rather than the following Monday, so the rebalance completed in a single pass with no deferral.</dd>
+      <dt>What this is not</dt>
+      <dd>One week is noise. The strategy's case rests on a ten-year, twenty-cohort study, and even that concluded it beats a Nasdaq index fund by a thin margin earned through shallower drawdowns rather than higher returns. A −3.8% opening week is well inside normal variation.</dd>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  Prices are live quotes at 21 Aug 2026, 3:07pm ET; SPMO weights from Invesco, effective 20 Aug 2026. P&amp;L is unrealized against average cost. Returns are price-only and exclude dividends.<br>
+  Automated weekly rebalance. Past performance does not predict future returns.
+</footer>
+</div>
