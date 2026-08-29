@@ -64,6 +64,19 @@ SAT_WEIGHT_LIVE = dict(A=0.35, B=0.35, C=0.0, D=0.20, E=0.0, F=0.0)
 # reasonably-shaped in-sample optimum, not a proven edge.
 EF_CORE_WEIGHT = 0.50
 
+# D also tested (2026-08-29): sweeping the core portion in D (satellite held fixed at
+# its 20% SAT_WEIGHT_LIVE value) found a broad Sharpe peak around core=50-57%
+# (0.9638 at the exact peak, vs 0.957 for the old fully-invested-in-D design). D is
+# ~13.5% of history, the second-most time of any state after A, so this one isn't a
+# fringe case. Search/holdout check (split 2020-01-01): FULL Sharpe 0.957->0.964,
+# SEARCH 0.995->1.047 (clear improvement), HOLDOUT 0.970->0.959 (small decline) --
+# net roughly a wash to modestly positive, not as clean a pass as the satellite
+# weights but not a red flag either. D_CASH_WEIGHT = 0.25 was chosen directly by the
+# user as a round number rather than the precise ~28% peak -- core in D becomes
+# 1 - 0.20 (satellite) - 0.25 (cash) = 0.55, inside the flat part of the plateau,
+# effectively indistinguishable from the exact optimum.
+D_CASH_WEIGHT = 0.25
+
 # The "cash" leg of target_weights() is held as BOXX (Alpha Architect 1-3 Month Box
 # ETF), not literal uninvested buying power -- user preference, 2026-08-29. Backtested
 # effect is negligible (BOXX tracks the T-bill proxy within ~0.16pp/yr, its own expense
@@ -71,9 +84,9 @@ EF_CORE_WEIGHT = 0.50
 # return). The reason to hold it instead of plain cash is tax deferral: BOXX has no
 # current income while held, unlike a cash sweep or a T-bill, which both pay taxable
 # interest every period. Its 60/40 long-term/short-term blended rate under Section 1256
-# does NOT apply here -- E/F episodes run weeks to months, so any BOXX sale will still
-# be a short-term gain, same as everything else in this account. Confirmed tradable,
-# fractional, in the live account (576391551) on 2026-08-29.
+# does NOT apply here -- E/F and D episodes run weeks to months, so any BOXX sale will
+# still be a short-term gain, same as everything else in this account. Confirmed
+# tradable, fractional, in the live account (576391551) on 2026-08-29.
 CASH_INSTRUMENT = 'BOXX'
 
 def target_weights(state):
@@ -82,6 +95,8 @@ def target_weights(state):
     sat = SAT_WEIGHT_LIVE[state]
     if state in ('E', 'F'):
         core = EF_CORE_WEIGHT
+    elif state == 'D':
+        core = 1.0 - sat - D_CASH_WEIGHT
     else:
         core = 1.0 - sat
     cash = max(0.0, 1.0 - core - sat)
