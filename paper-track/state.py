@@ -106,3 +106,24 @@ STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
     D='pullback in uptrend', E='breakdown', F='established downtrend',
 )
+
+class WeightSanityError(ValueError):
+    """Raised when a computed (state, core, satellite, cash) tuple fails validation.
+    Every live trigger must call validate_weights() before placing any order and
+    abort the rebalance (report, do not trade) if this raises -- added 2026-08-29
+    after the strategy grew to three weight legs across 17 instruments with no
+    guard between "compute a state" and "place real orders"."""
+    pass
+
+def validate_weights(state, core, sat, cash, tol=0.005):
+    if state not in STATE_LABEL:
+        raise WeightSanityError(f"state {state!r} is not one of {sorted(STATE_LABEL)}")
+    for name, w in (('core', core), ('satellite', sat), ('cash', cash)):
+        if not (-tol <= w <= 1.0 + tol):
+            raise WeightSanityError(f"{name}_weight={w!r} out of [0,1] range for state {state}")
+    total = core + sat + cash
+    if abs(total - 1.0) > tol:
+        raise WeightSanityError(
+            f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
+            f"(core={core}, sat={sat}, cash={cash})"
+        )
