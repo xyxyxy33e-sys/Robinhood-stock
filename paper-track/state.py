@@ -64,8 +64,21 @@ SAT_WEIGHT_LIVE = dict(A=0.35, B=0.35, C=0.0, D=0.20, E=0.0, F=0.0)
 # reasonably-shaped in-sample optimum, not a proven edge.
 EF_CORE_WEIGHT = 0.50
 
+# The "cash" leg of target_weights() is held as BOXX (Alpha Architect 1-3 Month Box
+# ETF), not literal uninvested buying power -- user preference, 2026-08-29. Backtested
+# effect is negligible (BOXX tracks the T-bill proxy within ~0.16pp/yr, its own expense
+# ratio; whole-strategy Sharpe identical to 3 decimal places using either as the cash
+# return). The reason to hold it instead of plain cash is tax deferral: BOXX has no
+# current income while held, unlike a cash sweep or a T-bill, which both pay taxable
+# interest every period. Its 60/40 long-term/short-term blended rate under Section 1256
+# does NOT apply here -- E/F episodes run weeks to months, so any BOXX sale will still
+# be a short-term gain, same as everything else in this account. Confirmed tradable,
+# fractional, in the live account (576391551) on 2026-08-29.
+CASH_INSTRUMENT = 'BOXX'
+
 def target_weights(state):
-    """Returns (core_weight, satellite_weight, cash_weight) for a given state letter."""
+    """Returns (core_weight, satellite_weight, cash_weight) for a given state letter.
+    cash_weight is deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power."""
     sat = SAT_WEIGHT_LIVE[state]
     if state in ('E', 'F'):
         core = EF_CORE_WEIGHT
