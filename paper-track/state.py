@@ -50,6 +50,30 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # combination was never in the study's own grid.
 SAT_WEIGHT_LIVE = dict(A=0.35, B=0.35, C=0.0, D=0.20, E=0.0, F=0.0)
 
+# Core weight override during E/F only -- everywhere else core = 1 - satellite_weight
+# (full deployment, no deliberate cash). In E/F, satellite is already 0 in
+# SAT_WEIGHT_LIVE, so this leaves the remainder (1 - EF_CORE_WEIGHT) as cash rather
+# than fully invested in the 15-stock core. Swept the core weight 0%..100% in E/F
+# only (2026-08-29): Sharpe peaks on a broad plateau at 44-50% (0.9571-0.9572, both
+# ends of that band within Sharpe 0.9538-0.9566), materially better than either
+# extreme -- 0% (all cash) gives 0.927, 100% (always invested, no gating) gives
+# 0.926. 50% chosen: statistically indistinguishable from the exact peak (~47%),
+# a rounder number, SPMO-core full window 2015-10-01..2026-08-28: CAGR 26.05%,
+# MaxDD -34.7%, Sharpe 0.957 (vs the ungated live design's CAGR 27.19%, MaxDD
+# -40.7%, Sharpe 0.926). Not validated on a search/holdout split -- treat as a
+# reasonably-shaped in-sample optimum, not a proven edge.
+EF_CORE_WEIGHT = 0.50
+
+def target_weights(state):
+    """Returns (core_weight, satellite_weight, cash_weight) for a given state letter."""
+    sat = SAT_WEIGHT_LIVE[state]
+    if state in ('E', 'F'):
+        core = EF_CORE_WEIGHT
+    else:
+        core = 1.0 - sat
+    cash = max(0.0, 1.0 - core - sat)
+    return core, sat, cash
+
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
     D='pullback in uptrend', E='breakdown', F='established downtrend',
