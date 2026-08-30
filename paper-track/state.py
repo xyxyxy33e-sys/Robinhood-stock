@@ -150,3 +150,44 @@ def validate_weights(state, core, sat, cash, tol=0.005):
             f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
             f"(core={core}, sat={sat}, cash={cash})"
         )
+
+
+class CircuitBreakerTripped(RuntimeError):
+    """Raised when the account's actual move doesn't match what its own holdings
+    should have produced -- added 2026-08-30. This is deliberately NOT a "the
+    market moved a lot" check (large moves are expected and priced into this
+    design -- 1.7x effective exposure means a bad day is supposed to be a bad
+    day). It's an "the numbers don't add up" check: a live trigger must call
+    circuit_breaker_check() with the account's actual total_value and the value
+    IMPLIED by summing each held position's quantity * its live quote, using
+    quote.adjusted_previous_close for the prior-close side of the comparison
+    (both sides self-contained from a single get_portfolio + get_equity_quotes
+    call, no persisted state needed across trigger firings). A real mismatch
+    here means a data error, a bad fill, an unaccounted-for position, or a bug
+    -- not market volatility -- and should halt automated trading and alert
+    rather than push another trade into an already-wrong state."""
+    pass
+
+def circuit_breaker_check(actual_total_value, implied_total_value, tol=0.02):
+    """actual_total_value: get_portfolio's total_value right now.
+    implied_total_value: sum over held positions of quantity * live quote,
+    reconstructed independently from get_equity_positions + get_equity_quotes.
+    These should agree to within `tol` (default 2%, to absorb bid/ask and
+    intraday timing noise) -- they are two views of the SAME thing, not two
+    different predictions, so a real gap means something is wrong, not that
+    the market moved. Raises CircuitBreakerTripped if they diverge beyond tol;
+    callers must halt (report, do not trade) rather than catch and continue."""
+    if implied_total_value <= 0:
+        raise CircuitBreakerTripped(
+            f"implied_total_value={implied_total_value!r} is not positive -- "
+            "can't reconcile, treat as a data problem"
+        )
+    pct = abs(actual_total_value - implied_total_value) / implied_total_value
+    if pct > tol:
+        raise CircuitBreakerTripped(
+            f"account total_value ({actual_total_value:.2f}) diverges from the "
+            f"sum of its own positions at live quotes ({implied_total_value:.2f}) "
+            f"by {pct*100:.1f}%, more than the {tol*100:.0f}% tolerance -- "
+            "reconciliation failed, do not trade"
+        )
+    return pct
