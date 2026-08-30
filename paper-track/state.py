@@ -41,41 +41,71 @@ def compute_states(dates, px, buf=0.01):
 # Study default (research/leverage_ma.md, 35% cap variant). Kept for reference/backtests.
 SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 
-# LIVE mapping -- user-specified 2026-08-29, raises D and zeroes E relative to the
-# study default. Backtested both windows before going live:
-#   mirror-core, 2016-09-20..2026-08-14: Sharpe 1.00 vs 0.98, MDD -38.7% vs -39.5%
-#   SPMO-core,   2015-10-01..2026-08-28: Sharpe 0.93 vs 0.91, MDD -40.7% vs -41.0%
-# Marginally better in-sample on this data, but E is only ~4.6% of history in this
-# window, so the difference is mostly noise, not a validated finding -- this
-# combination was never in the study's own grid.
-SAT_WEIGHT_LIVE = dict(A=0.35, B=0.35, C=0.0, D=0.20, E=0.0, F=0.0)
+# TARGET_WEIGHTS is the single source of truth: (core, satellite, cash) per state,
+# each row summing to 1.0. Every earlier per-constant version of this file (LIVE
+# satellite mapping + EF_CORE_WEIGHT + D_CASH_WEIGHT) has been folded in here as
+# history moved through it -- see below per state for what was tested and why.
+# cash is deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power.
+#
+# A (0.65, 0.35, 0.0) -- established uptrend, 60.4% of history. Sharpe plateau
+#   0.30-0.40 satellite (~0.964), current 0.35 sits in it. Core/cash axis tested
+#   separately: shallow peak near core=55%/cash=10% (Sharpe +0.0015 over full
+#   deployment) -- inside the noise floor of everything else tested, left alone.
+#
+# B (0.25, 0.75, 0.0) -- reclaim, 3.5% of history, only 4 independent episodes
+#   (22/16/30/29 trading days each) in the whole 10.9yr window. EVERY axis tested
+#   here points the same direction -- more satellite, not less, no cash -- and the
+#   curve doesn't turn over until ~80% satellite (Sharpe 0.976) or on the core/cash
+#   axis at all (monotonic to full deployment). Search/holdout split (2020-01-01)
+#   improves in BOTH halves as satellite rises (search 1.045->1.077, holdout
+#   0.960->0.966 at 30/70), which is some evidence against pure overfitting, but
+#   with only 4 episodes that "holdout confirmation" is really 1-2 episodes on each
+#   side reshuffled, not independent validation. 25/75 chosen by the user as a
+#   deliberately conservative pick relative to the ~80% satellite peak the raw
+#   sweep found -- treat the DIRECTION as more trustworthy than the MAGNITUDE.
+#
+# C (1.0, 0.0, 0.0) -- bounce in downtrend, 4.2% of history. Confirmed: satellite
+#   strictly hurts (never tested nonzero, no data suggested it should be), and core
+#   weight vs cash is monotonic all the way to 100% core -- stay fully invested.
+#
+# D (0.55, 0.20, 0.25) -- pullback in uptrend, 13.5% of history, second-most after
+#   A. Satellite sweep flattens 20-25%, core/cash sweep (satellite held fixed)
+#   plateaus at core 50-57% (peak Sharpe 0.964). Search/holdout: FULL 0.957->0.964,
+#   SEARCH 0.995->1.047 (improvement), HOLDOUT 0.970->0.959 (small decline) --
+#   roughly a wash to modestly positive. 25% cash chosen by the user as a round
+#   number inside the flat part of the plateau (core becomes 1-0.20-0.25=0.55).
+#
+# E (0.50, 0.0, 0.50) -- breakdown, 4.2% of history. Satellite: adding ANY strictly
+#   hurts (monotonic decline from 0%). Core/cash: broad plateau 44-50% core, current
+#   50% sits in it (peak ~47%, indistinguishable from 50% given the flatness).
+#
+# F (0.30, 0.0, 0.70) -- established downtrend, 14.3% of history, THIRD-most after
+#   A and D -- not a fringe case. Satellite: same as E, adding any strictly hurts,
+#   and hurts FASTER than E does. Core/cash: unlike every other state tested, max
+#   drawdown is COMPLETELY PINNED at -32.3% across the entire 0-100% core sweep --
+#   whatever sets the account's worst drawdown, it isn't happening during F. Peak
+#   Sharpe 0.9654-0.9655 on a broad plateau at core 27-37%; the old EF_CORE_WEIGHT
+#   design shared 50% with E, which was too high specifically because of F. 30%
+#   chosen inside that plateau.
+#
+# Combined effect of the B and F changes vs the prior uniform-B/EF design, tested
+# together 2026-08-29: SPMO-core full window Sharpe 0.964->0.978 (CAGR 25.4%->26.5%,
+# MDD unchanged -32.3%), mirror-core Sharpe 1.021->1.027. Same drawdown either way on
+# both cores -- this reads as a real efficiency gain, not a risk trade-off, but B's
+# thin sample (4 episodes) means it carries much less confidence than F's (which
+# rests on 14.3% of history, the same order of evidence as D).
+TARGET_WEIGHTS = {
+    'A': (0.65, 0.35, 0.00),
+    'B': (0.25, 0.75, 0.00),
+    'C': (1.00, 0.00, 0.00),
+    'D': (0.55, 0.20, 0.25),
+    'E': (0.50, 0.00, 0.50),
+    'F': (0.30, 0.00, 0.70),
+}
 
-# Core weight override during E/F only -- everywhere else core = 1 - satellite_weight
-# (full deployment, no deliberate cash). In E/F, satellite is already 0 in
-# SAT_WEIGHT_LIVE, so this leaves the remainder (1 - EF_CORE_WEIGHT) as cash rather
-# than fully invested in the 15-stock core. Swept the core weight 0%..100% in E/F
-# only (2026-08-29): Sharpe peaks on a broad plateau at 44-50% (0.9571-0.9572, both
-# ends of that band within Sharpe 0.9538-0.9566), materially better than either
-# extreme -- 0% (all cash) gives 0.927, 100% (always invested, no gating) gives
-# 0.926. 50% chosen: statistically indistinguishable from the exact peak (~47%),
-# a rounder number, SPMO-core full window 2015-10-01..2026-08-28: CAGR 26.05%,
-# MaxDD -34.7%, Sharpe 0.957 (vs the ungated live design's CAGR 27.19%, MaxDD
-# -40.7%, Sharpe 0.926). Not validated on a search/holdout split -- treat as a
-# reasonably-shaped in-sample optimum, not a proven edge.
-EF_CORE_WEIGHT = 0.50
-
-# D also tested (2026-08-29): sweeping the core portion in D (satellite held fixed at
-# its 20% SAT_WEIGHT_LIVE value) found a broad Sharpe peak around core=50-57%
-# (0.9638 at the exact peak, vs 0.957 for the old fully-invested-in-D design). D is
-# ~13.5% of history, the second-most time of any state after A, so this one isn't a
-# fringe case. Search/holdout check (split 2020-01-01): FULL Sharpe 0.957->0.964,
-# SEARCH 0.995->1.047 (clear improvement), HOLDOUT 0.970->0.959 (small decline) --
-# net roughly a wash to modestly positive, not as clean a pass as the satellite
-# weights but not a red flag either. D_CASH_WEIGHT = 0.25 was chosen directly by the
-# user as a round number rather than the precise ~28% peak -- core in D becomes
-# 1 - 0.20 (satellite) - 0.25 (cash) = 0.55, inside the flat part of the plateau,
-# effectively indistinguishable from the exact optimum.
-D_CASH_WEIGHT = 0.25
+# Derived for backward compatibility with anything that reads the satellite mapping
+# on its own (e.g. earlier trigger prompts, the published evaluation artifact).
+SAT_WEIGHT_LIVE = {s: w[1] for s, w in TARGET_WEIGHTS.items()}
 
 # The "cash" leg of target_weights() is held as BOXX (Alpha Architect 1-3 Month Box
 # ETF), not literal uninvested buying power -- user preference, 2026-08-29. Backtested
@@ -84,23 +114,16 @@ D_CASH_WEIGHT = 0.25
 # return). The reason to hold it instead of plain cash is tax deferral: BOXX has no
 # current income while held, unlike a cash sweep or a T-bill, which both pay taxable
 # interest every period. Its 60/40 long-term/short-term blended rate under Section 1256
-# does NOT apply here -- E/F and D episodes run weeks to months, so any BOXX sale will
-# still be a short-term gain, same as everything else in this account. Confirmed
+# does NOT apply here -- every gated state here runs weeks to months, so any BOXX sale
+# will still be a short-term gain, same as everything else in this account. Confirmed
 # tradable, fractional, in the live account (576391551) on 2026-08-29.
 CASH_INSTRUMENT = 'BOXX'
 
 def target_weights(state):
-    """Returns (core_weight, satellite_weight, cash_weight) for a given state letter.
-    cash_weight is deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power."""
-    sat = SAT_WEIGHT_LIVE[state]
-    if state in ('E', 'F'):
-        core = EF_CORE_WEIGHT
-    elif state == 'D':
-        core = 1.0 - sat - D_CASH_WEIGHT
-    else:
-        core = 1.0 - sat
-    cash = max(0.0, 1.0 - core - sat)
-    return core, sat, cash
+    """Returns (core_weight, satellite_weight, cash_weight) for a given state letter,
+    straight from TARGET_WEIGHTS -- the single source of truth. cash_weight is
+    deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power."""
+    return TARGET_WEIGHTS[state]
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
