@@ -106,10 +106,16 @@ def weekly_fridays(dates):
 
 
 def run(core_symbol, core_px, qqq_px, tqqq_px, cash_idx):
-    dates = sorted(set(qqq_px) & set(core_px) & set(tqqq_px) & set(cash_idx))
-    states = compute_states(dates, qqq_px)
-    state_by_date = dict(zip(dates, states))
+    # Compute states on QQQ's FULL history (back to its earliest available date,
+    # ~2009) so the 50/200-day SMA is properly warmed up before the backtest
+    # window starts -- truncating to the core/satellite/cash intersection here
+    # would force the first ~200 trading days into the SMA-not-ready default
+    # state ('F'), corrupting the first year of the regime signal.
+    qqq_dates = sorted(qqq_px)
+    states = compute_states(qqq_dates, qqq_px)
+    state_by_date = dict(zip(qqq_dates, states))
 
+    dates = sorted(set(qqq_px) & set(core_px) & set(tqqq_px) & set(cash_idx))
     fridays = weekly_fridays(dates)
     fridays = [d for d in fridays if d >= '2015-11-02']
 
