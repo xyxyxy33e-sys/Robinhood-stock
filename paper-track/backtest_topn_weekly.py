@@ -119,7 +119,7 @@ def main():
     prices = load_prices()
 
     results = []
-    for n in (15, 25):
+    for n in (1, 3, 5, 10, 15, 20, 25):
         for scheme in ('proportional', 'equal'):
             results.append(run_backtest(periods, prices, n, scheme))
 
