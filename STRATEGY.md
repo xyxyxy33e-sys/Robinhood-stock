@@ -1,6 +1,6 @@
 # Live strategy spec — Robinhood Agentic account (576391551)
 
-Single source of truth for the SPMO core + TQQQ satellite + BOXX cash-gate
+Single source of truth for the SPMO core + TQQQ/QLD satellite + BOXX cash-gate
 overlay. All three live triggers (Friday weekly, Mon–Thu daily, and any
 one-time trigger) should point here for the "what and why" and keep their own
 prompts to the "when and how" — mechanics and step order, not re-derived
@@ -12,11 +12,12 @@ triggers should need only small edits to stay in sync with it.
 | Role | Instrument | Notes |
 |---|---|---|
 | Core | 15-stock SPMO top-15 mirror | Re-scraped from Invesco every Friday, proportionally weighted, dual share classes combined into one company |
-| Satellite | TQQQ | Single position, all leverage in the design runs through this |
+| Satellite (3x) | TQQQ | Higher return, higher decay — volatility drag scales with leverage k as k(k-1), so TQQQ's decay coefficient (6) is 3x QLD's (2) |
+| Satellite (2x) | QLD | Added 2026-08-31. Lower decay, better Sharpe/drawdown than TQQQ in every combination backtested, at the cost of lower raw CAGR. Confirmed tradable/fractional in the live account. |
 | Cash gate | BOXX (Alpha Architect 1-3 Month Box ETF) | Deliberate allocation, not idle buying power — tax deferral vs. a cash sweep/T-bill, which pay taxable interest every period. Its Section 1256 long-term blended rate does NOT apply here — every gated state runs weeks to months, so a BOXX sale is still short-term. |
 
-Core is NEVER margined. All leverage is expressed through the TQQQ position
-alone.
+Core is NEVER margined. All leverage is expressed through the TQQQ/QLD
+satellite positions.
 
 ## Regime engine
 
@@ -36,28 +37,54 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | E | P<50, P<200, 50>200 | breakdown | 4.2% |
 | F | P<50, P<200, 50<200 | established downtrend | 14.3% |
 
-## Target weights (core, satellite, cash) — `TARGET_WEIGHTS` in state.py
+## Target weights (core, TQQQ, QLD, cash) — `TARGET_WEIGHTS` in state.py
 
-| State | Core | Satellite | Cash (BOXX) | Effective exposure |
-|---|---|---|---|---|
-| A | 65% | 35% | 0% | 1.7x |
-| B | 25% | 75% | 0% | 2.5x |
-| C | 100% | 0% | 0% | 1.0x |
-| D | 55% | 20% | 25% | 0.95x |
-| E | 50% | 0% | 50% | 0.5x |
-| F | 30% | 0% | 70% | 0.3x |
+| State | Core | TQQQ (3x) | QLD (2x) | Cash (BOXX) | Effective exposure |
+|---|---|---|---|---|---|
+| A | 80% | 20% | 0% | 0% | 1.4x |
+| B | 25% | 75% | 0% | 0% | 2.5x |
+| C | 100% | 0% | 0% | 0% | 1.0x |
+| D | 0% | 0% | 70% | 30% | 1.4x |
+| E | 50% | 0% | 0% | 50% | 0.5x |
+| F | 30% | 0% | 0% | 70% | 0.3x |
 
 `target_weights(state)` returns this row. Every live trigger must call it —
-never hand-derive weights — and must call `validate_weights(state, core, sat,
-cash)` immediately after, before computing any dollar target or placing any
-order. `WeightSanityError` = abort, do not trade, report the error.
+never hand-derive weights — and must call `validate_weights(state, core,
+tqqq, qld, cash)` immediately after, before computing any dollar target or
+placing any order. `WeightSanityError` = abort, do not trade, report the
+error.
 
 ### Why each row is what it is (short version — full backtests in the
-evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2)
+evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
+plus `paper-track/four_leg_overlay.py` for the 2026-08-31 QLD update)
 
-- **A**: broad Sharpe plateau 30-40% satellite; core/cash axis tested
-  separately, current full-deployment choice is inside the noise floor of
-  the shallow alternative optimum.
+QLD joined TQQQ as a second satellite instrument 2026-08-31, after
+`four_leg_overlay.py` searched each state's (core, TQQQ, QLD) split
+independently against the prior TQQQ-only baseline, one state at a time,
+full-timeline Sharpe as the objective, search period pre-2020-01-01 checked
+against a 2020+ holdout. Only changes that held up on holdout were adopted:
+
+- **A** (62% of weeks — largest state by far): satellite trimmed 35%→20%
+  (still 100% TQQQ, QLD not used here), +0.030 full-timeline Sharpe,
+  confirmed on holdout (1.116). Best-evidenced change in this update.
+- **D** (13.5% of history, second-most after A): the single biggest
+  structural change in the table — drops core AND TQQQ entirely for 70%
+  QLD + 30% cash, +0.025 full-timeline Sharpe, confirmed on holdout (1.088).
+  Moderate (not thin, not large) sample; flagged as the row most worth
+  re-checking if D's live behavior ever looks off, given the size of the
+  jump relative to the evidence base.
+- **B, C, F**: four-leg search found "better" search-period weights for all
+  three, but each made FULL-timeline Sharpe *worse* (-0.036, -0.069, -0.106
+  respectively) — search-only overfitting, not adopted. Confirms rather than
+  displaces their existing rationale (below).
+- **E**: four-leg search's "best" was 100% cash — a corner solution (cash's
+  near-zero variance trivially wins a Sharpe objective regardless of real
+  foregone return, a recurring artifact in this project's search work) —
+  rejected regardless of its Sharpe number.
+
+Original (pre-QLD, TQQQ-only) per-state rationale, still operative for B, C,
+E, F:
+
 - **B**: every axis tested (satellite weight, core/cash split) points toward
   MORE leverage, monotonically, with no plateau found even at 80%
   satellite. Only 4 independent episodes in 16 years (22/16/30/29 trading
@@ -65,9 +92,6 @@ evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de
   conservative pick below the raw ~80% peak.
 - **C**: monotonic — full deployment, no satellite, no cash, confirmed best
   on every axis tested.
-- **D**: broad plateau, core 50-57% (with satellite fixed at 20%).
-  Search/holdout: full Sharpe improved, search improved, holdout declined
-  slightly — roughly a wash. 13.5% of history, second-most after A.
 - **E**: satellite strictly hurts (monotonic decline from 0%). Core/cash
   plateau 44-50%, current 50% sits in it.
 - **F**: satellite strictly hurts, faster than E. Core/cash sweep found F's
@@ -86,6 +110,16 @@ this evaluation. Free-form joint optimization overfits fast; every live
 parameter here was set by single-state analysis with an economic story, not
 blind search. Don't re-introduce unconstrained joint tuning.
 
+Substate research (VIX/credit-spread/breadth/utilities-relative-strength,
+both level and rate-of-change versions — `paper-track/substate_research.py`,
+`substate_research_deltas.py`) tested whether any of the six states should be
+split further by external market data. Nothing survived a corner-solution
+check, a holdout check, AND a placebo check (random meaningless splits
+cleared the same "looks like a finding" bar ~10% of the time by chance).
+Below-state partitioning isn't supported by the available history — six
+states is treated as the right granularity, not a stepping stone to a finer
+one.
+
 ### Transition structure (context, not a trading rule)
 
 States move through a loop, not randomly: A→D is 96% of A's transitions; D
@@ -103,10 +137,10 @@ destination state, nothing more.
 
 ## Safety guards
 
-1. **`validate_weights(state, core, sat, cash)`** — every trigger, every
-   run, right after `target_weights()`. Weights must sum to 1.0 (±0.5%) and
-   the state must be a valid letter. `WeightSanityError` → abort, report,
-   do not trade.
+1. **`validate_weights(state, core, tqqq, qld, cash)`** — every trigger,
+   every run, right after `target_weights()`. Weights must sum to 1.0
+   (±0.5%) and the state must be a valid letter. `WeightSanityError` →
+   abort, report, do not trade.
 2. **`circuit_breaker_check(actual_total_value, implied_total_value)`** —
    every trigger, before placing any order. `implied_total_value` = sum of
    each held position's quantity × live quote, reconstructed independently

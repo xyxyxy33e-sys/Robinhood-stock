@@ -41,16 +41,81 @@ def compute_states(dates, px, buf=0.01):
 # Study default (research/leverage_ma.md, 35% cap variant). Kept for reference/backtests.
 SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 
-# TARGET_WEIGHTS is the single source of truth: (core, satellite, cash) per state,
-# each row summing to 1.0. Every earlier per-constant version of this file (LIVE
-# satellite mapping + EF_CORE_WEIGHT + D_CASH_WEIGHT) has been folded in here as
-# history moved through it -- see below per state for what was tested and why.
-# cash is deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power.
+# TARGET_WEIGHTS is the single source of truth: (core, tqqq, qld, cash) per state,
+# each row summing to 1.0. QLD (ProShares Ultra QQQ, 2x) joined TQQQ (3x) as a
+# second satellite instrument 2026-08-31, after paper-track/four_leg_overlay.py
+# searched each state's (core, tqqq, qld) split independently against the prior
+# TQQQ-only baseline (cash implied as the remainder), varying one state at a time,
+# full-timeline Sharpe as the objective, search period pre-2020-01-01 only, then
+# checked against the 2020+ holdout -- see below per state for what was tested and
+# why, and what did NOT survive that check. cash is deployed into CASH_INSTRUMENT
+# (BOXX), not held as raw buying power. QLD confirmed tradable/fractional in the
+# live account (576391551) on 2026-08-31.
 #
-# A (0.65, 0.35, 0.0) -- established uptrend, 60.4% of history. Sharpe plateau
-#   0.30-0.40 satellite (~0.964), current 0.35 sits in it. Core/cash axis tested
-#   separately: shallow peak near core=55%/cash=10% (Sharpe +0.0015 over full
-#   deployment) -- inside the noise floor of everything else tested, left alone.
+# Why QLD at all: TQQQ's daily-rebalancing volatility decay scales with k(k-1) for
+# leverage k -- 3x TQQQ's decay coefficient is 6 (3x2) vs 2x QLD's 2 (2x1), a 3x
+# higher structural drag, confirmed against realized data (QQQ 2015-2026: TQQQ lost
+# ~14.9%/yr to decay alone vs QLD's ~5.0%/yr). QLD trades lower raw CAGR for better
+# Sharpe and shallower drawdown in every core/satellite combination tested.
+#
+# A (0.65->0.80 core, 0.35->0.20 tqqq, 0.0 qld, 0.0 cash) -- established uptrend,
+#   60.4% of history, 351 weeks. Four-leg search: trims satellite from 35% to 20%
+#   (all TQQQ, QLD not used), +0.030 full-timeline Sharpe (0.988->1.013 -- note this
+#   backtest predates the QLD change and used a slightly different core baseline
+#   Sharpe than the 3-leg number above; treat the DELTA as the finding, not the
+#   absolute levels across the two studies), CONFIRMED on the 2020+ holdout slice
+#   (1.116, an improvement over baseline there too). Largest state by far (62% of
+#   weeks) so this is the best-evidenced change in this update.
+#
+# B (0.25, 0.75, 0.0, 0.0) -- UNCHANGED. Four-leg search on B found a "better"
+#   search-period weight (0.90 core / 0.10 tqqq) but it made FULL-timeline Sharpe
+#   WORSE (-0.036 vs baseline) -- classic search-only overfit, consistent with B's
+#   already-flagged 4-episode/28-week sample. Kept at the existing 25/75/0/0 split;
+#   see the original per-state note below for that rationale.
+#
+# C (1.0, 0.0, 0.0, 0.0) -- UNCHANGED. Four-leg search found switching to 100% TQQQ
+#   satellite, but full-timeline Sharpe was WORSE (-0.069) -- another search-only
+#   overfit on a thin (28-week) sample. Confirms the existing "stay 100% core"
+#   conclusion rather than displacing it.
+#
+# D (0.55/0.20/0.0/0.25 -> 0.0/0.0/0.70/0.30) -- pullback in uptrend, 13.5% of
+#   history, 79 weeks, second-most after A. Four-leg search: drops core AND TQQQ
+#   entirely in favor of 70% QLD + 30% cash, +0.025 full-timeline Sharpe, CONFIRMED
+#   on the 2020+ holdout (1.088). This is the largest STRUCTURAL change in this
+#   update -- D goes from "mostly core, some leverage, some cash" to "no core, all
+#   leverage via the lower-decay instrument, more cash" -- on a moderate (not thin,
+#   not large) sample. Adopted because it passed the same holdout bar as A, but
+#   flagged here as the one row in this table most worth re-checking if D's live
+#   behavior ever looks off, given the size of the structural jump relative to the
+#   evidence base.
+#
+# E (0.50, 0.0, 0.0, 0.50) -- UNCHANGED. Four-leg search's "best" was 100% cash --
+#   a corner solution (cash's near-zero variance trivially wins a Sharpe objective
+#   regardless of real foregone return, confirmed as a recurring artifact across
+#   this project's search work) -- REJECTED regardless of its Sharpe number, not
+#   adopted. Kept at the existing 50/0/0/50 split.
+#
+# F (0.30, 0.0, 0.0, 0.70) -- UNCHANGED. Four-leg search found switching to 20%
+#   TQQQ / 80% QLD (no core, no cash), but full-timeline Sharpe was WORSE (-0.106)
+#   than baseline -- the single worst result in the whole four-leg study. Confirms
+#   the existing "satellite hurts in F, lean into cash" conclusion.
+#
+# Below-state substate research (VIX/credit-spread/breadth/utilities-relative-
+# strength, both LEVEL and RATE-OF-CHANGE versions, paper-track/substate_research.py
+# and substate_research_deltas.py) found nothing that survived a corner-solution
+# check, a holdout check, AND a placebo check (random splits cleared the same
+# "looks like a finding" bar ~10% of the time by chance) -- concluded not worth
+# pursuing further; the six states are treated as the right granularity, not a
+# stepping stone to a finer one. See STRATEGY.md for the full writeup.
+#
+# --- Original 3-leg (TQQQ-only satellite) history below, preserved since B/C/E/F
+# --- are unchanged and this is still their operative rationale ---
+#
+# A (0.65, 0.35, 0.0) [pre-QLD] -- Sharpe plateau 0.30-0.40 satellite (~0.964),
+#   0.35 sat inside it. Core/cash axis tested separately: shallow peak near
+#   core=55%/cash=10% (Sharpe +0.0015 over full deployment) -- inside the noise
+#   floor of everything else tested, left alone. Superseded by the four-leg result
+#   above.
 #
 # B (0.25, 0.75, 0.0) -- reclaim, 3.5% of history, only 4 independent episodes
 #   (22/16/30/29 trading days each) in the whole 10.9yr window. EVERY axis tested
@@ -68,12 +133,13 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   strictly hurts (never tested nonzero, no data suggested it should be), and core
 #   weight vs cash is monotonic all the way to 100% core -- stay fully invested.
 #
-# D (0.55, 0.20, 0.25) -- pullback in uptrend, 13.5% of history, second-most after
-#   A. Satellite sweep flattens 20-25%, core/cash sweep (satellite held fixed)
-#   plateaus at core 50-57% (peak Sharpe 0.964). Search/holdout: FULL 0.957->0.964,
-#   SEARCH 0.995->1.047 (improvement), HOLDOUT 0.970->0.959 (small decline) --
-#   roughly a wash to modestly positive. 25% cash chosen by the user as a round
-#   number inside the flat part of the plateau (core becomes 1-0.20-0.25=0.55).
+# D (0.55, 0.20, 0.25) [pre-QLD] -- pullback in uptrend, 13.5% of history,
+#   second-most after A. Satellite sweep flattens 20-25%, core/cash sweep
+#   (satellite held fixed) plateaus at core 50-57% (peak Sharpe 0.964).
+#   Search/holdout: FULL 0.957->0.964, SEARCH 0.995->1.047 (improvement), HOLDOUT
+#   0.970->0.959 (small decline) -- roughly a wash to modestly positive. 25% cash
+#   chosen by the user as a round number inside the flat part of the plateau.
+#   Superseded by the four-leg result above.
 #
 # E (0.50, 0.0, 0.50) -- breakdown, 4.2% of history. Satellite: adding ANY strictly
 #   hurts (monotonic decline from 0%). Core/cash: broad plateau 44-50% core, current
@@ -95,17 +161,21 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # thin sample (4 episodes) means it carries much less confidence than F's (which
 # rests on 14.3% of history, the same order of evidence as D).
 TARGET_WEIGHTS = {
-    'A': (0.65, 0.35, 0.00),
-    'B': (0.25, 0.75, 0.00),
-    'C': (1.00, 0.00, 0.00),
-    'D': (0.55, 0.20, 0.25),
-    'E': (0.50, 0.00, 0.50),
-    'F': (0.30, 0.00, 0.70),
+    'A': (0.80, 0.20, 0.00, 0.00),
+    'B': (0.25, 0.75, 0.00, 0.00),
+    'C': (1.00, 0.00, 0.00, 0.00),
+    'D': (0.00, 0.00, 0.70, 0.30),
+    'E': (0.50, 0.00, 0.00, 0.50),
+    'F': (0.30, 0.00, 0.00, 0.70),
 }
 
-# Derived for backward compatibility with anything that reads the satellite mapping
-# on its own (e.g. earlier trigger prompts, the published evaluation artifact).
-SAT_WEIGHT_LIVE = {s: w[1] for s, w in TARGET_WEIGHTS.items()}
+# Instrument for each column of TARGET_WEIGHTS, in order.
+TARGET_WEIGHT_LEGS = ('core', 'tqqq', 'qld', 'cash')
+
+# Derived for backward compatibility with anything that reads a combined satellite
+# weight (TQQQ + QLD together) rather than the two legs separately (e.g. earlier
+# trigger prompts, the published evaluation artifact -- both predate the QLD split).
+SAT_WEIGHT_LIVE = {s: w[1] + w[2] for s, w in TARGET_WEIGHTS.items()}
 
 # The "cash" leg of target_weights() is held as BOXX (Alpha Architect 1-3 Month Box
 # ETF), not literal uninvested buying power -- user preference, 2026-08-29. Backtested
@@ -119,10 +189,19 @@ SAT_WEIGHT_LIVE = {s: w[1] for s, w in TARGET_WEIGHTS.items()}
 # tradable, fractional, in the live account (576391551) on 2026-08-29.
 CASH_INSTRUMENT = 'BOXX'
 
+# Both satellite instruments, in TARGET_WEIGHTS column order. TQQQ (3x) is the
+# higher-return/higher-decay leg; QLD (2x) is the lower-decay/better-Sharpe leg
+# (see the TARGET_WEIGHTS comment block above). A state can use either, both, or
+# neither -- there's no requirement that a state pick exactly one.
+SATELLITE_INSTRUMENTS = ('TQQQ', 'QLD')
+
 def target_weights(state):
-    """Returns (core_weight, satellite_weight, cash_weight) for a given state letter,
-    straight from TARGET_WEIGHTS -- the single source of truth. cash_weight is
-    deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power."""
+    """Returns (core_weight, tqqq_weight, qld_weight, cash_weight) for a given state
+    letter, straight from TARGET_WEIGHTS -- the single source of truth. cash_weight
+    is deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power. Two
+    satellite legs (TQQQ, QLD) since 2026-08-31 -- see TARGET_WEIGHT_LEGS for the
+    column order and SAT_WEIGHT_LIVE for a combined-satellite view if a caller only
+    needs the total leveraged exposure, not the TQQQ/QLD split."""
     return TARGET_WEIGHTS[state]
 
 STATE_LABEL = dict(
@@ -131,24 +210,26 @@ STATE_LABEL = dict(
 )
 
 class WeightSanityError(ValueError):
-    """Raised when a computed (state, core, satellite, cash) tuple fails validation.
+    """Raised when a computed (state, core, tqqq, qld, cash) tuple fails validation.
     Every live trigger must call validate_weights() before placing any order and
     abort the rebalance (report, do not trade) if this raises -- added 2026-08-29
     after the strategy grew to three weight legs across 17 instruments with no
-    guard between "compute a state" and "place real orders"."""
+    guard between "compute a state" and "place real orders"; extended 2026-08-31
+    to four legs when QLD joined TQQQ as a second satellite instrument."""
     pass
 
-def validate_weights(state, core, sat, cash, tol=0.005):
+def validate_weights(state, core, tqqq, qld, cash, tol=0.005):
     if state not in STATE_LABEL:
         raise WeightSanityError(f"state {state!r} is not one of {sorted(STATE_LABEL)}")
-    for name, w in (('core', core), ('satellite', sat), ('cash', cash)):
+    legs = (('core', core), ('tqqq', tqqq), ('qld', qld), ('cash', cash))
+    for name, w in legs:
         if not (-tol <= w <= 1.0 + tol):
             raise WeightSanityError(f"{name}_weight={w!r} out of [0,1] range for state {state}")
-    total = core + sat + cash
+    total = core + tqqq + qld + cash
     if abs(total - 1.0) > tol:
         raise WeightSanityError(
             f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
-            f"(core={core}, sat={sat}, cash={cash})"
+            f"(core={core}, tqqq={tqqq}, qld={qld}, cash={cash})"
         )
 
 
