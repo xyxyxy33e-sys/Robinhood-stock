@@ -373,3 +373,12 @@ destination state, nothing more.
   hard (25.5% -> ~18%) and 10/50/100 more than triples the transition
   rate. Cleaner rejection than the two-MA sweep above -- this one fails
   the search/holdout check outright, not just a turnover-cost caveat.
+  A gentler variant -- running a fast "micro" classifier (10/100) alongside
+  the live "macro" one (50/200) in parallel, splitting each macro state by
+  whether the two agree, rather than merging into one bigger state machine
+  (`paper-track/micro_macro_agreement.py`) -- avoids the overfitting blowup
+  (only 2 cells per state, not a cross-product) but nets out to a wash: two
+  individually-real, holdout-confirmed signals (A when micro confirms;
+  D when micro diverges) don't compose into a net full-timeline
+  improvement once blended (Sharpe 1.124 vs live 1.138, CAGR down ~4pp,
+  MaxDD better by ~6pp). Not adopted.
