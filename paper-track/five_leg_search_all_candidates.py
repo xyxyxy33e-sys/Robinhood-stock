@@ -133,7 +133,7 @@ def grid_search_one_state(rows, target_state, step=STEP):
 
 
 def main():
-    for sym in ('SCHD', 'VYM', 'USMV'):
+    for sym in ('SCHD', 'VYM', 'USMV', 'GLD'):
         px = load_daily_csv(f'{CANDIDATES_DIR}/{sym}.csv')
         rows = build_weekly_series(px)
         baseline_full = sharpe(full_series_rets(rows, BASELINE))

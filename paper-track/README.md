@@ -47,9 +47,16 @@ in this directory reflects current strategy.
   state-specific leg. Superseded by the standalone-leg approach in
   `five_leg_xlu_search.py` / `isolated_state_validation.py`.
 - **`five_leg_search_all_candidates.py`** -- broad sweep across SPY, XLU,
-  SCHD, VYM, USMV, BRK.B as candidate defensive/state-specific legs. Only
-  XLU (state E) survived isolated validation; kept for the record of what
-  was tried and why the others were rejected.
+  SCHD, VYM, USMV, BRK.B, GLD as candidate defensive/state-specific legs.
+  Only XLU (state E) survived isolated validation; kept for the record of
+  what was tried and why the others were rejected.
+- **`gld_validation.py`** -- head-to-head isolated test of gold (GLD) vs.
+  the currently-live XLU in state E (XLU included as a free option in the
+  same search grid, not just compared to the pre-XLU cash baseline). The
+  search step itself picked XLU over GLD; GLD only "wins" on a holdout
+  look-back, which the search→holdout discipline treats as a reject, not a
+  finding. See STRATEGY.md's "What was tested alongside XLU and rejected"
+  for the full writeup.
 - **`backtest_overlay_etf.py`**, **`backtest_overlay_etf_totalreturn.py`**,
   **`backtest_overlay_mirror.py`**, **`backtest_topn_weekly.py`**,
   **`backtest_topn_weekly_totalreturn.py`** -- earlier backtests from when
@@ -64,6 +71,6 @@ in this directory reflects current strategy.
 
 ## Data
 
-- `../data/defensive_candidates/{SCHD,VYM,USMV,BRKB}.csv` -- price data
+- `../data/defensive_candidates/{SCHD,VYM,USMV,BRKB,GLD}.csv` -- price data
   fetched to test the rejected defensive candidates above. Kept alongside
   the scripts that consume them for reproducibility.

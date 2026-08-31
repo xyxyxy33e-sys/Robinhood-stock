@@ -143,6 +143,28 @@ an artifact of blending with the rest of the portfolio's variance, not a
 real property of D's own weeks. D's weights are UNCHANGED from the QLD
 update above.
 
+**GLD (gold, tested 2026-08-31, after XLU was already live)**: the loose
+full-timeline search (`paper-track/five_leg_search_all_candidates.py`) found
+a state-E signal even larger than XLU's original one (+0.142 vs +0.043,
+100% GLD corner) — big enough, given this project's history of oversized
+loose-search signals turning out fake (D/XLU, E/BRK.B), to demand the
+decisive test before touching anything live. Two isolated checks
+(`paper-track/gld_validation.py`, `paper-track/isolated_state_validation.py`
+extended to GLD): (a) against the pre-XLU baseline (50% core/50% cash), GLD
+alone "holds up" (+17.3% holdout return, Sharpe 3.70, vs live's +4.5%/0.635)
+— but that's the wrong comparison now that XLU is actually live; (b) run
+head-to-head against XLU directly, with XLU included as a free option in the
+same isolated search grid, the search step itself — using only state E's 13
+pre-2020 search weeks, blind to the holdout — picked 100% XLU over GLD every
+time. GLD only "wins" if you look at the 19 holdout weeks in hindsight and
+pick the asset that did better there (+18.9% GLD vs +12.4% XLU, driven
+mostly by one COVID week, 2020-03-20: XLU -17.1% vs GLD -2.2%) — exactly the
+holdout-cherry-pick this project's search→holdout discipline exists to
+reject. States A, B, D were also checked and GLD did not hold up in any of
+them (live weights beat it on isolated holdout in each). **Verdict: GLD
+rejected, not adopted anywhere.** Data cached at
+`data/defensive_candidates/GLD.csv` for the record.
+
 **Full calendar-year effect** (`paper-track/calendar_year_report.py`-style
 check, run 2026-08-31): flips 2016 from -4.0% to +4.5%, improves 2022 from
 -16.6% to -14.3%, every other year unchanged (states outside E don't
