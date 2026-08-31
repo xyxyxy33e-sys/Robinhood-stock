@@ -364,4 +364,12 @@ destination state, nothing more.
   windows. See also `paper-track/three_ma_split_check.py` -- a third
   (20-day) MA usefully splits state A in one direction (de-lever once
   price is already confirmed above it) but not the other; partial,
-  unconfirmed on its own.
+  unconfirmed on its own. A genuine three-MA classifier (STACK x POSITION
+  regime, `paper-track/three_ma_classifier.py`) was tried for 10/50/100
+  and 50/100/200 and REJECTED for both -- search-period Sharpe looks much
+  better (1.09 -> 1.8-2.1) but holdout Sharpe gets WORSE than the plain
+  50/200 baseline (1.17 -> 0.95-1.00), the textbook overfitting signature
+  from fitting many small independently-weighted cells. CAGR also drops
+  hard (25.5% -> ~18%) and 10/50/100 more than triples the transition
+  rate. Cleaner rejection than the two-MA sweep above -- this one fails
+  the search/holdout check outright, not just a turnover-cost caveat.
