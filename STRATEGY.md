@@ -339,3 +339,14 @@ destination state, nothing more.
   firing triggers × a monthly reconciliation check. Every added piece is
   something that can silently break. When extending this further, prefer
   editing this file and `state.py` over adding new standalone mechanisms.
+- **Dollar-based/fractional market orders placed outside regular hours get
+  CANCELLED by the broker, not queued** (discovered 2026-08-31, the hard
+  way — a real ~$15.2k after-hours SPMO sell sat as `state='cancelled'`,
+  not `'queued'`, silently stalling the GLD migration until caught and
+  fixed manually that evening). The earlier assumption in this file and
+  the trigger prompts ("market closed → orders queue") was simply wrong for
+  this order type. Both live triggers now handle this: use dollar-based
+  market orders in regular hours as normal; outside regular hours, use
+  whole-share LIMIT orders with `market_hours` set to `extended_hours` or
+  `all_day_hours` at a marketable price, and always re-check order state
+  after placing rather than assuming it filled or queued.
