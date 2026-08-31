@@ -350,3 +350,18 @@ destination state, nothing more.
   whole-share LIMIT orders with `market_hours` set to `extended_hours` or
   `all_day_hours` at a marketable price, and always re-check order state
   after placing rather than assuming it filled or queued.
+- **The 50/200-day SMA windows themselves have never been validated** --
+  every other parameter here (per-state weights, QLD, XLU, GLD, the
+  substate ideas) went through this project's search/holdout discipline;
+  the classifier's own windows were just inherited from
+  `research/leverage_ma.md`. A sweep (`paper-track/ma_window_sweep.py`,
+  2026-08-31) found shorter pairs (10/100, 20/100) beat 50/200 on both
+  search and holdout Sharpe simultaneously -- a real effect -- but at
+  2-2.5x the state-transition rate, with no transaction-cost or
+  wash-sale-drag modeling to check whether that edge survives real
+  friction. Not adopted; would require re-optimizing every per-state
+  weight against the new classifier's states, not just swapping the
+  windows. See also `paper-track/three_ma_split_check.py` -- a third
+  (20-day) MA usefully splits state A in one direction (de-lever once
+  price is already confirmed above it) but not the other; partial,
+  unconfirmed on its own.
