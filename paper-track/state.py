@@ -189,6 +189,20 @@ SAT_WEIGHT_LIVE = {s: w[1] + w[2] for s, w in TARGET_WEIGHTS.items()}
 # tradable, fractional, in the live account (576391551) on 2026-08-29.
 CASH_INSTRUMENT = 'BOXX'
 
+# The "core" leg of target_weights() is held directly as the SPMO ETF itself,
+# not the 15-stock proportionally-weighted mirror -- changed 2026-08-31 after
+# paper-track/backtest_overlay_etf.py (ETF core) vs backtest_overlay_mirror.py
+# (mirror core) showed SPMO-ETF-as-core wins on every axis paired with the same
+# satellite/cash overlay: better Sharpe (1.065 vs 1.043 with the current
+# post-QLD weights; 1.013 vs 0.987 with the prior TQQQ-only weights) and a
+# materially shallower max drawdown (-30.4% vs -33.0%), not just a marginal
+# CAGR edge either way. Removes the weekly Invesco top-15 scrape and its
+# failure modes (stale data, reconstitution-week uncertainty), collapses 15
+# core positions into 1, and eliminates core-side wash-sale tracking (the
+# satellite/cash legs still churn and still need it). Confirmed tradable,
+# fractional, in the live account (576391551) on 2026-08-31.
+CORE_INSTRUMENT = 'SPMO'
+
 # Both satellite instruments, in TARGET_WEIGHTS column order. TQQQ (3x) is the
 # higher-return/higher-decay leg; QLD (2x) is the lower-decay/better-Sharpe leg
 # (see the TARGET_WEIGHTS comment block above). A state can use either, both, or

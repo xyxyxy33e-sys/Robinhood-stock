@@ -11,7 +11,7 @@ triggers should need only small edits to stay in sync with it.
 
 | Role | Instrument | Notes |
 |---|---|---|
-| Core | 15-stock SPMO top-15 mirror | Re-scraped from Invesco every Friday, proportionally weighted, dual share classes combined into one company |
+| Core | SPMO ETF, held directly | Changed 2026-08-31 from a 15-stock proportionally-weighted mirror. SPMO-as-core beats the mirror on every axis paired with the same satellite/cash overlay (Sharpe 1.065 vs 1.043 with current weights, -30.4% vs -33.0% max drawdown) and removes the weekly Invesco scrape, 15 positions, and core-side wash-sale tracking. |
 | Satellite (3x) | TQQQ | Higher return, higher decay — volatility drag scales with leverage k as k(k-1), so TQQQ's decay coefficient (6) is 3x QLD's (2) |
 | Satellite (2x) | QLD | Added 2026-08-31. Lower decay, better Sharpe/drawdown than TQQQ in every combination backtested, at the cost of lower raw CAGR. Confirmed tradable/fractional in the live account. |
 | Cash gate | BOXX (Alpha Architect 1-3 Month Box ETF) | Deliberate allocation, not idle buying power — tax deferral vs. a cash sweep/T-bill, which pay taxable interest every period. Its Section 1256 long-term blended rate does NOT apply here — every gated state runs weeks to months, so a BOXX sale is still short-term. |
@@ -161,14 +161,13 @@ destination state, nothing more.
 
 ## Cadence
 
-- **Friday, 15:55 ET** — full weekly routine: re-scrape SPMO holdings,
-  compute state, rebalance everything (core + satellite + BOXX), realized
-  P&L + wash-sale report, update the weekly report artifact.
+- **Friday, 15:55 ET** — full weekly routine: compute state, rebalance
+  everything (SPMO core + TQQQ/QLD satellite + BOXX), realized P&L +
+  wash-sale report, update the weekly report artifact.
 - **Monday–Thursday, 15:55 ET** — state-change check only. If the regime
   hasn't changed since yesterday's confirmed close: no action, no report, no
   artifact touch (expected outcome most days, ~8 transitions/year). If it
-  has: rebalance immediately using the core weights already on file from the
-  most recent Friday (no intraday Invesco re-scrape).
+  has: rebalance immediately to the new state's target weights.
 - Both use the SAME `target_weights()` / `compute_states()` / safety guards.
   Overlap is intentional and harmless: if the daily check already moved a
   position to target mid-week, Friday's diff just finds it there and trades
