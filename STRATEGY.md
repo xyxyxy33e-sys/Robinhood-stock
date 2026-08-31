@@ -213,6 +213,23 @@ destination state, nothing more.
    wash-sale-deferred; never report a deferred loss as reducing this year's
    tax liability. TQQQ resizes and BOXX buy/sell cycles are now frequent
    enough that wash sales are closer to the normal case than the exception.
+4. **Compute in code, never hand-add** (added 2026-08-31, after a real
+   incident) — any live financial figure derived by combining two or more
+   other numbers (a "today's total," a "new cumulative," a period subtotal)
+   must be computed programmatically from the raw records
+   (`get_pnl_trade_history`, `get_realized_pnl`, etc.), never composed by
+   hand in prose. On 2026-08-31 a weekly report's headline realized-P&L
+   figures were hand-added and ended up double-counting a pre-existing
+   loss, reporting both "today's total" and "new cumulative" wrong until an
+   independent code-based recomputation caught it (see the weekly report
+   artifact's correction note for that date). `paper-track/consistency_check.py`
+   has a `check_pnl_sum(trade_pnls, expected_total)` helper for exactly this:
+   sum the raw per-trade records and assert the result matches the account's
+   own independently-reported aggregate before reporting either figure. The
+   same file's `check_target_weights()` asserts every row of `TARGET_WEIGHTS`
+   sums to 1.0, independent of `validate_weights()`'s per-run check — run it
+   after any edit to `TARGET_WEIGHTS`. See `paper-track/README.md` for which
+   scripts in that directory are load-bearing vs. historical record.
 
 ## Cadence
 
