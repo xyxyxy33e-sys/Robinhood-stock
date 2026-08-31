@@ -14,10 +14,11 @@ triggers should need only small edits to stay in sync with it.
 | Core | SPMO ETF, held directly | Changed 2026-08-31 from a 15-stock proportionally-weighted mirror. SPMO-as-core beats the mirror on every axis paired with the same satellite/cash overlay (Sharpe 1.065 vs 1.043 with current weights, -30.4% vs -33.0% max drawdown) and removes the weekly Invesco scrape, 15 positions, and core-side wash-sale tracking. |
 | Satellite (3x) | TQQQ | Higher return, higher decay — volatility drag scales with leverage k as k(k-1), so TQQQ's decay coefficient (6) is 3x QLD's (2) |
 | Satellite (2x) | QLD | Added 2026-08-31. Lower decay, better Sharpe/drawdown than TQQQ in every combination backtested, at the cost of lower raw CAGR. Confirmed tradable/fractional in the live account. |
+| Defensive (state E only) | XLU (Utilities Select Sector SPDR) | Added 2026-08-31. Not a satellite, not blended into core — a standalone leg used only in state E, replacing what used to be E's 50% core allocation. The one candidate from an extensive defensive-instrument search (SPY, SCHD, VYM, USMV, BRK.B all tested and rejected) to survive three independent validation passes, including fully isolated single-state testing. ~0.08% expense ratio, cheaper than SPMO itself. Confirmed tradable/fractional (regular hours) in the live account. |
 | Cash gate | BOXX (Alpha Architect 1-3 Month Box ETF) | Deliberate allocation, not idle buying power — tax deferral vs. a cash sweep/T-bill, which pay taxable interest every period. Its Section 1256 long-term blended rate does NOT apply here — every gated state runs weeks to months, so a BOXX sale is still short-term. |
 
 Core is NEVER margined. All leverage is expressed through the TQQQ/QLD
-satellite positions.
+satellite positions. XLU carries no leverage.
 
 ## Regime engine
 
@@ -37,21 +38,21 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | E | P<50, P<200, 50>200 | breakdown | 4.2% |
 | F | P<50, P<200, 50<200 | established downtrend | 14.3% |
 
-## Target weights (core, TQQQ, QLD, cash) — `TARGET_WEIGHTS` in state.py
+## Target weights (core, TQQQ, QLD, XLU, cash) — `TARGET_WEIGHTS` in state.py
 
-| State | Core | TQQQ (3x) | QLD (2x) | Cash (BOXX) | Effective exposure |
-|---|---|---|---|---|---|
-| A | 80% | 20% | 0% | 0% | 1.4x |
-| B | 25% | 75% | 0% | 0% | 2.5x |
-| C | 100% | 0% | 0% | 0% | 1.0x |
-| D | 0% | 0% | 70% | 30% | 1.4x |
-| E | 50% | 0% | 0% | 50% | 0.5x |
-| F | 30% | 0% | 0% | 70% | 0.3x |
+| State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |
+|---|---|---|---|---|---|---|
+| A | 80% | 20% | 0% | 0% | 0% | 1.4x |
+| B | 25% | 75% | 0% | 0% | 0% | 2.5x |
+| C | 100% | 0% | 0% | 0% | 0% | 1.0x |
+| D | 0% | 0% | 70% | 0% | 30% | 1.4x |
+| E | 0% | 0% | 0% | 50% | 50% | 0.5x |
+| F | 30% | 0% | 0% | 0% | 70% | 0.3x |
 
 `target_weights(state)` returns this row. Every live trigger must call it —
 never hand-derive weights — and must call `validate_weights(state, core,
-tqqq, qld, cash)` immediately after, before computing any dollar target or
-placing any order. `WeightSanityError` = abort, do not trade, report the
+tqqq, qld, xlu, cash)` immediately after, before computing any dollar target
+or placing any order. `WeightSanityError` = abort, do not trade, report the
 error.
 
 ### Why each row is what it is (short version — full backtests in the
@@ -80,10 +81,12 @@ against a 2020+ holdout. Only changes that held up on holdout were adopted:
 - **E**: four-leg search's "best" was 100% cash — a corner solution (cash's
   near-zero variance trivially wins a Sharpe objective regardless of real
   foregone return, a recurring artifact in this project's search work) —
-  rejected regardless of its Sharpe number.
+  rejected regardless of its Sharpe number. Superseded by the XLU update
+  below, which changes E a different way (not more cash — a defensive
+  equity leg instead of half of core).
 
 Original (pre-QLD, TQQQ-only) per-state rationale, still operative for B, C,
-E, F:
+F (E's is superseded, see above and below):
 
 - **B**: every axis tested (satellite weight, core/cash split) points toward
   MORE leverage, monotonically, with no plateau found even at 80%
@@ -92,12 +95,64 @@ E, F:
   conservative pick below the raw ~80% peak.
 - **C**: monotonic — full deployment, no satellite, no cash, confirmed best
   on every axis tested.
-- **E**: satellite strictly hurts (monotonic decline from 0%). Core/cash
-  plateau 44-50%, current 50% sits in it.
 - **F**: satellite strictly hurts, faster than E. Core/cash sweep found F's
   own max drawdown is COMPLETELY UNAFFECTED by F's weight across the full
   0-100% range — reducing exposure here is close to free efficiency, not a
   risk trade-off. 14.3% of history, third-most.
+
+### The XLU update to state E (2026-08-31)
+
+E's 50% core allocation was fully replaced with 50% XLU (utilities sector) —
+cash unchanged at 50%. This is the single most-validated speculative change
+in this file, having survived three independent passes where every other
+candidate tested failed at least one:
+
+1. **Five-leg search** (`paper-track/five_leg_xlu_search.py`): XLU added as a
+   standalone leg (not blended into core), one state varied at a time
+   against the live baseline, full-timeline Sharpe, search/holdout split.
+   E: +0.043 Sharpe, holdout-confirmed (1.092). D also looked promising here
+   (+0.020) but did NOT survive step 3 below — see the rejection note.
+2. **Finer-grid robustness check**: E's peak is a narrow, single-asset
+   corner (100% of the state-E-search grid's top results cluster near 100%
+   XLU) — inherently narrow by construction, not necessarily fake, but
+   flagged for extra scrutiny given this project's history with corner
+   solutions.
+3. **Isolated single-state validation**
+   (`paper-track/isolated_state_validation.py`): the decisive test. Search
+   and holdout computed using ONLY state E's own discontiguous weeks (13
+   search weeks, 19 holdout weeks pre/post 2020-01-01), cash fixed at 50% to
+   avoid the degenerate-cash-corner trap, NO anchoring to the rest of the
+   portfolio's variance. Candidate (0 core / 0 TQQQ / 0 QLD / 50% XLU / 50%
+   cash) beat the live weights (50% core / 50% cash) on isolated holdout:
+   +7.5% return, Sharpe 0.873 vs live's +4.5%, Sharpe 0.635.
+
+**What was tested alongside XLU and rejected**: SPY blended into core
+(monotonically worse on every metric, including the weak years it was meant
+to help — diversifying the core dilutes the momentum tilt the strategy
+leans into). SCHD, VYM, USMV (all low-fee, 0.06-0.15%, dividend-quality/
+low-vol factor tilts) blended into core AND as standalone state-specific
+legs — all flat-to-worse, none matched XLU's magnitude even at a loose bar
+(`paper-track/defensive_core_blend.py`,
+`paper-track/five_leg_search_all_candidates.py`). BRK.B as a standalone leg
+showed a real signal in E under method (1) but did NOT survive isolated
+validation (3) — live weights beat it in isolation
+(`paper-track/isolated_state_validation.py`). **D/XLU is the clearest
+cautionary result**: it passed methods (1) and looked non-corner and
+holdout-confirmed, but FAILED isolated validation — D's apparent gain was
+an artifact of blending with the rest of the portfolio's variance, not a
+real property of D's own weeks. D's weights are UNCHANGED from the QLD
+update above.
+
+**Full calendar-year effect** (`paper-track/calendar_year_report.py`-style
+check, run 2026-08-31): flips 2016 from -4.0% to +4.5%, improves 2022 from
+-16.6% to -14.3%, every other year unchanged (states outside E don't
+reference this leg). Cumulative return over the full 10.9yr window improves
+from +1130.8% to +1305.4%.
+
+**Caveat, carried forward, don't re-litigate**: this rests on state E's own
+thin sample (32 weeks total, 19 in the isolated holdout) — the most-validated
+speculative change in this file is still built on less independent history
+than A or D. Revisit if E's live behavior ever looks off.
 
 ### What was tried and rejected
 
@@ -137,7 +192,7 @@ destination state, nothing more.
 
 ## Safety guards
 
-1. **`validate_weights(state, core, tqqq, qld, cash)`** — every trigger,
+1. **`validate_weights(state, core, tqqq, qld, xlu, cash)`** — every trigger,
    every run, right after `target_weights()`. Weights must sum to 1.0
    (±0.5%) and the state must be a valid letter. `WeightSanityError` →
    abort, report, do not trade.

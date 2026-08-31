@@ -160,17 +160,45 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # both cores -- this reads as a real efficiency gain, not a risk trade-off, but B's
 # thin sample (4 episodes) means it carries much less confidence than F's (which
 # rests on 14.3% of history, the same order of evidence as D).
+#
+# E (0.50/0.0/0.0/0.0/0.50 -> 0.0/0.0/0.0/0.50/0.50) -- breakdown, 4.2% of
+# history, 32 weeks. Added 2026-08-31: XLU (utilities sector, ~0.08% expense
+# ratio, cheaper than SPMO itself) as a FIFTH leg, used only in this state --
+# not blended into core. Fully replaces E's 50% core allocation with 50% XLU;
+# the 50% cash leg is untouched. This is the one candidate from an extensive
+# defensive-instrument search (paper-track/five_leg_xlu_search.py,
+# five_leg_search_all_candidates.py testing SCHD/VYM/USMV, a standalone BRK.B
+# test) to survive THREE independent validation passes: (1) the four/five-leg
+# per-state search vs. the live baseline over the full continuous timeline,
+# holdout-confirmed; (2) a finer-grid robustness check; (3) fully isolated
+# single-state validation (paper-track/isolated_state_validation.py) using
+# ONLY state E's own discontiguous weeks, split into pre/post-2020
+# search/holdout with NO anchoring to the rest of the portfolio's variance --
+# candidate beat live weights on isolated holdout (+7.5% return, Sharpe 0.873
+# vs live's +4.5%, Sharpe 0.635). A parallel test of the SAME candidate leg in
+# state D, and of BRK.B in state E, both looked promising under method (1) but
+# FAILED isolated validation (3) -- D's apparent gain was an artifact of
+# blending with the rest of the portfolio's variance, not a real property of
+# D's own weeks; BRK.B's E gain likewise didn't survive in isolation. Only
+# E/XLU passed all three. Full calendar-year comparison (paper-track's
+# ad-hoc year-by-year check, 2026-08-31): this change flips 2016 from -4.0% to
+# +4.5%, improves 2022 from -16.6% to -14.3%, and every other year is
+# untouched (states outside E don't reference this leg) -- cumulative return
+# over the full 10.9yr window improves from +1130.8% to +1305.4%. Still rests
+# on state E's thin sample (32 weeks total, 19 in the isolated holdout) --
+# treat as the best-evidenced speculative change in this file, not a settled
+# one, and revisit if E's live behavior ever looks off.
 TARGET_WEIGHTS = {
-    'A': (0.80, 0.20, 0.00, 0.00),
-    'B': (0.25, 0.75, 0.00, 0.00),
-    'C': (1.00, 0.00, 0.00, 0.00),
-    'D': (0.00, 0.00, 0.70, 0.30),
-    'E': (0.50, 0.00, 0.00, 0.50),
-    'F': (0.30, 0.00, 0.00, 0.70),
+    'A': (0.80, 0.20, 0.00, 0.00, 0.00),
+    'B': (0.25, 0.75, 0.00, 0.00, 0.00),
+    'C': (1.00, 0.00, 0.00, 0.00, 0.00),
+    'D': (0.00, 0.00, 0.70, 0.00, 0.30),
+    'E': (0.00, 0.00, 0.00, 0.50, 0.50),
+    'F': (0.30, 0.00, 0.00, 0.00, 0.70),
 }
 
 # Instrument for each column of TARGET_WEIGHTS, in order.
-TARGET_WEIGHT_LEGS = ('core', 'tqqq', 'qld', 'cash')
+TARGET_WEIGHT_LEGS = ('core', 'tqqq', 'qld', 'xlu', 'cash')
 
 # Derived for backward compatibility with anything that reads a combined satellite
 # weight (TQQQ + QLD together) rather than the two legs separately (e.g. earlier
@@ -209,13 +237,20 @@ CORE_INSTRUMENT = 'SPMO'
 # neither -- there's no requirement that a state pick exactly one.
 SATELLITE_INSTRUMENTS = ('TQQQ', 'QLD')
 
+# Defensive leg, used only in state E as of 2026-08-31 -- see the TARGET_WEIGHTS
+# comment block for the three-pass validation this survived. Confirmed
+# tradable/fractional (regular hours only, no extended-hours fractional) in the
+# live account (576391551) on 2026-08-31.
+DEFENSIVE_INSTRUMENT = 'XLU'
+
 def target_weights(state):
-    """Returns (core_weight, tqqq_weight, qld_weight, cash_weight) for a given state
-    letter, straight from TARGET_WEIGHTS -- the single source of truth. cash_weight
-    is deployed into CASH_INSTRUMENT (BOXX), not held as raw buying power. Two
-    satellite legs (TQQQ, QLD) since 2026-08-31 -- see TARGET_WEIGHT_LEGS for the
-    column order and SAT_WEIGHT_LIVE for a combined-satellite view if a caller only
-    needs the total leveraged exposure, not the TQQQ/QLD split."""
+    """Returns (core_weight, tqqq_weight, qld_weight, xlu_weight, cash_weight) for
+    a given state letter, straight from TARGET_WEIGHTS -- the single source of
+    truth. cash_weight is deployed into CASH_INSTRUMENT (BOXX), not held as raw
+    buying power. Five legs since 2026-08-31 (XLU joined as a defensive leg used
+    only in state E) -- see TARGET_WEIGHT_LEGS for the column order and
+    SAT_WEIGHT_LIVE for a combined-satellite (TQQQ+QLD only, excludes XLU) view
+    if a caller only needs total leveraged exposure."""
     return TARGET_WEIGHTS[state]
 
 STATE_LABEL = dict(
@@ -224,26 +259,28 @@ STATE_LABEL = dict(
 )
 
 class WeightSanityError(ValueError):
-    """Raised when a computed (state, core, tqqq, qld, cash) tuple fails validation.
-    Every live trigger must call validate_weights() before placing any order and
-    abort the rebalance (report, do not trade) if this raises -- added 2026-08-29
-    after the strategy grew to three weight legs across 17 instruments with no
-    guard between "compute a state" and "place real orders"; extended 2026-08-31
-    to four legs when QLD joined TQQQ as a second satellite instrument."""
+    """Raised when a computed (state, core, tqqq, qld, xlu, cash) tuple fails
+    validation. Every live trigger must call validate_weights() before placing
+    any order and abort the rebalance (report, do not trade) if this raises --
+    added 2026-08-29 after the strategy grew to three weight legs across 17
+    instruments with no guard between "compute a state" and "place real
+    orders"; extended 2026-08-31 to four legs when QLD joined TQQQ as a second
+    satellite instrument, then to five legs the same day when XLU joined as a
+    defensive leg used only in state E."""
     pass
 
-def validate_weights(state, core, tqqq, qld, cash, tol=0.005):
+def validate_weights(state, core, tqqq, qld, xlu, cash, tol=0.005):
     if state not in STATE_LABEL:
         raise WeightSanityError(f"state {state!r} is not one of {sorted(STATE_LABEL)}")
-    legs = (('core', core), ('tqqq', tqqq), ('qld', qld), ('cash', cash))
+    legs = (('core', core), ('tqqq', tqqq), ('qld', qld), ('xlu', xlu), ('cash', cash))
     for name, w in legs:
         if not (-tol <= w <= 1.0 + tol):
             raise WeightSanityError(f"{name}_weight={w!r} out of [0,1] range for state {state}")
-    total = core + tqqq + qld + cash
+    total = core + tqqq + qld + xlu + cash
     if abs(total - 1.0) > tol:
         raise WeightSanityError(
             f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
-            f"(core={core}, tqqq={tqqq}, qld={qld}, cash={cash})"
+            f"(core={core}, tqqq={tqqq}, qld={qld}, xlu={xlu}, cash={cash})"
         )
 
 
