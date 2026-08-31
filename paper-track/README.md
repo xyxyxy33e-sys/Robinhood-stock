@@ -17,8 +17,9 @@ in this directory reflects current strategy.
 - **`wash_sale.py`** -- `flag_wash_sales()` / `summarize()`, used live every
   week to separate usable vs. wash-sale-deferred realized losses.
 - **`consistency_check.py`** -- automated guard: `TARGET_WEIGHTS` sums to 1.0
-  per state, and a helper to cross-check any hand-composed P&L figure against
-  raw trade records before it goes in a report.
+  per state, `CORE_SPMO_FRAC`/`CORE_GLD_FRAC` sum to 1.0, and a helper to
+  cross-check any hand-composed P&L figure against raw trade records before
+  it goes in a report.
 
 ## Research that shaped the current design (results summarized in STRATEGY.md)
 
@@ -39,24 +40,38 @@ in this directory reflects current strategy.
 - **`calendar_year_report.py`** -- calendar-year backtest table vs.
   SPMO/QQQ/SPY, used to sanity-check the strategy's behavior year by year
   (not just aggregate Sharpe) before and after each design change.
+- **`defensive_core_blend.py`** -- tests blending a candidate into the core
+  weight (SPMO_frac/candidate_frac) rather than as a separate state-specific
+  leg. SPY/SCHD/VYM/USMV/XLU all tested and rejected here in this role
+  (superseded for XLU by the standalone-leg approach in
+  `five_leg_xlu_search.py`), but this is the script (extended inline,
+  2026-08-31) that found and confirmed the GLD 75/25 core blend actually
+  live today -- load-bearing for that result, not just historical record.
+
+## Research that shaped, then rejected, a candidate (kept for the record)
+
+- **`gld_validation.py`** -- head-to-head isolated test of gold (GLD) vs.
+  XLU as a STATE-E-SPECIFIC leg (XLU included as a free option in the same
+  search grid, not just compared to the pre-XLU cash baseline). The search
+  step itself picked XLU over GLD; GLD only "wins" on a holdout look-back,
+  which the search→holdout discipline treats as a reject, not a finding.
+  Do not confuse this with GLD's core-blend role above, which IS live --
+  this script only tested and rejected GLD as a replacement/standalone leg
+  in E. See STRATEGY.md's "What was tested alongside XLU and rejected".
+- **`five_leg_search_all_candidates.py`** -- broad sweep across SPY, XLU,
+  SCHD, VYM, USMV, BRK.B, GLD as candidate defensive/state-specific legs.
+  Only XLU (state E) survived isolated validation as a standalone leg; kept
+  for the record of what was tried and why the others were rejected in that
+  role (GLD's core-blend role is separate, see above).
+- **`substate_v2_check.py`**, **`a1a2_deepdive.py`**, **`a1a2_magnitude.py`**
+  -- verification of an A1/A2 (QQQ realized-vol) and D1/D2 (RSP-vs-QQQ)
+  substate proposal surfaced outside this project. A1/A2 showed a real but
+  parameter-fragile signal that mostly reduced to "more average TQQQ
+  leverage" once isolated from timing skill; D1/D2 failed on sample size and
+  a search/holdout sign flip. Neither adopted.
 
 ## Historical record only -- rejected paths, not referenced by current STRATEGY.md
 
-- **`defensive_core_blend.py`** -- tested blending a defensive instrument
-  (XLU, SPY, SCHD, VYM, USMV) into the core weight rather than as a separate
-  state-specific leg. Superseded by the standalone-leg approach in
-  `five_leg_xlu_search.py` / `isolated_state_validation.py`.
-- **`five_leg_search_all_candidates.py`** -- broad sweep across SPY, XLU,
-  SCHD, VYM, USMV, BRK.B, GLD as candidate defensive/state-specific legs.
-  Only XLU (state E) survived isolated validation; kept for the record of
-  what was tried and why the others were rejected.
-- **`gld_validation.py`** -- head-to-head isolated test of gold (GLD) vs.
-  the currently-live XLU in state E (XLU included as a free option in the
-  same search grid, not just compared to the pre-XLU cash baseline). The
-  search step itself picked XLU over GLD; GLD only "wins" on a holdout
-  look-back, which the search→holdout discipline treats as a reject, not a
-  finding. See STRATEGY.md's "What was tested alongside XLU and rejected"
-  for the full writeup.
 - **`backtest_overlay_etf.py`**, **`backtest_overlay_etf_totalreturn.py`**,
   **`backtest_overlay_mirror.py`**, **`backtest_topn_weekly.py`**,
   **`backtest_topn_weekly_totalreturn.py`** -- earlier backtests from when
@@ -72,5 +87,8 @@ in this directory reflects current strategy.
 ## Data
 
 - `../data/defensive_candidates/{SCHD,VYM,USMV,BRKB,GLD}.csv` -- price data
-  fetched to test the rejected defensive candidates above. Kept alongside
-  the scripts that consume them for reproducibility.
+  fetched to test the defensive/core-blend candidates above (GLD is the one
+  that's live, in its core-blend role; the rest were rejected). Kept
+  alongside the scripts that consume them for reproducibility.
+- `../data/defensive_candidates/RSP.csv` -- price data for the rejected
+  D1/D2 substate check (`substate_v2_check.py`).

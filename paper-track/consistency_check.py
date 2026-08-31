@@ -33,7 +33,19 @@ Usage as a library (intended use -- import into a trigger run or REPL):
     # raises AssertionError if they don't match within a cent
 """
 
-from state import TARGET_WEIGHTS, TARGET_WEIGHT_LEGS, validate_weights
+from state import (TARGET_WEIGHTS, TARGET_WEIGHT_LEGS, validate_weights,
+                    CORE_SPMO_FRAC, CORE_GLD_FRAC)
+
+
+def check_core_blend_fracs(tol=0.005):
+    """Assert the core's SPMO/GLD split sums to 1.0. Run alongside
+    check_target_weights() after any edit to state.py's core-blend constants."""
+    total = CORE_SPMO_FRAC + CORE_GLD_FRAC
+    assert abs(total - 1.0) <= tol, (
+        f"core blend fractions sum to {total:.4f}, not 1.0: "
+        f"CORE_SPMO_FRAC={CORE_SPMO_FRAC}, CORE_GLD_FRAC={CORE_GLD_FRAC}"
+    )
+    print(f"OK: core blend fractions (SPMO={CORE_SPMO_FRAC}, GLD={CORE_GLD_FRAC}) sum to 1.0")
 
 
 def check_target_weights(tol=0.005):
@@ -78,3 +90,4 @@ def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):
 
 if __name__ == "__main__":
     check_target_weights()
+    check_core_blend_fracs()

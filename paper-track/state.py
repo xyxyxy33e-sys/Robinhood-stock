@@ -231,6 +231,25 @@ CASH_INSTRUMENT = 'BOXX'
 # fractional, in the live account (576391551) on 2026-08-31.
 CORE_INSTRUMENT = 'SPMO'
 
+# The core leg itself is a fixed 75/25 blend of SPMO and GLD (gold), not pure
+# SPMO -- added 2026-08-31 after testing GLD two different ways. GLD as a
+# REPLACEMENT for a state-specific leg (standalone in state E, competing
+# head-to-head against XLU) was rejected: the isolated search, when given
+# both as options, picked pure XLU every time -- see the "GLD (gold, tested
+# 2026-08-31...)" note below. GLD blended INTO THE CORE across every state is
+# different and was adopted: unlike every other core-blend candidate tested
+# (SPY, SCHD, VYM, USMV -- see "What was tried and rejected" in STRATEGY.md),
+# a 75/25 SPMO/GLD core cuts max drawdown consistently in BOTH the pre-2020
+# search slice and the post-2020 holdout (-30.36% -> -27.35% full-timeline),
+# with full/holdout Sharpe improving (+0.045 full, +0.068 holdout) and the
+# pre-2020 search-period Sharpe cost negligible (-0.001, noise-level) --
+# the same both-sides-confirm pattern that validated E/XLU, not the
+# holdout-only pattern behind every rejected candidate. Cost: -0.45pp/yr
+# CAGR. Confirmed tradable, fractional, in the live account (576391551).
+CORE_SPMO_FRAC = 0.75
+CORE_GLD_FRAC = 0.25
+CORE_SECONDARY_INSTRUMENT = 'GLD'
+
 # Both satellite instruments, in TARGET_WEIGHTS column order. TQQQ (3x) is the
 # higher-return/higher-decay leg; QLD (2x) is the lower-decay/better-Sharpe leg
 # (see the TARGET_WEIGHTS comment block above). A state can use either, both, or
@@ -250,7 +269,10 @@ def target_weights(state):
     buying power. Five legs since 2026-08-31 (XLU joined as a defensive leg used
     only in state E) -- see TARGET_WEIGHT_LEGS for the column order and
     SAT_WEIGHT_LIVE for a combined-satellite (TQQQ+QLD only, excludes XLU) view
-    if a caller only needs total leveraged exposure."""
+    if a caller only needs total leveraged exposure. core_weight itself is a
+    fixed 75/25 SPMO/GLD blend (CORE_SPMO_FRAC/CORE_GLD_FRAC), not pure SPMO
+    -- split core_weight * account_value into those two instruments in that
+    ratio, in every state that has a nonzero core_weight."""
     return TARGET_WEIGHTS[state]
 
 STATE_LABEL = dict(

@@ -11,7 +11,7 @@ triggers should need only small edits to stay in sync with it.
 
 | Role | Instrument | Notes |
 |---|---|---|
-| Core | SPMO ETF, held directly | Changed 2026-08-31 from a 15-stock proportionally-weighted mirror. SPMO-as-core beats the mirror on every axis paired with the same satellite/cash overlay (Sharpe 1.065 vs 1.043 with current weights, -30.4% vs -33.0% max drawdown) and removes the weekly Invesco scrape, 15 positions, and core-side wash-sale tracking. |
+| Core | 75% SPMO ETF / 25% GLD (gold), fixed blend | SPMO-as-core changed 2026-08-31 from a 15-stock proportionally-weighted mirror (beats the mirror on every axis: Sharpe 1.065 vs 1.043, -30.4% vs -33.0% max drawdown; removes the weekly Invesco scrape, 15 positions, and core-side wash-sale tracking). GLD blended in the same day — see "The GLD core-blend addition (2026-08-31)" below. |
 | Satellite (3x) | TQQQ | Higher return, higher decay — volatility drag scales with leverage k as k(k-1), so TQQQ's decay coefficient (6) is 3x QLD's (2) |
 | Satellite (2x) | QLD | Added 2026-08-31. Lower decay, better Sharpe/drawdown than TQQQ in every combination backtested, at the cost of lower raw CAGR. Confirmed tradable/fractional in the live account. |
 | Defensive (state E only) | XLU (Utilities Select Sector SPDR) | Added 2026-08-31. Not a satellite, not blended into core — a standalone leg used only in state E, replacing what used to be E's 50% core allocation. The one candidate from an extensive defensive-instrument search (SPY, SCHD, VYM, USMV, BRK.B all tested and rejected) to survive three independent validation passes, including fully isolated single-state testing. ~0.08% expense ratio, cheaper than SPMO itself. Confirmed tradable/fractional (regular hours) in the live account. |
@@ -162,7 +162,11 @@ mostly by one COVID week, 2020-03-20: XLU -17.1% vs GLD -2.2%) — exactly the
 holdout-cherry-pick this project's search→holdout discipline exists to
 reject. States A, B, D were also checked and GLD did not hold up in any of
 them (live weights beat it on isolated holdout in each). **Verdict: GLD
-rejected, not adopted anywhere.** Data cached at
+rejected as a state-specific replacement/standalone leg** (it does not
+belong in state E in place of or alongside XLU). It was tested again the
+same day in a completely different role — blended into the core across
+every state, not competing with XLU at all — and adopted there; see "The
+GLD core-blend addition (2026-08-31)" below. Data cached at
 `data/defensive_candidates/GLD.csv` for the record.
 
 **Full calendar-year effect** (`paper-track/calendar_year_report.py`-style
@@ -175,6 +179,51 @@ from +1130.8% to +1305.4%.
 thin sample (32 weeks total, 19 in the isolated holdout) — the most-validated
 speculative change in this file is still built on less independent history
 than A or D. Revisit if E's live behavior ever looks off.
+
+### The GLD core-blend addition (2026-08-31)
+
+The core changed from 100% SPMO to a fixed 75% SPMO / 25% GLD blend, applied
+identically in every state that has a nonzero core weight (`CORE_SPMO_FRAC`,
+`CORE_GLD_FRAC` in `paper-track/state.py`). This is unrelated to GLD's
+rejection as a state-E leg above — that test asked "can GLD replace or
+compete with XLU as a state-specific defensive position" (no); this one
+asks "does a small permanent gold sleeve inside the core improve the whole
+portfolio's risk profile" (yes, modestly).
+
+Unlike every other core-blend candidate tested before it (SPY, SCHD, VYM,
+USMV — see "What was tried and rejected" below, all monotonically worse or
+flat-to-worse on every metric including the two weak years), GLD improves
+max drawdown **consistently in both halves of the data**, not just in
+hindsight on holdout:
+
+| Metric | 100% SPMO (prior) | 75/25 SPMO/GLD (live) |
+|---|---|---|
+| CAGR | 24.91% | 24.46% (-0.45pp) |
+| Sharpe, full timeline | 1.065 | 1.110 (+0.045) |
+| Sharpe, pre-2020 (search) | 0.967 | 0.966 (-0.001, noise-level) |
+| Sharpe, post-2020 (holdout) | 1.123 | 1.191 (+0.068) |
+| Max drawdown | -30.36% | -27.35% (+3.0pp better) |
+| 2016 (weak year) | -4.0% | -3.8% |
+| 2022 (weak year) | -16.6% | -15.4% |
+
+The pre-2020 search-period Sharpe cost is negligible — the same
+both-sides-hold-up pattern that validated E/XLU, not the holdout-only
+pattern behind every rejected candidate (D/XLU, E/BRK.B, GLD-as-E-leg
+above, the A1/D1 substate ideas below). Two honest caveats, not
+disqualifying but worth carrying forward: (1) a meaningful share of the
+full/holdout-period benefit comes from GLD's own large 2020 and 2025
+rallies landing in years the core was already strong (added beta from a
+second bull run, not pure downside cushioning) rather than repeatable
+diversification value — don't expect the full effect to recur if gold goes
+flat for a few years; (2) 90/10 and 50/50 blends were also tested (see the
+weekly-report conversation record) — 90/10 costs almost nothing but buys
+less protection, 50/50 buys more protection but the pre-2020 Sharpe cost
+turns clearly negative (-0.023); 75/25 was chosen as the middle of that
+dial, not because it's a local optimum the data singled out.
+
+Rejected in the same core-blend role: SPY, SCHD, VYM, USMV (see below) —
+none matched XLU's original core-blend result, let alone GLD's. Confirmed
+tradable, fractional, in the live account (576391551).
 
 ### What was tried and rejected
 
@@ -250,8 +299,10 @@ destination state, nothing more.
    own independently-reported aggregate before reporting either figure. The
    same file's `check_target_weights()` asserts every row of `TARGET_WEIGHTS`
    sums to 1.0, independent of `validate_weights()`'s per-run check — run it
-   after any edit to `TARGET_WEIGHTS`. See `paper-track/README.md` for which
-   scripts in that directory are load-bearing vs. historical record.
+   after any edit to `TARGET_WEIGHTS`. `check_core_blend_fracs()` does the
+   same for `CORE_SPMO_FRAC`/`CORE_GLD_FRAC` — run it after any edit to the
+   core blend. See `paper-track/README.md` for which scripts in that
+   directory are load-bearing vs. historical record.
 
 ## Cadence
 
