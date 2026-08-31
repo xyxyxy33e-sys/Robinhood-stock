@@ -1,0 +1,211 @@
+{
+  "source": "Invesco S&P 500 Momentum ETF (SPMO) top holdings, live-scraped",
+  "effective_business_date": "2026-08-28",
+  "total_fund_holdings": 103,
+  "exported_top_n": 25,
+  "price_source": "Robinhood get_equity_quotes, live intraday",
+  "price_as_of_utc": "2026-08-31T15:29:50Z",
+  "note": "weight = percentageOfTotalNetAssets from Invesco dng-api.invesco.com holdings/fund endpoint. GOOGL and GOOG are dual share classes of the same company (Alphabet), listed separately here as the fund itself does.",
+  "holdings": [
+    {
+      "rank": 1,
+      "ticker": "MU",
+      "name": "Micron Technology Inc",
+      "spmo_weight_pct": 10.55547,
+      "live_price_usd": 940.025,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 2,
+      "ticker": "NVDA",
+      "name": "NVIDIA Corp",
+      "spmo_weight_pct": 8.926976,
+      "live_price_usd": 220.26,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 3,
+      "ticker": "AVGO",
+      "name": "Broadcom Inc",
+      "spmo_weight_pct": 6.408315,
+      "live_price_usd": 368.265,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 4,
+      "ticker": "JNJ",
+      "name": "Johnson & Johnson",
+      "spmo_weight_pct": 4.716793,
+      "live_price_usd": 266.37,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 5,
+      "ticker": "GOOGL",
+      "name": "Alphabet Inc",
+      "spmo_weight_pct": 4.488928,
+      "live_price_usd": 338.6,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 6,
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices Inc",
+      "spmo_weight_pct": 3.827869,
+      "live_price_usd": 467.53,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 7,
+      "ticker": "GOOG",
+      "name": "Alphabet Inc",
+      "spmo_weight_pct": 3.557729,
+      "live_price_usd": 334.92,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 8,
+      "ticker": "LRCX",
+      "name": "Lam Research Corp",
+      "spmo_weight_pct": 3.437409,
+      "live_price_usd": 300.875,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 9,
+      "ticker": "XOM",
+      "name": "ExxonMobil Holdings Corp",
+      "spmo_weight_pct": 3.091238,
+      "live_price_usd": 159.3,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 10,
+      "ticker": "CAT",
+      "name": "Caterpillar Inc",
+      "spmo_weight_pct": 2.437758,
+      "live_price_usd": 790.98,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 11,
+      "ticker": "INTC",
+      "name": "Intel Corp",
+      "spmo_weight_pct": 2.360209,
+      "live_price_usd": 89.765,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 12,
+      "ticker": "SNDK",
+      "name": "Sandisk Corp",
+      "spmo_weight_pct": 2.20927,
+      "live_price_usd": 1532.1501,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 13,
+      "ticker": "CSCO",
+      "name": "Cisco Systems Inc",
+      "spmo_weight_pct": 1.888016,
+      "live_price_usd": 110.01,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 14,
+      "ticker": "AMAT",
+      "name": "Applied Materials Inc",
+      "spmo_weight_pct": 1.864209,
+      "live_price_usd": 455.985,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 15,
+      "ticker": "STX",
+      "name": "Seagate Technology Holdings PLC",
+      "spmo_weight_pct": 1.816876,
+      "live_price_usd": 819.17,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 16,
+      "ticker": "GE",
+      "name": "General Electric Co",
+      "spmo_weight_pct": 1.772461,
+      "live_price_usd": 335.67,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 17,
+      "ticker": "PLTR",
+      "name": "Palantir Technologies Inc",
+      "spmo_weight_pct": 1.69251,
+      "live_price_usd": 186.22,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 18,
+      "ticker": "RTX",
+      "name": "RTX Corp",
+      "spmo_weight_pct": 1.691157,
+      "live_price_usd": 208.35,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 19,
+      "ticker": "WDC",
+      "name": "Western Digital Corp",
+      "spmo_weight_pct": 1.565993,
+      "live_price_usd": 450.45,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 20,
+      "ticker": "GS",
+      "name": "Goldman Sachs Group Inc/The",
+      "spmo_weight_pct": 1.473697,
+      "live_price_usd": 1024.69,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 21,
+      "ticker": "PM",
+      "name": "Philip Morris International Inc",
+      "spmo_weight_pct": 1.434508,
+      "live_price_usd": 188.63,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 22,
+      "ticker": "APH",
+      "name": "Amphenol Corp",
+      "spmo_weight_pct": 1.410503,
+      "live_price_usd": 158.085,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 23,
+      "ticker": "KO",
+      "name": "Coca-Cola Co/The",
+      "spmo_weight_pct": 1.406857,
+      "live_price_usd": 89.185,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 24,
+      "ticker": "NEM",
+      "name": "Newmont Corp",
+      "spmo_weight_pct": 1.307684,
+      "live_price_usd": 125.785,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    },
+    {
+      "rank": 25,
+      "ticker": "KLAC",
+      "name": "KLA Corp",
+      "spmo_weight_pct": 1.302201,
+      "live_price_usd": 174.36,
+      "quote_timestamp_utc": "2026-08-31T15:29:50Z"
+    }
+  ]
+}
