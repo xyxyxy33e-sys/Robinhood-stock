@@ -374,9 +374,9 @@ single day's move is too frequent to be useful: QQQ alone has closed down
 ≥2% ~14x/year historically (1.3% daily stdev, so a -2% day is only ~1.5σ).
 Cumulative drawdown from a rolling high is far rarer and a more meaningful
 signal — the strategy's own 2015-2026 backtested daily series (state-
-weighted, not raw QQQ) crossed -10% off its 52-week high ~1.4x/year, -15%
-only 3 times in 10.9 years (Dec 2018, Mar 2020, Mar 2023), -20% exactly
-once (the Mar 2020 COVID crash).
+weighted, not raw QQQ) crossed -5% off its 52-week high ~2.5x/year, -10%
+~1.4x/year, -15% only 3 times in 10.9 years (Dec 2018, Mar 2020, Mar
+2023), -20% exactly once (the Mar 2020 COVID crash).
 
 Mechanism (`paper-track/drawdown_tracker.py`): the daily trigger computes
 the STRATEGY's own daily return every day it runs (yesterday's confirmed
@@ -390,11 +390,12 @@ or distorts the reading. `current_drawdown()` compares the latest index
 value to its rolling 252-trading-day high (or all-time high, until the log
 has a year of history — it started empty 2026-09-01, so this runs as an
 all-time-high tracker through roughly September 2027). Thresholds checked:
-**-10%** (worth a modest add), **-15%** and **-20%** (rare, genuinely major
-dislocations) — 5% is deliberately excluded, too frequent (~2.5x/year in
-backtest) to be a useful signal. `newly_crossed()` fires only the FIRST day
-a threshold is breached, not every day the account stays below it, so this
-alerts once per episode, not daily during a drawdown.
+**-5%** (low-conviction "worth a look," included at the user's request
+despite being the noisiest tier — ~2.5x/year in backtest), **-10%** (worth
+a modest add), **-15%** and **-20%** (rare, genuinely major dislocations).
+`newly_crossed()` fires only the FIRST day a threshold is breached, not
+every day the account stays below it, so this alerts once per episode, not
+daily during a drawdown.
 
 ## Cadence
 

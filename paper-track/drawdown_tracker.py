@@ -5,9 +5,12 @@ single noisy day). Single-day moves are too frequent to be useful (QQQ
 closes down >=2% about 14x/year, per this session's own check) -- this
 tracks CUMULATIVE drawdown from a rolling high instead, which is far
 rarer and a more meaningful signal (per the 2015-2026 backtest: the
-strategy's own state-weighted daily series crossed -10% off its 52-week
-high about 1.4x/year, -15% about 3 times in 10.9 years, -20% only once,
-the 2020-03 COVID crash).
+strategy's own state-weighted daily series crossed -5% off its 52-week
+high about 2.5x/year, -10% about 1.4x/year, -15% about 3 times in 10.9
+years, -20% only once, the 2020-03 COVID crash). -5% is included at the
+user's explicit request even though it's the noisiest tier -- treat a
+-5% alert as a low-conviction "worth a look," the -10%+ tiers as the
+higher-conviction signal.
 
 Mechanism: each day the live daily trigger runs, it computes the
 STRATEGY's own daily return (not QQQ's) -- yesterday's confirmed state's
@@ -29,7 +32,10 @@ import os
 
 LOG_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'live_nav_index.csv')
 ROLLING_WINDOW = 252  # trading days, ~1 year -- switches from all-time to rolling once log is this long
-DD_THRESHOLDS = (0.10, 0.15, 0.20)  # 5% deliberately excluded -- too frequent (~2.5x/yr) to be a useful signal
+# 5% included at the user's request despite being the noisiest tier (~2.5x/yr
+# in backtest, vs ~1.4x/yr at 10%, ~0.3x/yr at 15%, ~0.1x/yr at 20%) -- treat
+# a -5% alert as a low-conviction "worth a look," not the same signal as -10%+.
+DD_THRESHOLDS = (0.05, 0.10, 0.15, 0.20)
 
 
 def load_log():
@@ -118,4 +124,4 @@ if __name__ == '__main__':
         print(f"Log: {len(rows)} days, {rows[0][0]} -> {rows[-1][0]}")
         print(f"Latest ({latest_date}): index={latest_value:.4f}, "
               f"peak ({peak_date})={peak_value:.4f}, drawdown={dd*100:.2f}%")
-        print(f"Threshold tier: {'-' + str(int(tier*100)) + '%' if tier else 'none (within 10% of high)'}")
+        print(f"Threshold tier: {'-' + str(int(tier*100)) + '%' if tier else 'none (within 5% of high)'}")
