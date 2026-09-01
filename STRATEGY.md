@@ -399,3 +399,17 @@ destination state, nothing more.
   at live weights), and it would add a second classifier plus a doubled
   per-state weight table to state.py -- a real complexity increase.
   Revisit before adopting.
+
+  Turnover-cost modeling done (`paper-track/turnover_cost_model.py`,
+  2026-09-01): the objection does NOT hold up. At a calibrated 4bps
+  one-way spread/slippage rate, the micro-30/150 design's annualized cost
+  drag is LOWER than live 50/200-only (0.49pp/yr vs 0.74pp/yr) despite
+  more total transitions, because most of the extra ones are small
+  agree/diverge weight tweaks (~0.2 turnover fraction) rather than the
+  old design's fewer-but-all-expensive full state changes (up to ~2.0
+  turnover fraction). Net Sharpe: old 1.111, new 1.149 -- edge holds
+  across a 2-15bps cost sensitivity range. The remaining open items before
+  implementation: wash-sale drag isn't NAV-modeled (it's a tax-timing
+  effect, reported only directionally), and it still needs the second
+  classifier + doubled per-state weight table built into `state.py` and
+  the live triggers.
