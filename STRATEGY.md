@@ -380,5 +380,22 @@ destination state, nothing more.
   (only 2 cells per state, not a cross-product) but nets out to a wash: two
   individually-real, holdout-confirmed signals (A when micro confirms;
   D when micro diverges) don't compose into a net full-timeline
-  improvement once blended (Sharpe 1.124 vs live 1.138, CAGR down ~4pp,
-  MaxDD better by ~6pp). Not adopted.
+  improvement once blended at micro=10/100 (Sharpe 1.124 vs live 1.138,
+  CAGR down ~4pp, MaxDD better by ~6pp).
+
+  A broader sweep of the micro pair itself (`paper-track/micro_macro_sweep.py`,
+  2026-09-01) found the SAME two cells (A/agree, D/diverge) validate across
+  every micro pair tried (9 windows) -- consistent, not fragile to exact
+  parameterization -- and several pairs (30/100, 30/150) beat live 50/200 on
+  full-timeline, search, AND holdout Sharpe SIMULTANEOUSLY, not the
+  search-up/holdout-down pattern that sank the merged 3-MA classifier. Best
+  (30/150): Sharpe 1.171 vs 1.138, search 1.140 vs 1.090, holdout 1.203 vs
+  1.174, MaxDD -21.9% vs -29.7%, CAGR 21.6% vs 25.5% (real cost). Turnover
+  ~50% higher than macro-only (16.7/yr vs 11.2/yr), much milder than
+  10/100's ~25/yr. This is the strongest, best-behaved finding from the
+  whole MA-window research line -- flagged as a serious candidate, not
+  filed away, but NOT YET IMPLEMENTED: no transaction-cost/wash-sale-drag
+  modeling at the higher turnover, only A and D are touched (B/C/E/F stay
+  at live weights), and it would add a second classifier plus a doubled
+  per-state weight table to state.py -- a real complexity increase.
+  Revisit before adopting.
