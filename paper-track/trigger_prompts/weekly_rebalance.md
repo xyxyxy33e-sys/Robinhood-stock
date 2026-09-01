@@ -1,6 +1,9 @@
 # PROPOSED replacement prompt — Weekly Rebalance (Fri 15:55 ET)
 # Trigger: trig_01BasZybRAmmumVcNERAnKX7   cron: 55 19 * * 5
-# STATUS: DRAFT FOR REVIEW — not yet applied to the live trigger.
+# STATUS: APPLIED to the live trigger 2026-09-01. This file is the
+# source of record — edit here, then push via update_trigger, so the repo and
+# the live prompt never drift apart. list_triggers does NOT return prompt text,
+# so this file is the only readable copy.
 
 Weekly rebalance for the Robinhood Agentic account (576391551) — SPMO core +
 TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with the micro overlay and
@@ -96,10 +99,12 @@ When it does fire:
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 
 Same as the daily trigger: compute the strategy's own daily return from
-yesterday's confirmed state's weights (from `target_weights_with_micro` — the
-tracker's series is deliberately the un-vol-targeted design return) dotted with
-today's official-close-to-close leg returns for SPMO/TQQQ/QLD/XLU/BOXX, append
-via `paper-track/drawdown_tracker.py`'s `record_return()`, then
+yesterday's confirmed state's weights — from **`target_weights_with_voltarget`**,
+i.e. the weights actually held, WITH the volatility overlay (changed
+2026-09-01; the un-vol-targeted series would alert on drawdowns the real
+account never had) — dotted with today's official-close-to-close leg returns
+for SPMO/TQQQ/QLD/XLU/BOXX, append via
+`paper-track/drawdown_tracker.py`'s `record_return()`, then
 `current_drawdown()` and `newly_crossed()` for the -5/-10/-15/-20% tiers.
 
 ## 5. Push notifications — exactly three events, nothing else

@@ -55,11 +55,24 @@ def record_return(date, daily_return):
     This is a synthetic, cash-flow-blind return index -- NOT the account's
     total_value -- specifically so that a manual deposit (the whole point of
     this tracker) never itself looks like "a new high" or distorts the
-    drawdown reading. daily_return must be computed the same way
-    turnover_cost_model.py/current_design_by_year.py compute it: yesterday's
-    CONFIRMED state's weights (from target_weights_with_micro) dotted with
-    each leg's official-close-to-official-close return. Returns the full
-    updated log (list of rows) after writing.
+    drawdown reading.
+
+    daily_return must be yesterday's CONFIRMED state's weights dotted with each
+    leg's official-close-to-official-close return, using
+    **target_weights_with_voltarget(state, micro_agrees, vol)** -- i.e. the
+    weights actually held, WITH the volatility overlay applied.
+
+    CHANGED 2026-09-01: this previously used target_weights_with_micro(), the
+    un-vol-targeted design return. That was wrong for this tracker's purpose.
+    Its job is to answer "is this a real dip worth adding money to", so it has
+    to describe the portfolio the user actually holds. Volatility targeting
+    materially shrinks drawdowns (full-period MaxDD -41.6% vs -69.9%), so an
+    un-vol-targeted series would fire the -5%/-10% tiers EARLIER and MORE
+    OFTEN than the real account ever experienced -- alerting on a drawdown
+    that isn't happening. Keep this in sync with whatever the live triggers
+    actually trade.
+
+    Returns the full updated log (list of rows) after writing.
     """
     rows = load_log()
     rows = [r for r in rows if r[0] != date]  # idempotent: drop any existing row for this date first

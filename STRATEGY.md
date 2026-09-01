@@ -864,8 +864,12 @@ weighted, not raw QQQ) crossed -5% off its 52-week high ~2.5x/year, -10%
 
 Mechanism (`paper-track/drawdown_tracker.py`): the daily trigger computes
 the STRATEGY's own daily return every day it runs (yesterday's confirmed
-state's weights, from `target_weights_with_micro`, dotted with that day's
-official-close-to-close leg returns — SPMO/TQQQ/QLD/XLU/BOXX; gold/IAU
+state's weights, from `target_weights_with_voltarget` (CHANGED 2026-09-01
+from `target_weights_with_micro` — the tracker must describe the portfolio
+actually held, or it alerts on drawdowns the account never had; vol targeting
+cuts full-period MaxDD from -69.9% to -41.6%, so an un-vol-targeted series
+fires the -5%/-10% tiers earlier and more often than reality), dotted with
+that day's official-close-to-close leg returns — SPMO/TQQQ/QLD/XLU/BOXX; gold/IAU
 removed 2026-09-01, no longer part of this), and
 appends it to a small local log (`data/live_nav_index.csv`) via
 `record_return(date, daily_return)`. This builds an independent,

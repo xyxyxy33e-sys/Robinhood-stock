@@ -1,6 +1,9 @@
 # PROPOSED replacement prompt — Daily Regime Check (Mon–Thu 15:55 ET)
 # Trigger: trig_01GGL83Q7cR8zDB9yPqnKurE   cron: 55 19 * * 1-4
-# STATUS: DRAFT FOR REVIEW — not yet applied to the live trigger.
+# STATUS: APPLIED to the live trigger 2026-09-01. This file is the
+# source of record — edit here, then push via update_trigger, so the repo and
+# the live prompt never drift apart. list_triggers does NOT return prompt text,
+# so this file is the only readable copy.
 
 Daily regime check for the Robinhood Agentic account (576391551) — SPMO core +
 TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with the micro overlay and
@@ -79,12 +82,15 @@ longest runs are all calm state-A uptrends.
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 
 Compute the STRATEGY's own daily return: yesterday's confirmed state's
-weights (from `target_weights_with_micro` — the tracker's series is
-deliberately the un-vol-targeted design return) dotted with today's
+weights — from **`target_weights_with_voltarget`**, i.e. the weights actually
+held, WITH the volatility overlay — dotted with today's
 official-close-to-close leg returns for SPMO/TQQQ/QLD/XLU/BOXX. Append it via
 `paper-track/drawdown_tracker.py`'s `record_return(date, daily_return)` to
 `data/live_nav_index.csv`. This is a cash-flow-blind index on purpose, so a
-manual deposit never registers as a new high.
+manual deposit never registers as a new high. It must track the VOL-TARGETED
+portfolio (changed 2026-09-01): the un-vol-targeted series would fire the
+-5%/-10% tiers earlier and more often than the real account experiences,
+alerting on a drawdown that isn't happening.
 
 Then `current_drawdown()` vs the rolling 252-day high (all-time high until the
 log has a year — it started empty 2026-09-01) and `newly_crossed()` for the
