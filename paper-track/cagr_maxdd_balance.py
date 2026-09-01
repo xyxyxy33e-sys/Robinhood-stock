@@ -164,3 +164,17 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# --- Follow-up validation of the E/10%-XLU finding, run 2026-09-01 ---
+# Isolated single-state check (state E's own 13 search / 19 holdout weeks,
+# same methodology as isolated_state_validation.py) shows this is the
+# classic corner-solution artifact: search-Sharpe is monotonically
+# DECREASING in XLU weight, peaking at an absurd 7.489 at 0% XLU (100%
+# cash) -- the near-zero-variance cash corner trivially winning a
+# 13-week-sample Sharpe calculation. Applying that search-optimal weight
+# to holdout gives a real total return of only +0.6% (Sharpe 5.8 is
+# inflated, not real opportunity capture). The "10% XLU" full-timeline
+# pick fares little better in isolation: +2.2% holdout return vs live's
+# 50% XLU capturing +7.5% -- more than 3x the actual return, despite a
+# lower headline Sharpe (0.873). REJECTED -- live's 50/50 XLU/cash stands.
+# See paper-track/e_xlu_10pct_check.py for the full isolated validation.
