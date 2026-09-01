@@ -428,3 +428,37 @@ destination state, nothing more.
   21.15% -> 19.99% at the Sharpe optimum) -- does not unlock higher
   return without cost. Confirms this whole micro/macro family is a
   smoothing trade, not a return-boosting one.
+
+  Three more independently-constructed signals converged on the SAME
+  de-lever-when-confirmed direction for state A: price vs its own 20-day
+  SMA (`paper-track/three_ma_split_check.py`), QQQ's own realized-vol
+  percentile (a corrected re-read of `paper-track/a1a2_deepdive.py`'s
+  actual blind-search result, not its originally-proposed weights), and
+  VIX percentile. All four signals overlap substantially with each other
+  (~75-80% pairwise agreement) and each validated a near-zero-TQQQ weight
+  on ISOLATED holdout for its own "confident" majority. A 4-signal
+  majority-vote composite (`paper-track/combined_confidence_signal.py`)
+  made this even cleaner in isolation -- large samples (250-332 weeks),
+  strong isolated-holdout confirmation at every vote threshold.
+
+  **But the full-timeline, cost-adjusted test reverses all of it**
+  (`paper-track/composite_turnover_cost.py`, 2026-09-01): live's unchanged
+  80/20 core/TQQQ is the actual full-portfolio OPTIMUM. Sharpe declines
+  MONOTONICALLY as the confident-weeks weight is de-levered away from
+  80/20 (1.111 at 80/20 -> 1.054 at the fully de-levered 100/0), across
+  every cost assumption tested. Mechanism: isolated-holdout validation
+  checks a candidate weight against ONLY that cell's own return variance,
+  which is blind to how those weeks interact with the rest of the
+  multi-state portfolio. State A is the majority state and already
+  contributes the strategy's steadiest return stream (mostly free of the
+  worse drawdowns concentrated in D/E/F); trimming its return specifically
+  in its most-confirmed weeks removes some of the portfolio's best Sharpe
+  contribution -- a real full-timeline cost invisible to the isolated test.
+  **Net verdict on the entire state-A confidence line of research
+  (four converging signals, all corroborating in isolation): REJECTED.**
+  This was the most thoroughly-investigated idea of the whole research
+  effort and it is a clean rejection at the level that actually matters,
+  not an ambiguous one. No live weights changed. The broader lesson,
+  carried forward: isolated-cell validation is necessary (it catches
+  corner solutions) but not sufficient -- always re-check any candidate
+  change at the full-timeline, cost-adjusted level before trusting it.
