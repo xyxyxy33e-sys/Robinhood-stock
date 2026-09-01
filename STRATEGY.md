@@ -513,6 +513,62 @@ Below-state partitioning isn't supported by the available history — six
 states is treated as the right granularity, not a stepping stone to a finer
 one.
 
+State F substate on 50dma SLOPE (2026-09-01) — rejected, and the
+investigation produced a MORE IMPORTANT correction, below. A search for
+factors predicting the direction of individual state-F weeks (bucketed as
+big-up >=+3%, big-down <=-3%, mild) tested, in order: 14 cross-asset ETFs,
+VIX, credit spreads, breadth, rates, and finally ~20 moving-average
+relationships (distances, MA-vs-MA spreads, slopes, acceleration,
+vol-normalised distances, death-cross age). Only the 50dma's SLOPE (its
+20-day rate of change) looked promising: steeper decline preceding bigger
+bounces, a capitulation/mean-reversion story. It appeared to survive
+search/holdout, episode breadth (11 of 14), exclusion of 2022, and
+parameter-insensitivity. **It was still wrong**, for two reasons worth
+remembering:
+  1. EXPOSURE CONFOUND. Ranking the 50dma slope against its own trailing
+     2-year distribution splits state-F weeks 55/7, not ~50/50 -- inside an
+     established downtrend the 50dma is almost always falling relative to a
+     window dominated by uptrend weeks. So the "rule" was really "hold 60%
+     core in 89% of F weeks", averaging 54% exposure vs the live 30%. Most
+     of its apparent edge was simply holding more, not signal. ALWAYS
+     exposure-match before crediting a conditional weight rule -- and note
+     that an "inverted rule performs badly" sanity check proves NOTHING
+     under this confound (inverting also halves average exposure).
+  2. IT DIED ON MORE DATA. See below.
+
+**The 2015+ backtest window was hiding both bear markets (found 2026-09-01).**
+Every state-F number in this file and in the evaluation artifact was computed
+on data starting 2015-11 (SPMO's inception, which caps the *strategy*
+backtest). But a factor/state study needs only QQQ daily closes, so it can run
+much further back. `data/qqq_long_history.csv` now holds a merged QQQ daily
+series from **1999-09-15** (fetched via get_equity_historicals, splice
+verified against the existing 2009+ kairos series across 102 overlapping days
+at a price ratio of exactly 1.000000). Re-running state F on it:
+
+| | 2009-2026 (what everything above used) | Full 1999-2026 |
+|---|---|---|
+| F weeks / episodes | 62 / 14 | **197 / 28** |
+| QQQ compounded over F weeks | **+17.5%** | **-39.4%** |
+| big_up / big_down / mild | 20 / 14 / 28 | 50 / 58 / 89 |
+
+The post-2015 window contains no sustained bear market except 2022 -- it
+excludes the 2000-02 dot-com crash and the 2008-09 GFC, i.e. exactly the
+episodes state F exists for. On the real history QQQ *loses* ~39% cumulatively
+across F weeks and big-down weeks outnumber big-up ones. Any framing of
+"state F underperforms QQQ, why so defensive" is an artifact of the truncated
+sample; F's 30% core / 70% cash is validated much more strongly than the
+2015+ numbers suggest, and the risk/return frontier computed for F on the
+short sample understates the case for staying defensive. The slope signal
+itself also died here: permutation p went the WRONG way with 3.2x the data
+(0.083 -> 0.189) and episode breadth flipped from 11-helped/2-hurt to
+11-helped/15-hurt. A real effect strengthens with more data.
+
+**Standing lesson: before trusting any state-level statistic, check whether
+the sample window contains the market conditions that state is meant to
+handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
+prices (state classification, regime statistics, signal research); the
+2015-11 floor is only binding where SPMO/QLD/XLU/BOXX leg returns are needed.
+
 ### Transition structure (context, not a trading rule)
 
 States move through a loop, not randomly: A→D is 96% of A's transitions; D
@@ -678,7 +734,13 @@ would defeat the purpose by making the signal-to-noise ratio worse.
 - Every parameter here is fit on the same ~11-year SPMO window (16+ years
   for the QQQ-only regime signal). One real bear market (2022) in the
   strategy's own live-comparable history — n≈1 for the thing the whole
-  design is supposed to protect against.
+  design is supposed to protect against. **This is not a footnote — it
+  actively distorts state-level statistics.** Demonstrated 2026-09-01: on
+  the 2015+ window QQQ *gains* +17.5% across state-F weeks, but on the full
+  1999-2026 history (`data/qqq_long_history.csv`) it *loses* -39.4%, because
+  the short window excludes the 2000-02 and 2008-09 bears. Anything that only
+  needs QQQ prices should be re-checked on the long series before it is
+  believed — see "What was tried and rejected" for the full write-up.
 - B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
   not the magnitude.
 - Complexity has grown faster than the account: six states × three legs ×
