@@ -518,6 +518,78 @@ def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
     return min(cap, target / vol)
 
 
+# Rebalance drift band -- added 2026-09-01, together with the removal of the
+# old per-leg "$100 or 0.3%" trade threshold (user decision: gate on how wrong
+# the WHOLE portfolio is, not on how small each individual leg's trade is).
+#
+# THE PROBLEM IT SOLVES. Before volatility targeting, live weights only moved
+# on a regime change, so "check daily, act on change" was exact. With vol
+# targeting the target drifts a little EVERY day, so acting on any difference
+# would trade ~250x/year, while a weekly-only rule can sit badly off-target
+# during a fast vol spike -- precisely when being off-target costs most.
+#
+# THE RULE (paper-track/drift_band_test.py): rebalance when the regime changes
+# (always, regardless of drift) OR when L1 drift -- sum over the 5 legs of
+# |target_i - held_i| -- exceeds REBALANCE_DRIFT_BAND. Because the legs must
+# each sum to 1.0, an L1 drift of X corresponds to roughly X/2 of the
+# portfolio sitting in the wrong leg; the 0.10 band is therefore about "5
+# percentage points of the portfolio is misallocated".
+#
+# WHY 0.10. A daily-resolution simulation that lets held weights DRIFT with
+# realised returns between rebalances (more realistic than this repo's weekly
+# backtests, which silently reset to target every week) found performance is
+# FLAT across the whole 2%-20% band range -- full-period CAGR 11.35-11.43%,
+# Sharpe 0.665-0.669, MaxDD -41.4% to -42.5%. The band is therefore
+# essentially free in return terms and should be chosen on operational
+# grounds. Rebalances per year: every-day 250, weekly-only 66, band 2% 52,
+# band 5% 33, band 10% 24, band 20% 20. 0.10 sits mid-plateau at ~24
+# rebalances/year (roughly fortnightly) with lower turnover than weekly-only
+# (15.09x vs 15.48x/yr) and identical performance. The two eras disagree
+# mildly on the "best" band (OOS prefers 20%, the fitted window prefers 5%),
+# by margins well inside noise -- another reason not to fine-tune it.
+#
+# RESPONSIVENESS CHECK (the point of the band). Traced through the COVID
+# crash, band 0.10 fired NINE rebalances in three weeks -- 2020-02-24, 02-25,
+# 02-27, 03-02, 03-04, 03-09, 03-10, 03-11, 03-17 -- taking the risky sleeve
+# from 100% to 14% as realised vol went 14% -> 70%. It then correctly HELD
+# through the late-March plateau, when vol stayed high but stopped changing.
+# Regime changes bypass the band entirely, so genuine state transitions are
+# never delayed by it.
+#
+# NOTE for the drift-aware view of the overlay: in that same daily simulation
+# vol targeting still wins clearly over no vol targeting -- full period 11.43%
+# /0.669/-41.6% (band 20%) vs 9.56%/0.517/-69.9% -- though both CAGRs are
+# lower than the weekly backtests report, because weekly backtests reset to
+# target every week and so quietly assume free rebalancing.
+REBALANCE_DRIFT_BAND = 0.10
+
+
+def weight_drift(target, held):
+    """L1 distance between a target and a held weight tuple: sum |t_i - h_i|.
+    Both must be same-length weight tuples (5 legs, in TARGET_WEIGHT_LEGS
+    order). Returns 0.0 when held is None/empty (nothing held yet)."""
+    if not held:
+        return 0.0
+    return sum(abs(t - h) for t, h in zip(target, held))
+
+
+def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND):
+    """Should a trigger rebalance right now?
+
+    Rebalance if the regime changed (ALWAYS -- a state transition is never
+    gated by the band), or if L1 drift from target exceeds `band`, or if
+    nothing is held yet. Returns (bool, drift, reason) so the caller can log
+    WHY it traded."""
+    if not held:
+        return True, 0.0, 'initial allocation'
+    drift = weight_drift(target, held)
+    if regime_changed:
+        return True, drift, 'regime change'
+    if drift > band:
+        return True, drift, f'drift {drift*100:.1f}% > band {band*100:.0f}%'
+    return False, drift, f'drift {drift*100:.1f}% within band {band*100:.0f}%'
+
+
 def target_weights_with_voltarget(state, micro_agrees, vol):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.

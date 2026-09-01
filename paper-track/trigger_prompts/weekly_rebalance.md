@@ -9,10 +9,11 @@ close. `STRATEGY.md` in the repo is the single source of truth for what the
 strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
 
-This is the FULL weekly routine: rebalance every leg to target, then report.
-Unlike the Mon–Thu check, this runs whether or not the regime changed — it is
-where volatility-driven weight drift gets trued up, which is exactly what the
-weekly-rebalance backtest measures.
+This is the FULL weekly routine: check the drift band, rebalance if it fires,
+then report either way. Note the Mon–Thu trigger uses the SAME drift-band gate,
+so by Friday the portfolio is often already within band — in that case trade
+nothing and still produce the weekly report. The weekly report is unconditional;
+the weekly TRADE is not.
 
 ## 1. Compute this week's reading
 
@@ -53,13 +54,29 @@ Optionally run `python3 paper-track/consistency_check.py` — it asserts every
 volatility overlay are internally consistent. Cheap, and it catches a bad edit
 to `state.py` before that edit reaches an order.
 
-## 3. Rebalance every leg
+## 3. Check the drift band, then rebalance if it fires
+
+Build the account's CURRENT held weights: for each of SPMO / TQQQ / QLD / XLU /
+BOXX, quantity × live quote, divided by `get_portfolio`'s `total_value`. Idle
+uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
+
+    do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
+
+  - **regime changed → always rebalance**, whatever the drift.
+  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.10),
+    i.e. roughly "5 percentage points of the portfolio is in the wrong leg".
+  - **within band → trade nothing**, but still do steps 4-7 and publish the
+    weekly report. Report the drift figure so a long quiet stretch is visible
+    rather than looking like a trigger that failed to run.
+
+When it does fire:
 
   - Dollar target per leg = weight × `get_portfolio`'s `total_value`.
-  - Skip any leg whose trade is under **$100 or 0.3%** of account value —
-    below that, spread and wash-sale churn cost more than the tracking error.
-    This is why the live account will not sit exactly on target every week,
-    and that is intended.
+  - **No per-leg minimum** — every leg goes to target, however small its
+    trade. The old "$100 or 0.3%" per-leg skip was REMOVED 2026-09-01: the
+    band gates on whether the portfolio as a whole is meaningfully wrong,
+    which is the better control, and a per-leg gate on top of it would leave
+    small legs permanently adrift. Do not reintroduce one.
   - Sell before buy so proceeds are available.
   - Marketable limit orders: at/through the bid for sells, the ask for buys.
     At 15:55 ET regular-hours rules apply, so fractional/dollar-based orders
@@ -72,8 +89,9 @@ to `state.py` before that edit reaches an order.
   - XLU is fractional-tradable in regular hours only.
   - If any residual **IAU** is found, sell it — gold was removed from the
     design 2026-09-01 and any remaining position is dust to be cleared.
-  - After filling, re-verify holdings against target and report any leg still
-    off by more than the threshold.
+  - After filling, re-verify holdings against target and report the resulting
+    L1 drift; it should be near zero. Anything above the band after a
+    completed rebalance means a fill failed — investigate, do not ignore.
 
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 

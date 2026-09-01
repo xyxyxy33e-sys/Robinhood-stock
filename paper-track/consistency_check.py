@@ -37,7 +37,8 @@ from state import (TARGET_WEIGHTS, TARGET_WEIGHT_LEGS, validate_weights,
                     CORE_SPMO_FRAC, CORE_GLD_FRAC, MICRO_OVERLAY_WEIGHTS,
                     STATE_LABEL, target_weights_with_gold, validate_weights_6leg,
                     target_weights_with_voltarget, vol_target_multiplier,
-                    VOL_TARGET_PA, VOL_TARGET_CAP)
+                    VOL_TARGET_PA, VOL_TARGET_CAP,
+                    needs_rebalance, weight_drift, REBALANCE_DRIFT_BAND)
 
 
 def check_core_blend_fracs(tol=0.005):
@@ -163,6 +164,49 @@ def check_voltarget_overlay(tol=0.005):
           f"vol=None/0 is a no-op, cap={VOL_TARGET_CAP} <= 1.0")
 
 
+def check_rebalance_band():
+    """Assert the drift-band rebalance gate behaves, especially at its edges.
+
+    The band exists to stop volatility targeting from trading every day, but
+    it must NEVER delay a genuine regime change and must never wedge the
+    portfolio permanently off-target. Guards:
+      * a regime change always rebalances, no matter how small the drift;
+      * nothing held yet always rebalances (initial allocation);
+      * drift strictly above the band rebalances, drift at/below it does not;
+      * the band is in (0, 2] -- L1 drift between two weight tuples that each
+        sum to 1.0 cannot exceed 2.0, so a band >= 2 could never trigger and
+        would silently disable vol-driven rebalancing entirely.
+    """
+    assert 0 < REBALANCE_DRIFT_BAND < 2.0, (
+        f"REBALANCE_DRIFT_BAND={REBALANCE_DRIFT_BAND} must be in (0, 2): L1 drift between two "
+        f"weight tuples summing to 1.0 maxes out at 2.0, so a band at or above that can never "
+        f"fire and would disable vol-driven rebalancing"
+    )
+    base = (0.88, 0.12, 0.0, 0.0, 0.0)
+    # regime change always wins, even at zero drift
+    do, _, why = needs_rebalance(base, list(base), regime_changed=True)
+    assert do and why == 'regime change', f"regime change must always rebalance, got {why!r}"
+    # nothing held -> initial allocation
+    do, _, why = needs_rebalance(base, None, regime_changed=False)
+    assert do and 'initial' in why, f"empty holdings must rebalance, got {why!r}"
+    # identical weights, no regime change -> hold
+    do, drift, _ = needs_rebalance(base, list(base), regime_changed=False)
+    assert not do and drift == 0.0, "identical weights must not trigger a rebalance"
+    # just inside vs just outside the band (drift is 2x the per-leg shift:
+    # moving x out of core and into cash changes two legs by x each)
+    half = REBALANCE_DRIFT_BAND / 2
+    inside = (base[0] - half * 0.98, base[1], 0.0, 0.0, base[4] + half * 0.98)
+    outside = (base[0] - half * 1.02, base[1], 0.0, 0.0, base[4] + half * 1.02)
+    do_in, d_in, _ = needs_rebalance(inside, list(base), regime_changed=False)
+    do_out, d_out, _ = needs_rebalance(outside, list(base), regime_changed=False)
+    assert not do_in, f"drift {d_in:.4f} should be inside band {REBALANCE_DRIFT_BAND}"
+    assert do_out, f"drift {d_out:.4f} should be outside band {REBALANCE_DRIFT_BAND}"
+    assert abs(weight_drift(base, base)) == 0.0
+    print(f"OK: rebalance drift band {REBALANCE_DRIFT_BAND*100:.0f}% (L1) gates correctly -- "
+          f"regime changes always fire, empty holdings always fire, "
+          f"drift {d_in*100:.1f}% holds and {d_out*100:.1f}% trades")
+
+
 def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):
     """Assert summing raw per-trade P&L records matches an independently
     reported aggregate. Use this instead of hand-adding subtotals in prose.
@@ -190,3 +234,4 @@ if __name__ == "__main__":
     check_micro_overlay_weights()
     check_gold_overlay()
     check_voltarget_overlay()
+    check_rebalance_band()

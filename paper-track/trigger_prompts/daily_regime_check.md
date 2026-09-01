@@ -9,8 +9,9 @@ close. `STRATEGY.md` in the repo is the single source of truth for what the
 strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
 
-This is a STATE-CHANGE check, not a daily rebalance. Expected outcome on most
-days is "nothing changed, no action, no report" (~8 regime transitions/year).
+This is a DRIFT-GATED check, not an unconditional daily rebalance. Most days
+the answer is "within band, no action, no report" — expect roughly 24
+rebalances/year total across all causes.
 
 ## 1. Compute today's reading
 
@@ -42,18 +43,37 @@ through anyway: the multiplier degrades to 1.0, which is the correct fallback.
     A gap beyond 2% means a data error or bad fill, not market volatility.
     `CircuitBreakerTripped` → abort, report, DO NOT TRADE.
 
-## 3. Decide whether to trade
+## 3. Decide whether to trade — the drift band
 
-Compare today's macro state and `micro_agrees` to yesterday's confirmed close.
+Build the account's CURRENT held weights: for each of SPMO / TQQQ / QLD / XLU /
+BOXX, quantity × live quote, divided by `get_portfolio`'s `total_value`. Idle
+uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
 
-  - **No regime change** (same macro state AND same micro_agrees): NO TRADE.
-    Do not rebalance on volatility drift alone — the vol multiplier moves a
-    little every day, and acting on it daily would multiply turnover well past
-    what the backtest models. Volatility-driven adjustment is the FRIDAY
-    trigger's job, which is what the weekly-rebalance backtest actually
-    measures. Still do steps 4 and 5, then stop. No report, no artifact edit.
-  - **Regime changed**: rebalance to the new vol-targeted weights now, using
-    the order mechanics in step 6.
+    do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
+
+where `regime_changed` = today's (macro state, micro_agrees) differs from
+yesterday's confirmed close. The rule it implements:
+
+  - **regime changed → always rebalance**, no matter how small the drift. A
+    state transition is never gated by the band.
+  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.10),
+    where drift = sum over the 5 legs of |target − held|. Since the legs each
+    sum to 1.0, a 10% L1 drift is roughly "5 percentage points of the
+    portfolio is in the wrong leg".
+  - **within band → NO TRADE.** Still do steps 4 and 5, then stop. No report,
+    no artifact edit.
+
+This replaces the old "state-change only" daily rule AND the old per-leg
+"$100 or 0.3%" trade threshold, both removed 2026-09-01. Do not reintroduce a
+per-leg minimum: when a rebalance fires, take EVERY leg to target. The band
+already gates on whether the portfolio as a whole is meaningfully wrong, which
+is the better control; adding a second per-leg gate on top would leave small
+legs permanently drifting.
+
+The band is deliberately responsive, not sleepy: traced through the COVID
+crash it fired nine rebalances in three weeks, cutting the risky sleeve from
+100% to 14% as realised vol went 14% → 70%, then correctly held through the
+late-March plateau when vol stayed high but stopped moving.
 
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 
@@ -82,8 +102,8 @@ low-conviction FYI, not an escalation. Everything else stays in-session.
 ## 6. Order mechanics, when trading
 
   - Compute dollar targets = weight × `get_portfolio`'s `total_value`.
-  - Skip any leg whose trade is under **$100 or 0.3%** of account value —
-    below that, spread and wash-sale churn cost more than the tracking error.
+  - **No per-leg minimum.** Once the band has fired, every leg goes to target,
+    however small its trade. (The old $100/0.3% skip was removed 2026-09-01.)
   - Sell before buy so proceeds are available.
   - Marketable limit orders: at/through the bid for sells, the ask for buys.
     During regular hours (this trigger fires at 15:55 ET, so normally yes)
@@ -93,16 +113,18 @@ low-conviction FYI, not an escalation. Everything else stays in-session.
     rejected outside regular hours.
   - The cash leg is held as **BOXX**, never as idle buying power.
   - XLU is fractional-tradable in regular hours only.
-  - After filling, re-verify holdings against target and report any leg still
-    off by more than the threshold.
+  - After filling, re-verify holdings against target and report the resulting
+    L1 drift; it should be near zero. Anything above the band after a
+    completed rebalance means a fill failed — investigate, do not ignore.
 
 ## 7. Reporting
 
-On a no-change day: no report, no artifact edit — just end. On a rebalance:
+On a within-band day: no report, no artifact edit — just end. On a rebalance:
 append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top, stating the old state, new state, the vol reading and
-multiplier, the weights traded to, and the fills.
+multiplier, the drift and which condition fired (regime change vs drift band),
+the weights traded to, and the fills.
 
 Any live financial figure that combines two or more numbers (a daily total, a
 new cumulative) must be computed in code from raw records

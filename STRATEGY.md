@@ -153,6 +153,56 @@ across 2-12 weeks and trades away more than it gains.
 `VOL_TARGET_PA = 0.15` is the also-defensible drawdown-floor alternative
 (full-period 11.71% / 0.757 / -28.3%) — a one-line change.
 
+#### Rebalance drift band (replaces the per-leg trade threshold)
+
+Vol targeting makes the target move a little **every day**, so the old "act
+only on a regime change" daily rule no longer covers it, and trading on any
+daily difference would rebalance ~250x/year. Live rule
+(`needs_rebalance(target, held, regime_changed)` in `state.py`):
+
+- **regime change → always rebalance**, whatever the drift. Never gated.
+- **otherwise rebalance only when L1 drift > `REBALANCE_DRIFT_BAND` (0.10)**,
+  where drift = Σ|target − held| over the 5 legs. Because the legs sum to 1.0,
+  a 10% L1 drift ≈ *5 percentage points of the portfolio in the wrong leg*.
+
+**The old per-leg "$100 or 0.3%" trade threshold is REMOVED** (2026-09-01,
+user decision). When the band fires, every leg goes to target regardless of
+trade size. Gating on how wrong the *whole portfolio* is, is the better
+control; a per-leg minimum stacked on top would leave small legs permanently
+adrift. Do not reintroduce one.
+
+Band chosen in `paper-track/drift_band_test.py`, which runs a **daily**
+simulation where held weights drift with realised returns between rebalances
+— more honest than this repo's weekly backtests, which silently reset to
+target every week and so assume free rebalancing. Performance is **flat across
+the whole 2%–20% band range** (full-period CAGR 11.35–11.43%, Sharpe
+0.665–0.669, MaxDD −41.4% to −42.5%), so the band is essentially free in
+return terms and was picked on operational grounds:
+
+| rule | rebalances/yr | turnover/yr | CAGR | Sharpe |
+|---|---|---|---|---|
+| every day | 250 | 16.64x | 11.35% | 0.666 |
+| weekly only | 66 | 15.48x | 11.35% | 0.668 |
+| **band 10%** | **24** | **15.09x** | **11.40%** | **0.666** |
+| band 20% | 20 | 14.71x | 11.43% | 0.669 |
+
+10% sits mid-plateau at ~24 rebalances/year (roughly fortnightly) with *lower*
+turnover than weekly-only. The eras disagree mildly on the "best" band (OOS
+prefers 20%, the fitted window 5%) by margins inside noise — a reason not to
+fine-tune it.
+
+**Responsiveness check**, since a band could in principle make the strategy
+sleepy exactly when it matters: traced through the COVID crash, the 10% band
+fired **nine rebalances in three weeks** (2020-02-24, 02-25, 02-27, 03-02,
+03-04, 03-09, 03-10, 03-11, 03-17), cutting the risky sleeve from 100% to 14%
+as realised vol went 14% → 70%, then correctly held through the late-March
+plateau when vol stayed high but stopped changing.
+
+In this drift-aware daily model, vol targeting still beats no vol targeting
+clearly — full period 11.43% / 0.669 / −41.6% vs **9.56% / 0.517 / −69.9%** —
+though both CAGRs land below the weekly backtests, which is the free-rebalancing
+assumption showing up. Treat the daily-model numbers as the more honest ones.
+
 ### Micro overlay for states A and D (added 2026-09-01)
 
 A second, faster classifier — `compute_micro_agreement()` in `state.py`,
