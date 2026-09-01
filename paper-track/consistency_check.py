@@ -34,7 +34,7 @@ Usage as a library (intended use -- import into a trigger run or REPL):
 """
 
 from state import (TARGET_WEIGHTS, TARGET_WEIGHT_LEGS, validate_weights,
-                    CORE_SPMO_FRAC, CORE_GLD_FRAC)
+                    CORE_SPMO_FRAC, CORE_GLD_FRAC, MICRO_OVERLAY_WEIGHTS)
 
 
 def check_core_blend_fracs(tol=0.005):
@@ -67,6 +67,21 @@ def check_target_weights(tol=0.005):
     print(f"OK: all {len(TARGET_WEIGHTS)} states in TARGET_WEIGHTS sum to 1.0 within tol={tol}")
 
 
+def check_micro_overlay_weights(tol=0.005):
+    """Assert every MICRO_OVERLAY_WEIGHTS entry (the A/D micro-overlay refinement,
+    added 2026-09-01) is internally consistent, same as check_target_weights()."""
+    for (state, agree), legs in MICRO_OVERLAY_WEIGHTS.items():
+        assert len(legs) == len(TARGET_WEIGHT_LEGS), (
+            f"micro overlay ({state}, agree={agree}): expected {len(TARGET_WEIGHT_LEGS)} legs, got {len(legs)}: {legs}"
+        )
+        core, tqqq, qld, xlu, cash = legs
+        try:
+            validate_weights(state, core, tqqq, qld, xlu, cash, tol=tol)
+        except Exception as exc:
+            raise AssertionError(f"micro overlay ({state}, agree={agree}) failed validate_weights: {exc}") from exc
+    print(f"OK: all {len(MICRO_OVERLAY_WEIGHTS)} MICRO_OVERLAY_WEIGHTS entries sum to 1.0 within tol={tol}")
+
+
 def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):
     """Assert summing raw per-trade P&L records matches an independently
     reported aggregate. Use this instead of hand-adding subtotals in prose.
@@ -91,3 +106,4 @@ def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):
 if __name__ == "__main__":
     check_target_weights()
     check_core_blend_fracs()
+    check_micro_overlay_weights()

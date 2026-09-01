@@ -17,12 +17,22 @@ def load_csv(path):
 def sma(v, i, n):
     return sum(v[i-n+1:i+1])/n if i >= n-1 else None
 
-def compute_states(dates, px, buf=0.01):
+def compute_states(dates, px, buf=0.01, short_n=50, long_n=200):
+    """Six-state classifier: price vs short_n-day SMA, price vs long_n-day
+    SMA, short SMA vs long SMA, 1% hysteresis. Defaults (50, 200) are the
+    live macro classifier. Also used with (30, 150) as the "micro"
+    classifier for the A/D micro-overlay -- see MICRO_SHORT_N/MICRO_LONG_N
+    and compute_micro_agreement() below. Never call with untested windows
+    for live weights -- paper-track/ma_window_sweep.py and
+    three_ma_classifier.py found every OTHER window pair or a merged
+    3-MA classifier performs worse or fails search/holdout; only (50,200)
+    as the macro classifier and (30,150) as the micro overlay are validated.
+    """
     v = [px[d] for d in dates]
     s50 = s200 = None
     out = []
     for i, d in enumerate(dates):
-        m50, m200 = sma(v, i, 50), sma(v, i, 200)
+        m50, m200 = sma(v, i, short_n), sma(v, i, long_n)
         if m200 is None:
             out.append('F'); continue
         if v[i] > m50*(1+buf): s50 = True
@@ -37,6 +47,23 @@ def compute_states(dates, px, buf=0.01):
         elif not s50 and not s200 and cross: out.append('E')
         else: out.append('F')
     return out
+
+
+# Micro overlay windows -- validated 2026-09-01, paper-track/micro_macro_sweep.py
+# and turnover_cost_model.py. The MICRO classifier is the SAME six-state machine
+# as the macro one, just computed with faster windows -- it's never used as a
+# state in its own right, only to ask "does the fast reading currently agree
+# with the slow (macro) one" for states A and D.
+MICRO_SHORT_N = 30
+MICRO_LONG_N = 150
+
+
+def compute_micro_agreement(dates, px, buf=0.01):
+    """Per-date bool: does the MICRO (30/150) classifier currently read A or
+    B (the two "trend confirmed" states)? Used only to gate the A/D micro
+    overlay in MICRO_OVERLAY_WEIGHTS below -- never a state on its own."""
+    micro_states = compute_states(dates, px, buf=buf, short_n=MICRO_SHORT_N, long_n=MICRO_LONG_N)
+    return {d: (s in ('A', 'B')) for d, s in zip(dates, micro_states)}
 
 # Study default (research/leverage_ma.md, 35% cap variant). Kept for reference/backtests.
 SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
@@ -274,6 +301,51 @@ def target_weights(state):
     -- split core_weight * account_value into those two instruments in that
     ratio, in every state that has a nonzero core_weight."""
     return TARGET_WEIGHTS[state]
+
+# Micro overlay -- added 2026-09-01, paper-track/micro_macro_sweep.py,
+# turnover_cost_model.py, and the lambda-interpolation frontier that found
+# lambda=0.8 as the genuine Pareto-best point (better Sharpe AND CAGR than
+# the full lambda=1.0 endpoint, for only slightly worse MaxDD). This is the
+# ONE idea from an extensive session of research (MA-window sweeps, 3-MA
+# classifiers, state-A "confidence" signals from four independently
+# corroborating sources, a majority-vote composite) that survived every
+# check: search/holdout, corner-solution, full-timeline blending, and
+# turnover-cost modeling (net Sharpe 1.149 vs live's 1.111 at lambda=1.0,
+# even better at lambda=0.8's 1.154 -- see STRATEGY.md). Everything else
+# from that research either failed search/holdout, failed a corner-solution
+# check, or -- most instructively -- validated in isolation but reversed
+# once tested at the full-timeline level (the state-A "confidence" line,
+# composite_turnover_cost.py): DO NOT re-derive a similar overlay from an
+# isolated-cell result alone; always re-check at the full-timeline,
+# cost-adjusted level before trusting it, the way this one was.
+#
+# Mechanism: split states A and D by whether a faster "micro" reading
+# (compute_micro_agreement, 30/150-day SMAs, same six-state machine as the
+# macro classifier) currently agrees with the macro (50/200) one:
+#   A, micro agrees (reads A or B)   -> de-lever modestly (less TQQQ)
+#   D, micro diverges (reads C/D/E/F) -> shift from QLD into core+cash
+# States B, C, E, F are untouched -- those splits never had enough sample
+# to test (see STRATEGY.md). lambda=0.8 blend between live and the fully
+# micro-adjusted weight (see micro_macro_sweep.py for the fully-adjusted
+# endpoint):
+MICRO_LAMBDA = 0.8
+_LIVE_A, _NEW_A = (0.80, 0.20, 0.00, 0.00, 0.00), (0.90, 0.10, 0.00, 0.00, 0.00)
+_LIVE_D, _NEW_D = (0.00, 0.00, 0.70, 0.00, 0.30), (0.70, 0.00, 0.00, 0.00, 0.30)
+MICRO_OVERLAY_WEIGHTS = {
+    ('A', True): tuple(round((1 - MICRO_LAMBDA) * b + MICRO_LAMBDA * n, 4) for b, n in zip(_LIVE_A, _NEW_A)),
+    ('D', False): tuple(round((1 - MICRO_LAMBDA) * b + MICRO_LAMBDA * n, 4) for b, n in zip(_LIVE_D, _NEW_D)),
+}
+# = {('A', True): (0.88, 0.12, 0.0, 0.0, 0.0), ('D', False): (0.56, 0.0, 0.14, 0.0, 0.3)}
+
+
+def target_weights_with_micro(state, micro_agrees):
+    """target_weights(state), refined by the micro overlay for states A and
+    D only. micro_agrees: bool from compute_micro_agreement() for the same
+    date target_weights() is being called for -- whether the fast (30/150)
+    classifier currently reads A or B. For every state/agreement combo NOT
+    in MICRO_OVERLAY_WEIGHTS (B, C, E, F always; A when micro diverges; D
+    when micro agrees), returns the plain target_weights(state) unchanged."""
+    return MICRO_OVERLAY_WEIGHTS.get((state, micro_agrees), TARGET_WEIGHTS[state])
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',

@@ -49,11 +49,71 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
 | F | 30% | 0% | 0% | 0% | 70% | 0.3x |
 
-`target_weights(state)` returns this row. Every live trigger must call it —
-never hand-derive weights — and must call `validate_weights(state, core,
-tqqq, qld, xlu, cash)` immediately after, before computing any dollar target
-or placing any order. `WeightSanityError` = abort, do not trade, report the
-error.
+`target_weights(state)` returns this row — the base weights, unchanged since
+2026-08-31. Since 2026-09-01, states A and D are further refined by the
+**micro overlay** (below) via `target_weights_with_micro(state, micro_agrees)`
+— call that instead of plain `target_weights()` in every live trigger now.
+Either way, `validate_weights(state, core, tqqq, qld, xlu, cash)` must run
+immediately after, before computing any dollar target or placing any order.
+`WeightSanityError` = abort, do not trade, report the error.
+
+### Micro overlay for states A and D (added 2026-09-01)
+
+A second, faster classifier — `compute_micro_agreement()` in `state.py`,
+the SAME six-state machine as the macro classifier but computed on 30/150-day
+SMAs instead of 50/200 — refines two of the six states. `micro_agrees` = the
+micro classifier currently reads A or B (a bool, computed the same way and at
+the same cadence as the macro state, no lookahead):
+
+| State | micro_agrees | Core | TQQQ | QLD | Cash | vs. base row |
+|---|---|---|---|---|---|---|
+| A | **True** | 88% | 12% | — | — | de-levered from 80/20 |
+| A | False | 80% | 20% | — | — | unchanged |
+| D | True | — | — | 70% | 30% | unchanged |
+| D | **False** | 56% | — | 14% | 30% | shifted from QLD toward core |
+
+B, C, E, F are never touched by the micro overlay — those splits were tested
+and never had enough sample to validate (see below).
+
+**Why this is live and nothing else from an extensive research pass is**:
+of the whole session's exploration — MA-window sweeps (10/100, 20/100, other
+pairs beat 50/200 alone but at 2-2.5x turnover, no cost model, not adopted on
+its own), a from-scratch three-MA classifier (STACK×POSITION, rejected —
+search-period Sharpe looked great, holdout got worse than plain 50/200, the
+textbook overfitting signature), and an extensive "state-A confidence" line
+(four independently-constructed signals — this same micro/macro agreement,
+price vs 20-day SMA, QQQ's own realized-vol percentile, VIX percentile — all
+mutually corroborating, ~75-80% pairwise overlap, each individually validated
+on isolated holdout, then combined into a 4-signal majority-vote composite
+that looked cleanest of all) — **only this one survived full-timeline,
+cost-adjusted testing.**
+
+The state-A confidence line is the cautionary tale worth remembering: every
+piece of it validated on ISOLATED holdout (checking a candidate weight
+against only that cell's own return variance), but a full-timeline,
+cost-adjusted composite test (`paper-track/composite_turnover_cost.py`)
+reversed all of it — live's unchanged 80/20 turned out to be the actual
+full-portfolio optimum, because trimming state A's return in its most
+confirmed weeks removes some of the portfolio's best Sharpe contribution,
+invisible to an isolated-cell check. This micro overlay is the one exception
+that was different in degree, not method — a much MILDER de-lever (88/12,
+not the composite line's full 100/0) — and it was walked back to specifically
+where a `paper-track/micro_macro_sweep.py`+lambda-interpolation frontier
+found it still net-beneficial: `paper-track/turnover_cost_model.py` showed
+net Sharpe 1.149 vs. live's 1.111 at the FULL micro-adjusted endpoint
+(lambda=1.0: 90/10 core/TQQQ for A-agree, 70% core/30% cash for D-diverge —
+more extreme than the table above). The lambda=0.8 blend actually used live
+(the table above) is Pareto-BETTER than that lambda=1.0 endpoint on both
+Sharpe (1.154 vs 1.149) and CAGR (21.86% vs 21.07%), for only slightly worse
+MaxDD (-23.59% vs -21.98%) — the interpolation frontier's genuine sweet
+spot, not either raw endpoint. Cost drag at the lambda=1.0 endpoint was LOWER than live's
+despite more transitions (0.49pp/yr vs 0.74pp/yr), because most of the extra
+transitions are small agree/diverge weight tweaks (~0.2 turnover fraction),
+not full expensive state changes. Confirmed robust across a 2-15bps
+transaction-cost sensitivity range. **Always re-verify any future refinement
+of this kind at the full-timeline, cost-adjusted level before trusting an
+isolated-cell result — that discipline is what separated this one live
+change from the rejected composite that looked, in isolation, even better.**
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
