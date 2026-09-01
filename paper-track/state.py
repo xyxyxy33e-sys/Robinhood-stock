@@ -532,21 +532,32 @@ def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
 # (always, regardless of drift) OR when L1 drift -- sum over the 5 legs of
 # |target_i - held_i| -- exceeds REBALANCE_DRIFT_BAND. Because the legs must
 # each sum to 1.0, an L1 drift of X corresponds to roughly X/2 of the
-# portfolio sitting in the wrong leg; the 0.10 band is therefore about "5
+# portfolio sitting in the wrong leg; the 0.05 band is therefore about "2.5
 # percentage points of the portfolio is misallocated".
 #
-# WHY 0.10. A daily-resolution simulation that lets held weights DRIFT with
+# WHY 0.05. A daily-resolution simulation that lets held weights DRIFT with
 # realised returns between rebalances (more realistic than this repo's weekly
 # backtests, which silently reset to target every week) found performance is
 # FLAT across the whole 2%-20% band range -- full-period CAGR 11.35-11.43%,
-# Sharpe 0.665-0.669, MaxDD -41.4% to -42.5%. The band is therefore
-# essentially free in return terms and should be chosen on operational
-# grounds. Rebalances per year: every-day 250, weekly-only 66, band 2% 52,
-# band 5% 33, band 10% 24, band 20% 20. 0.10 sits mid-plateau at ~24
-# rebalances/year (roughly fortnightly) with lower turnover than weekly-only
-# (15.09x vs 15.48x/yr) and identical performance. The two eras disagree
-# mildly on the "best" band (OOS prefers 20%, the fitted window prefers 5%),
-# by margins well inside noise -- another reason not to fine-tune it.
+# Sharpe 0.664-0.669, MaxDD -41.4% to -42.5%. The band is therefore
+# essentially free in return terms and was chosen on operational grounds:
+#
+#   band     reb/yr   turn/yr    CAGR   Sharpe   median gap   max gap
+#   3%         42.5    15.77x  11.36%    0.665        2 days    74 days
+#   5%  (live) 32.7    15.49x  11.35%    0.665        3 days    93 days
+#   8%         26.9    15.28x  11.42%    0.667        3 days   118 days
+#   10%        24.5    15.09x  11.40%    0.666        4 days   128 days
+#   weekly     66.1    15.48x  11.35%    0.668        3 days     4 days
+#
+# 0.05 was picked (user decision 2026-09-01) for tighter tracking -- max gap
+# 93 days vs 10%'s 128, median 3 days vs 4 -- at the cost of ~8 more
+# rebalances/year. It also gets nearly the responsiveness of a
+# Friday-unconditional rule at LESS THAN HALF its trade count (32.7 vs 75.9
+# rebalances/year, same performance), which is the cheaper way to buy
+# responsiveness. The two eras disagree mildly on the "best" band (OOS prefers
+# 10%, the fitted window prefers 5%) by margins well inside noise -- a reason
+# not to fine-tune further. Anything in 3%-10% is defensible; this is one
+# constant to change.
 #
 # RESPONSIVENESS CHECK (the point of the band). Traced through the COVID
 # crash, band 0.10 fired NINE rebalances in three weeks -- 2020-02-24, 02-25,
@@ -561,7 +572,7 @@ def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
 # /0.669/-41.6% (band 20%) vs 9.56%/0.517/-69.9% -- though both CAGRs are
 # lower than the weekly backtests report, because weekly backtests reset to
 # target every week and so quietly assume free rebalancing.
-REBALANCE_DRIFT_BAND = 0.10
+REBALANCE_DRIFT_BAND = 0.05
 
 
 def weight_drift(target, held):
