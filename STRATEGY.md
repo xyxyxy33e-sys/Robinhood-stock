@@ -413,3 +413,18 @@ destination state, nothing more.
   effect, reported only directionally), and it still needs the second
   classifier + doubled per-state weight table built into `state.py` and
   the live triggers.
+
+  A follow-up (`paper-track/confident_a_leverage.py`, 2026-09-01) tested
+  whether GATING extra leverage to only the confident (agree) weeks could
+  push CAGR higher without the Sharpe cost -- the naive "lever up when
+  confident" hypothesis. The data says the opposite: Sharpe improves
+  monotonically as the agree-side TQQQ weight falls TOWARD ZERO (5 of 7
+  micro pairs tested peak at 0% TQQQ / 100% core during agree weeks), not
+  as it rises. Likely mechanism: leverage's edge comes from catching
+  acceleration/inflection early in a trend, before both a fast and slow
+  signal confirm it -- once both already agree the trend is mature, and
+  TQQQ's decay increasingly outweighs its beta. Same trade-off shape as
+  everything else here (CAGR falls right alongside Sharpe's improvement,
+  21.15% -> 19.99% at the Sharpe optimum) -- does not unlock higher
+  return without cost. Confirms this whole micro/macro family is a
+  smoothing trade, not a return-boosting one.
