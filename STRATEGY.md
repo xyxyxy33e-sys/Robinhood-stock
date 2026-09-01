@@ -407,6 +407,16 @@ state-weighted series, ~14x/year for raw QQQ) — the user was told this
 explicitly and asked for it anyway, so treat every occurrence as
 low-conviction "FYI" framing, not an escalation.
 
+**Push notifications** (added 2026-09-01, at the user's explicit request):
+both live triggers call the `PushNotification` tool — a real interrupt to
+the user's phone/desktop, not just text in the session transcript — for
+three specific events, and only these three: (1) any regime shift (macro
+state change, or a micro-agreement flip within states A/D), (2) a newly
+crossed drawdown-from-high tier (-5/-10/-15/-20%), (3) any single day at
+-2% or worse. Every other routine event (no-change days, ordinary weekly
+reports) stays as in-session/artifact reporting only — pushing for those
+would defeat the purpose by making the signal-to-noise ratio worse.
+
 ## Cadence
 
 - **Friday, 15:55 ET** — full weekly routine: compute state, rebalance
