@@ -258,24 +258,42 @@ CASH_INSTRUMENT = 'BOXX'
 # fractional, in the live account (576391551) on 2026-08-31.
 CORE_INSTRUMENT = 'SPMO'
 
-# The core leg itself is a fixed 75/25 blend of SPMO and GLD (gold), not pure
-# SPMO -- added 2026-08-31 after testing GLD two different ways. GLD as a
-# REPLACEMENT for a state-specific leg (standalone in state E, competing
-# head-to-head against XLU) was rejected: the isolated search, when given
-# both as options, picked pure XLU every time -- see the "GLD (gold, tested
-# 2026-08-31...)" note below. GLD blended INTO THE CORE across every state is
-# different and was adopted: unlike every other core-blend candidate tested
-# (SPY, SCHD, VYM, USMV -- see "What was tried and rejected" in STRATEGY.md),
-# a 75/25 SPMO/GLD core cuts max drawdown consistently in BOTH the pre-2020
-# search slice and the post-2020 holdout (-30.36% -> -27.35% full-timeline),
-# with full/holdout Sharpe improving (+0.045 full, +0.068 holdout) and the
-# pre-2020 search-period Sharpe cost negligible (-0.001, noise-level) --
-# the same both-sides-confirm pattern that validated E/XLU, not the
-# holdout-only pattern behind every rejected candidate. Cost: -0.45pp/yr
-# CAGR. Confirmed tradable, fractional, in the live account (576391551).
+# The core leg itself is a fixed 75/25 blend of SPMO and a gold-tracking ETF,
+# not pure SPMO -- added 2026-08-31 after testing gold exposure two different
+# ways. Gold as a REPLACEMENT for a state-specific leg (standalone in state E,
+# competing head-to-head against XLU) was rejected: the isolated search, when
+# given both as options, picked pure XLU every time -- see the "GLD (gold,
+# tested 2026-08-31...)" note below. Gold blended INTO THE CORE across every
+# state is different and was adopted: unlike every other core-blend candidate
+# tested (SPY, SCHD, VYM, USMV -- see "What was tried and rejected" in
+# STRATEGY.md), a 75/25 SPMO/gold core cuts max drawdown consistently in BOTH
+# the pre-2020 search slice and the post-2020 holdout (-30.36% -> -27.35%
+# full-timeline), with full/holdout Sharpe improving (+0.045 full, +0.068
+# holdout) and the pre-2020 search-period Sharpe cost negligible (-0.001,
+# noise-level) -- the same both-sides-confirm pattern that validated E/XLU,
+# not the holdout-only pattern behind every rejected candidate. Cost:
+# -0.45pp/yr CAGR (backtested against GLD; see below for why the live leg is
+# IAU instead -- return/risk profile of the two is effectively identical,
+# both track gold spot).
+#
+# Instrument switched GLD -> IAU 2026-09-01 (same day as the micro overlay
+# go-live, unrelated change): both are physically-backed gold trusts tracking
+# the same spot price, so the backtest above (run on GLD data, GLD/IAU
+# co-move within basis points) applies to either. IAU was chosen live for two
+# reasons -- (1) lower expense ratio (0.25% vs GLD's 0.40%), a small but real
+# and permanent edge with zero tradeoff; (2) ~$82/share vs GLD's ~$399/share,
+# which matters mechanically on this account: GLD is NOT fractional-tradable
+# here (confirmed 2026-09-01 -- a dollar-based buy order errored, "You can
+# only purchase 4 shares of GLD", leaving a cash remainder that had to be
+# swept into SPMO instead), while IAU filled a dollar-based order to 6
+# decimal places same-day. IAU's own liquidity is still ample for this
+# account's size (~$64B AUM, ~6.2M shares/day 30-day average, vs GLD's ~$146B
+# AUM and ~13.9M shares/day) -- not a liquidity-driven choice, a
+# precision-and-cost one. Confirmed tradable, fractional, in the live account
+# (576391551) on 2026-09-01.
 CORE_SPMO_FRAC = 0.75
 CORE_GLD_FRAC = 0.25
-CORE_SECONDARY_INSTRUMENT = 'GLD'
+CORE_SECONDARY_INSTRUMENT = 'IAU'
 
 # Both satellite instruments, in TARGET_WEIGHTS column order. TQQQ (3x) is the
 # higher-return/higher-decay leg; QLD (2x) is the lower-decay/better-Sharpe leg

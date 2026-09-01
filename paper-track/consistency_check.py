@@ -45,7 +45,7 @@ def check_core_blend_fracs(tol=0.005):
         f"core blend fractions sum to {total:.4f}, not 1.0: "
         f"CORE_SPMO_FRAC={CORE_SPMO_FRAC}, CORE_GLD_FRAC={CORE_GLD_FRAC}"
     )
-    print(f"OK: core blend fractions (SPMO={CORE_SPMO_FRAC}, GLD={CORE_GLD_FRAC}) sum to 1.0")
+    print(f"OK: core blend fractions (SPMO={CORE_SPMO_FRAC}, gold={CORE_GLD_FRAC}) sum to 1.0")
 
 
 def check_target_weights(tol=0.005):
