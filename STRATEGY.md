@@ -397,6 +397,16 @@ a modest add), **-15%** and **-20%** (rare, genuinely major dislocations).
 every day the account stays below it, so this alerts once per episode, not
 daily during a drawdown.
 
+Separately, at the user's explicit request, a single-day move of **-2% or
+worse** in the strategy's own daily return (the same number computed for
+the log above) is ALSO flagged every time it happens — this one is NOT
+deduplicated like the cumulative-drawdown tiers, since each such day is its
+own event, not a sustained episode. Per this session's own check, this is
+a genuinely frequent occurrence (~10x/year for the strategy's own
+state-weighted series, ~14x/year for raw QQQ) — the user was told this
+explicitly and asked for it anyway, so treat every occurrence as
+low-conviction "FYI" framing, not an escalation.
+
 ## Cadence
 
 - **Friday, 15:55 ET** — full weekly routine: compute state, rebalance
