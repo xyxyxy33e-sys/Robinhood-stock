@@ -569,6 +569,62 @@ handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
 prices (state classification, regime statistics, signal research); the
 2015-11 floor is only binding where SPMO/QLD/XLU/BOXX leg returns are needed.
 
+### 26-year stress test: the design has a -65% drawdown in it (2026-09-01)
+
+`paper-track/long_history_backtest.py` runs the LIVE weights (same
+`target_weights_with_micro`, same 4bps cost model, weekly rebalance) from
+2000-07 to 2026-08 by substituting instruments that have long history:
+QQQ total return as the core, SYNTHETIC 2x/3x for QLD/TQQQ, real XLU, and
+3-month T-bill as cash. The synthetic leverage is validated against the real
+funds over their full overlap -- TQQQ real CAGR 42.22% vs synthetic 42.14%
+(gap -0.08pp/yr), QLD 35.01% vs 34.63% (-0.39pp/yr) -- using a single
+0.6%/yr underlying-income term that is approximately QQQ's real dividend
+yield and fits BOTH the 2x and 3x fund, which a fitted fudge factor would
+not. Run with `--validate` to re-check. **Caveat: core is QQQ, not SPMO, so
+read this as a test of the REGIME MACHINERY, not of the live design's
+absolute returns.**
+
+| period | strat CAGR | QQQ CAGR | strat Sharpe | strat MaxDD |
+|---|---|---|---|---|
+| 2000-07..2015-10 (**100% out-of-sample**) | 4.51% | 1.79% | 0.311 | **-65.11%** |
+| 2015-11..2026-08 (the fitted window) | 23.11% | 19.24% | 1.051 | -26.75% |
+| Full 2000..2026 | 11.84% | 8.67% | 0.617 | **-65.11%** |
+
+Two findings, pulling in opposite directions.
+
+**The good one: the regime machinery survives genuine out-of-sample data.**
+Every per-state weight in `state.py` was fit inside the 2015-11+ window, so
+2000-2015 is data no parameter has ever seen. Over it the strategy still beat
+QQQ on CAGR (4.51% vs 1.79%) and Sharpe (0.311 vs 0.196), and it cushioned
+every real bear: dot-com -54.7% vs QQQ's -72.8%, GFC -28.1% vs -38.3%, 2022
+-17.6% vs -28.8%. That is meaningful validation -- the design is not merely
+an artifact of the window it was fit in.
+
+**The bad one: max drawdown is -65%, not -26%.** Every drawdown figure
+elsewhere in this file comes from the 2015-11+ window and is roughly
+2.5x too optimistic about the worst case. The dot-com decline alone takes
+this design down -61.9% peak-to-trough. Anyone reading "-25.96% MaxDD" as
+the risk of this strategy is reading a number produced by a sample with both
+century-defining bear markets removed.
+
+Two specific failure modes the recent window also hides, both WHIPSAW rather
+than trend:
+  - **2011: strategy -22.2% while QQQ was +4.1%** -- a 26pp underperformance
+    in an UP year. The classifier churned all six states (A:20 B:5 C:2 D:9
+    E:7 F:9 weeks) through the Aug-2011 crash/recovery, repeatedly
+    de-risking into lows and re-levering into highs.
+  - **COVID 2020: strategy -15.9% vs QQQ -7.1%** -- same mechanism, a crash
+    too fast for a 50/200 classifier to help, then a recovery it was too
+    slow to rejoin.
+Both are the known cost of trend-following: it pays for protection against
+sustained declines with losses in sharp round trips. The 2015-11+ window
+contains one clean trend-bear (2022) and so shows mostly the benefit.
+
+The state mix also differs materially, which is why the recent window
+flatters the design: state F was 8.2% of the fitted window but 15.2% of the
+full history, and state A 62.2% vs 52.2%. The recent era simply had more
+established uptrend and less established downtrend than the long run.
+
 ### Transition structure (context, not a trading rule)
 
 States move through a loop, not randomly: A→D is 96% of A's transitions; D
@@ -741,6 +797,15 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
+- **The real max drawdown is about -65%, not the -26% quoted from the
+  2015-11+ backtest.** `paper-track/long_history_backtest.py` runs the live
+  weights over 2000-2026 (QQQ core, validated synthetic 2x/3x legs): MaxDD
+  -65.11%, driven by the dot-com decline (-61.9% peak-to-trough). Quote
+  -26% as "max drawdown in the SPMO-era window", never as the strategy's
+  worst case. The same run also shows two whipsaw failures the recent window
+  hides — 2011 (strategy -22.2% while QQQ was +4.1%) and COVID-2020
+  (-15.9% vs QQQ's -7.1%) — which are the standing cost of trend-following
+  through sharp round trips, not fixable by reweighting.
 - B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
   not the magnitude.
 - Complexity has grown faster than the account: six states × three legs ×
