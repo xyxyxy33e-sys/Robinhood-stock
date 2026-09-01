@@ -15,11 +15,11 @@ triggers should need only small edits to stay in sync with it.
 | Satellite (3x) | TQQQ | Higher return, higher decay — volatility drag scales with leverage k as k(k-1), so TQQQ's decay coefficient (6) is 3x QLD's (2) |
 | Satellite (2x) | QLD | Added 2026-08-31. Lower decay, better Sharpe/drawdown than TQQQ in every combination backtested, at the cost of lower raw CAGR. Confirmed tradable/fractional in the live account. |
 | Defensive (state E only) | XLU (Utilities Select Sector SPDR) | Added 2026-08-31. Not a satellite, not blended into core — a standalone leg used only in state E, replacing what used to be E's 50% core allocation. The one candidate from an extensive defensive-instrument search (SPY, SCHD, VYM, USMV, BRK.B all tested and rejected) to survive three independent validation passes, including fully isolated single-state testing. ~0.08% expense ratio, cheaper than SPMO itself. Confirmed tradable/fractional (regular hours) in the live account. |
-| Gold (all states) | IAU (iShares Gold Trust) | Added 2026-09-01 as a standalone top-slice — a flat 20% (`STANDALONE_GOLD_FRAC`) present in EVERY state, unlike XLU. Every other leg scales down by 20% to make room. See "Gold: from core-blend to standalone top-slice" below for why this replaced the in-core blend. Lower expense ratio than GLD (0.25% vs 0.40%) and fractional-tradable on this account (GLD is not — confirmed live 2026-09-01). |
+| Gold — REMOVED | ~~IAU~~ | Standalone top-slice, live 2026-09-01, removed the same day by explicit user decision (not a backtest finding — see "Gold: removed 2026-09-01" below). `STANDALONE_GOLD_FRAC` is set to 0.0; the code path still exists (`target_weights_with_gold()`) but contributes nothing to live weights. |
 | Cash gate | BOXX (Alpha Architect 1-3 Month Box ETF) | Deliberate allocation, not idle buying power — tax deferral vs. a cash sweep/T-bill, which pay taxable interest every period. Its Section 1256 long-term blended rate does NOT apply here — every gated state runs weeks to months, so a BOXX sale is still short-term. |
 
 Core is NEVER margined. All leverage is expressed through the TQQQ/QLD
-satellite positions. XLU and IAU carry no leverage.
+satellite positions. XLU carries no leverage.
 
 ## Regime engine
 
@@ -55,30 +55,28 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 state's RELATIVE risk posture. It is no longer what a live trigger should
 call directly, though: two overlays apply on top, both added 2026-09-01.
 
-**Live weights, both overlays applied — what a trigger actually trades:**
+**Live weights, what a trigger actually trades (gold REMOVED 2026-09-01 —
+see "Gold: removed 2026-09-01" further below):**
 
-| State | Core (SPMO) | TQQQ | QLD | XLU | Gold (IAU) | Cash (BOXX) |
-|---|---|---|---|---|---|---|
-| A, micro agrees | 70.4% | 9.6% | 0% | 0% | 20% | 0% |
-| A, micro diverges | 64.0% | 16.0% | 0% | 0% | 20% | 0% |
-| B | 20.0% | 60.0% | 0% | 0% | 20% | 0% |
-| C | 80.0% | 0% | 0% | 0% | 20% | 0% |
-| D, micro agrees | 0% | 0% | 56.0% | 0% | 20% | 24.0% |
-| D, micro diverges | 44.8% | 0% | 11.2% | 0% | 20% | 24.0% |
-| E | 0% | 0% | 0% | 40.0% | 20% | 40.0% |
-| F | 24.0% | 0% | 0% | 0% | 20% | 56.0% |
+| State | Core (SPMO) | TQQQ | QLD | XLU | Cash (BOXX) |
+|---|---|---|---|---|---|
+| A, micro agrees | 88.0% | 12.0% | 0% | 0% | 0% |
+| A, micro diverges | 80.0% | 20.0% | 0% | 0% | 0% |
+| B | 25.0% | 75.0% | 0% | 0% | 0% |
+| C | 100.0% | 0% | 0% | 0% | 0% |
+| D, micro agrees | 0% | 0% | 70.0% | 0% | 30.0% |
+| D, micro diverges | 56.0% | 0% | 14.0% | 0% | 30.0% |
+| E | 0% | 0% | 0% | 50.0% | 50.0% |
+| F | 30.0% | 0% | 0% | 0% | 70.0% |
 
-Get this by calling `target_weights_with_gold(state, micro_agrees)`
-(`state.py`) — it composes the micro overlay (below) with the standalone
-20% gold top-slice ("Gold: from core-blend to standalone top-slice",
-further below): every one of the six base rows above is scaled by 0.80 and
-gold added at a flat 20%, in every state. `validate_weights_6leg(state,
-core, tqqq, qld, xlu, gold, cash)` must run immediately after, before
-computing any dollar target or placing any order. `WeightSanityError` =
-abort, do not trade, report the error. Plain `target_weights()` /
-`target_weights_with_micro()` (5 legs, no gold) are kept for backtest
-scripts and as intermediate steps — do not call them directly from a live
-trigger, they omit gold entirely.
+Get this by calling `target_weights_with_micro(state, micro_agrees)`
+(`state.py`). `target_weights_with_gold(state, micro_agrees)` still exists
+and is safe to call — with `STANDALONE_GOLD_FRAC = 0.0` it returns this
+exact same table plus an always-zero gold leg, so either function works;
+`target_weights_with_micro()` is the simpler, more direct one now that gold
+is out. `validate_weights(state, core, tqqq, qld, xlu, cash)` (5-leg) must
+run immediately after, before computing any dollar target or placing any
+order. `WeightSanityError` = abort, do not trade, report the error.
 
 ### Micro overlay for states A and D (added 2026-09-01)
 
@@ -316,7 +314,33 @@ Rejected in the same core-blend role: SPY, SCHD, VYM, USMV (see below) —
 none matched XLU's original core-blend result, let alone GLD's. Confirmed
 tradable, fractional, in the live account (576391551).
 
-### Gold: from core-blend to standalone top-slice (2026-09-01)
+### Gold: removed 2026-09-01 (user decision)
+
+Gold is out of the live design entirely, by explicit user instruction —
+not because the backtest evidence turned against it. `STANDALONE_GOLD_FRAC`
+is set to `0.0` in `paper-track/state.py`; the code path
+(`target_weights_with_gold()`, `validate_weights_6leg()`,
+`TARGET_WEIGHT_LEGS_WITH_GOLD`) is kept intact, not deleted, in case gold
+is reconsidered later — flip the constant back to reactivate it.
+
+For the record, the same-day research trail below (kept as history, not
+current design) never found a reason in the numbers to drop it: candidate
+replacements were tested (BTAL, TLT, DBC, PDBC, KMLM — see
+`paper-track/tlt_standalone_test.py`, `multi_candidate_test.py`,
+`btal_downturn_test.py`), downturn-only variants of both gold and BTAL
+were tested and rejected (concentrating a diversifier only in D/E/F
+underperforms holding it flat everywhere, for every candidate tried),
+alternate uses of the freed-up 20% were tested (extra cash, extra
+leverage, extra core, both uniform and bucketed by offense/defense
+regime — see `gold_removed_realloc.py`, `gold_removed_bucketed.py`,
+`sensitivity_full.py`), and a full continuous-fraction sensitivity sweep
+confirmed gold's chosen 20% sits on a genuine, non-overfit part of the
+Sharpe surface. None of that changes the outcome here: this section
+documents the design that was in place from 2026-09-01 (the standalone
+top-slice) through its removal the same day, kept for continuity in case
+the decision is revisited.
+
+### Gold: from core-blend to standalone top-slice (2026-09-01, historical)
 
 The in-core 75/25 SPMO/gold blend above had a structural flaw not visible
 until checked directly: because `core_weight` is **0% in states D and E**
@@ -493,7 +517,8 @@ weighted, not raw QQQ) crossed -5% off its 52-week high ~2.5x/year, -10%
 Mechanism (`paper-track/drawdown_tracker.py`): the daily trigger computes
 the STRATEGY's own daily return every day it runs (yesterday's confirmed
 state's weights, from `target_weights_with_micro`, dotted with that day's
-official-close-to-close leg returns — SPMO/IAU/TQQQ/QLD/XLU/BOXX), and
+official-close-to-close leg returns — SPMO/TQQQ/QLD/XLU/BOXX; gold/IAU
+removed 2026-09-01, no longer part of this), and
 appends it to a small local log (`data/live_nav_index.csv`) via
 `record_return(date, daily_return)`. This builds an independent,
 cash-flow-blind return index — deliberately NOT the account's raw

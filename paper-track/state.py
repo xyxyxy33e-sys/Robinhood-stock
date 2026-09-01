@@ -367,7 +367,22 @@ def target_weights_with_micro(state, micro_agrees):
 # chosen over the also-defensible 15%. This weight trades off against EVERY
 # other leg proportionally, not against cash alone -- see
 # target_weights_with_gold() below.
-STANDALONE_GOLD_FRAC = 0.20
+#
+# REMOVED 2026-09-01 (same day, user decision) -- STANDALONE_GOLD_FRAC set to
+# 0.0. Gold is out of the live design entirely, by explicit user instruction,
+# not because the backtest evidence turned against it -- an extensive
+# follow-up research pass (candidate replacements BTAL/TLT/DBC/PDBC/KMLM,
+# downturn-only variants, alternate uses of the freed-up slot -- cash, extra
+# leverage, extra core -- both uniform and bucketed offense/defense, and a
+# full continuous-fraction sensitivity sweep of all of the above) never found
+# anything that beat gold's own risk-adjusted numbers. Kept here as a
+# complete, working code path (not deleted) in case gold is reconsidered
+# later -- flip STANDALONE_GOLD_FRAC back to reactivate it; every other
+# function in this file (target_weights_with_gold, validate_weights_6leg,
+# TARGET_WEIGHT_LEGS_WITH_GOLD) still works correctly at 0.0, it just
+# degenerates to the plain 5-leg target_weights_with_micro() design with an
+# always-zero gold leg.
+STANDALONE_GOLD_FRAC = 0.0
 GOLD_INSTRUMENT = 'IAU'
 
 def target_weights_with_gold(state, micro_agrees):
