@@ -26,23 +26,31 @@ loss volume at the CURRENT turnover rate; a proportional scaling with the
 not something to present as a precise dollar figure without the account's
 actual tax situation.
 
-RESULTS SUMMARY (run 2026-09-01): the turnover objection does NOT hold up.
-At the calibrated 4bps rate, the NEW (micro 30/150 + macro) design's
-annualized cost drag is actually LOWER than the old 50/200-only design
-(0.49pp/yr vs 0.74pp/yr) despite having more total transitions (16.7/yr vs
-11.2/yr) -- because most of the "extra" transitions are the small A-agree/
-A-diverge weight tweaks (0.9/0.1 vs 0.8/0.2 core/TQQQ, only 0.2 turnover
-fraction), while the old design's fewer transitions are all FULL state
-changes (up to ~2.0 turnover fraction each, e.g. exiting QLD entirely).
-More transitions, but mostly cheap ones, beats fewer transitions that are
-all expensive. Net Sharpe: old 1.111, new 1.149 -- new design still wins.
-Robust across a wide cost range (2/4/8/15bps all tested): new design's
-Sharpe edge over old holds at every level, including a 15bps stress test
-well above what these liquid ETFs actually trade at. Wash-sale drag is
-NOT modeled as a NAV cost here (it's a tax-timing effect, not a return
-effect) -- reported only as a qualitative direction-of-travel note.
+RESULTS SUMMARY (run 2026-09-01, re-run same day after fixing a BOXX
+data bug -- see backtest_overlay_etf.py's _strip_boxx_flat_stub(): BOXX's
+price feed was a flat placeholder for all of 2022 pre-2022-12-29, making
+every cash leg read a fake 0% return that whole year; numbers below are
+POST-fix): the turnover objection does NOT hold up. At the calibrated
+4bps rate, the NEW (micro 30/150 + macro) design's annualized cost drag
+is still LOWER than the old 50/200-only design (0.49pp/yr vs 0.74pp/yr)
+despite having more total transitions (16.7/yr vs 11.2/yr) -- because
+most of the "extra" transitions are the small A-agree/A-diverge weight
+tweaks (0.9/0.1 vs 0.8/0.2 core/TQQQ, only 0.2 turnover fraction), while
+the old design's fewer transitions are all FULL state changes (up to
+~2.0 turnover fraction each, e.g. exiting QLD entirely). More
+transitions, but mostly cheap ones, beats fewer transitions that are all
+expensive. Net Sharpe: old 1.094, new 1.107 -- new design still wins (the
+BOXX fix raised both designs' CAGR, since cash-heavy weeks now earn a
+real 2022 T-bill return instead of a fake 0%, but did not change which
+design wins or by roughly how much). Robust across a wide cost range
+(2/4/8/15bps all tested): new design's Sharpe edge over old holds at
+every level, including a 15bps stress test well above what these liquid
+ETFs actually trade at. Wash-sale drag is NOT modeled as a NAV cost here
+(it's a tax-timing effect, not a return effect) -- reported only as a
+qualitative direction-of-travel note.
 VERDICT: the main open objection from micro_macro_sweep.py is resolved;
-this design's edge survives realistic transaction costs.
+this design's edge survives realistic transaction costs, before and
+after the BOXX data fix.
 """
 import math
 import sys

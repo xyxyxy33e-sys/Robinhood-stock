@@ -121,20 +121,30 @@ that was different in degree, not method — a much MILDER de-lever (88/12,
 not the composite line's full 100/0) — and it was walked back to specifically
 where a `paper-track/micro_macro_sweep.py`+lambda-interpolation frontier
 found it still net-beneficial: `paper-track/turnover_cost_model.py` showed
-net Sharpe 1.149 vs. live's 1.111 at the FULL micro-adjusted endpoint
-(lambda=1.0: 90/10 core/TQQQ for A-agree, 70% core/30% cash for D-diverge —
-more extreme than the table above; D's base row has since changed, see
-"State D: QLD/XLU reweight" below — these Sharpe/CAGR/MaxDD numbers are
-historical, from the original validation study, not re-run against the
-new D weights). The lambda=0.8 blend actually used live
-(the table above) is Pareto-BETTER than that lambda=1.0 endpoint on both
-Sharpe (1.154 vs 1.149) and CAGR (21.86% vs 21.07%), for only slightly worse
-MaxDD (-23.59% vs -21.98%) — the interpolation frontier's genuine sweet
-spot, not either raw endpoint. Cost drag at the lambda=1.0 endpoint was LOWER than live's
-despite more transitions (0.49pp/yr vs 0.74pp/yr), because most of the extra
-transitions are small agree/diverge weight tweaks (~0.2 turnover fraction),
-not full expensive state changes. Confirmed robust across a 2-15bps
-transaction-cost sensitivity range. **Always re-verify any future refinement
+net Sharpe 1.107 vs. live's 1.094 at the FULL micro-adjusted endpoint
+(lambda=1.0: 90/10 core/TQQQ for A-agree, 70% core/30% cash for D-diverge
+— more extreme than the table above; D's base row is unchanged at 70%
+QLD/30% cash, see "State D: QLD/XLU reweight, tried and reverted" below).
+Re-run 2026-09-01 after fixing a BOXX data bug (`_strip_boxx_flat_stub()`
+in `paper-track/backtest_overlay_etf.py` — BOXX's price feed was a flat
+placeholder for all of 2022 before 2022-12-29, so every cash leg read a
+fake 0% return that whole year instead of the real T-bill rate); the fix
+raised both designs' CAGR (cash-heavy weeks now earn real 2022 yield) but
+did not change which design wins or by roughly how much — new still beats
+old on net Sharpe both before and after the fix. Cost drag at the
+lambda=1.0 endpoint is LOWER than live's despite more transitions
+(0.49pp/yr vs 0.74pp/yr), because most of the extra transitions are small
+agree/diverge weight tweaks (~0.2 turnover fraction), not full expensive
+state changes. Confirmed robust across a 2-15bps transaction-cost
+sensitivity range. The lambda=0.8 blend actually used live (the table
+above) was the genuine Pareto-sweet-spot at the time this overlay was
+validated (better Sharpe AND CAGR than the lambda=1.0 endpoint, for only
+slightly worse MaxDD) — that specific comparison predates the BOXX fix and
+has not been re-run; the lambda=1.0-vs-old comparison above has been,
+and the qualitative conclusion (0.8 is a genuine interior optimum, not an
+endpoint) is not expected to flip from a cash-leg data fix that raises
+every design's returns roughly in proportion. **Always re-verify any
+future refinement
 of this kind at the full-timeline, cost-adjusted level before trusting an
 isolated-cell result — that discipline is what separated this one live
 change from the rejected composite that looked, in isolation, even better.**
@@ -184,8 +194,8 @@ isolated performance:
 
 | | Full-portfolio net Sharpe | Full-portfolio net CAGR | State D-only Sharpe | State D-only MaxDD |
 |---|---|---|---|---|
-| 70% QLD / 30% cash (original) | 1.109 | 22.91% | 1.610 | -12.04% |
-| 30% QLD / 40% XLU / 30% cash (tilt) | 1.098 | 22.13% | **1.729** | **-8.59%** |
+| 70% QLD / 30% cash (original) | 1.113 | 23.01% | 1.611 | -12.04% |
+| 30% QLD / 40% XLU / 30% cash (tilt) | 1.102 | 22.23% | **1.730** | **-8.59%** |
 
 State D is only 13.5% of history (79 of 564 weeks), so an isolated
 improvement there doesn't outweigh giving up upside capture in the 19-of-28
@@ -564,6 +574,28 @@ destination state, nothing more.
    to 1.0 — run it after any edit to `STANDALONE_GOLD_FRAC` or the micro
    overlay weights. See `paper-track/README.md` for which scripts in that
    directory are load-bearing vs. historical record.
+
+   **BOXX data bug, found and fixed 2026-09-01**: BOXX's price feed
+   (`/home/user/robinhood/data/kairos/etf/BOXX.csv`, pulled via
+   `get_equity_historicals`) was a flat placeholder (100.0301) for every
+   date from 2022-01-03 through 2022-12-28 -- not real price data; BOXX's
+   actual listing predates the reliable part of that feed and the vendor
+   backfilled a constant stub before it. `build_cash_index()` only falls
+   back to the T-bill rate when a date is genuinely MISSING from BOXX's
+   history, so this stub silently made every cash leg read a fake 0%
+   return for all of 2022 instead of the real ~1.6-2%+ T-bill yield that
+   year (rates were rising fast). Backtest-only -- live trading pulls
+   real-time quotes, not this historical file, so no live trade was ever
+   affected. Fixed in `paper-track/backtest_overlay_etf.py`'s
+   `load_daily_csv()` via `_strip_boxx_flat_stub()`, which every script in
+   this directory that loads BOXX.csv picks up automatically (all of them
+   import `load_daily_csv` from that one module). Effect on results: small
+   and mostly confined to 2022 and to cash-heavy states (F's isolated
+   annualized return moved from 8.2% to 9.2%, Sharpe 1.081 to 1.211;
+   full-strategy net Sharpe moved from 1.098 to 1.113) -- it did NOT
+   reverse any design conclusion in this file (the state D revert, the
+   micro overlay's edge over the old design, gold's removal) when
+   re-checked against the fix.
 
 ## Drawdown-from-high watch (added 2026-09-01)
 

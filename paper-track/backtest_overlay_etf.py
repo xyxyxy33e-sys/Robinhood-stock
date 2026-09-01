@@ -19,6 +19,31 @@ from state import compute_states, target_weights, validate_weights
 ROBINHOOD_REPO = '/home/user/robinhood/data/kairos'
 
 
+def _strip_boxx_flat_stub(px):
+    """BOXX's price feed (Robinhood get_equity_historicals backfill) is a
+    flat placeholder (100.0301) for every date from 2022-01-03 through
+    2022-12-28 -- not real price data; BOXX's actual listing/trading start
+    is in that window and the vendor backfilled a constant stub before it.
+    Found 2026-09-01 while investigating why state F's isolated backtest
+    return looked understated: with the stub left in, every cash leg
+    priced off BOXX read a fake 0.000% return for essentially all of 2022
+    (confirmed: T-bill-based cash actually returned +1.58% Apr-Nov 2022
+    alone), rather than falling back to the real T-bill rate the way
+    build_cash_index() does for any date genuinely missing from BOXX's
+    history. Strip the leading constant run so that fallback kicks in."""
+    dates = sorted(px)
+    if not dates:
+        return px
+    first_val = px[dates[0]]
+    cut = 0
+    while cut < len(dates) and px[dates[cut]] == first_val:
+        cut += 1
+    if cut <= 1:
+        return px
+    stub_dates = set(dates[:cut])
+    return {d: v for d, v in px.items() if d not in stub_dates}
+
+
 def load_daily_csv(path, close_col='c'):
     out = {}
     with open(path) as f:
@@ -27,6 +52,8 @@ def load_daily_csv(path, close_col='c'):
                 out[r['d']] = float(r[close_col])
             except (ValueError, KeyError):
                 pass
+    if path.endswith('BOXX.csv'):
+        out = _strip_boxx_flat_stub(out)
     return out
 
 
