@@ -46,7 +46,7 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | A | 80% | 20% | 0% | 0% | 0% | 1.4x |
 | B | 25% | 75% | 0% | 0% | 0% | 2.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
-| D | 0% | 0% | 30% | 40% | 30% | 0.6x |
+| D | 0% | 0% | 70% | 0% | 30% | 1.4x |
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
 | F | 30% | 0% | 0% | 0% | 70% | 0.3x |
 
@@ -64,8 +64,8 @@ see "Gold: removed 2026-09-01" further below):**
 | A, micro diverges | 80.0% | 20.0% | 0% | 0% | 0% |
 | B | 25.0% | 75.0% | 0% | 0% | 0% |
 | C | 100.0% | 0% | 0% | 0% | 0% |
-| D, micro agrees | 0% | 0% | 30.0% | 40.0% | 30.0% |
-| D, micro diverges | 24.0% | 0% | 6.0% | 40.0% | 30.0% |
+| D, micro agrees | 0% | 0% | 70.0% | 0% | 30.0% |
+| D, micro diverges | 56.0% | 0% | 14.0% | 0% | 30.0% |
 | E | 0% | 0% | 0% | 50.0% | 50.0% |
 | F | 30.0% | 0% | 0% | 0% | 70.0% |
 
@@ -90,8 +90,8 @@ the same cadence as the macro state, no lookahead):
 |---|---|---|---|---|---|---|---|
 | A | **True** | 88% | 12% | — | — | — | de-levered from 80/20 |
 | A | False | 80% | 20% | — | — | — | unchanged |
-| D | True | — | — | 30% | 40% | 30% | unchanged |
-| D | **False** | 24% | — | 6% | 40% | 30% | shifted from QLD toward core, XLU/cash held constant |
+| D | True | — | — | 70% | — | 30% | unchanged |
+| D | **False** | 56% | — | 14% | — | 30% | shifted from QLD toward core |
 
 B, C, E, F are never touched by the micro overlay — those splits were tested
 and never had enough sample to validate (see below).
@@ -139,7 +139,12 @@ of this kind at the full-timeline, cost-adjusted level before trusting an
 isolated-cell result — that discipline is what separated this one live
 change from the rejected composite that looked, in isolation, even better.**
 
-### State D: QLD/XLU reweight (2026-09-01, user decision)
+### State D: QLD/XLU reweight, tried and reverted (2026-09-01, user decision)
+
+**Net outcome: state D stays at 70% QLD / 30% cash (unchanged from the
+original table above).** The XLU tilt below was implemented, backtested at
+the full-portfolio level, and reverted the same day once that backtest came
+back — kept here as documented research, not as the live design.
 
 State D's original 70% QLD / 30% cash split (above) was re-examined at the
 user's request after the gold-removal research closed out, using a new
@@ -169,13 +174,30 @@ leverage would have captured more upside. This is a genuine trade
 uncommon one), not a free improvement — flagged to the user as such rather
 than presented as a strict win.
 
-**User decision: take the XLU-tilted side of that trade**, at the midpoint
-of the interior region: **30% QLD / 40% XLU / 30% cash**, replacing the
-70/0/30 split everywhere above (`TARGET_WEIGHTS['D']` and the micro overlay's
-`_LIVE_D`/`_NEW_D` in `state.py`, both tables above). Not yet reflected in
-the live account — no rebalancing trades have been placed for this change;
-per the user's standing instruction, trading is deferred until the full
-portfolio design is finalized.
+User initially took the XLU-tilted side of that trade — 30% QLD / 40% XLU /
+30% cash, the midpoint of the interior region — and it was briefly live in
+`TARGET_WEIGHTS['D']` and the micro overlay's `_LIVE_D`/`_NEW_D`. A
+full-portfolio backtest comparison (net of a 4bps turnover cost model,
+2015-11 to 2026-08, 564 weeks) then showed the tilt costs CAGR and Sharpe
+at the WHOLE-PORTFOLIO level, even though it improves state D's own
+isolated performance:
+
+| | Full-portfolio net Sharpe | Full-portfolio net CAGR | State D-only Sharpe | State D-only MaxDD |
+|---|---|---|---|---|
+| 70% QLD / 30% cash (original) | 1.109 | 22.91% | 1.610 | -12.04% |
+| 30% QLD / 40% XLU / 30% cash (tilt) | 1.098 | 22.13% | **1.729** | **-8.59%** |
+
+State D is only 13.5% of history (79 of 564 weeks), so an isolated
+improvement there doesn't outweigh giving up upside capture in the 19-of-28
+episodes (mostly rallies) where the tilt hurts, at the full-portfolio level.
+**User reverted to 70% QLD / 30% cash** given this comparison. The interior
+region and the isolated-state numbers above remain documented as a real,
+evidenced option — not adopted, but not rejected as an artifact either;
+revisit if state D's live behavior (or its share of history) changes enough
+to shift this full-portfolio tradeoff. No live rebalancing trades were
+placed for either the tilt or the revert — the account has been on 70%
+QLD/30% cash for D throughout; per the user's standing instruction, trading
+is deferred until the full portfolio design is finalized.
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -196,8 +218,8 @@ against a 2020+ holdout. Only changes that held up on holdout were adopted:
   at the original 70% QLD / 30% cash split. Moderate (not thin, not large)
   sample; flagged as the row most worth re-checking if D's live behavior
   ever looks off, given the size of the jump relative to the evidence base.
-  **Re-examined and changed again 2026-09-01** — see "State D: QLD/XLU
-  reweight" below.
+  **Re-examined 2026-09-01** (an XLU tilt was tried and reverted the same
+  day) — see "State D: QLD/XLU reweight, tried and reverted" below.
 - **B, C, F**: four-leg search found "better" search-period weights for all
   three, but each made FULL-timeline Sharpe *worse* (-0.036, -0.069, -0.106
   respectively) — search-only overfitting, not adopted. Confirms rather than
