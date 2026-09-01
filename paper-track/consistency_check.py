@@ -35,7 +35,9 @@ Usage as a library (intended use -- import into a trigger run or REPL):
 
 from state import (TARGET_WEIGHTS, TARGET_WEIGHT_LEGS, validate_weights,
                     CORE_SPMO_FRAC, CORE_GLD_FRAC, MICRO_OVERLAY_WEIGHTS,
-                    STATE_LABEL, target_weights_with_gold, validate_weights_6leg)
+                    STATE_LABEL, target_weights_with_gold, validate_weights_6leg,
+                    target_weights_with_voltarget, vol_target_multiplier,
+                    VOL_TARGET_PA, VOL_TARGET_CAP)
 
 
 def check_core_blend_fracs(tol=0.005):
@@ -104,6 +106,63 @@ def check_gold_overlay(tol=0.005):
     print(f"OK: all {n} (state, micro_agrees) combinations from target_weights_with_gold() sum to 1.0 within tol={tol}")
 
 
+def check_voltarget_overlay(tol=0.005):
+    """Assert target_weights_with_voltarget()'s output stays a valid 5-leg
+    weight tuple across every state, both micro settings, and a wide range of
+    realized-vol inputs -- including the degenerate ones. Added 2026-09-01
+    when volatility targeting became the outermost live overlay.
+
+    Specifically guards the three ways this overlay could break a rebalance:
+      * vol=None / 0 (insufficient history, or a bad vol computation) must
+        degrade to multiplier 1.0 and return the un-scaled weights, NOT zero
+        out the portfolio;
+      * cash must never go negative, which holds only while VOL_TARGET_CAP
+        <= 1.0 -- this asserts that invariant directly, so raising the cap
+        without re-deriving the math trips here instead of at trade time;
+      * every leg must stay in [0,1] and the tuple must still sum to 1.0.
+    """
+    assert VOL_TARGET_CAP <= 1.0, (
+        f"VOL_TARGET_CAP={VOL_TARGET_CAP} > 1.0 would lever the risky legs UP and can drive "
+        f"the cash leg negative; target_weights_with_voltarget()'s cash formula assumes cap<=1"
+    )
+    vols = [None, 0.0, 0.05, 0.10, VOL_TARGET_PA, 0.25, 0.40, 0.80, 2.0]
+    n = 0
+    for state in STATE_LABEL:
+        for micro_agrees in (True, False):
+            for vol in vols:
+                core, tqqq, qld, xlu, cash = target_weights_with_voltarget(state, micro_agrees, vol)
+                try:
+                    validate_weights(state, core, tqqq, qld, xlu, cash, tol=tol)
+                except Exception as exc:
+                    raise AssertionError(
+                        f"state {state} (micro_agrees={micro_agrees}, vol={vol}) failed "
+                        f"validate_weights: {exc}"
+                    ) from exc
+                if cash < -tol:
+                    raise AssertionError(
+                        f"state {state} (micro_agrees={micro_agrees}, vol={vol}) produced "
+                        f"negative cash={cash!r}"
+                    )
+                n += 1
+    # None/0 vol must be a no-op, not a wipeout
+    for state in STATE_LABEL:
+        for micro_agrees in (True, False):
+            base = target_weights_with_gold(state, micro_agrees)
+            base5 = (base[0], base[1], base[2], base[3], base[5])
+            for vol in (None, 0.0):
+                got = target_weights_with_voltarget(state, micro_agrees, vol)
+                if max(abs(a - b) for a, b in zip(got, base5)) > tol:
+                    raise AssertionError(
+                        f"state {state} (micro_agrees={micro_agrees}) with vol={vol} should be a "
+                        f"no-op but returned {got} vs expected {base5}"
+                    )
+    assert vol_target_multiplier(VOL_TARGET_PA) == 1.0
+    assert vol_target_multiplier(VOL_TARGET_PA * 2) < 1.0
+    print(f"OK: all {n} (state, micro_agrees, vol) combinations from "
+          f"target_weights_with_voltarget() are valid, cash never negative, "
+          f"vol=None/0 is a no-op, cap={VOL_TARGET_CAP} <= 1.0")
+
+
 def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):
     """Assert summing raw per-trade P&L records matches an independently
     reported aggregate. Use this instead of hand-adding subtotals in prose.
@@ -130,3 +189,4 @@ if __name__ == "__main__":
     check_core_blend_fracs()
     check_micro_overlay_weights()
     check_gold_overlay()
+    check_voltarget_overlay()

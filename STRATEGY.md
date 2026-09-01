@@ -69,6 +69,10 @@ see "Gold: removed 2026-09-01" further below):**
 | E | 0% | 0% | 0% | 50.0% | 50.0% |
 | F | 30.0% | 0% | 0% | 0% | 70.0% |
 
+**A THIRD OVERLAY IS NOW LIVE ON TOP OF THIS TABLE — volatility targeting,
+added 2026-09-01. The table below is no longer what a trigger trades; see
+"Volatility targeting" for the function to call.**
+
 Get this by calling `target_weights_with_micro(state, micro_agrees)`
 (`state.py`). `target_weights_with_gold(state, micro_agrees)` still exists
 and is safe to call — with `STANDALONE_GOLD_FRAC = 0.0` it returns this
@@ -77,6 +81,77 @@ exact same table plus an always-zero gold leg, so either function works;
 is out. `validate_weights(state, core, tqqq, qld, xlu, cash)` (5-leg) must
 run immediately after, before computing any dollar target or placing any
 order. `WeightSanityError` = abort, do not trade, report the error.
+
+### Volatility targeting (added 2026-09-01) — the outermost overlay
+
+**`target_weights_with_voltarget(state, micro_agrees, vol)` in `state.py` is
+what live triggers must call.** It applies `target_weights_with_micro()` and
+then scales the four risky legs (core/TQQQ/QLD/XLU) by
+
+    multiplier = min(1.0, VOL_TARGET_PA / realized_vol)
+
+putting whatever is freed into cash (BOXX). `vol` comes from
+`realized_vol(dates, px, as_of=date)` on the **same QQQ series** used for the
+state, as of the **same date** — 30 trading days (= 6.0 calendar weeks),
+annualized. Pass `None` when history is short: the multiplier degrades to 1.0
+and the weights are returned unscaled. Then run `validate_weights()` (5-leg)
+before computing any dollar target. Live constants: `VOL_TARGET_PA = 0.20`,
+`VOL_LOOKBACK_DAYS = 30`, `VOL_TARGET_CAP = 1.0`.
+
+**`VOL_TARGET_CAP` must stay at 1.0** — de-lever only. `cap=1.5` was tested
+and is worse where it matters: it levers up into the calm before a crash,
+taking COVID from -16.2% to -22.3%. `consistency_check.check_voltarget_overlay()`
+asserts the cap invariant, that cash never goes negative, and that a `None`/0
+vol is a no-op rather than a portfolio wipeout.
+
+**Why this and nothing else.** A 2026-09-01 search for a second defensive
+layer went **0-for-6** — VIX level/change, credit spreads, breadth,
+cross-asset ETFs, QQQ's own DMA slope/acceleration, and substate splits all
+failed out-of-sample. The DMA-slope rule looked strongest until an
+exposure-matched control showed ~2/3 of its edge was just holding more, and a
+3.2x larger sample moved its p-value the wrong way (0.083 → 0.189). Vol
+targeting is the one idea that survived, *because* it keys off realized
+volatility rather than price-vs-MA, so it reacts in days rather than in
+50/200-crossover time.
+
+Validated on 2000-2026 (`voltarget_and_sp500_test.py`, QQQ-core proxy with
+validated synthetic 2x/3x legs, net of 4bps):
+
+| period | live | vol-target 20% |
+|---|---|---|
+| 2000-07..2015-10 (**OOS**) | 4.51% / 0.311 / -65.1% | **8.03% / 0.512 / -37.9%** |
+| 2015-11..2026-08 (fitted) | 23.11% / 1.051 / -26.7% | 20.60% / 1.060 / -20.1% |
+| **FULL 2000..2026** | 11.84% / 0.617 / -65.1% | **13.06% / 0.746 / -37.9%** |
+
+Pareto-better on all three metrics over the full window, and it improves the
+out-of-sample slice far more than the fitted one — the opposite of an overfit
+signature. It passes the exposure-confound control: flat de-levering to the
+same average beta returns only 4.45% with -60.4% MaxDD in the OOS slice.
+Turnover is slightly *lower* than live. All 18 (lookback × target)
+combinations tested beat live on Sharpe and MaxDD, so the decision is robust
+to the parameter; 6-8wk is a flat plateau, and shorter is worse on every axis
+at once.
+
+On the **real** instruments (`voltarget_live_backtest.py`, SPMO era only —
+the bull-dominated window where this overlay is expected to cost return):
+
+| | CAGR | Sharpe | MaxDD |
+|---|---|---|---|
+| Live | 23.01% | 1.113 | -25.96% |
+| **Live + vol target** | 20.46% | **1.133** | **-19.33%** |
+
+Even here it improves Sharpe and cuts max drawdown by 6.6pp for 2.55pp of
+CAGR. Nearly all of that cost is **2020 alone** (42.9% → 25.2%): it de-levered
+into the COVID crash and was slow to re-lever for the V-shaped recovery.
+
+**What it does NOT fix: COVID-style crashes.** A 5-week crash and 20-week
+recovery is faster than any 6-week vol estimate. Its value is in *sustained*
+declines — the dot-com goes from -54.7% to -28.6%. Do not expect crash
+protection, and do not "fix" 2020 by shortening the lookback: that was tested
+across 2-12 weeks and trades away more than it gains.
+
+`VOL_TARGET_PA = 0.15` is the also-defensible drawdown-floor alternative
+(full-period 11.71% / 0.757 / -28.3%) — a one-line change.
 
 ### Micro overlay for states A and D (added 2026-09-01)
 

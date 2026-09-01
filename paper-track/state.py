@@ -405,9 +405,12 @@ def target_weights_with_gold(state, micro_agrees):
     Gold is a flat STANDALONE_GOLD_FRAC in EVERY state (unlike XLU, which is
     state E only) -- every other leg is scaled down by (1 -
     STANDALONE_GOLD_FRAC) to make room, preserving their RELATIVE
-    proportions from target_weights_with_micro(). This is the function live
-    triggers must call for a rebalance -- not target_weights() or
-    target_weights_with_micro() alone, both of which omit gold entirely."""
+    proportions from target_weights_with_micro().
+
+    SUPERSEDED 2026-09-01 as the live entry point: triggers must now call
+    target_weights_with_voltarget(), which applies the volatility-target
+    overlay. This function remains correct and is kept for the gold code
+    path (inert at STANDALONE_GOLD_FRAC=0.0)."""
     core, tqqq, qld, xlu, cash = target_weights_with_micro(state, micro_agrees)
     scale = 1 - STANDALONE_GOLD_FRAC
     return (core * scale, tqqq * scale, qld * scale, xlu * scale,
@@ -415,6 +418,123 @@ def target_weights_with_gold(state, micro_agrees):
 
 # Instrument for each column of target_weights_with_gold()'s output, in order.
 TARGET_WEIGHT_LEGS_WITH_GOLD = ('core', 'tqqq', 'qld', 'xlu', 'gold', 'cash')
+
+# ---------------------------------------------------------------------------
+# Volatility targeting -- added 2026-09-01. THE OUTERMOST OVERLAY: it runs on
+# top of target_weights_with_micro(), and target_weights_with_voltarget() is
+# what a live trigger should call.
+#
+# Mechanism: scale the four RISKY legs (core/tqqq/qld/xlu) by
+#     multiplier = min(VOL_TARGET_CAP, VOL_TARGET_PA / realized_vol)
+# and put whatever is freed into cash. Unlike every other part of this file,
+# this reacts to REALIZED VOLATILITY rather than to a price-vs-moving-average
+# state, so it responds in days instead of in 50/200-crossover time.
+#
+# WHY THIS AND NOTHING ELSE: an extensive 2026-09-01 search for a second
+# defensive layer went 0-for-6 -- VIX level/change, credit spreads (Baa-10Y
+# and its 252d-median deviation), breadth (% of a 510-name universe in
+# uptrend), cross-asset ETFs (DBC/UUP/KMLM/VXUS/GLD/TLT/BTAL/TAIL/...), QQQ's
+# own DMA slope+acceleration, and substate splits ALL failed out-of-sample.
+# The DMA-slope rule looked strongest until an exposure-matched control showed
+# ~2/3 of its "edge" was simply holding more, and a 3.2x larger sample (197
+# state-F weeks instead of 62) moved its p-value the WRONG way (0.083 ->
+# 0.189) and flipped its episode record from 11-helped/2-hurt to 11/15.
+# Volatility targeting is the one idea that survived the same gauntlet.
+#
+# VALIDATION (paper-track/voltarget_and_sp500_test.py, 2000-2026, QQQ-core
+# proxy with validated synthetic 2x/3x legs, net of the 4bps cost model):
+#   period                  live CAGR/Sharpe/MaxDD   vol-target 20%
+#   2000-07..2015-10 (OOS)   4.51% /0.311/ -65.1%    8.03% /0.512/ -37.9%
+#   2015-11..2026-08 (fit)  23.11% /1.051/ -26.7%   20.60% /1.060/ -20.1%
+#   FULL 2000..2026         11.84% /0.617/ -65.1%   13.06% /0.746/ -37.9%
+# Pareto-better over the full window on ALL THREE metrics, and it improves the
+# OUT-OF-SAMPLE slice far more than the fitted one -- the opposite of an
+# overfit signature.
+#
+# It passes the exposure-confound control that killed the DMA rule: flat
+# de-levering to the SAME average beta (0.96) returns only 4.45% with -60.4%
+# MaxDD in the OOS slice, vs vol targeting's 8.03%/-37.9%. The edge is in
+# WHEN it de-levers, not how much on average. Turnover is also slightly LOWER
+# than live (12.0x vs 12.9x/yr) -- it smooths some state transitions.
+#
+# PARAMETERS. Lookback 30 TRADING days = 6.0 calendar weeks (median-verified).
+# Chosen from a 2wk..12wk sweep at three target levels: full-period Sharpe
+# peaks at 6-7wk in every target column, and 6-8wk is a flat PLATEAU, not a
+# spike. Shorter is worse on every axis AT ONCE -- lower CAGR, lower Sharpe,
+# deeper drawdown AND higher turnover, because a noisier vol estimate trades
+# more (3wk: 12.64%/0.716/-41.0%/13.2x vs 6wk: 13.06%/0.746/-37.9%/12.0x).
+# All 18 (lookback x target) combinations tested beat live on full-period
+# Sharpe and MaxDD, so the DECISION to vol-target is robust to the parameter;
+# only the fine-tuning is uncertain.
+#
+# VOL_TARGET_PA = 0.20 targets return; 0.15 is the also-defensible
+# drawdown-floor choice (full period 11.71%/0.757/-28.3%) -- one-line change.
+#
+# CAP MUST STAY AT 1.0 (de-lever only, never lever up). cap=1.5 was tested and
+# is WORSE where it matters: it levers up into the calm before a crash, taking
+# COVID from -16.2% to -22.3%.
+#
+# WHAT IT DOES NOT FIX: COVID-style crashes. A 5-week crash and 20-week
+# recovery is faster than any 6-week vol estimate (-16.2% vs live's -15.9%).
+# Its value is in SUSTAINED declines: the dot-com goes from -54.7% to -28.6%
+# and 2011's whipsaw from -22.2% to -18.4%. Do not expect crash protection.
+#
+# CAVEAT: validated on a QQQ-core proxy because SPMO does not exist before
+# 2015. The mechanism is instrument-independent so it should carry, but the
+# exact CAGR figures do not transfer -- on the real SPMO-era instruments the
+# cost in that (bull-dominated) window is smaller than the proxy suggests.
+VOL_TARGET_PA = 0.20        # annualized target volatility for the risky sleeve
+VOL_LOOKBACK_DAYS = 30      # trading days (= 6.0 calendar weeks)
+VOL_TARGET_CAP = 1.0        # never exceed the un-scaled weights; do NOT raise
+TRADING_DAYS_PER_YEAR = 252
+
+
+def realized_vol(dates, px, as_of=None, lookback=VOL_LOOKBACK_DAYS):
+    """Annualized realized volatility of daily returns over the trailing
+    `lookback` TRADING days ending at `as_of` (default: the last date).
+    dates must be sorted ascending and px keyed by those dates -- the same
+    (dates, px) pair passed to compute_states(). Returns None when there is
+    not enough history, which callers must treat as "no scaling" (multiplier
+    1.0), never as zero. Uses only data at or before `as_of`: no lookahead."""
+    if as_of is None:
+        as_of = dates[-1]
+    try:
+        end = dates.index(as_of)
+    except ValueError:
+        return None
+    if end < lookback:
+        return None
+    rets = [px[dates[i]] / px[dates[i - 1]] - 1 for i in range(end - lookback + 1, end + 1)]
+    mean = sum(rets) / len(rets)
+    var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+    return (var ** 0.5) * (TRADING_DAYS_PER_YEAR ** 0.5)
+
+
+def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
+    """min(cap, target/vol), with vol=None/0 -> 1.0 (no scaling). Never
+    exceeds `cap`, so with cap=1.0 this can only ever REDUCE risk."""
+    if not vol or vol <= 0:
+        return 1.0
+    return min(cap, target / vol)
+
+
+def target_weights_with_voltarget(state, micro_agrees, vol):
+    """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
+    then scaled by the volatility-target multiplier.
+
+    vol: annualized realized volatility from realized_vol() on the SAME QQQ
+    series used for the state, as of the SAME date. Pass None when there is
+    insufficient history -- the multiplier degrades to 1.0 and this returns
+    target_weights_with_micro() unchanged, which is the correct fallback.
+
+    Returns 5 legs (core, tqqq, qld, xlu, cash). The four risky legs are
+    scaled by the multiplier and the freed weight goes to cash, so the tuple
+    still sums to 1.0. With cap=1.0 the multiplier is <=1, so cash can only
+    increase and never goes negative."""
+    core, tqqq, qld, xlu, cash = target_weights_with_micro(state, micro_agrees)
+    mult = vol_target_multiplier(vol)
+    risky = core + tqqq + qld + xlu
+    return (core * mult, tqqq * mult, qld * mult, xlu * mult, 1.0 - risky * mult)
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
