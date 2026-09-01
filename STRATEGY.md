@@ -46,7 +46,7 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | A | 80% | 20% | 0% | 0% | 0% | 1.4x |
 | B | 25% | 75% | 0% | 0% | 0% | 2.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
-| D | 0% | 0% | 70% | 0% | 30% | 1.4x |
+| D | 0% | 0% | 30% | 40% | 30% | 0.6x |
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
 | F | 30% | 0% | 0% | 0% | 70% | 0.3x |
 
@@ -64,8 +64,8 @@ see "Gold: removed 2026-09-01" further below):**
 | A, micro diverges | 80.0% | 20.0% | 0% | 0% | 0% |
 | B | 25.0% | 75.0% | 0% | 0% | 0% |
 | C | 100.0% | 0% | 0% | 0% | 0% |
-| D, micro agrees | 0% | 0% | 70.0% | 0% | 30.0% |
-| D, micro diverges | 56.0% | 0% | 14.0% | 0% | 30.0% |
+| D, micro agrees | 0% | 0% | 30.0% | 40.0% | 30.0% |
+| D, micro diverges | 24.0% | 0% | 6.0% | 40.0% | 30.0% |
 | E | 0% | 0% | 0% | 50.0% | 50.0% |
 | F | 30.0% | 0% | 0% | 0% | 70.0% |
 
@@ -86,12 +86,12 @@ SMAs instead of 50/200 — refines two of the six states. `micro_agrees` = the
 micro classifier currently reads A or B (a bool, computed the same way and at
 the same cadence as the macro state, no lookahead):
 
-| State | micro_agrees | Core | TQQQ | QLD | Cash | vs. base row |
-|---|---|---|---|---|---|---|
-| A | **True** | 88% | 12% | — | — | de-levered from 80/20 |
-| A | False | 80% | 20% | — | — | unchanged |
-| D | True | — | — | 70% | 30% | unchanged |
-| D | **False** | 56% | — | 14% | 30% | shifted from QLD toward core |
+| State | micro_agrees | Core | TQQQ | QLD | XLU | Cash | vs. base row |
+|---|---|---|---|---|---|---|---|
+| A | **True** | 88% | 12% | — | — | — | de-levered from 80/20 |
+| A | False | 80% | 20% | — | — | — | unchanged |
+| D | True | — | — | 30% | 40% | 30% | unchanged |
+| D | **False** | 24% | — | 6% | 40% | 30% | shifted from QLD toward core, XLU/cash held constant |
 
 B, C, E, F are never touched by the micro overlay — those splits were tested
 and never had enough sample to validate (see below).
@@ -123,7 +123,10 @@ where a `paper-track/micro_macro_sweep.py`+lambda-interpolation frontier
 found it still net-beneficial: `paper-track/turnover_cost_model.py` showed
 net Sharpe 1.149 vs. live's 1.111 at the FULL micro-adjusted endpoint
 (lambda=1.0: 90/10 core/TQQQ for A-agree, 70% core/30% cash for D-diverge —
-more extreme than the table above). The lambda=0.8 blend actually used live
+more extreme than the table above; D's base row has since changed, see
+"State D: QLD/XLU reweight" below — these Sharpe/CAGR/MaxDD numbers are
+historical, from the original validation study, not re-run against the
+new D weights). The lambda=0.8 blend actually used live
 (the table above) is Pareto-BETTER than that lambda=1.0 endpoint on both
 Sharpe (1.154 vs 1.149) and CAGR (21.86% vs 21.07%), for only slightly worse
 MaxDD (-23.59% vs -21.98%) — the interpolation frontier's genuine sweet
@@ -135,6 +138,44 @@ transaction-cost sensitivity range. **Always re-verify any future refinement
 of this kind at the full-timeline, cost-adjusted level before trusting an
 isolated-cell result — that discipline is what separated this one live
 change from the rejected composite that looked, in isolation, even better.**
+
+### State D: QLD/XLU reweight (2026-09-01, user decision)
+
+State D's original 70% QLD / 30% cash split (above) was re-examined at the
+user's request after the gold-removal research closed out, using a new
+shared harness (`paper-track/state_isolated_test.py`) and a dedicated
+deep-dive script covering a full 2D grid over QLD% x XLU% (cash as the
+remainder).
+
+The grid-wide "optimum" — QLD=0%, XLU=0%, cash=100% — is a **corner-solution
+artifact**, not a real finding: search-period Sharpe 15.695, but holdout
+CAGR only 2.98% and MaxDD -0.17%. Cash's near-zero variance trivially wins
+a Sharpe objective regardless of real foregone return — the same failure
+mode caught repeatedly elsewhere in this file (state E's four-leg search,
+several rejected gold-search corners). Rejected outright.
+
+Excluding that corner, the legitimate interior region is **QLD 10-30% / XLU
+20-50% / cash ~30%**, consistent with the original per-state XLU-for-D
+subagent finding from the broader parallel research pass.
+
+An episode-by-episode check (28 distinct state-D episodes, 2015-2026,
+grouped by >14-day gaps) comparing live (70/30 QLD/cash) against a
+representative interior point (40% QLD/30% XLU/30% cash) found XLU only
+helps in **9 of 28 episodes** — concentrated in the sharp drawdowns (Dec
+2015, Oct 2018, Mar 2020 COVID, Jan 2022, Mar 2025, Feb-Mar 2026) — and
+**hurts in the other 19**, mostly rally/recovery episodes where QLD's
+leverage would have captured more upside. This is a genuine trade
+(upside participation in the common case, for tail protection in the
+uncommon one), not a free improvement — flagged to the user as such rather
+than presented as a strict win.
+
+**User decision: take the XLU-tilted side of that trade**, at the midpoint
+of the interior region: **30% QLD / 40% XLU / 30% cash**, replacing the
+70/0/30 split everywhere above (`TARGET_WEIGHTS['D']` and the micro overlay's
+`_LIVE_D`/`_NEW_D` in `state.py`, both tables above). Not yet reflected in
+the live account — no rebalancing trades have been placed for this change;
+per the user's standing instruction, trading is deferred until the full
+portfolio design is finalized.
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -150,11 +191,13 @@ against a 2020+ holdout. Only changes that held up on holdout were adopted:
   (still 100% TQQQ, QLD not used here), +0.030 full-timeline Sharpe,
   confirmed on holdout (1.116). Best-evidenced change in this update.
 - **D** (13.5% of history, second-most after A): the single biggest
-  structural change in the table — drops core AND TQQQ entirely for 70%
-  QLD + 30% cash, +0.025 full-timeline Sharpe, confirmed on holdout (1.088).
-  Moderate (not thin, not large) sample; flagged as the row most worth
-  re-checking if D's live behavior ever looks off, given the size of the
-  jump relative to the evidence base.
+  structural change in the table — drops core AND TQQQ entirely for
+  leverage + cash, +0.025 full-timeline Sharpe, confirmed on holdout (1.088)
+  at the original 70% QLD / 30% cash split. Moderate (not thin, not large)
+  sample; flagged as the row most worth re-checking if D's live behavior
+  ever looks off, given the size of the jump relative to the evidence base.
+  **Re-examined and changed again 2026-09-01** — see "State D: QLD/XLU
+  reweight" below.
 - **B, C, F**: four-leg search found "better" search-period weights for all
   three, but each made FULL-timeline Sharpe *worse* (-0.036, -0.069, -0.106
   respectively) — search-only overfitting, not adopted. Confirms rather than

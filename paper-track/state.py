@@ -105,16 +105,23 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   overfit on a thin (28-week) sample. Confirms the existing "stay 100% core"
 #   conclusion rather than displacing it.
 #
-# D (0.55/0.20/0.0/0.25 -> 0.0/0.0/0.70/0.30) -- pullback in uptrend, 13.5% of
-#   history, 79 weeks, second-most after A. Four-leg search: drops core AND TQQQ
-#   entirely in favor of 70% QLD + 30% cash, +0.025 full-timeline Sharpe, CONFIRMED
-#   on the 2020+ holdout (1.088). This is the largest STRUCTURAL change in this
-#   update -- D goes from "mostly core, some leverage, some cash" to "no core, all
-#   leverage via the lower-decay instrument, more cash" -- on a moderate (not thin,
-#   not large) sample. Adopted because it passed the same holdout bar as A, but
-#   flagged here as the one row in this table most worth re-checking if D's live
-#   behavior ever looks off, given the size of the structural jump relative to the
-#   evidence base.
+# D (0.55/0.20/0.0/0.25 -> 0.0/0.0/0.70/0.30 -> 0.0/0.0/0.30/0.40/0.30) -- pullback
+#   in uptrend, 13.5% of history, 79 weeks, second-most after A. Four-leg search:
+#   drops core AND TQQQ entirely in favor of 70% QLD + 30% cash, +0.025 full-timeline
+#   Sharpe, CONFIRMED on the 2020+ holdout (1.088). Re-examined 2026-09-01 (user
+#   request) with a full 2D QLD x XLU grid via state_d_deep_dive.py: the grid-wide
+#   "optimum" (QLD=0/XLU=0/cash=100%) is a corner-solution artifact -- search Sharpe
+#   15.695 but holdout CAGR only 2.98%, MaxDD -0.17% -- rejected as economically
+#   meaningless, same pattern as the corner solutions caught elsewhere in this file.
+#   Excluding that corner, the legitimate interior region is QLD 10-30% / XLU 20-50%
+#   / cash ~30%, consistent with the original per-state XLU-for-D subagent finding.
+#   Episode-by-episode check (28 episodes since 2015) found XLU only helps in 9 of
+#   them -- concentrated in the sharp drawdowns (Dec 2015, Oct 2018, Mar 2020 COVID,
+#   Jan 2022, Mar 2025, Feb-Mar 2026) -- and hurts in the other 19, mostly
+#   rally/recovery episodes where QLD's leverage captures more upside. This is a
+#   real trade (upside participation in the common case for tail protection in the
+#   uncommon one), not a free improvement. User chose the XLU-tilted side of that
+#   trade: 30% QLD / 40% XLU / 30% cash, the midpoint of the interior region.
 #
 # E (0.50, 0.0, 0.0, 0.50) -- UNCHANGED. Four-leg search's "best" was 100% cash --
 #   a corner solution (cash's near-zero variance trivially wins a Sharpe objective
@@ -219,7 +226,7 @@ TARGET_WEIGHTS = {
     'A': (0.80, 0.20, 0.00, 0.00, 0.00),
     'B': (0.25, 0.75, 0.00, 0.00, 0.00),
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
-    'D': (0.00, 0.00, 0.70, 0.00, 0.30),
+    'D': (0.00, 0.00, 0.30, 0.40, 0.30),
     'E': (0.00, 0.00, 0.00, 0.50, 0.50),
     'F': (0.30, 0.00, 0.00, 0.00, 0.70),
 }
@@ -329,12 +336,12 @@ def target_weights(state):
 # endpoint):
 MICRO_LAMBDA = 0.8
 _LIVE_A, _NEW_A = (0.80, 0.20, 0.00, 0.00, 0.00), (0.90, 0.10, 0.00, 0.00, 0.00)
-_LIVE_D, _NEW_D = (0.00, 0.00, 0.70, 0.00, 0.30), (0.70, 0.00, 0.00, 0.00, 0.30)
+_LIVE_D, _NEW_D = (0.00, 0.00, 0.30, 0.40, 0.30), (0.30, 0.00, 0.00, 0.40, 0.30)
 MICRO_OVERLAY_WEIGHTS = {
     ('A', True): tuple(round((1 - MICRO_LAMBDA) * b + MICRO_LAMBDA * n, 4) for b, n in zip(_LIVE_A, _NEW_A)),
     ('D', False): tuple(round((1 - MICRO_LAMBDA) * b + MICRO_LAMBDA * n, 4) for b, n in zip(_LIVE_D, _NEW_D)),
 }
-# = {('A', True): (0.88, 0.12, 0.0, 0.0, 0.0), ('D', False): (0.56, 0.0, 0.14, 0.0, 0.3)}
+# = {('A', True): (0.88, 0.12, 0.0, 0.0, 0.0), ('D', False): (0.24, 0.0, 0.06, 0.40, 0.3)}
 
 
 def target_weights_with_micro(state, micro_agrees):
