@@ -11,14 +11,15 @@ triggers should need only small edits to stay in sync with it.
 
 | Role | Instrument | Notes |
 |---|---|---|
-| Core | 75% SPMO ETF / 25% IAU (gold), fixed blend | SPMO-as-core changed 2026-08-31 from a 15-stock proportionally-weighted mirror (beats the mirror on every axis: Sharpe 1.065 vs 1.043, -30.4% vs -33.0% max drawdown; removes the weekly Invesco scrape, 15 positions, and core-side wash-sale tracking). Gold blended into the core the same day — see "The GLD core-blend addition (2026-08-31)" below. Live instrument switched GLD → IAU on 2026-09-01 (same-spot-price gold trust, lower 0.25% vs 0.40% expense ratio, and — the deciding factor — GLD is not fractional-tradable on this account, IAU is; see `state.py`'s `CORE_SECONDARY_INSTRUMENT` comment). Every GLD backtest number in this doc still applies: the two ETFs co-move within basis points. |
+| Core | 100% SPMO ETF (pure, no blend) | SPMO-as-core changed 2026-08-31 from a 15-stock proportionally-weighted mirror (beats the mirror on every axis: Sharpe 1.065 vs 1.043, -30.4% vs -33.0% max drawdown; removes the weekly Invesco scrape, 15 positions, and core-side wash-sale tracking). Gold was blended INTO the core (75/25 SPMO/gold) the same day, then moved OUT to a standalone leg on 2026-09-01 — see "Gold: from core-blend to standalone top-slice" below. Core is pure SPMO again as of that date. |
 | Satellite (3x) | TQQQ | Higher return, higher decay — volatility drag scales with leverage k as k(k-1), so TQQQ's decay coefficient (6) is 3x QLD's (2) |
 | Satellite (2x) | QLD | Added 2026-08-31. Lower decay, better Sharpe/drawdown than TQQQ in every combination backtested, at the cost of lower raw CAGR. Confirmed tradable/fractional in the live account. |
 | Defensive (state E only) | XLU (Utilities Select Sector SPDR) | Added 2026-08-31. Not a satellite, not blended into core — a standalone leg used only in state E, replacing what used to be E's 50% core allocation. The one candidate from an extensive defensive-instrument search (SPY, SCHD, VYM, USMV, BRK.B all tested and rejected) to survive three independent validation passes, including fully isolated single-state testing. ~0.08% expense ratio, cheaper than SPMO itself. Confirmed tradable/fractional (regular hours) in the live account. |
+| Gold (all states) | IAU (iShares Gold Trust) | Added 2026-09-01 as a standalone top-slice — a flat 20% (`STANDALONE_GOLD_FRAC`) present in EVERY state, unlike XLU. Every other leg scales down by 20% to make room. See "Gold: from core-blend to standalone top-slice" below for why this replaced the in-core blend. Lower expense ratio than GLD (0.25% vs 0.40%) and fractional-tradable on this account (GLD is not — confirmed live 2026-09-01). |
 | Cash gate | BOXX (Alpha Architect 1-3 Month Box ETF) | Deliberate allocation, not idle buying power — tax deferral vs. a cash sweep/T-bill, which pay taxable interest every period. Its Section 1256 long-term blended rate does NOT apply here — every gated state runs weeks to months, so a BOXX sale is still short-term. |
 
 Core is NEVER margined. All leverage is expressed through the TQQQ/QLD
-satellite positions. XLU carries no leverage.
+satellite positions. XLU and IAU carry no leverage.
 
 ## Regime engine
 
@@ -50,12 +51,34 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | F | 30% | 0% | 0% | 0% | 70% | 0.3x |
 
 `target_weights(state)` returns this row — the base weights, unchanged since
-2026-08-31. Since 2026-09-01, states A and D are further refined by the
-**micro overlay** (below) via `target_weights_with_micro(state, micro_agrees)`
-— call that instead of plain `target_weights()` in every live trigger now.
-Either way, `validate_weights(state, core, tqqq, qld, xlu, cash)` must run
-immediately after, before computing any dollar target or placing any order.
-`WeightSanityError` = abort, do not trade, report the error.
+2026-08-31 and still the right reference table for understanding each
+state's RELATIVE risk posture. It is no longer what a live trigger should
+call directly, though: two overlays apply on top, both added 2026-09-01.
+
+**Live weights, both overlays applied — what a trigger actually trades:**
+
+| State | Core (SPMO) | TQQQ | QLD | XLU | Gold (IAU) | Cash (BOXX) |
+|---|---|---|---|---|---|---|
+| A, micro agrees | 70.4% | 9.6% | 0% | 0% | 20% | 0% |
+| A, micro diverges | 64.0% | 16.0% | 0% | 0% | 20% | 0% |
+| B | 20.0% | 60.0% | 0% | 0% | 20% | 0% |
+| C | 80.0% | 0% | 0% | 0% | 20% | 0% |
+| D, micro agrees | 0% | 0% | 56.0% | 0% | 20% | 24.0% |
+| D, micro diverges | 44.8% | 0% | 11.2% | 0% | 20% | 24.0% |
+| E | 0% | 0% | 0% | 40.0% | 20% | 40.0% |
+| F | 24.0% | 0% | 0% | 0% | 20% | 56.0% |
+
+Get this by calling `target_weights_with_gold(state, micro_agrees)`
+(`state.py`) — it composes the micro overlay (below) with the standalone
+20% gold top-slice ("Gold: from core-blend to standalone top-slice",
+further below): every one of the six base rows above is scaled by 0.80 and
+gold added at a flat 20%, in every state. `validate_weights_6leg(state,
+core, tqqq, qld, xlu, gold, cash)` must run immediately after, before
+computing any dollar target or placing any order. `WeightSanityError` =
+abort, do not trade, report the error. Plain `target_weights()` /
+`target_weights_with_micro()` (5 legs, no gold) are kept for backtest
+scripts and as intermediate steps — do not call them directly from a live
+trigger, they omit gold entirely.
 
 ### Micro overlay for states A and D (added 2026-09-01)
 
@@ -240,7 +263,15 @@ thin sample (32 weeks total, 19 in the isolated holdout) — the most-validated
 speculative change in this file is still built on less independent history
 than A or D. Revisit if E's live behavior ever looks off.
 
-### The GLD core-blend addition (2026-08-31)
+### The GLD core-blend addition (2026-08-31) — SUPERSEDED 2026-09-01
+
+**Superseded the next day** by moving gold out of the core into a standalone
+top-slice — see "Gold: from core-blend to standalone top-slice" further
+below for why and the comparison data. Kept below as history: the
+core-blend numbers are still real backtest results and the reasoning for
+holding *some* gold at all still applies: only the *mechanism* (in-core
+blend vs. standalone leg) changed, not the underlying case for gold
+exposure. Core is pure SPMO again as of 2026-09-01.
 
 The core changed from 100% SPMO to a fixed 75% SPMO / 25% GLD blend, applied
 identically in every state that has a nonzero core weight (`CORE_SPMO_FRAC`,
@@ -284,6 +315,83 @@ dial, not because it's a local optimum the data singled out.
 Rejected in the same core-blend role: SPY, SCHD, VYM, USMV (see below) —
 none matched XLU's original core-blend result, let alone GLD's. Confirmed
 tradable, fractional, in the live account (576391551).
+
+### Gold: from core-blend to standalone top-slice (2026-09-01)
+
+The in-core 75/25 SPMO/gold blend above had a structural flaw not visible
+until checked directly: because `core_weight` is **0% in states D and E**
+(`TARGET_WEIGHTS`), blending gold into the core meant gold exposure
+silently dropped to **zero exactly in pullback and breakdown** — the states
+where a safe-haven asset would matter most. Prompted by the user asking to
+double-check the 25% weight (gold had just had a historically strong
+decade, including +62.3% in 2025 alone — worth checking the case wasn't an
+artifact of one outlier year), then to explicitly move gold outside the
+core and re-evaluate.
+
+**Standalone gold beat the in-core design on every metric, in every period
+tested**, including the honest checks (excl-2025, pre-2020 search, 2020-24
+holdout — not just the full-timeline number 2025 can inflate):
+
+| Period | Best in-core Sharpe (25-30% of core) | Standalone Sharpe (20%, every state) |
+|---|---|---|
+| Full timeline | 1.183 | 1.244 |
+| Excl. 2025 | 1.117 | 1.164 |
+| Pre-2020 search | 1.151 | 1.247 |
+| 2020-24 holdout | 1.128 | 1.154 |
+
+**Isolation check** (is this gold-specific, or just generic de-risking?): a
+standalone slice of plain **cash** at the same weight underperforms the
+gold slice on both Sharpe and CAGR in every period — cash's MaxDD is
+marginally better in isolation (zero volatility, expected), but gold's
+extra return more than compensates on a risk-adjusted basis. Confirms real
+diversification value, not a dilution artifact.
+
+**Per-state weight optimization was tried and rejected** — classic
+overfitting on thin per-state samples. States C and E "optimized" to a
+nonsensical 0% with search-period Sharpe above 4.8 (corner-solution
+artifacts from 10-13-week samples); states B, D, F all pushed to the grid
+edge (40-50%); state F's holdout Sharpe **collapsed from 3.81 (search) to
+0.058 (holdout)** — the same search-only-overfit pattern documented
+elsewhere in this file. The full-timeline composite built from each state's
+"optimal" weight looked best of everything tested (Sharpe 1.276) but
+**lost to the simple uniform 20% weight on the one honest test** (2020-24
+holdout: per-state 1.073 vs. uniform 20%'s 1.154) — reject per-state
+weighting for the same reason every other search-only-overfit result in
+this file was rejected.
+
+**A defensive tilt (more gold in D/E/F than A/B/C) was also tried and
+rejected** — the user's own hypothesis, tested directly and refuted by the
+data. A 2D grid over (offense weight, defense weight) found the Sharpe
+surface ridges along **offense ≈ defense**, not toward extra defense
+weight — at every offense level tested, the best-performing defense weight
+was statistically indistinguishable from just using the same weight as
+offense. Every deliberately defense-tilted combination underperformed the
+flat/uniform version at the same total gold budget on the honest 2020-24
+holdout (0% offense / 35% defense, the most extreme tilt tested, scored
+worst of everything: holdout Sharpe 1.099 vs. uniform 20/20's 1.154).
+Reason: offense states (A/B/C) are 407 of 564 weeks — most of the
+timeline — so starving them of gold to concentrate it in the 157
+defense-state weeks removes diversification value during the majority of
+history to fund a bigger position during the minority.
+
+**Weight chosen: 20%** (`STANDALONE_GOLD_FRAC` in `paper-track/state.py`).
+15% was also defensible (same flat-plateau shape held up in every check),
+but 20% strictly dominated it — better Sharpe, CAGR, AND MaxDD in every
+single period tested, no tradeoff either way.
+
+**Mechanism**: `target_weights_with_gold(state, micro_agrees)` composes the
+micro overlay with this — every leg from `target_weights_with_micro()` is
+scaled by 0.80, and gold added at a flat 0.20, in every state, every time.
+This is the function live triggers call now; `validate_weights_6leg()` is
+its matching guard (6 legs: core, tqqq, qld, xlu, gold, cash).
+
+**One caution carried forward, same as the in-core version's**: this
+backtest window is an unusually strong decade for gold. Even the honest
+2020-24 holdout keeps showing "more gold is better" as weight rises past
+40% — treat that climb skeptically rather than chasing it; it likely
+reflects gold's trailing tailwind more than a structural edge that will
+persist at arbitrarily high weights. 20% was chosen from the flat,
+well-evidenced part of the curve, not the extrapolated tail.
 
 ### What was tried and rejected
 
@@ -360,8 +468,12 @@ destination state, nothing more.
    same file's `check_target_weights()` asserts every row of `TARGET_WEIGHTS`
    sums to 1.0, independent of `validate_weights()`'s per-run check — run it
    after any edit to `TARGET_WEIGHTS`. `check_core_blend_fracs()` does the
-   same for `CORE_SPMO_FRAC`/`CORE_GLD_FRAC` — run it after any edit to the
-   core blend. See `paper-track/README.md` for which scripts in that
+   same for `CORE_SPMO_FRAC`/`CORE_GLD_FRAC` (now 1.0/0.0 — core is pure
+   SPMO since gold moved to a standalone leg 2026-09-01) — run it after any
+   edit to the core blend. `check_gold_overlay()` asserts every
+   (state, micro_agrees) combination from `target_weights_with_gold()` sums
+   to 1.0 — run it after any edit to `STANDALONE_GOLD_FRAC` or the micro
+   overlay weights. See `paper-track/README.md` for which scripts in that
    directory are load-bearing vs. historical record.
 
 ## Drawdown-from-high watch (added 2026-09-01)

@@ -34,7 +34,8 @@ Usage as a library (intended use -- import into a trigger run or REPL):
 """
 
 from state import (TARGET_WEIGHTS, TARGET_WEIGHT_LEGS, validate_weights,
-                    CORE_SPMO_FRAC, CORE_GLD_FRAC, MICRO_OVERLAY_WEIGHTS)
+                    CORE_SPMO_FRAC, CORE_GLD_FRAC, MICRO_OVERLAY_WEIGHTS,
+                    STATE_LABEL, target_weights_with_gold, validate_weights_6leg)
 
 
 def check_core_blend_fracs(tol=0.005):
@@ -82,6 +83,27 @@ def check_micro_overlay_weights(tol=0.005):
     print(f"OK: all {len(MICRO_OVERLAY_WEIGHTS)} MICRO_OVERLAY_WEIGHTS entries sum to 1.0 within tol={tol}")
 
 
+def check_gold_overlay(tol=0.005):
+    """Assert target_weights_with_gold()'s 6-leg output sums to 1.0 for
+    every state, both with and without the micro overlay active (A/D each
+    checked at micro_agrees True and False) -- added 2026-09-01 when gold
+    moved from an in-core blend to a standalone top-slice present in every
+    state. Run this after any edit to STANDALONE_GOLD_FRAC or the micro
+    overlay weights."""
+    n = 0
+    for state in STATE_LABEL:
+        for micro_agrees in (True, False):
+            core, tqqq, qld, xlu, gold, cash = target_weights_with_gold(state, micro_agrees)
+            try:
+                validate_weights_6leg(state, core, tqqq, qld, xlu, gold, cash, tol=tol)
+            except Exception as exc:
+                raise AssertionError(
+                    f"state {state} (micro_agrees={micro_agrees}) failed validate_weights_6leg: {exc}"
+                ) from exc
+            n += 1
+    print(f"OK: all {n} (state, micro_agrees) combinations from target_weights_with_gold() sum to 1.0 within tol={tol}")
+
+
 def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):
     """Assert summing raw per-trade P&L records matches an independently
     reported aggregate. Use this instead of hand-adding subtotals in prose.
@@ -107,3 +129,4 @@ if __name__ == "__main__":
     check_target_weights()
     check_core_blend_fracs()
     check_micro_overlay_weights()
+    check_gold_overlay()

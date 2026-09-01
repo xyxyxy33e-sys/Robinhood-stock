@@ -258,42 +258,23 @@ CASH_INSTRUMENT = 'BOXX'
 # fractional, in the live account (576391551) on 2026-08-31.
 CORE_INSTRUMENT = 'SPMO'
 
-# The core leg itself is a fixed 75/25 blend of SPMO and a gold-tracking ETF,
-# not pure SPMO -- added 2026-08-31 after testing gold exposure two different
-# ways. Gold as a REPLACEMENT for a state-specific leg (standalone in state E,
-# competing head-to-head against XLU) was rejected: the isolated search, when
-# given both as options, picked pure XLU every time -- see the "GLD (gold,
-# tested 2026-08-31...)" note below. Gold blended INTO THE CORE across every
-# state is different and was adopted: unlike every other core-blend candidate
-# tested (SPY, SCHD, VYM, USMV -- see "What was tried and rejected" in
-# STRATEGY.md), a 75/25 SPMO/gold core cuts max drawdown consistently in BOTH
-# the pre-2020 search slice and the post-2020 holdout (-30.36% -> -27.35%
-# full-timeline), with full/holdout Sharpe improving (+0.045 full, +0.068
-# holdout) and the pre-2020 search-period Sharpe cost negligible (-0.001,
-# noise-level) -- the same both-sides-confirm pattern that validated E/XLU,
-# not the holdout-only pattern behind every rejected candidate. Cost:
-# -0.45pp/yr CAGR (backtested against GLD; see below for why the live leg is
-# IAU instead -- return/risk profile of the two is effectively identical,
-# both track gold spot).
-#
-# Instrument switched GLD -> IAU 2026-09-01 (same day as the micro overlay
-# go-live, unrelated change): both are physically-backed gold trusts tracking
-# the same spot price, so the backtest above (run on GLD data, GLD/IAU
-# co-move within basis points) applies to either. IAU was chosen live for two
-# reasons -- (1) lower expense ratio (0.25% vs GLD's 0.40%), a small but real
-# and permanent edge with zero tradeoff; (2) ~$82/share vs GLD's ~$399/share,
-# which matters mechanically on this account: GLD is NOT fractional-tradable
-# here (confirmed 2026-09-01 -- a dollar-based buy order errored, "You can
-# only purchase 4 shares of GLD", leaving a cash remainder that had to be
-# swept into SPMO instead), while IAU filled a dollar-based order to 6
-# decimal places same-day. IAU's own liquidity is still ample for this
-# account's size (~$64B AUM, ~6.2M shares/day 30-day average, vs GLD's ~$146B
-# AUM and ~13.9M shares/day) -- not a liquidity-driven choice, a
-# precision-and-cost one. Confirmed tradable, fractional, in the live account
-# (576391551) on 2026-09-01.
-CORE_SPMO_FRAC = 0.75
-CORE_GLD_FRAC = 0.25
-CORE_SECONDARY_INSTRUMENT = 'IAU'
+# Core is pure SPMO -- NOT blended with gold. History: gold was blended INTO
+# the core at a fixed 75/25 SPMO/gold split from 2026-08-31 to 2026-09-01,
+# superseded the same day by moving gold OUT of the core into its own
+# standalone leg (see STANDALONE_GOLD_FRAC below) after a stress test found
+# the in-core design had a structural flaw: because core_weight is 0% in
+# states D and E, the in-core blend meant gold exposure silently dropped to
+# ZERO exactly during pullback/breakdown -- the states where a safe-haven
+# asset matters most. A standalone top-slice, present in every state
+# regardless of core_weight, tested better on EVERY metric in EVERY period
+# (full timeline, pre-2020 search, 2020-24 holdout, and with gold's outlier
+# +62.3% 2025 excluded) -- see the "Gold: from core-blend to standalone
+# top-slice" section of STRATEGY.md for the full comparison, including the
+# isolation check confirming this is gold's own diversification value, not
+# just generic de-risking (an equal-weight cash slice underperforms the gold
+# slice on Sharpe and CAGR in every period).
+CORE_SPMO_FRAC = 1.0
+CORE_GLD_FRAC = 0.0
 
 # Both satellite instruments, in TARGET_WEIGHTS column order. TQQQ (3x) is the
 # higher-return/higher-decay leg; QLD (2x) is the lower-decay/better-Sharpe leg
@@ -362,8 +343,50 @@ def target_weights_with_micro(state, micro_agrees):
     date target_weights() is being called for -- whether the fast (30/150)
     classifier currently reads A or B. For every state/agreement combo NOT
     in MICRO_OVERLAY_WEIGHTS (B, C, E, F always; A when micro diverges; D
-    when micro agrees), returns the plain target_weights(state) unchanged."""
+    when micro agrees), returns the plain target_weights(state) unchanged.
+    Returns 5 legs (core, tqqq, qld, xlu, cash) -- see
+    target_weights_with_gold() for the 6-leg version that also applies the
+    standalone gold overlay; that is the one live triggers should call."""
     return MICRO_OVERLAY_WEIGHTS.get((state, micro_agrees), TARGET_WEIGHTS[state])
+
+# Standalone gold top-slice -- added 2026-09-01, superseding the in-core
+# 75/25 SPMO/gold blend the same day (see the CORE_SPMO_FRAC/CORE_GLD_FRAC
+# comment above for why). Validated via gold_standalone_test.py and
+# gold_offense_defense.py: a FLAT, UNIFORM weight across all six states beats
+# every alternative tested, including per-state optimization (which overfit
+# badly on thin per-state samples -- states C/E "optimized" to a nonsensical
+# 0% with search-Sharpe >4.8, a corner-solution artifact from 10-13-week
+# samples; states B/D/F pushed to the grid edge and state F's holdout Sharpe
+# collapsed from 3.81 search to 0.058 holdout, textbook overfitting) and a
+# defense-tilted design (more gold in D/E/F than A/B/C, testing the
+# hypothesis that gold should lean in specifically during downturns) -- every
+# tested tilt away from uniform, in either direction, UNDERPERFORMED flat on
+# the honest 2020-24 holdout; the offense/defense Sharpe surface ridges along
+# offense-weight == defense-weight, not toward extra defense weight. 20% beat
+# 15% on every metric in every period tested (no tradeoff), so 20% was
+# chosen over the also-defensible 15%. This weight trades off against EVERY
+# other leg proportionally, not against cash alone -- see
+# target_weights_with_gold() below.
+STANDALONE_GOLD_FRAC = 0.20
+GOLD_INSTRUMENT = 'IAU'
+
+def target_weights_with_gold(state, micro_agrees):
+    """The full live weight function -- target_weights_with_micro(), with the
+    standalone gold overlay applied on top. Returns 6 legs in
+    TARGET_WEIGHT_LEGS_WITH_GOLD order: (core, tqqq, qld, xlu, gold, cash).
+    Gold is a flat STANDALONE_GOLD_FRAC in EVERY state (unlike XLU, which is
+    state E only) -- every other leg is scaled down by (1 -
+    STANDALONE_GOLD_FRAC) to make room, preserving their RELATIVE
+    proportions from target_weights_with_micro(). This is the function live
+    triggers must call for a rebalance -- not target_weights() or
+    target_weights_with_micro() alone, both of which omit gold entirely."""
+    core, tqqq, qld, xlu, cash = target_weights_with_micro(state, micro_agrees)
+    scale = 1 - STANDALONE_GOLD_FRAC
+    return (core * scale, tqqq * scale, qld * scale, xlu * scale,
+            STANDALONE_GOLD_FRAC, cash * scale)
+
+# Instrument for each column of target_weights_with_gold()'s output, in order.
+TARGET_WEIGHT_LEGS_WITH_GOLD = ('core', 'tqqq', 'qld', 'xlu', 'gold', 'cash')
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
@@ -371,17 +394,23 @@ STATE_LABEL = dict(
 )
 
 class WeightSanityError(ValueError):
-    """Raised when a computed (state, core, tqqq, qld, xlu, cash) tuple fails
-    validation. Every live trigger must call validate_weights() before placing
-    any order and abort the rebalance (report, do not trade) if this raises --
-    added 2026-08-29 after the strategy grew to three weight legs across 17
+    """Raised when a computed weight tuple fails validation. Every live
+    trigger must call a validate_weights* function before placing any order
+    and abort the rebalance (report, do not trade) if this raises -- added
+    2026-08-29 after the strategy grew to three weight legs across 17
     instruments with no guard between "compute a state" and "place real
     orders"; extended 2026-08-31 to four legs when QLD joined TQQQ as a second
     satellite instrument, then to five legs the same day when XLU joined as a
-    defensive leg used only in state E."""
+    defensive leg used only in state E, then to six legs 2026-09-01 when gold
+    became a standalone leg present in every state (see validate_weights_6leg
+    for that case)."""
     pass
 
 def validate_weights(state, core, tqqq, qld, xlu, cash, tol=0.005):
+    """5-leg validator, for target_weights()/target_weights_with_micro()
+    output. Live triggers should use validate_weights_6leg() instead, for
+    target_weights_with_gold()'s output -- this is kept for any caller still
+    working with the pre-gold-overlay 5-leg weights."""
     if state not in STATE_LABEL:
         raise WeightSanityError(f"state {state!r} is not one of {sorted(STATE_LABEL)}")
     legs = (('core', core), ('tqqq', tqqq), ('qld', qld), ('xlu', xlu), ('cash', cash))
@@ -393,6 +422,23 @@ def validate_weights(state, core, tqqq, qld, xlu, cash, tol=0.005):
         raise WeightSanityError(
             f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
             f"(core={core}, tqqq={tqqq}, qld={qld}, xlu={xlu}, cash={cash})"
+        )
+
+def validate_weights_6leg(state, core, tqqq, qld, xlu, gold, cash, tol=0.005):
+    """6-leg validator for target_weights_with_gold()'s output -- the one
+    live triggers must call after 2026-09-01's standalone-gold overlay went
+    live. Same checks as validate_weights(), plus the gold leg."""
+    if state not in STATE_LABEL:
+        raise WeightSanityError(f"state {state!r} is not one of {sorted(STATE_LABEL)}")
+    legs = (('core', core), ('tqqq', tqqq), ('qld', qld), ('xlu', xlu), ('gold', gold), ('cash', cash))
+    for name, w in legs:
+        if not (-tol <= w <= 1.0 + tol):
+            raise WeightSanityError(f"{name}_weight={w!r} out of [0,1] range for state {state}")
+    total = core + tqqq + qld + xlu + gold + cash
+    if abs(total - 1.0) > tol:
+        raise WeightSanityError(
+            f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
+            f"(core={core}, tqqq={tqqq}, qld={qld}, xlu={xlu}, gold={gold}, cash={cash})"
         )
 
 
