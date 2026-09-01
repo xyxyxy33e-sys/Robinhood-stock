@@ -364,6 +364,38 @@ destination state, nothing more.
    core blend. See `paper-track/README.md` for which scripts in that
    directory are load-bearing vs. historical record.
 
+## Drawdown-from-high watch (added 2026-09-01)
+
+Informational only — never gates or triggers a trade. The user funds this
+account with occasional manual deposits (transferred by hand, not
+automated) and wanted an objective signal for "is this a real dip worth
+adding extra money to," rather than reacting to any single red day. A
+single day's move is too frequent to be useful: QQQ alone has closed down
+≥2% ~14x/year historically (1.3% daily stdev, so a -2% day is only ~1.5σ).
+Cumulative drawdown from a rolling high is far rarer and a more meaningful
+signal — the strategy's own 2015-2026 backtested daily series (state-
+weighted, not raw QQQ) crossed -10% off its 52-week high ~1.4x/year, -15%
+only 3 times in 10.9 years (Dec 2018, Mar 2020, Mar 2023), -20% exactly
+once (the Mar 2020 COVID crash).
+
+Mechanism (`paper-track/drawdown_tracker.py`): the daily trigger computes
+the STRATEGY's own daily return every day it runs (yesterday's confirmed
+state's weights, from `target_weights_with_micro`, dotted with that day's
+official-close-to-close leg returns — SPMO/IAU/TQQQ/QLD/XLU/BOXX), and
+appends it to a small local log (`data/live_nav_index.csv`) via
+`record_return(date, daily_return)`. This builds an independent,
+cash-flow-blind return index — deliberately NOT the account's raw
+`total_value`, so that a manual deposit never itself looks like a new high
+or distorts the reading. `current_drawdown()` compares the latest index
+value to its rolling 252-trading-day high (or all-time high, until the log
+has a year of history — it started empty 2026-09-01, so this runs as an
+all-time-high tracker through roughly September 2027). Thresholds checked:
+**-10%** (worth a modest add), **-15%** and **-20%** (rare, genuinely major
+dislocations) — 5% is deliberately excluded, too frequent (~2.5x/year in
+backtest) to be a useful signal. `newly_crossed()` fires only the FIRST day
+a threshold is breached, not every day the account stays below it, so this
+alerts once per episode, not daily during a drawdown.
+
 ## Cadence
 
 - **Friday, 15:55 ET** — full weekly routine: compute state, rebalance
