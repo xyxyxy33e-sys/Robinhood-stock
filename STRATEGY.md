@@ -940,6 +940,46 @@ more.
 - **A: more TQQQ** raises CAGR (14.3% at 70/30) with flat Sharpe and worse
   MaxDD — a dial. **D, E:** nothing (see the substate section above).
 
+### The return frontier (2026-09-02) — how to raise CAGR, and what it costs
+
+The user asked how to bring the return up. The improvement search found one
+edge (B) and otherwise only DIALS — leverage in the trend states A and D, and
+the micro overlay (an A de-lever). `paper-track/return_frontier.py` draws the
+dial, starting from B=75/25. Vol target is NOT on it: 20% is already the CAGR
+peak (22% -> 11.62%, 25% -> 11.45%), so raising it buys drawdown for nothing.
+
+| Design | Proxy CAGR | Sharpe | MaxDD | Real CAGR | Sharpe | MaxDD |
+|---|---:|---:|---:|---:|---:|---:|
+| LIVE (B=25/75, micro on) | 11.61% | 0.682 | -38.8% | 20.02% | 1.116 | -19.3% |
+| B=75/25, micro on | 12.30% | 0.765 | -29.8% | 18.28% | 1.138 | -19.3% |
+| B=75/25, micro off | 14.16% | 0.763 | -30.2% | 20.88% | 1.094 | -23.8% |
+| + A=70/30 | 15.04% | 0.755 | -32.1% | 22.15% | 1.062 | -25.7% |
+| + D=85% QLD | 14.81% | 0.756 | -30.6% | 21.98% | 1.085 | -24.8% |
+| + A=70/30, D=85% QLD | 15.69% | 0.752 | -32.4% | 23.25% | 1.061 | -26.7% |
+| + A=60/40, D=100% QLD | 17.19% | 0.744 | -34.7% | 25.50% | 1.030 | -29.6% |
+| + A=50/50, D=100% QLD | 17.98% | 0.739 | -36.4% | 26.60% | 1.004 | -31.4% |
+
+Real-era stress events per point (COVID 2020-02..04 / 2022 / Apr 2025 max
+drawdown): live -19.3 / -6.6 / -11.4; micro off -23.8 / -10.0 / -15.3;
+A=70/30+D=85% -26.7 / -11.8 / -18.1; A=60/40+D=100% -29.6 / -13.7 / -20.8;
+QQQ -27.3 / -31.4 / -21.5.
+
+Reading it:
+
+- **Sharpe declines slowly and without a knee** (proxy 0.765 -> 0.739 across
+  the whole span). No point on the frontier is "wrong"; it is a preference.
+- **On 26 years, every point up to A=60/40 + D=100% still has a SMALLER max
+  drawdown than today's live design** (-34.7% vs -38.8%), because the B fix
+  buys ~9pp of drawdown that leverage then spends back. On the real 2015+
+  era the B fix bought nothing (MaxDD unchanged at -19.3%), so there every
+  step up costs drawdown directly — COVID goes -19% -> -30% at the top.
+- **D leverage is nearly free in the live era** (D=85% QLD: real Sharpe
+  1.062 -> 1.061 on top of A=70/30) while **A leverage and micro-off are what
+  cost Sharpe** there. Order of preference if climbing: micro off, then D,
+  then A.
+- Proxy leverage in 2000-02 runs through SYNTHETIC TQQQ/QLD; real funds did
+  not exist. The regime behaviour is the finding, not the decimals.
+
 **Standing lesson: before trusting any state-level statistic, check whether
 the sample window contains the market conditions that state is meant to
 handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
