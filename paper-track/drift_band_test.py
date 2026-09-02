@@ -145,6 +145,9 @@ def main():
     rate_on = make_rate_lookup(load_tbill_long())
     qqq = load_px('data/qqq_long_history.csv')
     xlu = load_px('data/xlu_long_history.csv')
+    common = set(qqq) & set(xlu)          # QQQ history now runs past XLU's
+    qqq = {d: v for d, v in qqq.items() if d in common}
+    xlu = {d: v for d, v in xlu.items() if d in common}
     rows = build_daily(qqq, synth_leveraged(qqq, 2, 0.95, rate_on),
                        synth_leveraged(qqq, 3, 0.84, rate_on), xlu, qqq, rate_on)
     print(f"daily-cadence simulation, {rows[0]['d']}..{rows[-1]['d']}, {len(rows)} trading days")

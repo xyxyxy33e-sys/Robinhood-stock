@@ -135,8 +135,8 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   this project's search work) -- REJECTED regardless of its Sharpe number, not
 #   adopted. Kept at the existing 50/0/0/50 split.
 #
-# B (0.25, 0.75, 0.0, 0.0, 0.0) -- PROPOSED 2026-09-02 (not yet adopted): change to
-#   (0.75, 0.25, 0, 0, 0). Full-history re-sweep (paper-track/improvement_search.py
+# B (0.75, 0.25, 0.0, 0.0, 0.0) -- CHANGED 2026-09-02 from (0.25, 0.75, 0, 0, 0),
+#   applied together with the return-frontier step below. Full-history re-sweep (paper-track/improvement_search.py
 #   and improvement_search_r2.py) is MONOTONIC -- less leverage in B is better at
 #   every step in BOTH eras on CAGR, Sharpe and MaxDD (25/75 -> 75/25: 11.61% /
 #   0.682 / -38.8% -> 12.30% / 0.765 / -29.8%; beta-matched control 0.686, PASS).
@@ -145,6 +145,24 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   happened to succeed. Cost on real SPMO-era instruments: -1.74pp CAGR
 #   (20.02% -> 18.28%), +0.022 Sharpe. Same lesson as F: thin recent window.
 #   See STRATEGY.md "Improvement search on full history".
+#
+# A (0.70, 0.30, 0, 0, 0) and D (0, 0, 0.85, 0, 0.15) -- CHANGED 2026-09-02 from
+#   A (0.80, 0.20) / D (0, 0, 0.70, 0, 0.30), together with the micro overlay being
+#   DISABLED (MICRO_OVERLAY_ENABLED below). These three are NOT an edge: they are a
+#   deliberate step up the RETURN FRONTIER (paper-track/return_frontier.py, STRATEGY.md
+#   "The return frontier"), chosen by the user after asking how to raise CAGR. Leverage
+#   in the trend states A/D moves CAGR and MaxDD together with Sharpe nearly flat
+#   (proxy 0.765 -> 0.752 across the step), so the choice is a risk preference, not a
+#   finding. Combined design vs the previous live design:
+#     26y proxy   15.69% / 0.752 / -32.4%   vs   11.61% / 0.682 / -38.8%  (better on all 3
+#                                                because the B fix buys ~9pp of drawdown)
+#     real SPMO   23.25% / 1.061 / -26.7%   vs   20.02% / 1.116 / -19.3%  (COVID-shaped
+#                                                events now ~-27% instead of ~-19%)
+#   Leverage was NOT added to B, C, E or F: the search showed leverage in the
+#   counter-trend states (50 < 200) is harmful, not merely risky -- C=80/20 cost 4.9pp
+#   in 2022 on real instruments. The vol target is not a return lever (20% is the CAGR
+#   peak). If drawdowns ever need to come back down, walk this exact path in reverse:
+#   A first (costs the most Sharpe), then D, then re-enable the micro overlay.
 #
 # F (0.0, 0.0, 0.0, 0.0, 1.00) -- CHANGED 2026-09-02 from (0.30, 0, 0, 0, 0.70)
 #   to 100% cash. Earlier four-leg search had found switching to 20% TQQQ / 80%
@@ -278,10 +296,10 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # treat as the best-evidenced speculative change in this file, not a settled
 # one, and revisit if E's live behavior ever looks off.
 TARGET_WEIGHTS = {
-    'A': (0.80, 0.20, 0.00, 0.00, 0.00),
-    'B': (0.25, 0.75, 0.00, 0.00, 0.00),
+    'A': (0.70, 0.30, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.80, 0.20, ...) -- return-frontier step, see block above
+    'B': (0.75, 0.25, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.25, 0.75, ...) -- the one EDGE found, see block above
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
-    'D': (0.00, 0.00, 0.70, 0.00, 0.30),
+    'D': (0.00, 0.00, 0.85, 0.00, 0.15),   # 2026-09-02: was (0, 0, 0.70, 0, 0.30) -- return-frontier step, see block above
     'E': (0.00, 0.00, 0.00, 0.50, 0.50),
     'F': (0.00, 0.00, 0.00, 0.00, 1.00),
 }
@@ -389,19 +407,36 @@ def target_weights(state):
 # to test (see STRATEGY.md). lambda=0.8 blend between live and the fully
 # micro-adjusted weight (see micro_macro_sweep.py for the fully-adjusted
 # endpoint):
+#
+# DISABLED 2026-09-02 (MICRO_OVERLAY_ENABLED = False). The full-history improvement
+# search (paper-track/improvement_search.py, _r2.py) re-examined it on 2000-2026:
+# the overlay's A-half is simply a de-lever of state A (88/12 instead of 80/20 when
+# the fast classifier agrees), and the A sweep shows Sharpe flat at 0.693-0.699 from
+# 10% to 40% TQQQ while CAGR and MaxDD climb together -- i.e. it is a RISK DIAL, not
+# the edge the 2015+ window made it look like (better Sharpe in 2015+, worse in
+# 2000-2015: the fitted-era signature). Turned off as part of the user's move up
+# the return frontier. The machinery below is kept intact and the function
+# signatures are unchanged, so it can be re-enabled by flipping the flag; the
+# _LIVE_* values are the A/D rows it was designed against, NOT today's rows -- if
+# it is ever re-enabled, re-derive them from the current TARGET_WEIGHTS first.
+MICRO_OVERLAY_ENABLED = False
 MICRO_LAMBDA = 0.8
 _LIVE_A, _NEW_A = (0.80, 0.20, 0.00, 0.00, 0.00), (0.90, 0.10, 0.00, 0.00, 0.00)
 _LIVE_D, _NEW_D = (0.00, 0.00, 0.70, 0.00, 0.30), (0.70, 0.00, 0.00, 0.00, 0.30)
 MICRO_OVERLAY_WEIGHTS = {
     ('A', True): tuple(round((1 - MICRO_LAMBDA) * b + MICRO_LAMBDA * n, 4) for b, n in zip(_LIVE_A, _NEW_A)),
     ('D', False): tuple(round((1 - MICRO_LAMBDA) * b + MICRO_LAMBDA * n, 4) for b, n in zip(_LIVE_D, _NEW_D)),
-}
-# = {('A', True): (0.88, 0.12, 0.0, 0.0, 0.0), ('D', False): (0.56, 0.0, 0.14, 0.0, 0.3)}
+} if MICRO_OVERLAY_ENABLED else {}
+# enabled: {('A', True): (0.88, 0.12, 0.0, 0.0, 0.0), ('D', False): (0.56, 0.0, 0.14, 0.0, 0.3)}
+# disabled: {} -> target_weights_with_micro() returns TARGET_WEIGHTS[state] for every input
 
 
 def target_weights_with_micro(state, micro_agrees):
     """target_weights(state), refined by the micro overlay for states A and
-    D only. micro_agrees: bool from compute_micro_agreement() for the same
+    D only -- WHEN MICRO_OVERLAY_ENABLED. It is disabled as of 2026-09-02, so
+    this currently returns TARGET_WEIGHTS[state] regardless of micro_agrees;
+    the parameter is kept so callers (live triggers, backtests) need no change.
+    micro_agrees: bool from compute_micro_agreement() for the same
     date target_weights() is being called for -- whether the fast (30/150)
     classifier currently reads A or B. For every state/agreement combo NOT
     in MICRO_OVERLAY_WEIGHTS (B, C, E, F always; A when micro diverges; D

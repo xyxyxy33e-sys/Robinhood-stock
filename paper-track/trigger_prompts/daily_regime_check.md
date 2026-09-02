@@ -1,19 +1,20 @@
 # PROPOSED replacement prompt — Daily Regime Check (Mon–Thu 15:55 ET)
 # Trigger: trig_01GGL83Q7cR8zDB9yPqnKurE   cron: 55 19 * * 1-4
-# STATUS: APPLIED to the live trigger 2026-09-01. This file is the
+# STATUS: APPLIED to the live trigger 2026-09-01; re-applied 2026-09-02 (weights
+# reweighted, micro overlay disabled). This file is the
 # source of record — edit here, then push via update_trigger, so the repo and
 # the live prompt never drift apart. list_triggers does NOT return prompt text,
 # so this file is the only readable copy.
 
 Daily regime check for the Robinhood Agentic account (576391551) — SPMO core +
-TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with the micro overlay and
-volatility targeting on top. Runs Mon–Thu at 15:55 ET, five minutes before the
+TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with volatility targeting
+on top. (The micro overlay was DISABLED 2026-09-02 -- see below.) Runs Mon–Thu at 15:55 ET, five minutes before the
 close. `STRATEGY.md` in the repo is the single source of truth for what the
 strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
 
 This is a DRIFT-GATED check, not an unconditional daily rebalance. Most days
-the answer is "within band, no action, no report" — expect roughly 43
+the answer is "within band, no action, no report" — expect roughly 41
 rebalances/year total across all causes.
 
 ## 1. Compute today's reading
@@ -24,7 +25,10 @@ ample). Then, using `paper-track/state.py`'s OWN functions — never a
 reimplementation:
 
   - `compute_states(dates, px)` → today's macro state (A–F)
-  - `compute_micro_agreement(dates, px)` → today's `micro_agrees` bool
+  - `compute_micro_agreement(dates, px)` → today's `micro_agrees` bool. INERT
+    since 2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still computed and
+    passed through because the function signature needs it, but it changes
+    no weight and is NOT a regime change.
   - `realized_vol(dates, px, as_of=<today>)` → annualized 30-trading-day vol
   - `target_weights_with_voltarget(state, micro_agrees, vol)` → the 5 live
     weights (core, tqqq, qld, xlu, cash)
@@ -54,8 +58,9 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
 
     do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
 
-where `regime_changed` = today's (macro state, micro_agrees) differs from
-yesterday's confirmed close. The rule it implements:
+where `regime_changed` = today's MACRO state (A–F) differs from yesterday's
+confirmed close. A `micro_agrees` flip alone is NOT a regime change as of
+2026-09-02 — the overlay is disabled, so a flip moves no weight. The rule it implements:
 
   - **regime changed → always rebalance**, no matter how small the drift. A
     state transition is never gated by the band.
@@ -100,8 +105,8 @@ a tier is breached, not every day underwater.
 ## 5. Push notifications — exactly three events, nothing else
 
 Call the `PushNotification` tool (a real interrupt to the user's phone) ONLY
-for: (1) a regime shift — macro state change, or a micro-agreement flip within
-states A/D; (2) a newly crossed drawdown tier; (3) any single day at -2% or
+for: (1) a regime shift — a macro state change (micro flips no longer count,
+2026-09-02); (2) a newly crossed drawdown tier; (3) any single day at -2% or
 worse in the strategy's own daily return. Event (3) is NOT deduplicated —
 each such day is its own event — and is frequent (~10x/year), so frame it as
 low-conviction FYI, not an escalation. Everything else stays in-session.

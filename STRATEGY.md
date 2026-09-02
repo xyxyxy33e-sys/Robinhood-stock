@@ -43,10 +43,10 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 
 | State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |
 |---|---|---|---|---|---|---|
-| A | 80% | 20% | 0% | 0% | 0% | 1.4x |
-| B | 25% | 75% | 0% | 0% | 0% | 2.5x |
+| A | 70% | 30% | 0% | 0% | 0% | 1.6x |
+| B | 75% | 25% | 0% | 0% | 0% | 1.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
-| D | 0% | 0% | 70% | 0% | 30% | 1.4x |
+| D | 0% | 0% | 85% | 0% | 15% | 1.7x |
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
 | F | 0% | 0% | 0% | 0% | 100% | 0.0x |
 
@@ -55,17 +55,15 @@ reference table for understanding each
 state's RELATIVE risk posture. It is no longer what a live trigger should
 call directly, though: two overlays apply on top, both added 2026-09-01.
 
-**Live weights, what a trigger actually trades (gold REMOVED 2026-09-01 —
-see "Gold: removed 2026-09-01" further below):**
+**Live weights before the vol overlay (gold REMOVED 2026-09-01; micro overlay
+DISABLED 2026-09-02, so this table now equals the base table above):**
 
 | State | Core (SPMO) | TQQQ | QLD | XLU | Cash (BOXX) |
 |---|---|---|---|---|---|
-| A, micro agrees | 88.0% | 12.0% | 0% | 0% | 0% |
-| A, micro diverges | 80.0% | 20.0% | 0% | 0% | 0% |
-| B | 25.0% | 75.0% | 0% | 0% | 0% |
+| A (micro overlay disabled 2026-09-02) | 70.0% | 30.0% | 0% | 0% | 0% |
+| B | 75.0% | 25.0% | 0% | 0% | 0% |
 | C | 100.0% | 0% | 0% | 0% | 0% |
-| D, micro agrees | 0% | 0% | 70.0% | 0% | 30.0% |
-| D, micro diverges | 56.0% | 0% | 14.0% | 0% | 30.0% |
+| D (micro overlay disabled 2026-09-02) | 0% | 0% | 85.0% | 0% | 15.0% |
 | E | 0% | 0% | 0% | 50.0% | 50.0% |
 | F | 0% | 0% | 0% | 0% | 100.0% |
 
@@ -224,7 +222,17 @@ clearly — full period 11.43% / 0.669 / −41.6% vs **9.56% / 0.517 / −69.9%*
 though both CAGRs land below the weekly backtests, which is the free-rebalancing
 assumption showing up. Treat the daily-model numbers as the more honest ones.
 
-### Micro overlay for states A and D (added 2026-09-01)
+### Micro overlay for states A and D (added 2026-09-01, DISABLED 2026-09-02)
+
+**Status: OFF** (`MICRO_OVERLAY_ENABLED = False` in `state.py`). The
+full-history improvement search showed the overlay's A-half is a de-lever of
+state A — a risk dial, not an edge (see "Improvement search on full history"
+and "The return frontier" below) — and it was switched off as part of the
+2026-09-02 move up the return frontier. `micro_agrees` is still computed and
+still passed to `target_weights_with_voltarget()`, but it no longer changes
+any weight and a micro flip is no longer a regime change. The section below
+is the original rationale, kept for the record and for re-enabling.
+
 
 A second, faster classifier — `compute_micro_agreement()` in `state.py`,
 the SAME six-state machine as the macro classifier but computed on 30/150-day
@@ -942,6 +950,16 @@ more.
 
 ### The return frontier (2026-09-02) — how to raise CAGR, and what it costs
 
+**APPLIED 2026-09-02 (user decision): the bolded row — B=75/25, A=70/30,
+D=85% QLD / 15% cash, micro overlay off.** Confirmed from `state.py` itself
+after the edit: real instruments 23.35% / 1.063 / −26.7%
+(`voltarget_live_backtest.py`); 26-year proxy **15.69% / 0.752 / −32.4%** at
+the 3% band, 41 rebalances/yr (`drift_band_test.py`). Every "−42%" worst-case
+figure elsewhere in this file describes the design before this change; the
+current worst case on the proxy is about **−32%**, and the live-era stress
+events are larger than before (COVID −27% vs −19%). To reduce drawdown
+later, walk the path in reverse: A first, then D, then re-enable micro.
+
 The user asked how to bring the return up. The improvement search found one
 edge (B) and otherwise only DIALS — leverage in the trend states A and D, and
 the micro overlay (an A de-lever). `paper-track/return_frontier.py` draws the
@@ -955,7 +973,7 @@ peak (22% -> 11.62%, 25% -> 11.45%), so raising it buys drawdown for nothing.
 | B=75/25, micro off | 14.16% | 0.763 | -30.2% | 20.88% | 1.094 | -23.8% |
 | + A=70/30 | 15.04% | 0.755 | -32.1% | 22.15% | 1.062 | -25.7% |
 | + D=85% QLD | 14.81% | 0.756 | -30.6% | 21.98% | 1.085 | -24.8% |
-| + A=70/30, D=85% QLD | 15.69% | 0.752 | -32.4% | 23.25% | 1.061 | -26.7% |
+| **+ A=70/30, D=85% QLD (APPLIED)** | **15.69%** | **0.752** | **-32.4%** | **23.25%** | **1.061** | **-26.7%** |
 | + A=60/40, D=100% QLD | 17.19% | 0.744 | -34.7% | 25.50% | 1.030 | -29.6% |
 | + A=50/50, D=100% QLD | 17.98% | 0.739 | -36.4% | 26.60% | 1.004 | -31.4% |
 
@@ -990,7 +1008,8 @@ prices (state classification, regime statistics, signal research); the
 
 **Read this together with "Volatility targeting" above: everything in this
 section describes the design BEFORE the vol overlay went live the same day.
-The overlay cut the worst case from ~-65/-70% to about -42%. The section is
+The overlay cut the worst case from ~-65/-70% to about -42%; the 2026-09-02
+reweight (B fix + return-frontier step) then moved it to about -32%. The section is
 kept as-is because it is what motivated adding the overlay.**
 
 `paper-track/long_history_backtest.py` runs the LIVE weights (same
@@ -1023,7 +1042,7 @@ every real bear: dot-com -54.7% vs QQQ's -72.8%, GFC -28.1% vs -38.3%, 2022
 an artifact of the window it was fit in.
 
 **The bad one: max drawdown is -65%, not -26%** (pre-vol-targeting; ~-42%
-with the overlay now live). Every drawdown figure
+with the overlay, ~-32% after the 2026-09-02 reweight). Every drawdown figure
 elsewhere in this file comes from the 2015-11+ window and is roughly
 2.5x too optimistic about the worst case. The dot-com decline alone takes
 this design down -61.9% peak-to-trough. Anyone reading "-25.96% MaxDD" as
@@ -1224,20 +1243,25 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -42%, not the -26% quoted from the
-  2015-11+ backtest** -- and it was about -65 to -70% before volatility
-  targeting was added 2026-09-01. Measured over 2000-2026 with the QQQ-core
+- **The real max drawdown is about -32% (proxy, 2000-2026) as of the
+  2026-09-02 reweight; it was -42% before that and -65 to -70% before
+  volatility targeting was added 2026-09-01.** Do not quote the -19%/-27%
+  SPMO-era figures as the worst case. History of the figure: Measured over 2000-2026 with the QQQ-core
   proxy (`paper-track/long_history_backtest.py`, `drift_band_test.py`):
   live weights WITHOUT the vol overlay draw down -69.6% (dot-com alone
   -67.2%); the CURRENT live design, vol target 20% + 3% drift band, draws
-  down **-42.1%** (dot-com -38.2%). QQQ buy-and-hold over the same span is
-  -80.2%. Quote -26% only as "max drawdown in the SPMO-era window", never as
-  the worst case. Cutting the tail from ~-70% to ~-42% is the main reason the
-  vol overlay earned its place. The same run also shows two whipsaw failures
+  down -42.1% (dot-com -38.2%); the 2026-09-02 design (B=75/25, A=70/30,
+  D=85% QLD, micro off) draws down **-32.4%**. QQQ buy-and-hold over the same
+  span is -80.2%. Quote the SPMO-era figure only as "max drawdown in the
+  SPMO-era window", never as the worst case. Cutting the tail from ~-70% to
+  ~-42% is the main reason the vol overlay earned its place; the B fix took
+  it the rest of the way. The same run also shows two whipsaw failures
   the recent window hides -- 2011 (strategy -22.2% while QQQ was +4.1%) and
   COVID-2020 (-15.9% vs QQQ's -7.1%) -- which are the standing cost of
   trend-following through sharp round trips, not fixable by reweighting.
-- B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
+- B's weights were 25/75 until 2026-09-02, resting on 4 episodes; the full-history
+  re-sweep (27 episodes) reversed the direction to 75/25. The old note, for the record:
+  B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
   not the magnitude.
 - Complexity has grown faster than the account: six states × three legs ×
   wash-sale tracking × a tax-deferral instrument × three independently

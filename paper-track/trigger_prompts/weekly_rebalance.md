@@ -1,13 +1,14 @@
 # PROPOSED replacement prompt — Weekly Rebalance (Fri 15:55 ET)
 # Trigger: trig_01BasZybRAmmumVcNERAnKX7   cron: 55 19 * * 5
-# STATUS: APPLIED to the live trigger 2026-09-01. This file is the
+# STATUS: APPLIED to the live trigger 2026-09-01; re-applied 2026-09-02 (weights
+# reweighted, micro overlay disabled). This file is the
 # source of record — edit here, then push via update_trigger, so the repo and
 # the live prompt never drift apart. list_triggers does NOT return prompt text,
 # so this file is the only readable copy.
 
 Weekly rebalance for the Robinhood Agentic account (576391551) — SPMO core +
-TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with the micro overlay and
-volatility targeting on top. Runs Friday at 15:55 ET, five minutes before the
+TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with volatility targeting
+on top. (The micro overlay was DISABLED 2026-09-02 -- see below.) Runs Friday at 15:55 ET, five minutes before the
 close. `STRATEGY.md` in the repo is the single source of truth for what the
 strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
@@ -26,13 +27,15 @@ ample). Then, using `paper-track/state.py`'s OWN functions — never a
 reimplementation:
 
   - `compute_states(dates, px)` → macro state (A–F)
-  - `compute_micro_agreement(dates, px)` → `micro_agrees` bool
+  - `compute_micro_agreement(dates, px)` → `micro_agrees` bool. INERT since
+    2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still passed through because
+    the signature needs it, but it changes no weight and is not a regime change.
   - `realized_vol(dates, px, as_of=<today>)` → annualized 30-trading-day vol
   - `target_weights_with_voltarget(state, micro_agrees, vol)` → the 5 live
     weights (core, tqqq, qld, xlu, cash)
 
 `target_weights_with_voltarget()` is THE live weight function as of
-2026-09-01: it applies the micro overlay and then scales the four risky legs
+2026-09-01: it applies the (now inert) micro overlay and then scales the four risky legs
 by `min(1.0, VOL_TARGET_PA / realized_vol)`, routing the freed weight to cash.
 Do not call `target_weights()`, `target_weights_with_micro()`, or
 `target_weights_with_gold()` for live weights — they all omit the volatility
@@ -53,7 +56,7 @@ moving part and should be visible.
     `CircuitBreakerTripped` → abort, report, DO NOT TRADE.
 
 Optionally run `python3 paper-track/consistency_check.py` — it asserts every
-`TARGET_WEIGHTS` row, the micro overlay, the (inert) gold overlay, and the
+`TARGET_WEIGHTS` row, the (disabled) micro overlay, the (inert) gold overlay, and the
 volatility overlay are internally consistent. Cheap, and it catches a bad edit
 to `state.py` before that edit reaches an order.
 
@@ -109,8 +112,8 @@ for SPMO/TQQQ/QLD/XLU/BOXX, append via
 
 ## 5. Push notifications — exactly three events, nothing else
 
-`PushNotification` ONLY for: (1) a regime shift — macro state change, or a
-micro-agreement flip within states A/D; (2) a newly crossed drawdown tier;
+`PushNotification` ONLY for: (1) a regime shift — a macro state change (micro
+flips no longer count, 2026-09-02); (2) a newly crossed drawdown tier;
 (3) any single day at -2% or worse in the strategy's own daily return. Event
 (3) is NOT deduplicated and is frequent (~10x/year) — frame as low-conviction
 FYI. A routine weekly rebalance with no regime change is NOT a push event.
@@ -142,10 +145,14 @@ fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-42%** with the volatility
-overlay live (2000-2026 stress test, `paper-track/drift_band_test.py`; it was
-about -65 to -70% before vol targeting, and QQQ buy-and-hold is -80%), NOT the
--26% figure the SPMO-era window shows — never quote -26% as the worst case.
+market in it; the strategy's true max drawdown is about **-32%** on the
+2000-2026 stress test (`paper-track/drift_band_test.py`, design of 2026-09-02:
+B=75/25, A=70/30, D=85% QLD, micro off; it was -42% before that reweight and
+-65 to -70% before vol targeting; QQQ buy-and-hold is -80%), NOT the -19% to
+-27% figures the SPMO-era window shows — never quote those as the worst case.
+Also carry: the 2026-09-02 reweight is a deliberate step UP the return
+frontier, so live-era stress events are larger than before (COVID-shaped
+drawdowns about -27% instead of -19%) — that is by design, not a fault.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.

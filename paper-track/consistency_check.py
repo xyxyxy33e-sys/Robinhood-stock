@@ -84,6 +84,13 @@ def check_micro_overlay_weights(tol=0.005):
         except Exception as exc:
             raise AssertionError(f"micro overlay ({state}, agree={agree}) failed validate_weights: {exc}") from exc
     print(f"OK: all {len(MICRO_OVERLAY_WEIGHTS)} MICRO_OVERLAY_WEIGHTS entries sum to 1.0 within tol={tol}")
+    from state import MICRO_OVERLAY_ENABLED, target_weights_with_micro, TARGET_WEIGHTS as _TW
+    if not MICRO_OVERLAY_ENABLED:
+        assert MICRO_OVERLAY_WEIGHTS == {}, "overlay disabled but MICRO_OVERLAY_WEIGHTS is non-empty"
+        for st in _TW:
+            for ag in (True, False):
+                assert target_weights_with_micro(st, ag) == _TW[st], (st, ag)
+        print("OK: micro overlay DISABLED -- target_weights_with_micro() == TARGET_WEIGHTS for all 12 inputs")
 
 
 def check_gold_overlay(tol=0.005):
