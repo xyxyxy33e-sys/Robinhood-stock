@@ -752,6 +752,125 @@ F. The gain comes from *when* the cash is held, not from holding less risk.
 - It protects against sustained declines, not chop: dot-com improves
   **-32.1% -> -21.7%**, but the 2011 whipsaw **worsens -14.0% -> -16.0%**.
 
+### State F episode census (2000-2026)
+
+`paper-track/f_episodes.py` lists every F episode on daily data. **39
+episodes, 993 trading days, 15.1% of history.** Duration: min 1 day, median
+15 days (~3 weeks), mean 25.5, max 110.
+
+| Duration bucket | Episodes | Days | Share of all F time |
+|---|---:|---:|---:|
+| <=1 week | 7 | 20 | 2.0% |
+| 1-4 weeks | 17 | 202 | 20.3% |
+| 1-3 months | 10 | 350 | 35.2% |
+| >3 months | 5 | 421 | 42.4% |
+
+The distribution is the whole argument for holding cash in F: **25 of 39
+episodes end with QQQ flat or higher, but 42% of all F *time* sits in just
+five episodes longer than three months.** The six worst run 52-110 days and
+lose 15-35% each, with intra-episode drawdowns of 22-45%:
+
+| Episode | Days | QQQ | Worst DD inside |
+|---|---:|---:|---:|
+| 2008-09-03 -> 2008-12-15 | 73 | -35.4% | -43.4% |
+| 2002-03-13 -> 2002-08-16 | 110 | -33.4% | -42.7% |
+| 2000-09-22 -> 2001-01-19 | 82 | -28.6% | -42.5% |
+| 2001-02-02 -> 2001-04-18 | 52 | -26.0% | -44.7% |
+| 2001-06-13 -> 2001-10-23 | 89 | -22.3% | -38.3% |
+| 2022-04-11 -> 2022-07-18 | 67 | -15.1% | -21.6% |
+
+This is the same positively-skewed payoff recorded in the F weights change
+above, seen episode by episode. The live era (2015-11+) is episodes 29-39 --
+eleven episodes, only three negative, worst -15.1% -- which is exactly why the
+truncated window made F look excessively defensive.
+
+**Two measurement notes, so the numbers in this file reconcile:**
+
+- QQQ compounded across all F episodes is **-83.1% daily-sampled** here vs
+  **-39.4% weekly-sampled** in the section above. The weekly figure uses the
+  last trading day of each ISO week (197 weeks / 28 episodes), the cadence the
+  weekly backtests run on; daily sampling resolves entries and exits the
+  weekly grid blurs and does not merge episodes a few days apart. Both are
+  correct for what they measure. Neither is the strategy's return -- F holds
+  100% cash, so these are losses AVOIDED, not taken.
+- `compute_states()` emits `'F'` as a placeholder while the 200-day SMA is
+  still warming up (`if m200 is None: out.append('F')`). On data starting
+  1999-09-15 that fabricates a 199-day "episode" ending 2000-06-27 in which
+  QQQ rose 51% -- the longest and most positive entry, entirely artifact. The
+  backtests never saw it (`long_history_backtest.START = '2000-07-01'` exists
+  to skip it), but **any ad-hoc state tally on this data must drop the warm-up
+  explicitly.**
+
+### D and E substates: searched again on full history, still nothing (2026-09-02)
+
+The user asked whether states D and E have a substate justifying a bigger cash
+position, the way state F turned out to. `paper-track/de_substate_search.py`
+answers no, and this is the second independent time the substate question has
+come back negative.
+
+The earlier study (`substate_research.py`, `substate_research_deltas.py`) ran
+on the 2015-11+ window where D is ~370 trading days and E ~115 -- too thin to
+split. The full QQQ history roughly triples both and adds the dot-com crash
+and the GFC, which is precisely what flipped the F conclusion, so the retry
+was justified.
+
+**Flat cash increases first, as the baseline** (2000-2026 QQQ core, vol
+targeting + 3% band, F already at 100% cash):
+
+| Design | CAGR | Sharpe | MaxDD | avg risky |
+|---|---:|---:|---:|---:|
+| **Live** | **11.61%** | **0.682** | **-38.8%** | 71.5% |
+| D risky x0.70 | 10.86% | 0.662 | -38.3% | 68.7% |
+| D risky x0.00 | 8.86% | 0.575 | -37.4% | 62.2% |
+| E risky x0.70 | 11.53% | 0.680 | -38.0% | 70.8% |
+| E risky x0.00 | 11.33% | 0.671 | -36.2% | 69.2% |
+
+D is strictly worse with more cash -- 2.75pp of CAGR for 1.4pp of drawdown.
+E's whole cash axis is nearly flat. Neither resembles F, where the move was
+Pareto-improving.
+
+**Then the conditional search.** Nine point-in-time signals computable from
+QQQ closes alone (drawdown from the 252d high, 200-SMA slope, 50-SMA gap,
+50/200 gap, 20d and 12-1 momentum, 63d trend R^2, 30d/252d vol ratio, episode
+age) x 3 split points x 2 cash depths, per state = 108 candidates, thresholds
+fit on the search era and applied unchanged to the holdout.
+
+- **6 of 108** improved Sharpe in both eras. Best gain **+0.007** Sharpe
+  (state E, 252-day drawdown, worst third to cash), against **+0.017** for the
+  F change.
+- All six survived the exposure-matched control -- but by 0.001-0.007 Sharpe,
+  well inside noise, and all six sit in state E whose cash axis the flat sweep
+  had already shown to be featureless.
+- **All six fail the max-statistic permutation test**, decisively: best
+  p = **0.580**. The null distribution of the best-of-108 gain has median
+  **+0.009** and 95th percentile **+0.022** -- i.e. *a random split of E's days
+  typically beats the best real signal we found.* That is the textbook
+  signature of nothing being there.
+
+**Conclusion: no substate adopted for D or E.** The six states remain the
+right granularity. Two negative results on independent data sets is enough --
+do not re-run this search a third time without a genuinely new signal source
+(the nine tested here exhaust what QQQ closes can say), and note that F's
+success came from a *sample-window* fix, not from finer conditioning.
+
+**The lever that does raise cash in D and E is the vol target itself**, which
+needs no new signal (full period, band 3%):
+
+| Vol target | CAGR | Sharpe | MaxDD | avg risky |
+|---:|---:|---:|---:|---:|
+| 22% | 11.62% | 0.665 | -40.6% | 73.0% |
+| **20% (live)** | **11.61%** | **0.682** | **-38.8%** | 71.5% |
+| 18% | 11.40% | 0.694 | -35.9% | 69.5% |
+| 16% | 10.90% | 0.698 | -32.2% | 66.5% |
+| 14% | 10.18% | 0.702 | -28.5% | 62.3% |
+| 12% | 9.22% | 0.703 | -24.6% | 56.4% |
+
+Sharpe sits on a flat plateau from 18% down to 12% while CAGR falls steadily:
+a clean risk dial, not an edge. 20% is at the CAGR peak and is kept, since
+this account's stated objective is to outperform SPY and QQQ. Lowering it is
+the honest way to buy drawdown protection if that objective ever changes --
+a deliberate return-for-risk trade, not a free improvement.
+
 **Standing lesson: before trusting any state-level statistic, check whether
 the sample window contains the market conditions that state is meant to
 handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ

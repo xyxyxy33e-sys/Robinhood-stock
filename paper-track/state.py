@@ -170,6 +170,19 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # pursuing further; the six states are treated as the right granularity, not a
 # stepping stone to a finer one. See STRATEGY.md for the full writeup.
 #
+# RE-RUN 2026-09-02 for states D and E specifically (the user asked whether they
+# hide a bigger-cash substate the way F turned out to), on the full 1999-2026 QQQ
+# history rather than the thin 2015+ window -- paper-track/de_substate_search.py.
+# Still nothing. Nine QQQ-only signals x 3 split points x 2 cash depths = 108
+# candidates; 6 improved Sharpe in both eras, best by +0.007 (vs +0.017 for the F
+# change), and ALL SIX FAILED a max-statistic permutation test at p=0.580 -- the
+# null best-of-108 gain has median +0.009, i.e. a RANDOM split of state E's days
+# typically beats the best real signal. Flat cash increases are no better: D is
+# strictly worse the more cash it holds, E's cash axis is nearly flat. Two
+# independent negative results now; do not re-run without a genuinely new signal
+# source. F's success came from fixing the SAMPLE WINDOW, not from finer
+# conditioning -- that is the transferable lesson, not "look for more substates".
+#
 # --- Original 3-leg (TQQQ-only satellite) history below, preserved since B/C/E/F
 # --- are unchanged and this is still their operative rationale ---
 #
