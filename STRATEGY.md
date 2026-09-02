@@ -715,7 +715,12 @@ handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
 prices (state classification, regime statistics, signal research); the
 2015-11 floor is only binding where SPMO/QLD/XLU/BOXX leg returns are needed.
 
-### 26-year stress test: the design has a -65% drawdown in it (2026-09-01)
+### 26-year stress test: the design had a -65% drawdown in it (2026-09-01)
+
+**Read this together with "Volatility targeting" above: everything in this
+section describes the design BEFORE the vol overlay went live the same day.
+The overlay cut the worst case from ~-65/-70% to about -42%. The section is
+kept as-is because it is what motivated adding the overlay.**
 
 `paper-track/long_history_backtest.py` runs the LIVE weights (same
 `target_weights_with_micro`, same 4bps cost model, weekly rebalance) from
@@ -746,7 +751,8 @@ every real bear: dot-com -54.7% vs QQQ's -72.8%, GFC -28.1% vs -38.3%, 2022
 -17.6% vs -28.8%. That is meaningful validation -- the design is not merely
 an artifact of the window it was fit in.
 
-**The bad one: max drawdown is -65%, not -26%.** Every drawdown figure
+**The bad one: max drawdown is -65%, not -26%** (pre-vol-targeting; ~-42%
+with the overlay now live). Every drawdown figure
 elsewhere in this file comes from the 2015-11+ window and is roughly
 2.5x too optimistic about the worst case. The dot-com decline alone takes
 this design down -61.9% peak-to-trough. Anyone reading "-25.96% MaxDD" as
@@ -947,15 +953,19 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -65%, not the -26% quoted from the
-  2015-11+ backtest.** `paper-track/long_history_backtest.py` runs the live
-  weights over 2000-2026 (QQQ core, validated synthetic 2x/3x legs): MaxDD
-  -65.11%, driven by the dot-com decline (-61.9% peak-to-trough). Quote
-  -26% as "max drawdown in the SPMO-era window", never as the strategy's
-  worst case. The same run also shows two whipsaw failures the recent window
-  hides — 2011 (strategy -22.2% while QQQ was +4.1%) and COVID-2020
-  (-15.9% vs QQQ's -7.1%) — which are the standing cost of trend-following
-  through sharp round trips, not fixable by reweighting.
+- **The real max drawdown is about -42%, not the -26% quoted from the
+  2015-11+ backtest** -- and it was about -65 to -70% before volatility
+  targeting was added 2026-09-01. Measured over 2000-2026 with the QQQ-core
+  proxy (`paper-track/long_history_backtest.py`, `drift_band_test.py`):
+  live weights WITHOUT the vol overlay draw down -69.6% (dot-com alone
+  -67.2%); the CURRENT live design, vol target 20% + 3% drift band, draws
+  down **-42.1%** (dot-com -38.2%). QQQ buy-and-hold over the same span is
+  -80.2%. Quote -26% only as "max drawdown in the SPMO-era window", never as
+  the worst case. Cutting the tail from ~-70% to ~-42% is the main reason the
+  vol overlay earned its place. The same run also shows two whipsaw failures
+  the recent window hides -- 2011 (strategy -22.2% while QQQ was +4.1%) and
+  COVID-2020 (-15.9% vs QQQ's -7.1%) -- which are the standing cost of
+  trend-following through sharp round trips, not fixable by reweighting.
 - B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
   not the magnitude.
 - Complexity has grown faster than the account: six states × three legs ×

@@ -142,8 +142,9 @@ fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-65%** (from the
-2000-2026 stress test in `paper-track/long_history_backtest.py`), NOT the
+market in it; the strategy's true max drawdown is about **-42%** with the volatility
+overlay live (2000-2026 stress test, `paper-track/drift_band_test.py`; it was
+about -65 to -70% before vol targeting, and QQQ buy-and-hold is -80%), NOT the
 -26% figure the SPMO-era window shows — never quote -26% as the worst case.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
