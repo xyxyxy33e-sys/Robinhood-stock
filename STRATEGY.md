@@ -48,10 +48,10 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
 | D | 0% | 0% | 70% | 0% | 30% | 1.4x |
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
-| F | 30% | 0% | 0% | 0% | 70% | 0.3x |
+| F | 0% | 0% | 0% | 0% | 100% | 0.0x |
 
-`target_weights(state)` returns this row — the base weights, unchanged since
-2026-08-31 and still the right reference table for understanding each
+`target_weights(state)` returns this row — the base weights, still the right
+reference table for understanding each
 state's RELATIVE risk posture. It is no longer what a live trigger should
 call directly, though: two overlays apply on top, both added 2026-09-01.
 
@@ -67,7 +67,7 @@ see "Gold: removed 2026-09-01" further below):**
 | D, micro agrees | 0% | 0% | 70.0% | 0% | 30.0% |
 | D, micro diverges | 56.0% | 0% | 14.0% | 0% | 30.0% |
 | E | 0% | 0% | 0% | 50.0% | 50.0% |
-| F | 30.0% | 0% | 0% | 0% | 70.0% |
+| F | 0% | 0% | 0% | 0% | 100.0% |
 
 **A THIRD OVERLAY IS NOW LIVE ON TOP OF THIS TABLE — volatility targeting,
 added 2026-09-01. The table below is no longer what a trigger trades; see
@@ -702,12 +702,55 @@ excludes the 2000-02 dot-com crash and the 2008-09 GFC, i.e. exactly the
 episodes state F exists for. On the real history QQQ *loses* ~39% cumulatively
 across F weeks and big-down weeks outnumber big-up ones. Any framing of
 "state F underperforms QQQ, why so defensive" is an artifact of the truncated
-sample; F's 30% core / 70% cash is validated much more strongly than the
-2015+ numbers suggest, and the risk/return frontier computed for F on the
+sample; F's defensive posture is validated much more strongly than the
+2015+ numbers suggest (and this finding is what drove F to 100% cash on
+2026-09-02 — see below), and the risk/return frontier computed for F on the
 short sample understates the case for staying defensive. The slope signal
 itself also died here: permutation p went the WRONG way with 3.2x the data
 (0.083 -> 0.189) and episode breadth flipped from 11-helped/2-hurt to
 11-helped/15-hurt. A real effect strengthens with more data.
+
+### State F -> 100% cash (changed 2026-09-02)
+
+State F's weights moved from **30% core / 70% cash to 100% cash**. This is the
+direct consequence of the finding immediately above: on the full 1999-2026
+history QQQ compounds **-39.4%** across F weeks, so the 30% core leg was
+holding equity through the only regime the classifier explicitly labels
+"established downtrend, going down."
+
+Measured on the 2000-2026 QQQ-core stress test with volatility targeting and
+the 3% drift band live (`paper-track/long_history_backtest.py`,
+`paper-track/drift_band_test.py`):
+
+| Design | CAGR | Sharpe | MaxDD | Rebalances/yr |
+|---|---|---|---|---|
+| LIVE (F = 30% core / 70% cash) | 11.36% | 0.665 | -42.1% | 42.5 |
+| **F -> 100% cash (adopted)** | **11.61%** | **0.682** | **-38.8%** | **38.6** |
+| E+F -> cash (not adopted) | 11.33% | 0.671 | -36.2% | 36.5 |
+| D+E+F -> cash (not adopted) | 8.64% | 0.566 | -34.8% | 33.5 |
+
+Better on all three axes, and it trades less.
+
+**Why this isn't the usual cash-corner artifact.** This project has repeatedly
+rejected "100% cash" search results as corner solutions — cash's near-zero
+variance trivially wins a Sharpe objective regardless of foregone return, and
+state E's own search hit exactly that trap. The distinguishing test is the
+**exposure-matched control**: flatly de-levering the live design until its
+average equity exposure matches the F-cash version gives 11.12% / 0.667 /
+-41.4%, i.e. *worse* than routing that same reduction specifically into state
+F. The gain comes from *when* the cash is held, not from holding less risk.
+
+**Caveats, all of which are real:**
+
+- The benefit is concentrated in **2000-2015** (7.37% / 0.479 vs 6.88% /
+  0.451); **2015-2026 is a dead heat**. That the win lands in the era that was
+  never searched is the good direction, but the recent era does not confirm it.
+- It helps in **only 8 of 27 F episodes**; the old design wins the other 19.
+  The aggregate gain is a positively-skewed insurance payoff — a few large
+  avoided losses paying for many small foregone gains. *Expect it to feel
+  wrong most of the time it fires.*
+- It protects against sustained declines, not chop: dot-com improves
+  **-32.1% -> -21.7%**, but the 2011 whipsaw **worsens -14.0% -> -16.0%**.
 
 **Standing lesson: before trusting any state-level statistic, check whether
 the sample window contains the market conditions that state is meant to

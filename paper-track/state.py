@@ -135,10 +135,32 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   this project's search work) -- REJECTED regardless of its Sharpe number, not
 #   adopted. Kept at the existing 50/0/0/50 split.
 #
-# F (0.30, 0.0, 0.0, 0.70) -- UNCHANGED. Four-leg search found switching to 20%
-#   TQQQ / 80% QLD (no core, no cash), but full-timeline Sharpe was WORSE (-0.106)
-#   than baseline -- the single worst result in the whole four-leg study. Confirms
-#   the existing "satellite hurts in F, lean into cash" conclusion.
+# F (0.0, 0.0, 0.0, 0.0, 1.00) -- CHANGED 2026-09-02 from (0.30, 0, 0, 0, 0.70)
+#   to 100% cash. Earlier four-leg search had found switching to 20% TQQQ / 80%
+#   QLD was the single WORST result in that whole study (full-timeline Sharpe
+#   -0.106 vs baseline) -- "satellite hurts in F, lean into cash" was already the
+#   conclusion; this change follows it to the corner. Evidence is the 2000-2026
+#   QQQ-core stress test (paper-track/long_history_backtest.py +
+#   drift_band_test.py, with vol targeting and the 3% band live):
+#     LIVE (F=30/70)   CAGR 11.36%  Sharpe 0.665  MaxDD -42.1%  42.5 rebal/yr
+#     F -> 100% cash   CAGR 11.61%  Sharpe 0.682  MaxDD -38.8%  38.6 rebal/yr
+#   A Pareto improvement on all three, and it trades LESS. Why this is not the
+#   usual cash-corner artifact (cf. state E below, where 100% cash was rejected):
+#   it PASSES the exposure-matched control -- flatly de-levering the live design
+#   to the same average equity exposure gives 11.12% / 0.667 / -41.4%, i.e. worse
+#   than the F-specific cash move, so the gain is from WHEN the cash is held, not
+#   merely from holding less risk. Caveats, stated honestly:
+#     - The benefit is concentrated in 2000-2015 (7.37%/0.479 vs 6.88%/0.451);
+#       2015-2026 is a dead heat. This is an out-of-sample-era result, which is
+#       the good direction, but it is not confirmed in the recent era.
+#     - It helps in only 8 of 27 F episodes; the live design wins the other 19.
+#       The aggregate gain is a positively-skewed insurance payoff -- a few large
+#       avoided losses paying for many small foregone gains. Expect it to feel
+#       wrong most of the time it fires.
+#     - Dot-com improves -32.1% -> -21.7%; the 2011 whipsaw WORSENS -14.0% ->
+#       -16.0%. It is protection against sustained declines, not against chop.
+#   Also tested and NOT adopted: E+F -> cash (11.33%/0.671/-36.2%, gives up CAGR
+#   for drawdown) and D+E+F -> cash (8.64%/0.566/-34.8%, clearly worse).
 #
 # Below-state substate research (VIX/credit-spread/breadth/utilities-relative-
 # strength, both LEVEL and RATE-OF-CHANGE versions, paper-track/substate_research.py
@@ -185,7 +207,10 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   hurts (monotonic decline from 0%). Core/cash: broad plateau 44-50% core, current
 #   50% sits in it (peak ~47%, indistinguishable from 50% given the flatness).
 #
-# F (0.30, 0.0, 0.70) -- established downtrend, 14.3% of history, THIRD-most after
+# F (0.30, 0.0, 0.70) [SUPERSEDED 2026-09-02 by 100% cash -- see the F block
+#   above for the change and its evidence; kept here as the operative rationale
+#   for the 30/70 split that stood until then]
+#   -- established downtrend, 14.3% of history, THIRD-most after
 #   A and D -- not a fringe case. Satellite: same as E, adding any strictly hurts,
 #   and hurts FASTER than E does. Core/cash: unlike every other state tested, max
 #   drawdown is COMPLETELY PINNED at -32.3% across the entire 0-100% core sweep --
@@ -234,7 +259,7 @@ TARGET_WEIGHTS = {
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
     'D': (0.00, 0.00, 0.70, 0.00, 0.30),
     'E': (0.00, 0.00, 0.00, 0.50, 0.50),
-    'F': (0.30, 0.00, 0.00, 0.00, 0.70),
+    'F': (0.00, 0.00, 0.00, 0.00, 1.00),
 }
 
 # Instrument for each column of TARGET_WEIGHTS, in order.
