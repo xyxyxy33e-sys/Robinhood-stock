@@ -161,9 +161,9 @@ daily difference would rebalance ~250x/year. Live rule
 (`needs_rebalance(target, held, regime_changed)` in `state.py`):
 
 - **regime change → always rebalance**, whatever the drift. Never gated.
-- **otherwise rebalance only when L1 drift > `REBALANCE_DRIFT_BAND` (0.05)**,
+- **otherwise rebalance only when L1 drift > `REBALANCE_DRIFT_BAND` (0.03)**,
   where drift = Σ|target − held| over the 5 legs. Because the legs sum to 1.0,
-  a 5% L1 drift ≈ *2.5 percentage points of the portfolio in the wrong leg*.
+  a 3% L1 drift ≈ *1.5 percentage points of the portfolio in the wrong leg*.
 
 **The old per-leg "$100 or 0.3%" trade threshold is REMOVED** (2026-09-01,
 user decision). When the band fires, every leg goes to target regardless of
@@ -182,22 +182,28 @@ return terms and was picked on operational grounds:
 | rule | rebal/yr | turnover/yr | CAGR | Sharpe | median gap | max gap |
 |---|---|---|---|---|---|---|
 | every day | 250 | 16.64x | 11.35% | 0.666 | 0 d | 0 d |
-| band 3% | 42.5 | 15.77x | 11.36% | 0.665 | 2 d | 74 d |
-| **band 5% (live)** | **32.7** | **15.49x** | **11.35%** | **0.665** | **3 d** | **93 d** |
+| band 2% | 52.4 | 15.92x | 11.35% | 0.665 | 1 d | 51 d |
+| **band 3% (live)** | **42.5** | **15.77x** | **11.36%** | **0.665** | **2 d** | **74 d** |
+| band 5% | 32.7 | 15.49x | 11.35% | 0.665 | 3 d | 93 d |
 | band 8% | 26.9 | 15.28x | 11.42% | 0.667 | 3 d | 118 d |
 | band 10% | 24.5 | 15.09x | 11.40% | 0.666 | 4 d | 128 d |
 | weekly only | 66.1 | 15.48x | 11.35% | 0.668 | 3 d | 4 d |
-| Friday uncond. + band 5% intra-week | 75.9 | 15.87x | 11.37% | 0.667 | 3 d | 4 d |
+| Friday uncond. + band intra-week | 75.9 | 15.87x | 11.37% | 0.667 | 3 d | 4 d |
 
-**5% chosen (user decision)** for tighter tracking — max gap 93 days vs 10%'s
-128, median 3 days vs 4 — at ~8 more rebalances/year. It also reaches nearly
-the responsiveness of a Friday-unconditional rule at **less than half its
-trade count** (32.7 vs 75.9 rebalances/year, identical performance), which is
-the cheaper way to buy responsiveness — and matters because extra rebalances
-carry a wash-sale cost the 4bps model does not capture. The eras disagree
-mildly on the "best" band (OOS prefers 10%, the fitted window 5%) by margins
-inside noise — a reason not to fine-tune further. Anything in 3-10% is
-defensible; it is one constant.
+**3% chosen (user decision, after briefly running 5%)** for tighter tracking:
+max gap 74 days vs 5%'s 93, median 2 days vs 3, and it is the only band in the
+range that *also* improves MaxDD (−42.1% vs −42.5%), at ~10 more
+rebalances/year. **2% was considered and declined** — it adds ~20
+rebalances/year over 3% for literally identical CAGR and Sharpe and a slightly
+worse drawdown, and at a 1-day median gap it would trade most days.
+
+The whole 2-10% range is one flat plateau on return (CAGR 11.35-11.42%,
+Sharpe 0.665-0.667), so this constant is an **operational** choice about trade
+frequency, not a return one. Costs the 4bps model does *not* capture — wash
+sales, tax-lot fragmentation, and execution risk on every live order — are
+what argue against going tighter, and are the real reason 2% was declined.
+The eras disagree on the "best" band by margins inside noise (OOS prefers 10%,
+the fitted window 5%) — a reason not to fine-tune further.
 
 Long no-trade stretches are not a risk, because they happen where nothing is
 happening: seven of the eight longest runs are state A at single-digit-to-low-
@@ -205,12 +211,13 @@ teens volatility with the market grinding up (e.g. 128 days Dec 2016-Jun 2017,
 vol 8.7%, QQQ +17.9%). The median run is 3 days.
 
 **Responsiveness check**, since a band could in principle make the strategy
-sleepy exactly when it matters: traced through the COVID crash, the live 5%
-band fired **twelve rebalances in five weeks** — 2020-02-24, 02-25, 02-27,
-03-02, 03-04, 03-09, 03-10, 03-11, 03-13, 03-17, 03-23, 03-26 — walking the
-risky sleeve down 100% → 66% → 47% → 33% → 23% → 13% as realised vol went
-14% → 79%. (At a 10% band the same window fires nine.) Regime changes bypass
-the band entirely, so state transitions are never delayed by it.
+sleepy exactly when it matters: traced through the COVID crash, the band
+rebalances repeatedly and fast, walking the risky sleeve down
+100% → 66% → 47% → 33% → 23% → 13% as realised vol went 14% → 79%. Every band
+in the range catches the move — 10% fires 9 times in that window, 5% fires 12,
+2% fires 17 — the tighter ones only add refinements, which is further evidence
+the choice is operational rather than protective. Regime changes bypass the
+band entirely, so state transitions are never delayed by it.
 
 In this drift-aware daily model, vol targeting still beats no vol targeting
 clearly — full period 11.43% / 0.669 / −41.6% vs **9.56% / 0.517 / −69.9%** —

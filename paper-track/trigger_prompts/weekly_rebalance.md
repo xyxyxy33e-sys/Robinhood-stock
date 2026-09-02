@@ -66,8 +66,8 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
     do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
 
   - **regime changed → always rebalance**, whatever the drift.
-  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.05),
-    i.e. roughly "2.5 percentage points of the portfolio is in the wrong leg".
+  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.03),
+    i.e. roughly "1.5 percentage points of the portfolio is in the wrong leg".
   - **within band → trade nothing**, but still do steps 4-7 and publish the
     weekly report. Report the drift figure so a long quiet stretch is visible
     rather than looking like a trigger that failed to run.

@@ -13,7 +13,7 @@ strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
 
 This is a DRIFT-GATED check, not an unconditional daily rebalance. Most days
-the answer is "within band, no action, no report" — expect roughly 33
+the answer is "within band, no action, no report" — expect roughly 43
 rebalances/year total across all causes.
 
 ## 1. Compute today's reading
@@ -59,9 +59,9 @@ yesterday's confirmed close. The rule it implements:
 
   - **regime changed → always rebalance**, no matter how small the drift. A
     state transition is never gated by the band.
-  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.05),
+  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.03),
     where drift = sum over the 5 legs of |target − held|. Since the legs each
-    sum to 1.0, a 5% L1 drift is roughly "2.5 percentage points of the
+    sum to 1.0, a 3% L1 drift is roughly "1.5 percentage points of the
     portfolio is in the wrong leg".
   - **within band → NO TRADE.** Still do steps 4 and 5, then stop. No report,
     no artifact edit.
@@ -74,10 +74,10 @@ is the better control; adding a second per-leg gate on top would leave small
 legs permanently drifting.
 
 The band is deliberately responsive, not sleepy: traced through the COVID
-crash it fired TWELVE rebalances in five weeks, cutting the risky sleeve from
-100% to 13% as realised vol went 14% → 79%. Long quiet stretches only happen
-where nothing is happening — the median no-trade run is 3 days, and the
-longest runs are all calm state-A uptrends.
+crash it rebalances repeatedly, walking the risky sleeve from 100% down to
+~13% as realised vol goes 14% → 79%. Long quiet stretches only happen where
+nothing is happening — the median no-trade run is 2 days, and the longest
+runs are all calm state-A uptrends.
 
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 
