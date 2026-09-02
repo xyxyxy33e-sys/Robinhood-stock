@@ -135,6 +135,17 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 #   this project's search work) -- REJECTED regardless of its Sharpe number, not
 #   adopted. Kept at the existing 50/0/0/50 split.
 #
+# B (0.25, 0.75, 0.0, 0.0, 0.0) -- PROPOSED 2026-09-02 (not yet adopted): change to
+#   (0.75, 0.25, 0, 0, 0). Full-history re-sweep (paper-track/improvement_search.py
+#   and improvement_search_r2.py) is MONOTONIC -- less leverage in B is better at
+#   every step in BOTH eras on CAGR, Sharpe and MaxDD (25/75 -> 75/25: 11.61% /
+#   0.682 / -38.8% -> 12.30% / 0.765 / -29.8%; beta-matched control 0.686, PASS).
+#   Mechanism: B ends by failing (exit to C/F) in 14 of 27 episodes and QQQ is
+#   negative inside 17 of 27; the live 25/75 was fit on 4 episodes that all
+#   happened to succeed. Cost on real SPMO-era instruments: -1.74pp CAGR
+#   (20.02% -> 18.28%), +0.022 Sharpe. Same lesson as F: thin recent window.
+#   See STRATEGY.md "Improvement search on full history".
+#
 # F (0.0, 0.0, 0.0, 0.0, 1.00) -- CHANGED 2026-09-02 from (0.30, 0, 0, 0, 0.70)
 #   to 100% cash. Earlier four-leg search had found switching to 20% TQQQ / 80%
 #   QLD was the single WORST result in that whole study (full-timeline Sharpe

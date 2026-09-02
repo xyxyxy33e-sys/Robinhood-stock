@@ -871,6 +871,75 @@ this account's stated objective is to outperform SPY and QQQ. Lowering it is
 the honest way to buy drawdown protection if that objective ever changes --
 a deliberate return-for-risk trade, not a free improvement.
 
+### Improvement search on full history (2026-09-02) — PROPOSED, awaiting decision
+
+Prompted by the by-year tables: the strategy's losses to QQQ cluster in sharp
+recovery years and one whipsaw year, and every per-state weight was fit on the
+2015+ window that had just proved misleading for F. `paper-track/
+improvement_search.py` (round 1: per-state re-sweeps, hysteresis, micro
+overlay on/off, five vol-measure variants, vol-target exemptions) and
+`improvement_search_r2.py` (round 2: fine sweeps, episode census, beta-matched
+control, combinations) test each change against the current design on
+2000-2026, requiring improvement in BOTH eras, then re-check survivors on the
+real SPMO-era instruments.
+
+**One change is recommended: state B, 25% core / 75% TQQQ -> 75% core / 25%
+TQQQ.** Everything else tested is either a risk dial or fails a check.
+
+| Design (26y proxy) | CAGR | Sharpe | MaxDD | Sharpe 2015+ | Sharpe 2000-15 |
+|---|---:|---:|---:|---:|---:|
+| Live (B=25/75) | 11.61% | 0.682 | -38.8% | 0.959 | 0.479 |
+| B=50/50 | 11.97% | 0.724 | -33.3% | 0.977 | 0.535 |
+| **B=75/25** | **12.30%** | **0.765** | **-29.8%** | **0.989** | **0.593** |
+| B=100/0 | 12.58% | 0.799 | -26.4% | 0.995 | 0.646 |
+
+Monotonic: less leverage in B is better at every step, in both eras, on all
+three metrics. Beta-matched control (live design flatly de-levered to the same
+average beta 0.887): Sharpe 0.686 vs candidate 0.765 — **PASS**, decisively.
+
+*Why.* B ("reclaim": price above both SMAs while the 50 is still below the
+200) is structurally a state that ends either by FAILING (price drops back:
+14 of 27 episodes exit to C or F) or by GRADUATING to A (13 of 27), and the
+gains from graduation accrue in A, not B. Inside B itself QQQ finished
+negative in 17 of 27 episodes (median 13 days). Leverage in a state that
+mostly ends in failure is a bad bet; 2008 alone cost 12.8pp vs QQQ via three
+bear-market rallies classified as B. The live 25/75 came from four episodes on
+2015-11+, all of which happened to be real reclaims (QQQ +19.9% compounded
+over that window's 28 B-weeks). Same failure mode as F: the recent window
+didn't contain the case the state exists to handle.
+
+*The cost, stated plainly.* On the real SPMO-era instruments B=75/25 gives
+18.28% / 1.138 / -19.3% vs live 20.02% / 1.116 / -19.3%: **-1.74pp CAGR,
++0.022 Sharpe.** In that window it slips just below QQQ's 18.39% CAGR. Over 26
+years it is +0.69pp CAGR and -9pp MaxDD. This is a bet that B episodes keep
+behaving as they did in 27 episodes rather than as they did in the last 6.
+B=60/40 (real: 18.83% / 1.142 — the live-era Sharpe peak; proxy: 12.11% /
+0.741 / -31.9%, both-era Pareto) is the hedge if the live-era return matters
+more.
+
+**Tested and NOT recommended:**
+
+- **C=80/20 TQQQ.** Proxy full-period Pareto (+0.6pp CAGR) but 2015+ Sharpe
+  worse, and on real instruments it costs **4.9pp in 2022** (C is bear-market
+  bounces; 14 of 2022's weeks were C). It also contradicts the B mechanism —
+  both are counter-trend states with 50 < 200, and the evidence says no
+  leverage there. C exits to F 19 of 43 times.
+- **max(10d,30d) realised vol** (faster de-lever). Proxy +0.016 Sharpe /
+  -1.8pp MaxDD in both eras, but real instruments -0.73pp CAGR and Sharpe
+  1.116 -> 1.105. Mixed; not enough to justify a change.
+- **Micro overlay OFF.** +1.85pp CAGR on the proxy, better 2000-15, worse
+  2015+; real instruments 22.66% / 1.095 / -23.8% vs 20.02% / 1.116 / -19.3%.
+  Splitting it: the A-half (88/12 instead of 80/20 when the fast classifier
+  agrees) is simply a de-lever of state A — the A sweep shows Sharpe flat at
+  0.693-0.699 from 10% to 40% TQQQ while CAGR and MaxDD climb together. **A
+  risk dial, not an edge**, same family as the vol target. Left on.
+- **Hysteresis.** 1% is the best of 0.5/1/2/3/5%; 2-3% are much worse (2011
+  is not fixable this way).
+- **Downside semi-vol, EWMA vol, mean(10d,30d), min(30d,60d):** all worse.
+- **Exempting B or C from vol targeting:** MaxDD -52% to -54%. Very bad.
+- **A: more TQQQ** raises CAGR (14.3% at 70/30) with flat Sharpe and worse
+  MaxDD — a dial. **D, E:** nothing (see the substate section above).
+
 **Standing lesson: before trusting any state-level statistic, check whether
 the sample window contains the market conditions that state is meant to
 handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
