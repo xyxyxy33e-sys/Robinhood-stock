@@ -124,9 +124,27 @@ Pull the strategy-era trade list (`get_pnl_trade_history`, span 'all',
 paginate) and run `paper-track/wash_sale.py`'s `flag_wash_sales()` +
 `summarize()` whenever there was a loss-sale. Split realized losses into
 usable vs. wash-sale-deferred and NEVER report a deferred loss as reducing
-this year's tax liability. TQQQ resizes and BOXX buy/sell cycles make wash
-sales closer to the norm than the exception, and volatility targeting adds
-more BOXX cycling, so expect this to matter more than it used to.
+this year's tax liability.
+
+**`get_pnl_trade_history` IS NOT ENOUGH ON ITS OWN.** It returns only CLOSING
+trades, so a list built from it alone has no buy records, and `flag_wash_sales`
+then reports every loss as usable — a confidently wrong tax figure that looks
+like a clean result. Also pull BUYS from `get_equity_orders` (state='filled',
+`created_at_gte` at least 30 days before the earliest loss-sale), append them
+as `{date, symbol, side:'buy', realized_gain:0}` rows, and call
+`flag_wash_sales(trades, require_buys=True)` so the mistake raises
+`MissingBuyRecords` instead of returning a silent $0 deferred. This is not
+hypothetical: the 2026-09-04 run reported $0 deferred on the first pass and
+$1,532.59 deferred of $1,610.66 in losses once the buys were added.
+
+One more caveat to carry when reporting: a buy on the SAME DATE as the
+loss-sale is not matched (`SAME_DAY_MATCHES = False`), so a same-day round
+trip reads as "usable". Call that out rather than presenting it as settled —
+if a week's entire usable total comes from same-day round trips, say so.
+
+TQQQ resizes and BOXX buy/sell cycles make wash sales closer to the norm than
+the exception, and volatility targeting adds more BOXX cycling, so expect this
+to matter more than it used to.
 
 Any figure combining two or more numbers (a weekly total, a new cumulative)
 must be computed in code from the raw records, never hand-added in prose. Use
