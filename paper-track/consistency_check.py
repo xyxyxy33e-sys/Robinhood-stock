@@ -209,9 +209,37 @@ def check_rebalance_band():
     assert not do_in, f"drift {d_in:.4f} should be inside band {REBALANCE_DRIFT_BAND}"
     assert do_out, f"drift {d_out:.4f} should be outside band {REBALANCE_DRIFT_BAND}"
     assert abs(weight_drift(base, base)) == 0.0
+
+    # zero-target-leg sweep (ZERO_LEG_EPS, added 2026-09-04): a leg the design
+    # says should be empty must not be able to sit inside the band forever.
+    from state import ZERO_LEG_EPS
+    assert 0 < ZERO_LEG_EPS < REBALANCE_DRIFT_BAND, (
+        f"ZERO_LEG_EPS={ZERO_LEG_EPS} must be in (0, {REBALANCE_DRIFT_BAND}): at or above the "
+        f"band it could never add a fire the band did not already cause, making it dead code"
+    )
+    zt = (0.70, 0.30, 0.0, 0.0, 0.0)              # target: no cash at all
+    stub = (0.6985, 0.2965, 0.0, 0.0, 0.0050)     # 0.50% cash held, drift 0.99% -- inside band
+    do, d, why = needs_rebalance(zt, stub, regime_changed=False)
+    assert do and 'zero-target leg' in why, (
+        f"a zero-target leg held at 0.50% must fire even at drift {d*100:.2f}%, got {why!r}")
+    assert d < REBALANCE_DRIFT_BAND, "test case must be INSIDE the band or it proves nothing"
+    # opting out reproduces the old behaviour exactly
+    do_off, _, _ = needs_rebalance(zt, stub, regime_changed=False, zero_leg_eps=None)
+    assert not do_off, "zero_leg_eps=None must restore the pre-2026-09-04 band-only rule"
+    # dust below the epsilon is left alone
+    dust = (0.6995, 0.2997, 0.0, 0.0, ZERO_LEG_EPS * 0.8)
+    do_dust, _, _ = needs_rebalance(zt, dust, regime_changed=False)
+    assert not do_dust, "holdings below ZERO_LEG_EPS must not fire"
+    # a leg with a NONZERO target near it is not a stub, however close to zero
+    do_nz, _, _ = needs_rebalance((0.0, 0.0, 0.85, 0.0, 0.15),
+                                  (0.0, 0.0, 0.855, 0.0, 0.145), regime_changed=False)
+    assert not do_nz, "only EXACTLY-zero targets are stubs; a small nonzero target is not"
+
     print(f"OK: rebalance drift band {REBALANCE_DRIFT_BAND*100:.0f}% (L1) gates correctly -- "
           f"regime changes always fire, empty holdings always fire, "
           f"drift {d_in*100:.1f}% holds and {d_out*100:.1f}% trades")
+    print(f"OK: zero-target-leg sweep at {ZERO_LEG_EPS*100:.2f}% fires on a stub inside the band, "
+          f"ignores dust below it, and is a no-op with zero_leg_eps=None")
 
 
 def check_pnl_sum(trade_pnls, expected_total, label="", cent_tol=0.01):

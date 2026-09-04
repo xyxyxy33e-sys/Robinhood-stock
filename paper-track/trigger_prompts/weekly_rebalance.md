@@ -71,6 +71,11 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
   - **regime changed → always rebalance**, whatever the drift.
   - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.03),
     i.e. roughly "1.5 percentage points of the portfolio is in the wrong leg".
+  - **a leg whose target is EXACTLY 0% but is still held above 0.10%
+    (`ZERO_LEG_EPS`) → rebalance**, whatever the total drift. Added
+    2026-09-04 — when vol drops below target the cash target becomes exactly
+    zero, and a leftover BOXX stub would otherwise sit inside the band
+    indefinitely. `needs_rebalance()` applies this itself.
   - **within band → trade nothing**, but still do steps 4-7 and publish the
     weekly report. Report the drift figure so a long quiet stretch is visible
     rather than looking like a trigger that failed to run.

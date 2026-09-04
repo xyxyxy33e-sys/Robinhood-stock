@@ -68,6 +68,15 @@ confirmed close. A `micro_agrees` flip alone is NOT a regime change as of
     where drift = sum over the 5 legs of |target − held|. Since the legs each
     sum to 1.0, a 3% L1 drift is roughly "1.5 percentage points of the
     portfolio is in the wrong leg".
+  - **a leg whose target is EXACTLY 0% but is still held above 0.10%
+    (`ZERO_LEG_EPS`) → rebalance**, whatever the total drift. Added
+    2026-09-04. When realised vol drops below the 20% target the multiplier
+    hits 1.0 and the cash target becomes exactly zero; a leftover BOXX stub
+    would otherwise sit inside the band indefinitely, permanently consuming
+    part of the band's budget for real drift. `needs_rebalance()` handles
+    this itself — you do not need to check it separately. This is NOT the
+    per-leg trade threshold removed 2026-09-01: it only ever ADDS a reason to
+    fire, and when it fires every leg still goes to target.
   - **within band → NO TRADE.** Still do steps 4 and 5, then stop. No report,
     no artifact edit.
 

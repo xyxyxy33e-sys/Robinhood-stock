@@ -667,6 +667,40 @@ def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
 # target every week and so quietly assume free rebalancing.
 REBALANCE_DRIFT_BAND = 0.03
 
+# A leg whose TARGET is exactly zero but which is still HELD above this weight
+# fires a rebalance on its own, regardless of total L1 drift. Added 2026-09-04.
+#
+# THE SYMPTOM. On 2026-09-04 realised vol fell below the 20% target, so the
+# multiplier hit 1.0 and the cash target became exactly 0.00%. The account held
+# 0.50% BOXX. Total drift was 0.99%, inside the band, so nothing traded -- and
+# nothing would, until some unrelated move pushed drift past 3%. A leg the
+# design says should not exist would have sat there indefinitely.
+#
+# WHY THIS IS NOT THE PER-LEG THRESHOLD THAT WAS REMOVED. The "$100 or 0.3%"
+# per-leg skip deleted on 2026-09-01 decided which legs to SKIP once a
+# rebalance had already fired, and it left small legs permanently adrift. This
+# is the opposite: it only ever ADDS a reason to fire, never suppresses one,
+# and when it fires every leg still goes to target. Do not read the 2026-09-01
+# rule as forbidding this one.
+#
+# WHAT THE EVIDENCE ACTUALLY SAYS (paper-track/zero_leg_sweep_test.py, daily
+# 2000-2026 proxy). This change is FREE, not PROFITABLE -- CAGR, Sharpe and
+# MaxDD are identical to three decimal places in all three eras (full 15.69% /
+# 0.752 / -32.4%; OOS 11.25% / 0.603; fitted 22.29% / 0.941), for +0.2
+# rebalances/yr and +0.01x turnover. It is adopted for COHERENCE, not return:
+# "target 0% means hold 0%". Anyone re-deriving this should know the numbers
+# do not argue for it, and would not argue against removing it either.
+#
+# The stub is also rarer than it looks: a zero leg set to exactly 0 stays at 0
+# under drift (0 * (1+r) = 0), so it can only reappear when the TARGET changes
+# to zero while something is still held. Stub days are 0.7% of history without
+# this rule, 0.0% with it at 0.001. It cannot oscillate.
+#
+# 0.001 (0.10%) fully clears it; 0.0025 and 0.005 test identically but leave
+# ~0.16% stubs standing. 0.10% of a $100k account is ~$100, comfortably above
+# fractional-fill dust, so the tighter value was taken.
+ZERO_LEG_EPS = 0.001
+
 
 def weight_drift(target, held):
     """L1 distance between a target and a held weight tuple: sum |t_i - h_i|.
@@ -677,13 +711,17 @@ def weight_drift(target, held):
     return sum(abs(t - h) for t, h in zip(target, held))
 
 
-def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND):
+def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND,
+                    zero_leg_eps=ZERO_LEG_EPS):
     """Should a trigger rebalance right now?
 
     Rebalance if the regime changed (ALWAYS -- a state transition is never
-    gated by the band), or if L1 drift from target exceeds `band`, or if
-    nothing is held yet. Returns (bool, drift, reason) so the caller can log
-    WHY it traded."""
+    gated by the band), if L1 drift from target exceeds `band`, if a leg whose
+    target is exactly zero is still held above `zero_leg_eps` (see
+    ZERO_LEG_EPS), or if nothing is held yet. Returns (bool, drift, reason) so
+    the caller can log WHY it traded.
+
+    Pass zero_leg_eps=None to get the pre-2026-09-04 behaviour (band only)."""
     if not held:
         return True, 0.0, 'initial allocation'
     drift = weight_drift(target, held)
@@ -691,6 +729,13 @@ def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND):
         return True, drift, 'regime change'
     if drift > band:
         return True, drift, f'drift {drift*100:.1f}% > band {band*100:.0f}%'
+    if zero_leg_eps is not None:
+        stubs = [i for i, (t, h) in enumerate(zip(target, held))
+                 if t == 0.0 and h > zero_leg_eps]
+        if stubs:
+            names = ', '.join(f'{TARGET_WEIGHT_LEGS[i]} {held[i]*100:.2f}%' for i in stubs)
+            return True, drift, (f'zero-target leg held: {names} '
+                                 f'(drift {drift*100:.1f}% was within band)')
     return False, drift, f'drift {drift*100:.1f}% within band {band*100:.0f}%'
 
 

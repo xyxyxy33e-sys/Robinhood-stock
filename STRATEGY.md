@@ -998,6 +998,40 @@ Reading it:
 - Proxy leverage in 2000-02 runs through SYNTHETIC TQQQ/QLD; real funds did
   not exist. The regime behaviour is the finding, not the decimals.
 
+### Zero-target-leg sweep (added 2026-09-04)
+
+`needs_rebalance()` now fires when any leg's target is **exactly 0%** but it is
+still held above **`ZERO_LEG_EPS` = 0.10%**, regardless of total L1 drift.
+
+**Why.** On 2026-09-04 realised vol fell to 19.78%, below the 20% target, so
+the multiplier hit 1.0 and the cash target became exactly 0.00% — while the
+account still held 0.50% BOXX. Total drift was 0.99%, inside the 3% band, so
+nothing traded and nothing would have until an unrelated move pushed drift
+past 3%. The return drag is trivial (~5bp/yr while it lasts); the real cost is
+that the stub contributed 0.5pp of the 0.99% reading and never decays, so a
+permanent floor on the drift metric makes a 3% band behave like a ~2.5% band
+for genuine drift.
+
+**This is not the per-leg threshold removed on 2026-09-01.** That one decided
+which legs to SKIP once a rebalance had fired, and left small legs adrift.
+This only ever ADDS a reason to fire; when it fires, every leg still goes to
+target. The two rules are not in tension.
+
+**The evidence says free, not profitable** (`paper-track/zero_leg_sweep_test.py`,
+daily 2000-2026 proxy). CAGR, Sharpe and MaxDD are identical to three decimal
+places in all three eras — full 15.69% / 0.752 / −32.4%, OOS 11.25% / 0.603,
+fitted 22.29% / 0.941 — for +0.2 rebalances/yr and +0.01x turnover. It is
+adopted for coherence ("target 0% means hold 0%"), not for return. Anyone
+re-deriving this should know the numbers neither argue for it nor against
+removing it.
+
+The stub is rarer than it looks: a zero leg set to exactly 0 stays at 0 under
+drift, so it only reappears when the target *changes* to zero while something
+is still held. Stub days are 0.7% of history without the rule and 0.0% with
+it. It cannot oscillate. 0.25% and 0.50% epsilons test identically but leave
+~0.16% stubs standing; 0.10% (~$100 on this account, above fractional-fill
+dust) was taken because it clears the case completely.
+
 **Standing lesson: before trusting any state-level statistic, check whether
 the sample window contains the market conditions that state is meant to
 handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
