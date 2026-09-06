@@ -1097,6 +1097,62 @@ robustness:**
 ones already on the frontier table — A/B leverage and the vol target — and
 those are return-for-drawdown trades the owner has already priced.
 
+### Whole-strategy review (2026-09-06) — one PROPOSED change, awaiting decision
+
+`paper-track/strategy_review.py` and `strategy_review_r2.py`. Four questions
+the project had not asked before; results:
+
+- **Portfolio-level (leverage-aware) vol target** — scale by
+  `min(1, T / (beta_eff * vol_qqq))` so a 1.6x state A and a 1.0x state C
+  carry the same risk. At matched CAGR it is no better than the live
+  QQQ-vol target (T=0.30: 15.50% / 0.746 / -34.7% vs live 15.69% / 0.752 /
+  -32.4%) and the search-era Sharpe is worse at every T. Rejected.
+- **Classifier ensemble** (average the weights of 2-3 MA pairs): worse on
+  every metric for every combination. Rejected.
+- **Simplification / state collapses on the 26y proxy.** Every collapse
+  that keeps the CORE through C and D beats the 6-state machine on the
+  proxy (2-state ABCD->70/30, EF->cash: 16.54% / 0.779 / -30.2%, both eras,
+  Pareto, beta-control PASS; 4-state C->A, D->A: 16.90% / 0.793). **But on
+  real instruments they lose** (2-state 22.13% vs live 23.25%, worst years
+  2016 -8.9pp and 2022 -6.7pp — the two momentum-crash years). The proxy's
+  core is QQQ; the live core is SPMO, and rotating OUT of a momentum core
+  in a pullback (state D) is worth about +0.7pp/yr pre-tax that the proxy
+  cannot see. **Standing lesson: any test that changes which states hold
+  the core leg must be confirmed on real SPMO rows — the proxy is blind to
+  the SPMO/QQQ difference.**
+- **After-tax (the one that matters if the account is taxable).** Lot-level
+  FIFO/HIFO simulation, annual settlement, top bracket (ST 40.8% / LT
+  23.8%), on real weekly SPMO-era rows 2015-11..2026-08:
+
+  | design | pre-tax | after annual tax | full liquidations/yr |
+  |---|---|---|---|
+  | QQQ buy-and-hold (liquidated at LT) | 18.39% | 15.98% | — |
+  | SPMO buy-and-hold (liquidated at LT) | 17.39% | 15.05% | — |
+  | **LIVE** (D = 85% QLD) | 23.25% | **15.10%** | 6.8 |
+  | D = 70/30 core/TQQQ | 22.55% | 18.43% | 2.1 |
+  | **D = 60/40 core/TQQQ** | **23.28%** | **18.70%** | 2.1 |
+
+  The live design gives back 8pp/yr to tax and, after tax, roughly TIES
+  buy-and-hold QQQ in a top-bracket taxable account. The cause is
+  structural: state D (about four episodes a year) sells 100% of the core
+  into QLD and buys it back weeks later, so core lots never reach one year
+  and every gain is realised short-term. Keeping the core through D and
+  expressing D's leverage with TQQQ instead — `D = (0.60, 0.40, 0, 0, 0)`,
+  1.8x vs the live 1.7x — matches live pre-tax on real instruments
+  (23.28% vs 23.25%), is a both-era Sharpe improvement on the 26y proxy
+  (16.39% / 0.768 / -32.5% vs 15.69% / 0.752 / -32.4%, beta-control PASS),
+  cuts full liquidations from 6.8 to 2.1 a year, and is worth about
+  **+3.6pp/yr after tax**. At a 24% bracket the after-tax gap is about
+  +2.5pp/yr. HIFO vs FIFO lot selection, a wider drift band and turning
+  the vol target off each move after-tax return by <1.5pp and are not
+  worth their costs. Caveats: wash-sale disallowance is ignored (it makes
+  live look BETTER than it is), dividend tax is ignored, and the bracket
+  is assumed. If the account is tax-advantaged none of this applies and
+  the live D row stays.
+
+  **Proposed: `D = (0.60, 0.40, 0.00, 0.00, 0.00)`. Not applied — needs the
+  owner's confirmation that the account is taxable.**
+
 ### 26-year stress test: the design had a -65% drawdown in it (2026-09-01)
 
 **Read this together with "Volatility targeting" above: everything in this
