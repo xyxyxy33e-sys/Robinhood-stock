@@ -1884,3 +1884,14 @@ A 40/60 under step ⅓ gives proxy 23.6 / 0.918 / −35.2 (H 0.771), real
 daily 31.9 / 1.154 / −33.2 — i.e. higher CAGR than live at a better
 Sharpe than live, for ~2pp more proxy MaxDD.
 
+Follow-up (same day, `leverage_under_trim_r3.py`): 4 and 5 windows. Adding
+a 50d (>6% or >8%) or 250d (>15% or >17%) window at step 0.2
+(1/.8/.6/.4/.2) lands on the live figures (proxy Sharpe 0.884–0.890,
+real 1.17–1.25) — the multiplier never reaches zero, so it is the live
+trim with the same depth spread thinner. The same window sets at step
+0.25 or ⅓ (bottom at 0) recover the gain (proxy 0.904–0.919, H
+0.75–0.80, real 1.20–1.31). Depth, not window count, is what matters;
+4w +50d>6% step ⅓ has the best holdout (0.801) and real MaxDD (−22.8%)
+but a weaker search-era Sharpe (1.069 vs 1.100 for 3w step ⅓), so the
+3-window step-⅓ form remains the cleaner candidate.
+
