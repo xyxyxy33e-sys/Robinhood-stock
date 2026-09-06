@@ -43,10 +43,10 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 
 | State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |
 |---|---|---|---|---|---|---|
-| A | 70% | 30% | 0% | 0% | 0% | 1.6x |
+| A | 50% | 50% | 0% | 0% | 0% | 2.0x |
 | B | 75% | 25% | 0% | 0% | 0% | 1.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
-| D | 0% | 0% | 85% | 0% | 15% | 1.7x |
+| D | 0% | 0% | 100% | 0% | 0% | 2.0x |
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
 | F | 0% | 0% | 0% | 0% | 100% | 0.0x |
 
@@ -60,10 +60,10 @@ DISABLED 2026-09-02, so this table now equals the base table above):**
 
 | State | Core (SPMO) | TQQQ | QLD | XLU | Cash (BOXX) |
 |---|---|---|---|---|---|
-| A (micro overlay disabled 2026-09-02) | 70.0% | 30.0% | 0% | 0% | 0% |
+| A (micro overlay disabled 2026-09-02) | 50.0% | 50.0% | 0% | 0% | 0% |
 | B | 75.0% | 25.0% | 0% | 0% | 0% |
 | C | 100.0% | 0% | 0% | 0% | 0% |
-| D (micro overlay disabled 2026-09-02) | 0% | 0% | 85.0% | 0% | 15.0% |
+| D (micro overlay disabled 2026-09-02) | 0% | 0% | 100.0% | 0% | 0% |
 | E | 0% | 0% | 0% | 50.0% | 50.0% |
 | F | 0% | 0% | 0% | 0% | 100.0% |
 
@@ -998,6 +998,40 @@ Reading it:
 - Proxy leverage in 2000-02 runs through SYNTHETIC TQQQ/QLD; real funds did
   not exist. The regime behaviour is the finding, not the decimals.
 
+### Return frontier, step 2 (2026-09-06) — APPLIED
+
+Owner decision after the whole-strategy review ("what if I want more"). The
+frontier ladder (ad-hoc run, figures reproduced by `improvement_search.py`'s
+harness and `return_frontier.py`'s real-instrument rows):
+
+| rung | 26y CAGR | Sharpe | MaxDD | 2022 | real CAGR | real Sharpe | real MaxDD |
+|---|---|---|---|---|---|---|---|
+| 2026-09-02 design (A70/30, D85% QLD) | 15.69% | 0.752 | -32.4% | -21.0% | 23.25% | 1.061 | -26.7% |
+| A60/40 | 16.55% | 0.747 | -34.2% | -21.6% | 24.44% | 1.031 | -28.6% |
+| A60/40 + D100% QLD | 17.19% | 0.744 | -34.7% | -22.9% | 25.50% | 1.030 | -29.6% |
+| **A50/50 + D100% QLD (APPLIED)** | **17.98%** | **0.740** | **-36.5%** | **-23.5%** | **26.60%** | **1.004** | **-31.4%** |
+| A50/50 + VT 25% | 17.57% | 0.721 | -37.8% | -26.5% | 26.63% | 0.992 | -32.3% |
+| A40/60 + VT 25% | 18.34% | 0.716 | -39.5% | -27.2% | 27.60% | 0.964 | -34.1% |
+| A50/50, vol target OFF | 16.84% | 0.674 | -54.6% | -27.4% | 27.47% | 0.989 | -38.3% |
+
+What was learned mapping it: **A leverage is the cheap rung** (~+0.85pp CAGR
+per 10pp of TQQQ for ~-1.8pp MaxDD, Sharpe nearly flat); **D leverage is
+nearly free**; **raising the vol target is the expensive rung** (+0.2pp CAGR
+for a 2022-type year going from -22% to -26%); **B leverage has negative
+expected return on the 26y record** (QQQ negative in 17/27 B episodes, 4
+exits straight to F) and only looks good on the 2015+ window where every
+bounce succeeded — B stays 75/25; **vol target off is a trap** (less return
+than A50/50 with it on, -55% MaxDD, 6 years underwater). Beyond A50/50 the
+real-window Sharpe drops below 1.0.
+
+New standing figures: worst case about **-36%** (proxy), COVID-shaped event
+about **-34%**, 2022-type year about **-24%**, 2025 tariff-shaped event about
+**-25%**. Search/holdout Sharpe 0.922 / 0.594 (was 0.941 / 0.603). This is a
+return-for-drawdown trade the owner priced, not an edge. Effective exposure
+in A is now 2.0x; a -5% QQQ day is about a -10% strategy day. Real-instrument
+2020 under this design: +43.8% vs QQQ +47.6% (Feb-Mar -21%, April lag -10pp);
+2024: +48.1% vs +24.8%; 2026 YTD to Aug: +24.8% vs +17.4%.
+
 ### Zero-target-leg sweep (added 2026-09-04)
 
 `needs_rebalance()` now fires when any leg's target is **exactly 0%** but it is
@@ -1398,7 +1432,10 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -32% (proxy, 2000-2026) as of the
+- **The real max drawdown is about -36% (proxy, 2000-2026) as of the
+  2026-09-06 reweight (A=50/50, D=100% QLD; -32% under the 09-02 design; see
+  "Return frontier, step 2"). The paragraph below carries the 09-02 figure
+  for the record.** Previously: about -32% (proxy, 2000-2026) as of the
   2026-09-02 reweight; it was -42% before that and -65 to -70% before
   volatility targeting was added 2026-09-01.** Do not quote the -19%/-27%
   SPMO-era figures as the worst case. History of the figure: Measured over 2000-2026 with the QQQ-core

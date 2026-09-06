@@ -295,11 +295,26 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # on state E's thin sample (32 weeks total, 19 in the isolated holdout) --
 # treat as the best-evidenced speculative change in this file, not a settled
 # one, and revisit if E's live behavior ever looks off.
+# 2026-09-06 -- SECOND STEP UP THE RETURN FRONTIER (user decision, "apply A
+# 50/50 and D 100% QLD"). paper-track/strategy_review*.py and the ad-hoc
+# frontier ladder run that day (STRATEGY.md, "Return frontier, step 2"):
+#   A 70/30 -> 50/50 core/TQQQ (effective exposure 1.6x -> 2.0x)
+#   D 85% QLD / 15% cash -> 100% QLD (1.7x -> 2.0x)
+#   B, C, E, F, vol target (20%), drift band: UNCHANGED. The same ladder showed
+#   raising VOL_TARGET_PA is the expensive rung (+0.2pp CAGR for a -26% instead
+#   of -22% 2022-type year) and B leverage has NEGATIVE expected return on the
+#   26y record -- neither was taken.
+# Evidence: 26y proxy 15.69%/0.752/-32.4% -> ~18%/0.74/-36% (both eras
+# monotone: A leverage costs ~0.01 Sharpe per 10pp step, D leverage ~free);
+# real SPMO era 23.25%/1.061/-26.7% -> ~27%/1.0/-32%. This is a deliberate
+# return-for-drawdown trade, NOT an edge: worst case is now about -36% on the
+# proxy and a 2022-type year is about -25%. Do not read the higher CAGR as a
+# discovery -- it is bought with drawdown, and the owner priced it.
 TARGET_WEIGHTS = {
-    'A': (0.70, 0.30, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.80, 0.20, ...) -- return-frontier step, see block above
+    'A': (0.50, 0.50, 0.00, 0.00, 0.00),   # 2026-09-06: was (0.70, 0.30) -- frontier step 2; 2026-09-02: was (0.80, 0.20)
     'B': (0.75, 0.25, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.25, 0.75, ...) -- the one EDGE found, see block above
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
-    'D': (0.00, 0.00, 0.85, 0.00, 0.15),   # 2026-09-02: was (0, 0, 0.70, 0, 0.30) -- return-frontier step, see block above
+    'D': (0.00, 0.00, 1.00, 0.00, 0.00),   # 2026-09-06: was (0,0,0.85,0,0.15) -- frontier step 2; 2026-09-02: was (0,0,0.70,0,0.30)
     'E': (0.00, 0.00, 0.00, 0.50, 0.50),
     'F': (0.00, 0.00, 0.00, 0.00, 1.00),
 }
