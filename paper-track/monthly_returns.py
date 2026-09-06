@@ -32,7 +32,7 @@ import sys
 from collections import defaultdict
 
 sys.path.insert(0, 'paper-track')
-from state import (compute_fast_states, effective_state, compute_gap200, is_extended, compute_states, compute_micro_agreement, realized_vol,
+from state import (compute_fast_states, effective_state, compute_extension_gaps, extension_votes, compute_states, compute_micro_agreement, realized_vol,
                    target_weights_with_voltarget, needs_rebalance)
 from backtest_overlay_etf import load_daily_csv
 from long_history_backtest import load_px
@@ -75,16 +75,16 @@ def simulate(px, qqq, days, vol_target=True):
     states = dict(zip(qd, compute_states(qd, qqq)))
     micro = compute_micro_agreement(qd, qqq)
     fast = compute_fast_states(qd, qqq)          # 2026-09-06 fast re-entry overlay
-    gap = compute_gap200(qd, qqq)                # 2026-09-06 extension trim
+    gaps = compute_extension_gaps(qd, qqq)       # 2026-09-06 graded extension trim
     held = prev = None
     out = []
     for i in range(1, len(days)):
         d0, d1 = days[i - 1], days[i]
         st, ag = states[d0], micro[d0]
         vol = realized_vol(qd, qqq, as_of=d0) if vol_target else None
-        t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gap200=gap[d0])
+        t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gaps=gaps[d0])
         eff = effective_state(st, fast[d0])
-        st = (eff, is_extended(eff, gap[d0]))       # regime = row held + trim flag
+        st = (eff, extension_votes(eff, gaps[d0]))   # regime = row held + trim votes
         cost = 0.0
         if held is None:
             held = list(t)

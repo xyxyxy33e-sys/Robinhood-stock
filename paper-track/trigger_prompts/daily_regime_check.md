@@ -35,21 +35,22 @@ reimplementation:
     overlay. It is NOT a state of its own -- it only decides whether a macro
     B/C day holds A weights (fast in A/B) or a macro F day holds C weights
     (fast in A/B/C). See `effective_state()`.
-  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>, gap200=<gap>)`
+  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>, gaps=<gaps>)`
     → the 5 live weights (core, tqqq, qld, xlu, cash). **The `fast_state`
     argument is mandatory for live use** -- omitting it silently runs the
     pre-overlay design.
   - `effective_state(state, fast_state)` → the state whose weight row is
     actually held. Report BOTH the macro state and the effective state
     whenever they differ.
-  - `compute_gap200(dates, px)[<today>]` → today's close / 200-day SMA − 1.
-    Added 2026-09-06: the EXTENSION TRIM. When the effective state is A and
-    this gap is above 15% (`EXTENSION_GAP`), the A row is held at half its
-    risky size (`EXTENSION_SCALE = 0.5` → 25% SPMO / 25% TQQQ / 50% BOXX)
-    before vol targeting. `is_extended(effective_state, gap200)` tells you
-    whether it is active. Pass it as `gap200=<gap>` to
-    `target_weights_with_voltarget(...)` — **mandatory for live use** like
-    `fast_state`. Report the gap and whether the trim is active every run.
+  - `compute_extension_gaps(dates, px)[<today>]` → today's {100: gap, 150:
+    gap, 200: gap} (close / SMA − 1). Added 2026-09-06: the GRADED EXTENSION
+    TRIM. Votes = how many of {100d > 10%, 150d > 12%, 200d > 15%} are true;
+    when the effective state is A the four risky legs are scaled by
+    1 − 0.25 × votes (×0.75 / ×0.5 / ×0.25) before vol targeting.
+    `extension_votes(effective_state, gaps)` gives the count. Pass the dict
+    as `gaps=<gaps>` to `target_weights_with_voltarget(...)` — **mandatory
+    for live use** like `fast_state` (do NOT use the legacy `gap200=`
+    argument). Report the three gaps and the vote count every run.
 
 `target_weights_with_voltarget()` is THE live weight function as of
 2026-09-01. Do not call `target_weights()`, `target_weights_with_micro()`, or
@@ -78,7 +79,8 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
 
 where `regime_changed` = today's EFFECTIVE state (`effective_state(macro,
 fast)`, A–F) differs from yesterday's confirmed close, OR the extension
-trim flag (`is_extended(effective_state, gap200)`) differs from yesterday's.
+trim vote count (`extension_votes(effective_state, gaps)`) differs from
+yesterday's.
 That covers a macro transition, the fast re-entry overlay switching on or
 off, and the extension trim switching on or off (both added 2026-09-06) —
 each one moves the weight row, so each one fires. A
@@ -168,7 +170,7 @@ On a within-band day: no report, no artifact edit — just end. On a rebalance:
 append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top, stating the old state, new state (macro AND effective,
-if the fast overlay is active), whether the extension trim is active, the vol reading and
+if the fast overlay is active), the extension-trim vote count, the vol reading and
 multiplier, the drift and which condition fired (regime change vs drift band),
 the weights traded to, and the fills.
 

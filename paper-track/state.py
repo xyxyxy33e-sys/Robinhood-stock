@@ -839,13 +839,31 @@ def effective_state(state, fast_state):
 # strength of that monotonicity (the project's standing corner-solution
 # warning). ~+2 rebalances/yr.
 EXTENSION_TRIM_ENABLED = True
-EXTENSION_GAP = 0.15          # close / 200d SMA - 1, on the decision date
-EXTENSION_SCALE = 0.5         # multiplier on the four risky legs while extended
+# 2026-09-06 (later the same day): the single 200d/15% trim was replaced by a
+# GRADED three-window version after the owner asked "can we do both, like a
+# step down". Votes = how many of these are true on the decision date; the
+# four risky legs of the A row are scaled by 1 - EXTENSION_STEP * votes
+# (x0.75 / x0.5 / x0.25). Each threshold sits at roughly the 90th-95th
+# percentile of A-day gaps for its window, so it is one rule measured three
+# ways, not three rules. Evidence vs the single trim (20.75% / 0.844 /
+# -33.3%): 26y proxy 21.73% / 0.890 / -33.3%, holdout Sharpe 0.680 -> 0.748,
+# exposure-matched (k=0.929) 0.744 and beta-matched 0.846 controls PASS;
+# real SPMO-era weekly 29.49% / 1.149 / -26.4% -> 30.72% / 1.211 / -25.3%.
+# Better on the proxy AND on real instruments on every metric, which is the
+# bar. Other stepped variants (two-step on 200d, linear ramps, both-windows
+# x0.25, 2-of-3 vote) all land between the single trim and this one.
+# The REVERSED rule (step exposure UP when far BELOW the averages in C/E/F)
+# was tested and rejected: MaxDD -51% to -68% on the proxy, holdout Sharpe
+# 0.48-0.61 -- 2001/2002 falling knives; it only looks good on 2015+.
+EXTENSION_RULES = ((100, 0.10), (150, 0.12), (200, 0.15))   # (SMA window, gap threshold)
+EXTENSION_STEP = 0.25                                       # trim per vote
+EXTENSION_GAP = 0.15          # kept for reporting / the legacy single-window path
+EXTENSION_SCALE = 0.5
 
 
 def compute_gap200(dates, px):
-    """Per-date close / 200-day SMA - 1 (None during the 200d warm-up). Feed
-    the decision date's value to target_weights_with_voltarget(gap200=...)."""
+    """Per-date close / 200-day SMA - 1 (None during the 200d warm-up).
+    Reporting helper; live weights use compute_extension_gaps()."""
     v = [px[d] for d in dates]
     out = {}
     for i, d in enumerate(dates):
@@ -854,15 +872,47 @@ def compute_gap200(dates, px):
     return out
 
 
-def is_extended(eff_state, gap200):
-    """True when the extension trim applies. A change in THIS value is a
-    regime change for needs_rebalance(), like a change of effective state."""
-    if not EXTENSION_TRIM_ENABLED or gap200 is None:
+def compute_extension_gaps(dates, px):
+    """Per-date dict {window: close / SMA(window) - 1} for every window in
+    EXTENSION_RULES (None during warm-up). Feed the decision date's dict to
+    target_weights_with_voltarget(gaps=...)."""
+    v = [px[d] for d in dates]
+    out = {}
+    for i, d in enumerate(dates):
+        g = {}
+        for n, _ in EXTENSION_RULES:
+            m = sma(v, i, n)
+            g[n] = None if m is None else v[i] / m - 1
+        out[d] = g
+    return out
+
+
+def extension_votes(eff_state, gaps):
+    """How many of EXTENSION_RULES fire (0-3). Only effective state A can be
+    extended; a None gap (warm-up) never votes."""
+    if not EXTENSION_TRIM_ENABLED or gaps is None or eff_state != 'A':
+        return 0
+    return sum(1 for n, t in EXTENSION_RULES if gaps.get(n) is not None and gaps[n] > t)
+
+
+def extension_scale(eff_state, gaps):
+    """Multiplier on the four risky legs: 1 - EXTENSION_STEP * votes."""
+    return 1.0 - EXTENSION_STEP * extension_votes(eff_state, gaps)
+
+
+def is_extended(eff_state, gaps_or_gap200):
+    """True when the trim is active (>= 1 vote). Accepts the gaps dict from
+    compute_extension_gaps(), or a bare 200d gap for the legacy single-window
+    check. A change in THIS value -- or in extension_votes() -- is a regime
+    change for needs_rebalance()."""
+    if not EXTENSION_TRIM_ENABLED or gaps_or_gap200 is None:
         return False
-    return eff_state == 'A' and gap200 > EXTENSION_GAP
+    if isinstance(gaps_or_gap200, dict):
+        return extension_votes(eff_state, gaps_or_gap200) > 0
+    return eff_state == 'A' and gaps_or_gap200 > EXTENSION_GAP
 
 
-def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None):
+def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -880,11 +930,16 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
     (added 2026-09-06). Live triggers MUST pass it -- omitting it silently
     runs the pre-overlay design. None is accepted so old backtests still run.
 
-    gap200: close / 200d SMA - 1 for the same date from compute_gap200()
-    (added 2026-09-06, extension trim). Live triggers MUST pass it too."""
+    gaps: the {window: gap} dict for the same date from
+    compute_extension_gaps() -- the graded three-window extension trim
+    (2026-09-06). Live triggers MUST pass it. gap200 (a bare 200d gap) is the
+    legacy single-window trim, honoured only when gaps is None."""
     eff = effective_state(state, fast_state)
     core, tqqq, qld, xlu, cash = target_weights_with_micro(eff, micro_agrees)
-    if is_extended(eff, gap200):
+    if gaps is not None:
+        f = extension_scale(eff, gaps)
+        core, tqqq, qld, xlu = (x * f for x in (core, tqqq, qld, xlu))
+    elif is_extended(eff, gap200):
         core, tqqq, qld, xlu = (x * EXTENSION_SCALE for x in (core, tqqq, qld, xlu))
     mult = vol_target_multiplier(vol)
     risky = core + tqqq + qld + xlu
