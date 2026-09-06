@@ -1119,7 +1119,13 @@ the project had not asked before; results:
   in a pullback (state D) is worth about +0.7pp/yr pre-tax that the proxy
   cannot see. **Standing lesson: any test that changes which states hold
   the core leg must be confirmed on real SPMO rows — the proxy is blind to
-  the SPMO/QQQ difference.**
+  the SPMO/QQQ difference.** Each piece separately on real SPMO-era rows:
+  E->cash only 22.32% / 1.029 (-0.9pp; loses 2016/2026, E is the V-bottom
+  state); C->A + D->A 22.86% / 1.062 (-0.4pp; 2022 -17.4% vs -11.3%);
+  C->A alone 23.56% / 1.063 (+0.3pp, but 2022 -18.1% -- leverage in a
+  bear-market rally, same reason C leverage was rejected 09-02); the
+  2-state 22.13% / 1.034 (-1.1pp). The six states earn their keep on the
+  instruments actually held. Do not re-run.
 - **After-tax (the one that matters if the account is taxable).** Lot-level
   FIFO/HIFO simulation, annual settlement, top bracket (ST 40.8% / LT
   23.8%), on real weekly SPMO-era rows 2015-11..2026-08:
