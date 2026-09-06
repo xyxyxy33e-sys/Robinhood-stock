@@ -46,7 +46,8 @@ reimplementation:
     gap, 200: gap} (close / SMA − 1). Added 2026-09-06: the GRADED EXTENSION
     TRIM. Votes = how many of {100d > 10%, 150d > 12%, 200d > 15%} are true;
     when the effective state is A the four risky legs are scaled by
-    1 − 0.25 × votes (×0.75 / ×0.5 / ×0.25) before vol targeting.
+    1 − ⅓ × votes (×⅔ / ×⅓ / ×0 — three votes puts the A row 100%
+    in BOXX) before vol targeting. Step 0.25 → ⅓ on 2026-09-06 (later).
     `extension_votes(effective_state, gaps)` gives the count. Pass the dict
     as `gaps=<gaps>` to `target_weights_with_voltarget(...)` — **mandatory
     for live use** like `fast_state` (do NOT use the legacy `gap200=`

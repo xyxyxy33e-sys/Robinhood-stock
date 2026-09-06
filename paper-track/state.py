@@ -311,7 +311,7 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # proxy and a 2022-type year is about -25%. Do not read the higher CAGR as a
 # discovery -- it is bought with drawdown, and the owner priced it.
 TARGET_WEIGHTS = {
-    'A': (0.50, 0.50, 0.00, 0.00, 0.00),   # 2026-09-06: was (0.70, 0.30) -- frontier step 2; 2026-09-02: was (0.80, 0.20)
+    'A': (0.40, 0.60, 0.00, 0.00, 0.00),   # 2026-09-06 (third step): was (0.50, 0.50) -- owner spent the step-1/3 trim's Sharpe on leverage; earlier (0.70, 0.30), (0.80, 0.20)
     'B': (0.75, 0.25, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.25, 0.75, ...) -- the one EDGE found, see block above
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
     'D': (0.00, 0.00, 1.00, 0.00, 0.00),   # 2026-09-06: was (0,0,0.85,0,0.15) -- frontier step 2; 2026-09-02: was (0,0,0.70,0,0.30)
@@ -843,7 +843,8 @@ EXTENSION_TRIM_ENABLED = True
 # GRADED three-window version after the owner asked "can we do both, like a
 # step down". Votes = how many of these are true on the decision date; the
 # four risky legs of the A row are scaled by 1 - EXTENSION_STEP * votes
-# (x0.75 / x0.5 / x0.25). Each threshold sits at roughly the 90th-95th
+# (originally x0.75 / x0.5 / x0.25; step 1/3 since the third revision below).
+# Each threshold sits at roughly the 90th-95th
 # percentile of A-day gaps for its window, so it is one rule measured three
 # ways, not three rules. Evidence vs the single trim (20.75% / 0.844 /
 # -33.3%): 26y proxy 21.73% / 0.890 / -33.3%, holdout Sharpe 0.680 -> 0.748,
@@ -856,7 +857,23 @@ EXTENSION_TRIM_ENABLED = True
 # was tested and rejected: MaxDD -51% to -68% on the proxy, holdout Sharpe
 # 0.48-0.61 -- 2001/2002 falling knives; it only looks good on 2015+.
 EXTENSION_RULES = ((100, 0.10), (150, 0.12), (200, 0.15))   # (SMA window, gap threshold)
-EXTENSION_STEP = 0.25                                       # trim per vote
+# 2026-09-06 (third revision, owner decision): EXTENSION_STEP 0.25 -> 1/3, so
+# the A row is scaled x2/3 / x1/3 / x0 -- at three votes the A row is 100%
+# cash. Found while testing "does the trim make more leverage sensible"
+# (leverage_under_trim*.py): trim depth is monotone and the gain comes from
+# the bottom rung reaching zero, not from the window count (4/5-window sets
+# at step 0.2 land on the 0.25 figures). Step 1/3 at A 50/50: proxy 21.73% /
+# 0.890 / -33.3% -> 22.15% / 0.912 / -33.3%, holdout 0.748 -> 0.769,
+# exposure-matched control 0.747 PASS, max-stat permutation over 8
+# schedules p=0.00, real weekly 30.72% / 1.211 / -25.3% -> 31.40% / 1.248 /
+# -25.0%, real daily 29.27% / 1.122 -> 29.62% / 1.146. Deeper schedules
+# (1/.5/0/0, 1/0/0/0) test even better; 1/3 is the deliberate non-corner
+# pick -- do NOT push it to zero-at-one-vote on that monotonicity. The
+# owner then moved A to 40/60 (leverage is a pure risk dial: beta-matched
+# control Sharpe == live at every rung), net: proxy 23.60% / 0.918 / -35.2%
+# (search 1.112, holdout 0.771), real weekly 33.34% / 1.233 / -27.0%, real
+# daily with the band 31.86% / 1.154 / -33.2%.
+EXTENSION_STEP = 1.0 / 3.0                                  # trim per vote (x2/3, x1/3, x0)
 EXTENSION_GAP = 0.15          # kept for reporting / the legacy single-window path
 EXTENSION_SCALE = 0.5
 

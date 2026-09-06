@@ -298,11 +298,11 @@ check_fast_reentry()
 
 def check_extension_trim():
     """Graded extension trim (2026-09-06): only effective state A, one vote
-    per window above its threshold, x0.75/0.5/0.25, never below 0.25, no-op
+    per window above its threshold, x2/3 / x1/3 / x0 (step 1/3), no-op
     without gaps; the legacy single-window path still works."""
     from state import (extension_votes, extension_scale, is_extended, EXTENSION_RULES,
                        EXTENSION_STEP, EXTENSION_TRIM_ENABLED, target_weights_with_voltarget)
-    assert EXTENSION_TRIM_ENABLED and EXTENSION_RULES == ((100, 0.10), (150, 0.12), (200, 0.15)) and EXTENSION_STEP == 0.25
+    assert EXTENSION_TRIM_ENABLED and EXTENSION_RULES == ((100, 0.10), (150, 0.12), (200, 0.15)) and abs(EXTENSION_STEP - 1/3) < 1e-12
     hot = {100: 0.2, 150: 0.2, 200: 0.2}; cold = {100: 0.0, 150: 0.0, 200: 0.0}
     for st in 'BCDEF':
         assert extension_votes(st, hot) == 0 and not is_extended(st, hot)
@@ -311,17 +311,17 @@ def check_extension_trim():
     assert extension_votes('A', {100: 0.11, 150: 0.0, 200: 0.0}) == 1
     assert extension_votes('A', {100: 0.11, 150: 0.13, 200: 0.0}) == 2
     assert extension_votes('A', {100: None, 150: None, 200: 0.16}) == 1
-    assert abs(extension_scale('A', hot) - 0.25) < 1e-12 and extension_scale('A', cold) == 1.0
+    assert abs(extension_scale('A', hot)) < 1e-12 and extension_scale('A', cold) == 1.0
     full = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=cold)
     for votes, g in ((1, {100: 0.11, 150: 0.0, 200: 0.0}), (2, {100: 0.11, 150: 0.13, 200: 0.0}), (3, hot)):
         t = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=g)
-        f = 1 - 0.25 * votes
+        f = 1 - votes / 3
         assert abs(sum(t) - 1.0) < 1e-9 and all(abs(t[i] - full[i] * f) < 1e-9 for i in range(4)), votes
     assert target_weights_with_voltarget('C', False, 0.15, fast_state='A', gaps=hot) == target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=hot)
     assert target_weights_with_voltarget('A', False, 0.15, gaps=None) == target_weights_with_voltarget('A', False, 0.15)
     legacy = target_weights_with_voltarget('A', False, 0.15, gap200=0.2)
     assert all(abs(legacy[i] - full[i] * 0.5) < 1e-9 for i in range(4))
-    print("OK: graded extension trim -- effective A only, one vote per window, x0.75/0.5/0.25, no-op without gaps, legacy path intact")
+    print("OK: graded extension trim -- effective A only, one vote per window, x2/3 / x1/3 / x0, no-op without gaps, legacy path intact")
 
 
 check_extension_trim()

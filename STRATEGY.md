@@ -18,7 +18,7 @@ C row when the fast read is A/B/C.
 
 | Effective state | Row | Exposure |
 |---|---|---|
-| A | 50% SPMO / 50% TQQQ | 2.0x |
+| A | 40% SPMO / 60% TQQQ | 2.2x |
 | B | 75% SPMO / 25% TQQQ | 1.5x |
 | C | 100% SPMO | 1.0x |
 | D | 100% QLD | 2.0x |
@@ -27,22 +27,25 @@ C row when the fast read is A/B/C.
 
 **Extension trim (graded):** when the effective state is A, count how many
 of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
-200d} are true and scale the A row's risky legs by 1 − 0.25 × votes
-(×0.75 / ×0.5 / ×0.25). Then the four risky legs are scaled by
+200d} are true and scale the A row's risky legs by 1 − ⅓ × votes
+(×⅔ / ×⅓ / ×0 — three votes is 100% cash). Then the four risky legs are scaled by
 `min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX. Rebalance on any change of effective
 state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
 
-**Standing figures.** 26-year QQQ-core proxy 2000–2026: **21.7% CAGR /
-Sharpe 0.89 / max drawdown −33.3%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
-Real instruments, weekly, Nov 2015–Aug 2026: **30.7% / 1.21 / −25.3%**
-(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe
-1.075, holdout (2000–2015) 0.748. A 2022-type year is about −19% real /
-−27% proxy; a COVID-shaped event about −34%; a −5% QQQ day is about −10%.
+**Standing figures.** 26-year QQQ-core proxy 2000–2026: **23.6% CAGR /
+Sharpe 0.92 / max drawdown −35.2%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
+Real instruments, weekly, Nov 2015–Aug 2026: **33.3% / 1.23 / −27.0%**
+(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%); real daily with
+the drift band 31.9% / 1.15 / −33.2%, ~55 rebalances/yr. Search-era Sharpe
+1.112, holdout (2000–2015) 0.771. A 2022-type year is about −20% real /
+−28% proxy; a COVID-shaped event about −25% to −35%; a −5% QQQ day is about
+−11%.
 
 **Change log (newest first).**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-06 | trim step 0.25 → ⅓ (A ×⅔/⅓/0); A 50/50 → 40/60 | step: both eras, controls, p=0.00; 40/60: owner decision; "Leverage under the trim" |
 | 2026-09-06 | graded extension trim: A ×0.75/0.5/0.25 as QQQ clears 10/12/15% above its 100/150/200d | both eras, controls, p=0.00, real +2.7pp; "Extension trim" |
 | 2026-09-06 | 20/100 fast re-entry overlay on B/C/F | both eras, controls, p=0.01; "Fast re-entry overlay" |
 | 2026-09-06 | A 70/30 → 50/50, D 85% QLD → 100% QLD | owner decision on the frontier; "Return frontier, step 2" |
@@ -139,7 +142,7 @@ it only to skip ladder rungs when the fast reading already confirms:
 
 | macro | fast | weights held |
 |---|---|---|
-| B or C | A or B | **A** (50/50) |
+| B or C | A or B | **A** (40/60) |
 | F | A, B or C | **C** (100% core) |
 | anything else | — | unchanged |
 
@@ -182,11 +185,13 @@ before vol targeting. Tests: `paper-track/research_plan_gaps.py`,
 `research_plan_gaps_r2.py`.
 
 **Rule (graded, applied the same evening).** `EXTENSION_RULES = ((100,
-0.10), (150, 0.12), (200, 0.15))`, `EXTENSION_STEP = 0.25`,
-`compute_extension_gaps()`, `extension_votes()`, `extension_scale()`. When
-the effective state is A, each window whose gap exceeds its threshold is
-one vote; the four risky legs are scaled by 1 − 0.25 × votes (×0.75 / ×0.5
-/ ×0.25). Each threshold sits near the 90th–95th percentile of A-day gaps
+0.10), (150, 0.12), (200, 0.15))`, `EXTENSION_STEP = 1/3` (was 0.25 until
+later on 2026-09-06 — see "Leverage under the trim" in the research
+record), `compute_extension_gaps()`, `extension_votes()`,
+`extension_scale()`. When the effective state is A, each window whose gap
+exceeds its threshold is one vote; the four risky legs are scaled by 1 −
+⅓ × votes (×⅔ / ×⅓ / ×0 — at three votes the A row is 100% BOXX). Each
+threshold sits near the 90th–95th percentile of A-day gaps
 for its window, so this is one rule measured three ways. No other state is
 touched; the trim only ever reduces exposure. A change in the vote count is
 a regime change for `needs_rebalance()`.
@@ -194,7 +199,18 @@ a regime change for `needs_rebalance()`.
 | | 26y proxy | holdout Sharpe | real weekly 2015–26 |
 |---|---|---|---|
 | single trim, 200d > 15% → ×0.5 (first version) | 20.75% / 0.844 / −33.3% | 0.680 | 29.49% / 1.149 / −26.4% |
-| **graded three-window (live)** | **21.73% / 0.890 / −33.3%** | **0.748** | **30.72% / 1.211 / −25.3%** |
+| graded three-window, step 0.25, A 50/50 | 21.73% / 0.890 / −33.3% | 0.748 | 30.72% / 1.211 / −25.3% |
+| graded, step ⅓, A 50/50 | 22.15% / 0.912 / −33.3% | 0.769 | 31.40% / 1.248 / −25.0% |
+| **graded, step ⅓, A 40/60 (live)** | **23.60% / 0.918 / −35.2%** | **0.771** | **33.34% / 1.233 / −27.0%** |
+
+Step ⅓ vs 0.25 (A 50/50): exposure-matched control 0.747 PASS, max-stat
+permutation over 8 schedules (vote labels shuffled among A days) p = 0.00,
+real daily with the band 29.27% / 1.122 → 29.62% / 1.146; deeper schedules
+test better still (1/.5/0/0: 0.931, holdout 0.788) and ⅓ is the
+deliberate non-corner pick. Window count does not matter (4/5-window sets
+at step 0.2 land on the 0.25 figures) — depth does. A 40/60 on top is the
+owner spending that Sharpe on leverage (beta-matched control equals live
+Sharpe at every rung, so leverage itself is a risk dial, not an edge).
 
 Graded vs single: exposure-matched (k = 0.929) 0.744 and beta-matched
 0.846 controls PASS; per-year gains spread (2002 +2.8, 2003 +6.4, 2009
@@ -226,9 +242,9 @@ to de-lever CONFIRMED trend; this trims OVERHEATED trend.
 −18pp, 2020 −4.5pp; real 2023 −3pp, 2024 −4pp; gets it back in 2007,
 2010–11, 2018, 2020 (real +10), 2024–26. 65 episodes / 669 days in about
 eight extension regimes (2003, 2009–10, 2011, 2020–21, 2023, 2024, 2025,
-2026). Trim size is monotone — ×0.75 through ×0.0 all improve — so 0.5 is a
-deliberately non-corner pick; do not push it toward full cash on the
-strength of that monotonicity.
+2026). Trim size is monotone — ×0.75 through ×0.0 all improve — so 0.5 was
+a deliberately non-corner pick and step ⅓ is the graded equivalent; do not
+push it toward full cash at one vote on the strength of that monotonicity.
 
 ## Volatility targeting (added 2026-09-01) — the outermost overlay
 
@@ -573,15 +589,16 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -33% (proxy, 2000-2026) under the
-  2026-09-06 design (A=50/50, D=100% QLD, 20/100 fast re-entry overlay,
-  graded extension trim).**
+- **The real max drawdown is about -35% (proxy, 2000-2026) under the
+  2026-09-06 design (A=40/60, D=100% QLD, 20/100 fast re-entry overlay,
+  graded extension trim at step ⅓).**
   History of the figure, same proxy (`paper-track/long_history_backtest.py`,
   `drift_band_test.py`, `improvement_search.py`): live weights WITHOUT the
   vol overlay -69.6% (dot-com alone -67.2%); vol target 20% + 3% band
   (2026-09-01) -42.1%; the 2026-09-02 design (B=75/25, A=70/30, D=85% QLD,
   micro off) -32.4%; A=50/50 + D=100% QLD -36.5%; with the overlay -34.8%;
-  with the extension trim -33.3% (single and graded alike).
+  with the extension trim -33.3% (single and graded alike); step ⅓ and
+  A=40/60 (third revision the same day) -35.2%.
   QQQ buy-and-hold over the same
   span is -80.2%. Quote the SPMO-era figure only as "max drawdown in the
   SPMO-era window", never as the worst case. Cutting the tail from ~-70% to
@@ -752,7 +769,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Gap-to-200d rules in other states | negative |
 | 2026-09-06 | Pair study | negative |
 | 2026-09-06 | Post-change re-checks | confirmed |
-| 2026-09-06 | Leverage under the trim; trim step sweep | leverage: no edge; steeper step: candidate |
+| 2026-09-06 | Leverage under the trim; trim step sweep | step ⅓ + A 40/60 APPLIED (owner) |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -1831,7 +1848,7 @@ Under the 2.0x design, re-swept: vol target 15–25% × 10/30/60-day lookback
 with less TQQQ (25/25/50 or 100% QLD: identical proxy, −0.2 to −0.5pp real —
 SPMO's momentum is worth more than the decay saved).
 
-### Leverage under the trim; trim step sweep (2026-09-06) — leverage NO EDGE; steeper trim step is a CANDIDATE (not applied)
+### Leverage under the trim; trim step sweep (2026-09-06) — leverage NO EDGE; step ⅓ + A 40/60 APPLIED (owner decision)
 
 Question: does the graded extension trim make more A/B leverage
 sensible? Scripts: `paper-track/leverage_under_trim.py` (ladders) and
@@ -1894,4 +1911,14 @@ trim with the same depth spread thinner. The same window sets at step
 4w +50d>6% step ⅓ has the best holdout (0.801) and real MaxDD (−22.8%)
 but a weaker search-era Sharpe (1.069 vs 1.100 for 3w step ⅓), so the
 3-window step-⅓ form remains the cleaner candidate.
+
+**Applied (same day, owner: "apply step 1/3 and 40/60").** `EXTENSION_STEP
+= 1/3`, `TARGET_WEIGHTS['A'] = (0.40, 0.60, 0, 0, 0)`. Standing figures
+move to proxy 23.60% / 0.918 / −35.2% (search 1.112, holdout 0.771,
+holdout CAGR 18.1%, worst holdout year −19.1%), real weekly 33.34% /
+1.233 / −27.0%, real daily 31.86% / 1.154 / −33.2%. Proxy by year: 2000
+−18.9, 2008 −13.2, 2011 −19.1, 2020 +37.5, 2022 −28.0; COVID drawdown
+−25.2%, 2022 drawdown −30.6%. Real daily by year: 2020 +40.3, 2022 −20.3,
+2023 +73.4, 2024 +64.5, 2025 +28.9, 2026 YTD +35.9. Worst-case figure to
+carry: **about −35%**.
 

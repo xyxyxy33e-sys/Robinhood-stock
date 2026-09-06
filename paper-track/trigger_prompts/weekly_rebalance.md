@@ -47,7 +47,8 @@ reimplementation:
     gap, 200: gap} (close / SMA − 1). Added 2026-09-06: the GRADED EXTENSION
     TRIM. Votes = how many of {100d > 10%, 150d > 12%, 200d > 15%} are true;
     when the effective state is A the four risky legs are scaled by
-    1 − 0.25 × votes (×0.75 / ×0.5 / ×0.25) before vol targeting.
+    1 − ⅓ × votes (×⅔ / ×⅓ / ×0 — three votes puts the A row 100%
+    in BOXX) before vol targeting. Step 0.25 → ⅓ on 2026-09-06 (later).
     `extension_votes(effective_state, gaps)` gives the count. Pass the dict
     as `gaps=<gaps>` to `target_weights_with_voltarget(...)` — **mandatory
     for live use** like `fast_state` (do NOT use the legacy `gap200=`
@@ -193,17 +194,18 @@ fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-33%** on the
-2000-2026 stress test (design of 2026-09-06: A=50/50 core/TQQQ, B=75/25,
+market in it; the strategy's true max drawdown is about **-35%** on the
+2000-2026 stress test (design of 2026-09-06, third revision: A=40/60 core/TQQQ, B=75/25,
 D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
-trim (A scaled x0.75/0.5/0.25 as QQQ clears 10%/12%/15% above its
-100/150/200-day SMAs), micro off, vol target 20%; it was -32% under the
+trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
+100/150/200-day SMAs), micro off, vol target 20%; it was -33% with A=50/50 and step 0.25 earlier the same day, -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol
 targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
 SPMO-era window shows -- never quote those as the worst case. Also carry:
 the 2026-09-06 reweight is the SECOND deliberate step up the return frontier,
-so live-era stress events are larger than before (COVID-shaped drawdowns about
--34%, a 2022-type year about -24%) -- that is by design, not a fault.
+so live-era stress events are larger than before (and the 40/60 A row of
+the third revision adds ~2pp of drawdown on top) (COVID-shaped drawdowns about
+-25% to -35%, a 2022-type year about -20% real / -28% proxy) -- that is by design, not a fault.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.
