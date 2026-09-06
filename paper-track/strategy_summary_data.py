@@ -5,19 +5,19 @@ and byyear.json to the scratchpad path below; splice them into the artifact's
 script block in place of the existing constants.
 
 NEW = the live design as of 2026-09-06 (A=50/50, D=100% QLD, 20/100 fast
-re-entry overlay on B/C/F). OLD = the 2026-09-02 design (A=70/30, D=85% QLD,
+re-entry overlay on B/C/F, graded extension trim on A). OLD = the 2026-09-02 design (A=70/30, D=85% QLD,
 no fast overlay) -- the prior comparison baseline, kept as the "before"
 column so the frontier-step-2 + overlay improvement is visible."""
 import json, math, sys
 sys.path.insert(0,'paper-track')
 import voltarget_live_backtest as VL
-from state import TARGET_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED, compute_fast_states, effective_state
+from state import TARGET_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED, compute_fast_states, effective_state, compute_extension_gaps, extension_scale
 from long_history_backtest import load_px
 from four_leg_overlay import last_trading_day_per_week
 assert not MICRO_OVERLAY_ENABLED
 rows=VL.build(); rows=rows[0] if isinstance(rows,tuple) else rows
 qqq=load_px('data/qqq_long_history.csv'); spy=load_px('data/spy_long_history.csv')
-qd=sorted(qqq); fast=compute_fast_states(qd,qqq)
+qd=sorted(qqq); fast=compute_fast_states(qd,qqq); gaps=compute_extension_gaps(qd,qqq)
 wkq=last_trading_day_per_week(sorted(qqq)); wks=last_trading_day_per_week(sorted(spy))
 d0_to_key={v:k for k,v in wkq.items()}
 keys=sorted(wkq)
@@ -30,7 +30,9 @@ def vt(w,v):
     m=1.0 if not v else min(1.0,VOL_TARGET_PA/v); risky=sum(w[:4]); return tuple(x*m for x in w[:4])+(1-risky*m,)
 def new_w(r):
     st=effective_state(r['state'], fast[r['d0']])
-    return vt(TARGET_WEIGHTS[st], r['vol'])
+    w=TARGET_WEIGHTS[st]; f=extension_scale(st, gaps[r['d0']])
+    if f<1: w=tuple(x*f for x in w[:4])+(1-f*sum(w[:4]),)
+    return vt(w, r['vol'])
 def old_w(r):
     return vt(OLD_W[r['state']], r['vol'])
 def nav(wfn):
