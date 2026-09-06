@@ -20,6 +20,9 @@ month's return runs from the last trading day of the prior month to the last
 trading day of the month, and the sleeve is NOT reset at month boundaries --
 months are reporting slices of one continuous simulation.
 
+Pass --no-vol-target to run the same weights with the volatility overlay off
+(multiplier pinned at 1.0) for an A/B against the live design.
+
 CAVEAT ON PRICES. Split-adjusted closes, so dividends are excluded. That
 understates SPMO (~0.7%/yr) and especially XLU (~3%/yr), so state-E months are
 reported slightly worse than they truly were. BOXX's flat-price stub is
@@ -65,7 +68,9 @@ def build():
     return px, qqq, common
 
 
-def simulate(px, qqq, days):
+def simulate(px, qqq, days, vol_target=True):
+    """vol_target=False runs the same weights with the volatility overlay OFF
+    (multiplier pinned at 1.0), i.e. target_weights_with_micro() directly."""
     qd = sorted(qqq)
     states = dict(zip(qd, compute_states(qd, qqq)))
     micro = compute_micro_agreement(qd, qqq)
@@ -74,7 +79,8 @@ def simulate(px, qqq, days):
     for i in range(1, len(days)):
         d0, d1 = days[i - 1], days[i]
         st, ag = states[d0], micro[d0]
-        t = target_weights_with_voltarget(st, ag, realized_vol(qd, qqq, as_of=d0))
+        vol = realized_vol(qd, qqq, as_of=d0) if vol_target else None
+        t = target_weights_with_voltarget(st, ag, vol)
         cost = 0.0
         if held is None:
             held = list(t)
@@ -94,9 +100,10 @@ def simulate(px, qqq, days):
 
 
 def main():
+    vol_target = '--no-vol-target' not in sys.argv
     px, qqq, common = build()
     warm = [d for d in common if d >= '2022-06-01']       # 200d SMA + vol warm-up
-    daily_all = simulate(px, qqq, warm)
+    daily_all = simulate(px, qqq, warm, vol_target=vol_target)
     # the trading day immediately BEFORE the reporting window, so January 2024
     # gets a real benchmark base instead of being compared against itself
     idx = [x[0] for x in daily_all]
@@ -115,7 +122,8 @@ def main():
     prev_close = {k: None for k in keys}
     for n, k in enumerate(keys):
         prev_close[k] = base_day if n == 0 else months[keys[n - 1]][-1][0]
-    print(f"Calendar-month returns, current design, real instruments, net of 4bps\n"
+    tag = 'WITH 20% vol target' if vol_target else 'vol target OFF (multiplier 1.0)'
+    print(f"Calendar-month returns, current design, real instruments, net of 4bps -- {tag}\n"
           f"{keys[0]} .. {keys[-1]}   ({len(daily)} trading days)\n")
     print(f"{'month':<9}{'strategy':>10}{'QQQ':>9}{'SPMO':>9}{'diff vs QQQ':>13}   states")
     nav = navq = navs = 1.0
