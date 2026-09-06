@@ -36,13 +36,21 @@ reimplementation:
     overlay. It is NOT a state of its own -- it only decides whether a macro
     B/C day holds A weights (fast in A/B) or a macro F day holds C weights
     (fast in A/B/C). See `effective_state()`.
-  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>)`
+  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>, gap200=<gap>)`
     → the 5 live weights (core, tqqq, qld, xlu, cash). **The `fast_state`
     argument is mandatory for live use** -- omitting it silently runs the
     pre-overlay design.
   - `effective_state(state, fast_state)` → the state whose weight row is
     actually held. Report BOTH the macro state and the effective state
     whenever they differ.
+  - `compute_gap200(dates, px)[<today>]` → today's close / 200-day SMA − 1.
+    Added 2026-09-06: the EXTENSION TRIM. When the effective state is A and
+    this gap is above 15% (`EXTENSION_GAP`), the A row is held at half its
+    risky size (`EXTENSION_SCALE = 0.5` → 25% SPMO / 25% TQQQ / 50% BOXX)
+    before vol targeting. `is_extended(effective_state, gap200)` tells you
+    whether it is active. Pass it as `gap200=<gap>` to
+    `target_weights_with_voltarget(...)` — **mandatory for live use** like
+    `fast_state`. Report the gap and whether the trim is active every run.
 
 `target_weights_with_voltarget()` is THE live weight function as of
 2026-09-01: it applies the (now inert) micro overlay and then scales the four risky legs
@@ -79,8 +87,9 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
     do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
 
   - **regime changed → always rebalance**, whatever the drift. Regime =
-    the EFFECTIVE state (`effective_state(macro, fast)`), so the fast
-    re-entry overlay switching on or off counts (2026-09-06).
+    the EFFECTIVE state (`effective_state(macro, fast)`) plus the extension
+    trim flag (`is_extended(...)`), so the fast re-entry overlay or the trim
+    switching on or off counts (2026-09-06).
   - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.03),
     i.e. roughly "1.5 percentage points of the portfolio is in the wrong leg".
   - **a leg whose target is EXACTLY 0% but is still held above 0.10%
@@ -176,16 +185,17 @@ aggregate BEFORE reporting either figure — a real double-counting incident on
 Update the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top: macro state and label, fast (20/100) reading and the
-effective state if it differs, `micro_agrees`, the realized-vol reading
+effective state if it differs, the 200-day gap and whether the extension
+trim is active, `micro_agrees`, the realized-vol reading
 and resulting multiplier, target vs. actual weights per leg, trades placed and
 fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-35%** on the
+market in it; the strategy's true max drawdown is about **-33%** on the
 2000-2026 stress test (design of 2026-09-06: A=50/50 core/TQQQ, B=75/25,
-D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, micro off, vol
-target 20%; it was -32% under the
+D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, extension trim
+(A at half size when QQQ is >15% above its 200d), micro off, vol target 20%; it was -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol
 targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
 SPMO-era window shows -- never quote those as the worst case. Also carry:

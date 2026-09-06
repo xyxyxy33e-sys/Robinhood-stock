@@ -812,7 +812,57 @@ def effective_state(state, fast_state):
     return FAST_REENTRY_MAP.get((state, fast_state), state)
 
 
-def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None):
+# ---------------------------------------------------------------------------
+# EXTENSION TRIM -- added 2026-09-06 (paper-track/research_plan_gaps.py,
+# research_plan_gaps_r2.py; STRATEGY.md "Extension trim").
+#
+# When the EFFECTIVE state is A and QQQ's close is more than EXTENSION_GAP
+# above its 200-day SMA, hold the A row at EXTENSION_SCALE of its risky size
+# (25% SPMO / 25% TQQQ / 50% BOXX at the live 50/50 row) instead of full.
+# Nothing else changes. This is an "overheated" signal -- the opposite end
+# from the 2026-09-01 "state-A confidence" line (micro agreement, price vs
+# 20d, vol/VIX percentiles), which asked whether to de-lever CONFIRMED trend
+# and was rejected; that rejection does not cover this rule.
+#
+# Evidence (26y proxy, live design with the 20/100 overlay 19.77% / 0.779 /
+# -34.8%): 20.75% / 0.844 / -33.3%, Sharpe up in BOTH eras (search 0.937 ->
+# 1.058, holdout 0.655 -> 0.680), exposure-matched (k=0.963, 0.742) and
+# beta-matched (0.783) controls PASS, max-statistic permutation over a
+# 9-threshold grid p=0.00, plateau 12-20% all both-era. Real SPMO-era weekly
+# 27.99% / 1.030 / -31.4% -> 29.49% / 1.149 / -26.4%; real daily with the
+# drift band 27.35% / 0.986 / -33.4% -> 29.40% / 1.105 / -32.6%. Improves
+# the 80/20, 70/30 and 50/50 A rows alike, so it is not a leverage artifact.
+# Cost: sits half-out through post-crash melt-ups (2009 -18pp proxy, 2020
+# -4.5pp; real 2023 -3, 2024 -4). Rests on 65 episodes / 669 days in ~8
+# extension regimes. The trim size is monotone (x0.75 .. x0.0 all improve):
+# 0.5 is a deliberately non-corner pick -- do NOT push it toward 0.0 on the
+# strength of that monotonicity (the project's standing corner-solution
+# warning). ~+2 rebalances/yr.
+EXTENSION_TRIM_ENABLED = True
+EXTENSION_GAP = 0.15          # close / 200d SMA - 1, on the decision date
+EXTENSION_SCALE = 0.5         # multiplier on the four risky legs while extended
+
+
+def compute_gap200(dates, px):
+    """Per-date close / 200-day SMA - 1 (None during the 200d warm-up). Feed
+    the decision date's value to target_weights_with_voltarget(gap200=...)."""
+    v = [px[d] for d in dates]
+    out = {}
+    for i, d in enumerate(dates):
+        m = sma(v, i, 200)
+        out[d] = None if m is None else v[i] / m - 1
+    return out
+
+
+def is_extended(eff_state, gap200):
+    """True when the extension trim applies. A change in THIS value is a
+    regime change for needs_rebalance(), like a change of effective state."""
+    if not EXTENSION_TRIM_ENABLED or gap200 is None:
+        return False
+    return eff_state == 'A' and gap200 > EXTENSION_GAP
+
+
+def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -828,8 +878,14 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None):
 
     fast_state: the 20/100 reading for the same date from compute_fast_states()
     (added 2026-09-06). Live triggers MUST pass it -- omitting it silently
-    runs the pre-overlay design. None is accepted so old backtests still run."""
-    core, tqqq, qld, xlu, cash = target_weights_with_micro(effective_state(state, fast_state), micro_agrees)
+    runs the pre-overlay design. None is accepted so old backtests still run.
+
+    gap200: close / 200d SMA - 1 for the same date from compute_gap200()
+    (added 2026-09-06, extension trim). Live triggers MUST pass it too."""
+    eff = effective_state(state, fast_state)
+    core, tqqq, qld, xlu, cash = target_weights_with_micro(eff, micro_agrees)
+    if is_extended(eff, gap200):
+        core, tqqq, qld, xlu = (x * EXTENSION_SCALE for x in (core, tqqq, qld, xlu))
     mult = vol_target_multiplier(vol)
     risky = core + tqqq + qld + xlu
     return (core * mult, tqqq * mult, qld * mult, xlu * mult, 1.0 - risky * mult)

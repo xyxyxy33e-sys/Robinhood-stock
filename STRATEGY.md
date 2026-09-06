@@ -25,21 +25,25 @@ C row when the fast read is A/B/C.
 | E | 50% XLU / 50% BOXX | 0.5x |
 | F | 100% BOXX | 0.0x |
 
-Then the four risky legs are scaled by `min(1, 20% / 30-day realized QQQ
-vol)` with the remainder in BOXX. Rebalance on any change of effective
+**Extension trim:** when the effective state is A and QQQ's close is more
+than 15% above its 200-day SMA, the A row is held at half its risky size
+(25% SPMO / 25% TQQQ / 50% BOXX). Then the four risky legs are scaled by
+`min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX. Rebalance on any change of effective
 state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
 
-**Standing figures.** 26-year QQQ-core proxy 2000–2026: **19.8% CAGR /
-Sharpe 0.78 / max drawdown −34.8%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
-Real instruments, weekly, Nov 2015–Aug 2026: **28.0% / 1.03 / −31.4%**
-(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe
-0.937, holdout (2000–2015) 0.655. A 2022-type year is about −19% real /
+**Standing figures.** 26-year QQQ-core proxy 2000–2026: **20.8% CAGR /
+Sharpe 0.84 / max drawdown −33.3%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
+Real instruments, weekly, Nov 2015–Aug 2026: **29.5% / 1.15 / −26.4%**
+(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%); real daily with the
+drift band 29.4% / 1.11 / −32.6%. Search-era Sharpe 1.058, holdout
+(2000–2015) 0.680. A 2022-type year is about −19% real /
 −27% proxy; a COVID-shaped event about −34%; a −5% QQQ day is about −10%.
 
 **Change log (newest first).**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-06 | extension trim: A at half size when QQQ >15% above its 200d | both eras, controls, p=0.00, real +1.5pp; "Extension trim" |
 | 2026-09-06 | 20/100 fast re-entry overlay on B/C/F | both eras, controls, p=0.01; "Fast re-entry overlay" |
 | 2026-09-06 | A 70/30 → 50/50, D 85% QLD → 100% QLD | owner decision on the frontier; "Return frontier, step 2" |
 | 2026-09-04 | zero-target-leg sweep in `needs_rebalance()` | free; "Zero-target-leg sweep" |
@@ -98,13 +102,16 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 reference for each state's RELATIVE risk posture. A live trigger never calls
 it directly: two overlays apply on top, and the function that applies both is
 
-    target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast)
+    target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast, gap200=gap)
 
 1. **Fast re-entry overlay** (2026-09-06): `effective_state(state, fast_state)`
    may swap the row — macro B/C with a 20/100 read of A/B holds the **A**
    row; macro F with a 20/100 read of A/B/C holds the **C** row. Nothing
    else changes. Section "Fast re-entry overlay" below.
-2. **Volatility targeting** (2026-09-01): the four risky legs of that row are
+2. **Extension trim** (2026-09-06): if the effective state is A and
+   `gap200 > 0.15`, the four risky legs are halved (`is_extended()`).
+   Section "Extension trim" below.
+3. **Volatility targeting** (2026-09-01): the four risky legs of that row are
    scaled by `min(1, 0.20 / realized_vol_30d)` and the freed weight goes to
    cash. Section "Volatility targeting" below.
 
@@ -165,6 +172,40 @@ holdout) and stays disabled.
 
 New standing figures: worst case about **−35%** (proxy), 2022-type year
 about **−17%** real / −27% proxy.
+
+## Extension trim (added 2026-09-06)
+
+`EXTENSION_TRIM_ENABLED`, `EXTENSION_GAP = 0.15`, `EXTENSION_SCALE = 0.5`,
+`compute_gap200()`, `is_extended()` in `state.py`; applied inside
+`target_weights_with_voltarget(..., gap200=)` after the fast overlay and
+before vol targeting. Tests: `paper-track/research_plan_gaps.py`,
+`research_plan_gaps_r2.py`.
+
+**Rule.** Effective state A and QQQ close more than 15% above its 200-day
+SMA → hold the A row at half size (25% SPMO / 25% TQQQ / 50% BOXX). No
+other state is touched; the trim only ever reduces exposure. A change in
+`is_extended()` is a regime change for `needs_rebalance()`.
+
+**Evidence.** 26y proxy (live design with the overlay, 19.77% / 0.779 /
+−34.8%) → **20.75% / 0.844 / −33.3%**; Sharpe up in both eras (search
+0.937 → 1.058, holdout 0.655 → 0.680); exposure-matched control (k = 0.963)
+0.742 and beta-matched 0.783 — PASS; max-statistic permutation over a
+9-threshold grid **p = 0.00**; threshold plateau 12–20% all both-era, most
+Pareto. Real SPMO-era weekly 27.99% / 1.030 / −31.4% → **29.49% / 1.149 /
+−26.4%**; real daily with the drift band 27.35% / 0.986 / −33.4% → 29.40% /
+1.105 / −32.6% (+2 rebalances/yr). It improves the 80/20, 70/30 and 50/50
+A rows alike, so it is not an artifact of the 6 Sep leverage step. It does
+not conflict with the 2026-09-01 "state-A confidence" rejection: those
+signals (micro agreement, price vs 20d, vol/VIX percentiles) asked whether
+to de-lever CONFIRMED trend; this trims OVERHEATED trend.
+
+**Costs and sample.** Sits half-out through post-crash melt-ups: proxy 2009
+−18pp, 2020 −4.5pp; real 2023 −3pp, 2024 −4pp; gets it back in 2007,
+2010–11, 2018, 2020 (real +10), 2024–26. 65 episodes / 669 days in about
+eight extension regimes (2003, 2009–10, 2011, 2020–21, 2023, 2024, 2025,
+2026). Trim size is monotone — ×0.75 through ×0.0 all improve — so 0.5 is a
+deliberately non-corner pick; do not push it toward full cash on the
+strength of that monotonicity.
 
 ## Volatility targeting (added 2026-09-01) — the outermost overlay
 
@@ -509,13 +550,15 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -35% (proxy, 2000-2026) under the
-  2026-09-06 design (A=50/50, D=100% QLD, 20/100 fast re-entry overlay).**
+- **The real max drawdown is about -33% (proxy, 2000-2026) under the
+  2026-09-06 design (A=50/50, D=100% QLD, 20/100 fast re-entry overlay,
+  extension trim).**
   History of the figure, same proxy (`paper-track/long_history_backtest.py`,
   `drift_band_test.py`, `improvement_search.py`): live weights WITHOUT the
   vol overlay -69.6% (dot-com alone -67.2%); vol target 20% + 3% band
   (2026-09-01) -42.1%; the 2026-09-02 design (B=75/25, A=70/30, D=85% QLD,
-  micro off) -32.4%; A=50/50 + D=100% QLD -36.5%; with the overlay -34.8%.
+  micro off) -32.4%; A=50/50 + D=100% QLD -36.5%; with the overlay -34.8%;
+  with the extension trim -33.3%.
   QQQ buy-and-hold over the same
   span is -80.2%. Quote the SPMO-era figure only as "max drawdown in the
   SPMO-era window", never as the worst case. Cutting the tail from ~-70% to
@@ -682,6 +725,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Whole-strategy review | collapses/after-tax: no change |
 | 2026-09-06 | Return frontier, step 2 | applied |
 | 2026-09-06 | Fast re-entry overlay (Part I) | applied |
+| 2026-09-06 | Extension trim (Part I); research-plan gap tests | applied |
 | 2026-09-06 | Pair study | negative |
 | 2026-09-06 | Post-change re-checks | confirmed |
 

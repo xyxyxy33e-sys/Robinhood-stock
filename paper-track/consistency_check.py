@@ -295,3 +295,23 @@ def check_fast_reentry():
     print("OK: fast re-entry overlay touches only B/C/F, only adds exposure, and is a no-op without a fast reading")
 
 check_fast_reentry()
+
+def check_extension_trim():
+    """Extension trim (2026-09-06): only effective state A, only when gap200
+    exceeds EXTENSION_GAP, only ever reduces exposure, no-op without a gap."""
+    from state import (is_extended, EXTENSION_TRIM_ENABLED, EXTENSION_GAP, EXTENSION_SCALE,
+                       target_weights_with_voltarget)
+    assert EXTENSION_TRIM_ENABLED and EXTENSION_GAP == 0.15 and EXTENSION_SCALE == 0.5
+    for st in 'BCDEF':
+        assert not is_extended(st, 0.5), f"trim must not touch {st}"
+        assert target_weights_with_voltarget(st, False, 0.15, gap200=0.5) == target_weights_with_voltarget(st, False, 0.15)
+    assert not is_extended('A', None) and not is_extended('A', 0.15) and is_extended('A', 0.1501)
+    full = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gap200=0.10)
+    trim = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gap200=0.20)
+    assert abs(sum(trim) - 1.0) < 1e-9 and trim[4] > full[4]
+    assert all(abs(trim[i] - full[i] * EXTENSION_SCALE) < 1e-9 for i in range(4))
+    assert target_weights_with_voltarget('C', False, 0.15, fast_state='A', gap200=0.20) == trim
+    print("OK: extension trim touches only effective state A above the 15% gap, halves the risky legs, and is a no-op without a gap reading")
+
+
+check_extension_trim()
