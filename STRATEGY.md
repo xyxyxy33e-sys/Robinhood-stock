@@ -726,6 +726,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Return frontier, step 2 | applied |
 | 2026-09-06 | Fast re-entry overlay (Part I) | applied |
 | 2026-09-06 | Extension trim (Part I); research-plan gap tests | applied |
+| 2026-09-06 | Gap-to-200d rules in other states | negative |
 | 2026-09-06 | Pair study | negative |
 | 2026-09-06 | Post-change re-checks | confirmed |
 
@@ -1771,6 +1772,30 @@ weight mixes, and cash-in-pair, on both fast windows (20/100 and 20/60):
 **Standing lesson:** a pair cell is a signal only above ~200 days AND only if
 it survives on real instruments; the proxy alone has enough freedom to fit
 any cell.
+
+### Gap-to-200d rules in the other states (2026-09-06) — NEGATIVE, no change
+
+`paper-track/gap_rules_other_states.py`. Asked after the A extension trim:
+does distance from the 200d help anywhere else? Three families on the 26y
+proxy (baseline = live incl. the A trim, 20.75% / 0.844 / −33.3%):
+
+- **Trim when far above** (D at +5/+10%): no both-era gain. D's median gap
+  is only +4.8%; the deep-extension days that make the A trim work do not
+  exist in D.
+- **Cut to cash when far below** (B/C/E/F): F is already cash. `C & gap <
+  −10% → cash` passes both eras on the proxy (21.11% / 0.859) but is worse
+  on real instruments (29.12% / 1.139 / −27.9% vs 29.49% / 1.149 / −26.4%).
+- **Add when far below** (oversold bounce, hold the next-more-aggressive
+  row): `E & gap < −5% → D row` (100% QLD) is the best-looking proxy result
+  of the day — 24.50% / 0.940 / −31.0%, both eras, Pareto, positive in 12 of
+  13 affected years — **but rests on 105 proxy days / 12 real weeks, and on
+  real instruments it is flat on Sharpe with MaxDD −26.4% → −32.8%** (2022
+  −17 → −22, 2025 +20 → +8). Buying a breakdown at 2x fails the
+  real-instrument hurdle on drawdown. Rejected; the one gap rule worth
+  revisiting when the real window contains more E episodes.
+
+**Standing conclusion:** the 200d gap is informative in A (overheating) and
+nowhere else that survives on real instruments.
 
 ### Post-change re-checks (2026-09-06) — all confirmed
 
