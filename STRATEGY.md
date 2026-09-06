@@ -1,11 +1,55 @@
 # Live strategy spec — Robinhood Agentic account (576391551)
 
-Single source of truth for the SPMO core + TQQQ/QLD satellite + BOXX cash-gate
-overlay. All three live triggers (Friday weekly, Mon–Thu daily, and any
-one-time trigger) should point here for the "what and why" and keep their own
-prompts to the "when and how" — mechanics and step order, not re-derived
-rationale. This file is what to update when the strategy changes; the
-triggers should need only small edits to stay in sync with it.
+Single source of truth for the SPMO core + TQQQ/QLD satellite + XLU
+defensive + BOXX cash-gate strategy. The live triggers (Mon–Thu daily, Friday
+weekly) point here for the "what and why" and keep their own prompts to the
+"when and how". **Part I is the live design — what the triggers trade today.
+Part II is the research record — dated, kept so nothing is re-run.** Update
+Part I when the strategy changes; append to Part II when something is tested.
+
+# Part I — Live design
+
+## Current design at a glance (2026-09-06)
+
+**What the account holds, by effective state** — see the tables under
+"Target weights"; effective state = macro 50/200 state, except that macro
+B/C hold the A row when the 20/100 fast read is A/B, and macro F holds the
+C row when the fast read is A/B/C.
+
+| Effective state | Row | Exposure |
+|---|---|---|
+| A | 50% SPMO / 50% TQQQ | 2.0x |
+| B | 75% SPMO / 25% TQQQ | 1.5x |
+| C | 100% SPMO | 1.0x |
+| D | 100% QLD | 2.0x |
+| E | 50% XLU / 50% BOXX | 0.5x |
+| F | 100% BOXX | 0.0x |
+
+Then the four risky legs are scaled by `min(1, 20% / 30-day realized QQQ
+vol)` with the remainder in BOXX. Rebalance on any change of effective
+state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
+
+**Standing figures.** 26-year QQQ-core proxy 2000–2026: **19.8% CAGR /
+Sharpe 0.78 / max drawdown −34.8%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
+Real instruments, weekly, Nov 2015–Aug 2026: **28.0% / 1.03 / −31.4%**
+(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe
+0.937, holdout (2000–2015) 0.655. A 2022-type year is about −19% real /
+−27% proxy; a COVID-shaped event about −34%; a −5% QQQ day is about −10%.
+
+**Change log (newest first).**
+
+| Date | Change | Evidence |
+|---|---|---|
+| 2026-09-06 | 20/100 fast re-entry overlay on B/C/F | both eras, controls, p=0.01; "Fast re-entry overlay" |
+| 2026-09-06 | A 70/30 → 50/50, D 85% QLD → 100% QLD | owner decision on the frontier; "Return frontier, step 2" |
+| 2026-09-04 | zero-target-leg sweep in `needs_rebalance()` | free; "Zero-target-leg sweep" |
+| 2026-09-02 | B 25/75 → 75/25, A 80/20 → 70/30, D 70% → 85% QLD, F → 100% cash, micro overlay off | "State F -> 100% cash", "Improvement search", "The return frontier" |
+| 2026-09-01 | volatility targeting, 3% drift band, gold removed | "Volatility targeting", "26-year stress test" |
+| 2026-08-31 | SPMO core, QLD satellite, XLU in state E | "The XLU update to state E" |
+
+Everything below the line "Research record" is history and evidence — what
+was tried, what was kept, what was rejected and why. It is there so nothing
+gets re-run; it is not what the triggers trade.
 
 ## Instruments
 
@@ -50,37 +94,79 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | E | 0% | 0% | 0% | 50% | 50% | 0.5x |
 | F | 0% | 0% | 0% | 0% | 100% | 0.0x |
 
-`target_weights(state)` returns this row — the base weights, still the right
-reference table for understanding each
-state's RELATIVE risk posture. It is no longer what a live trigger should
-call directly, though: two overlays apply on top, both added 2026-09-01.
+`target_weights(state)` returns this row — the base table, the right
+reference for each state's RELATIVE risk posture. A live trigger never calls
+it directly: two overlays apply on top, and the function that applies both is
 
-**Live weights before the vol overlay (gold REMOVED 2026-09-01; micro overlay
-DISABLED 2026-09-02, so this table now equals the base table above):**
+    target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast)
 
-| State | Core (SPMO) | TQQQ | QLD | XLU | Cash (BOXX) |
-|---|---|---|---|---|---|
-| A (micro overlay disabled 2026-09-02) | 50.0% | 50.0% | 0% | 0% | 0% |
-| B | 75.0% | 25.0% | 0% | 0% | 0% |
-| C | 100.0% | 0% | 0% | 0% | 0% |
-| D (micro overlay disabled 2026-09-02) | 0% | 0% | 100.0% | 0% | 0% |
-| E | 0% | 0% | 0% | 50.0% | 50.0% |
-| F | 0% | 0% | 0% | 0% | 100.0% |
+1. **Fast re-entry overlay** (2026-09-06): `effective_state(state, fast_state)`
+   may swap the row — macro B/C with a 20/100 read of A/B holds the **A**
+   row; macro F with a 20/100 read of A/B/C holds the **C** row. Nothing
+   else changes. Section "Fast re-entry overlay" below.
+2. **Volatility targeting** (2026-09-01): the four risky legs of that row are
+   scaled by `min(1, 0.20 / realized_vol_30d)` and the freed weight goes to
+   cash. Section "Volatility targeting" below.
 
-**A THIRD OVERLAY IS NOW LIVE ON TOP OF THIS TABLE — volatility targeting,
-added 2026-09-01. The table below is no longer what a trigger trades; see
-"Volatility targeting" for the function to call.**
+`micro_agrees` is still passed (the signature needs it) but the 30/150 micro
+overlay is DISABLED (2026-09-02) and it moves no weight. `validate_weights(state,
+core, tqqq, qld, xlu, cash)` must run on the result before any dollar target
+or order; `WeightSanityError` = abort, do not trade, report.
 
-Get this by calling `target_weights_with_micro(state, micro_agrees)`
-(`state.py`). `target_weights_with_gold(state, micro_agrees)` still exists
-and is safe to call — with `STANDALONE_GOLD_FRAC = 0.0` it returns this
-exact same table plus an always-zero gold leg, so either function works;
-`target_weights_with_micro()` is the simpler, more direct one now that gold
-is out. `validate_weights(state, core, tqqq, qld, xlu, cash)` (5-leg) must
-run immediately after, before computing any dollar target or placing any
-order. `WeightSanityError` = abort, do not trade, report the error.
+## Fast re-entry overlay, 20/100 (added 2026-09-06)
 
-### Volatility targeting (added 2026-09-01) — the outermost overlay
+`FAST_REENTRY_ENABLED`, `FAST_SHORT_N = 20`, `FAST_LONG_N = 100`,
+`FAST_REENTRY_MAP`, `compute_fast_states()`, `effective_state()` in
+`state.py`; `target_weights_with_voltarget(..., fast_state=)`. Tests:
+`paper-track/fast_ma_overlay_test.py`, `fast_ma_overlay_r2.py`.
+
+**Why.** Comparing the live design to a published "100% TQQQ above the
+50-day, cash below" switch showed the two use the same line (six 2025 switch
+dates all within 0–2 days of our A/B/C ↔ D/E/F transitions) and that the
+whole 2025 gap (switch +59%, live +16%) was our re-entry ladder: C (1.0x)
+→ B (1.25x) → A (2.0x) took from 1 May to 24 June while the switch was 3x
+from day one. Raising B/C weights outright fails on the 26y record (B is a
+failed bounce in 17/27 episodes; C at A weights makes 2022 −18%). The
+overlay instead reads the SAME six-state machine on a 20/100 pair and uses
+it only to skip ladder rungs when the fast reading already confirms:
+
+| macro | fast | weights held |
+|---|---|---|
+| B or C | A or B | **A** (50/50) |
+| F | A, B or C | **C** (100% core) |
+| anything else | — | unchanged |
+
+A, D, E are untouched; the overlay never de-risks; it is not a state.
+`effective_state()` is what `needs_rebalance()`'s `regime_changed` compares.
+
+**Evidence.** 26y proxy 17.98% / 0.739 / −36.4% → **19.77% / 0.779 /
+−34.8%**; Sharpe up in both eras (search 0.922 → 0.937, holdout 0.594 →
+**0.655**, the largest out-of-sample gain of anything tested this session);
+exposure- and beta-matched controls PASS at k = 1.000 (same average
+exposure — the gain is timing, not risk); max-statistic permutation over a
+9-window grid p = 0.01; plateau 20/80 – 30/100 all both-era positive; per
+year better 15/27, flat 8, worse 4 (2000 −8pp, 2022 −5pp, 2018 −4pp, 2003
+−3pp — bear-market rallies). Real SPMO-era weekly 26.60% / 1.004 / −31.4%
+→ 27.99% / 1.030 / −31.4%; 2019 +38 → +50, 2023 +52 → +60, 2025 +13 → +18,
+2022 −13 → −17. Rebalances/yr 38 → 42. In 2025 it would have held 100%
+core from 24 Apr (macro still F) and A weights from 2 May (macro C)
+instead of 24 Jun.
+
+**Rejected variants (do not re-run):** fast windows with a 10- or 15-day
+short leg (MaxDD −41 to −47%, holdout gain gone — 15/60 holdout 0.586 <
+live); 20/60 (+1pp real return, −38% MaxDD — the non-Pareto sibling);
+combining 20/60 and 20/100 by AND (= 20/100), OR (= 20/60), or a strict
+P>20>60>100 stack (no effect) or a loose one (−43% MaxDD, 2022 −27%);
+using the fast reading to EXIT early (A + fast down → D weights: worse both
+eras); E + fast up → D weights (no effect); requiring fast confirmation
+before any macro transition (worse). The 30/150 micro overlay disabled
+09-02 was a different design (changed A/D, fit on 2015+, nothing on
+holdout) and stays disabled.
+
+New standing figures: worst case about **−35%** (proxy), 2022-type year
+about **−17%** real / −27% proxy.
+
+## Volatility targeting (added 2026-09-01) — the outermost overlay
 
 **`target_weights_with_voltarget(state, micro_agrees, vol)` in `state.py` is
 what live triggers must call.** It applies `target_weights_with_micro()` and
@@ -221,6 +307,753 @@ In this drift-aware daily model, vol targeting still beats no vol targeting
 clearly — full period 11.43% / 0.669 / −41.6% vs **9.56% / 0.517 / −69.9%** —
 though both CAGRs land below the weekly backtests, which is the free-rebalancing
 assumption showing up. Treat the daily-model numbers as the more honest ones.
+
+## Zero-target-leg sweep (added 2026-09-04)
+
+`needs_rebalance()` now fires when any leg's target is **exactly 0%** but it is
+still held above **`ZERO_LEG_EPS` = 0.10%**, regardless of total L1 drift.
+
+**Why.** On 2026-09-04 realised vol fell to 19.78%, below the 20% target, so
+the multiplier hit 1.0 and the cash target became exactly 0.00% — while the
+account still held 0.50% BOXX. Total drift was 0.99%, inside the 3% band, so
+nothing traded and nothing would have until an unrelated move pushed drift
+past 3%. The return drag is trivial (~5bp/yr while it lasts); the real cost is
+that the stub contributed 0.5pp of the 0.99% reading and never decays, so a
+permanent floor on the drift metric makes a 3% band behave like a ~2.5% band
+for genuine drift.
+
+**This is not the per-leg threshold removed on 2026-09-01.** That one decided
+which legs to SKIP once a rebalance had fired, and left small legs adrift.
+This only ever ADDS a reason to fire; when it fires, every leg still goes to
+target. The two rules are not in tension.
+
+**The evidence says free, not profitable** (`paper-track/zero_leg_sweep_test.py`,
+daily 2000-2026 proxy). CAGR, Sharpe and MaxDD are identical to three decimal
+places in all three eras — full 15.69% / 0.752 / −32.4%, OOS 11.25% / 0.603,
+fitted 22.29% / 0.941 — for +0.2 rebalances/yr and +0.01x turnover. It is
+adopted for coherence ("target 0% means hold 0%"), not for return. Anyone
+re-deriving this should know the numbers neither argue for it nor against
+removing it.
+
+The stub is rarer than it looks: a zero leg set to exactly 0 stays at 0 under
+drift, so it only reappears when the target *changes* to zero while something
+is still held. Stub days are 0.7% of history without the rule and 0.0% with
+it. It cannot oscillate. 0.25% and 0.50% epsilons test identically but leave
+~0.16% stubs standing; 0.10% (~$100 on this account, above fractional-fill
+dust) was taken because it clears the case completely.
+
+**Standing lesson: before trusting any state-level statistic, check whether
+the sample window contains the market conditions that state is meant to
+handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
+prices (state classification, regime statistics, signal research); the
+2015-11 floor is only binding where SPMO/QLD/XLU/BOXX leg returns are needed.
+
+## Safety guards
+
+1. **`validate_weights(state, core, tqqq, qld, xlu, cash)`** — every trigger,
+   every run, right after `target_weights()`. Weights must sum to 1.0
+   (±0.5%) and the state must be a valid letter. `WeightSanityError` →
+   abort, report, do not trade.
+2. **`circuit_breaker_check(actual_total_value, implied_total_value)`** —
+   every trigger, before placing any order. `implied_total_value` = sum of
+   each held position's quantity × live quote, reconstructed independently
+   from `get_equity_positions` + `get_equity_quotes`. `actual_total_value` =
+   `get_portfolio`'s own `total_value`. These are two views of the same
+   number, not two predictions — a gap beyond 2% tolerance means a data
+   error, bad fill, unaccounted position, or bug, not market volatility.
+   `CircuitBreakerTripped` → abort, report, do not trade. This is
+   deliberately NOT a "the market moved a lot" breaker — large moves are
+   expected at up to 2.5x effective exposure and are the design working as
+   intended, not a fault condition.
+3. **Wash-sale flagging** — `paper-track/wash_sale.py`,
+   `flag_wash_sales()` + `summarize()`, run on the strategy-era trade list
+   whenever there's a loss-sale. Splits realized losses into usable vs.
+   wash-sale-deferred; never report a deferred loss as reducing this year's
+   tax liability. TQQQ resizes and BOXX buy/sell cycles are now frequent
+   enough that wash sales are closer to the normal case than the exception.
+4. **Compute in code, never hand-add** (added 2026-08-31, after a real
+   incident) — any live financial figure derived by combining two or more
+   other numbers (a "today's total," a "new cumulative," a period subtotal)
+   must be computed programmatically from the raw records
+   (`get_pnl_trade_history`, `get_realized_pnl`, etc.), never composed by
+   hand in prose. On 2026-08-31 a weekly report's headline realized-P&L
+   figures were hand-added and ended up double-counting a pre-existing
+   loss, reporting both "today's total" and "new cumulative" wrong until an
+   independent code-based recomputation caught it (see the weekly report
+   artifact's correction note for that date). `paper-track/consistency_check.py`
+   has a `check_pnl_sum(trade_pnls, expected_total)` helper for exactly this:
+   sum the raw per-trade records and assert the result matches the account's
+   own independently-reported aggregate before reporting either figure. The
+   same file's `check_target_weights()` asserts every row of `TARGET_WEIGHTS`
+   sums to 1.0, independent of `validate_weights()`'s per-run check — run it
+   after any edit to `TARGET_WEIGHTS`. `check_core_blend_fracs()` does the
+   same for `CORE_SPMO_FRAC`/`CORE_GLD_FRAC` (now 1.0/0.0 — core is pure
+   SPMO since gold moved to a standalone leg 2026-09-01) — run it after any
+   edit to the core blend. `check_gold_overlay()` asserts every
+   (state, micro_agrees) combination from `target_weights_with_gold()` sums
+   to 1.0 — run it after any edit to `STANDALONE_GOLD_FRAC` or the micro
+   overlay weights. See `paper-track/README.md` for which scripts in that
+   directory are load-bearing vs. historical record.
+
+   **BOXX data bug, found and fixed 2026-09-01**: BOXX's price feed
+   (`/home/user/robinhood/data/kairos/etf/BOXX.csv`, pulled via
+   `get_equity_historicals`) was a flat placeholder (100.0301) for every
+   date from 2022-01-03 through 2022-12-28 -- not real price data; BOXX's
+   actual listing predates the reliable part of that feed and the vendor
+   backfilled a constant stub before it. `build_cash_index()` only falls
+   back to the T-bill rate when a date is genuinely MISSING from BOXX's
+   history, so this stub silently made every cash leg read a fake 0%
+   return for all of 2022 instead of the real ~1.6-2%+ T-bill yield that
+   year (rates were rising fast). Backtest-only -- live trading pulls
+   real-time quotes, not this historical file, so no live trade was ever
+   affected. Fixed in `paper-track/backtest_overlay_etf.py`'s
+   `load_daily_csv()` via `_strip_boxx_flat_stub()`, which every script in
+   this directory that loads BOXX.csv picks up automatically (all of them
+   import `load_daily_csv` from that one module). Effect on results: small
+   and mostly confined to 2022 and to cash-heavy states (F's isolated
+   annualized return moved from 8.2% to 9.2%, Sharpe 1.081 to 1.211;
+   full-strategy net Sharpe moved from 1.098 to 1.113) -- it did NOT
+   reverse any design conclusion in this file (the state D revert, the
+   micro overlay's edge over the old design, gold's removal) when
+   re-checked against the fix.
+
+## Drawdown-from-high watch (added 2026-09-01)
+
+Informational only — never gates or triggers a trade. The user funds this
+account with occasional manual deposits (transferred by hand, not
+automated) and wanted an objective signal for "is this a real dip worth
+adding extra money to," rather than reacting to any single red day. A
+single day's move is too frequent to be useful: QQQ alone has closed down
+≥2% ~14x/year historically (1.3% daily stdev, so a -2% day is only ~1.5σ).
+Cumulative drawdown from a rolling high is far rarer and a more meaningful
+signal — the strategy's own 2015-2026 backtested daily series (state-
+weighted, not raw QQQ) crossed -5% off its 52-week high ~2.5x/year, -10%
+~1.4x/year, -15% only 3 times in 10.9 years (Dec 2018, Mar 2020, Mar
+2023), -20% exactly once (the Mar 2020 COVID crash).
+
+Mechanism (`paper-track/drawdown_tracker.py`): the daily trigger computes
+the STRATEGY's own daily return every day it runs (yesterday's confirmed
+state's weights, from `target_weights_with_voltarget` (CHANGED 2026-09-01
+from `target_weights_with_micro` — the tracker must describe the portfolio
+actually held, or it alerts on drawdowns the account never had; vol targeting
+cuts full-period MaxDD from -69.9% to -41.6%, so an un-vol-targeted series
+fires the -5%/-10% tiers earlier and more often than reality), dotted with
+that day's official-close-to-close leg returns — SPMO/TQQQ/QLD/XLU/BOXX; gold/IAU
+removed 2026-09-01, no longer part of this), and
+appends it to a small local log (`data/live_nav_index.csv`) via
+`record_return(date, daily_return)`. This builds an independent,
+cash-flow-blind return index — deliberately NOT the account's raw
+`total_value`, so that a manual deposit never itself looks like a new high
+or distorts the reading. `current_drawdown()` compares the latest index
+value to its rolling 252-trading-day high (or all-time high, until the log
+has a year of history — it started empty 2026-09-01, so this runs as an
+all-time-high tracker through roughly September 2027). Thresholds checked:
+**-5%** (low-conviction "worth a look," included at the user's request
+despite being the noisiest tier — ~2.5x/year in backtest), **-10%** (worth
+a modest add), **-15%** and **-20%** (rare, genuinely major dislocations).
+`newly_crossed()` fires only the FIRST day a threshold is breached, not
+every day the account stays below it, so this alerts once per episode, not
+daily during a drawdown.
+
+Separately, at the user's explicit request, a single-day move of **-2% or
+worse** in the strategy's own daily return (the same number computed for
+the log above) is ALSO flagged every time it happens — this one is NOT
+deduplicated like the cumulative-drawdown tiers, since each such day is its
+own event, not a sustained episode. Per this session's own check, this is
+a genuinely frequent occurrence (~10x/year for the strategy's own
+state-weighted series, ~14x/year for raw QQQ) — the user was told this
+explicitly and asked for it anyway, so treat every occurrence as
+low-conviction "FYI" framing, not an escalation.
+
+**Push notifications** (added 2026-09-01, at the user's explicit request):
+both live triggers call the `PushNotification` tool — a real interrupt to
+the user's phone/desktop, not just text in the session transcript — for
+three specific events, and only these three: (1) any regime shift (macro
+state change, or a micro-agreement flip within states A/D), (2) a newly
+crossed drawdown-from-high tier (-5/-10/-15/-20%), (3) any single day at
+-2% or worse. Every other routine event (no-change days, ordinary weekly
+reports) stays as in-session/artifact reporting only — pushing for those
+would defeat the purpose by making the signal-to-noise ratio worse.
+
+## Cadence
+
+- **Monday–Friday, 15:55 ET** — every session computes the macro state, the
+  20/100 fast read, realized vol and the live weights, then calls
+  `needs_rebalance(target, held, regime_changed)`: rebalance on a change of
+  EFFECTIVE state, on L1 drift > 3%, or on a zero-target leg still held
+  above 0.10%; otherwise no trade. ~42 rebalances/year expected.
+- **Friday** additionally produces the weekly report (state, fast read, vol
+  and multiplier, weights, fills, realized P&L with the wash-sale split,
+  drawdown from high) whether or not it traded.
+- Both triggers use the SAME `state.py` functions and safety guards. If the
+  daily check already moved the book to target mid-week, Friday finds it
+  there and trades nothing extra.
+
+## Reports
+
+- **Weekly report artifact**: https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14
+  — running log, newest week at top, updated by every trigger that trades.
+- **Evaluation artifact**: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2
+  — full backtests, per-state sensitivity, search/holdout checks, the joint
+  grid search failure, calendar-year tables.
+
+## Known limitations (carry these into every report, don't re-litigate them)
+
+- Every parameter here is fit on the same ~11-year SPMO window (16+ years
+  for the QQQ-only regime signal). One real bear market (2022) in the
+  strategy's own live-comparable history — n≈1 for the thing the whole
+  design is supposed to protect against. **This is not a footnote — it
+  actively distorts state-level statistics.** Demonstrated 2026-09-01: on
+  the 2015+ window QQQ *gains* +17.5% across state-F weeks, but on the full
+  1999-2026 history (`data/qqq_long_history.csv`) it *loses* -39.4%, because
+  the short window excludes the 2000-02 and 2008-09 bears. Anything that only
+  needs QQQ prices should be re-checked on the long series before it is
+  believed — see "What was tried and rejected" for the full write-up.
+- **The real max drawdown is about -35% (proxy, 2000-2026) under the
+  2026-09-06 design (A=50/50, D=100% QLD, 20/100 fast re-entry overlay).**
+  History of the figure, same proxy (`paper-track/long_history_backtest.py`,
+  `drift_band_test.py`, `improvement_search.py`): live weights WITHOUT the
+  vol overlay -69.6% (dot-com alone -67.2%); vol target 20% + 3% band
+  (2026-09-01) -42.1%; the 2026-09-02 design (B=75/25, A=70/30, D=85% QLD,
+  micro off) -32.4%; A=50/50 + D=100% QLD -36.5%; with the overlay -34.8%.
+  QQQ buy-and-hold over the same
+  span is -80.2%. Quote the SPMO-era figure only as "max drawdown in the
+  SPMO-era window", never as the worst case. Cutting the tail from ~-70% to
+  ~-42% is the main reason the vol overlay earned its place; the B fix took
+  it the rest of the way. The same run also shows two whipsaw failures
+  the recent window hides -- 2011 (strategy -22.2% while QQQ was +4.1%) and
+  COVID-2020 (-15.9% vs QQQ's -7.1%) -- which are the standing cost of
+  trend-following through sharp round trips, not fixable by reweighting.
+- B's weights were 25/75 until 2026-09-02, resting on 4 episodes; the full-history
+  re-sweep (27 episodes) reversed the direction to 75/25. The old note, for the record:
+  B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
+  not the magnitude.
+- Complexity has grown faster than the account: six states × three legs ×
+  wash-sale tracking × a tax-deferral instrument × three independently
+  firing triggers × a monthly reconciliation check. Every added piece is
+  something that can silently break. When extending this further, prefer
+  editing this file and `state.py` over adding new standalone mechanisms.
+- **Dollar-based/fractional market orders placed outside regular hours get
+  CANCELLED by the broker, not queued** (discovered 2026-08-31, the hard
+  way — a real ~$15.2k after-hours SPMO sell sat as `state='cancelled'`,
+  not `'queued'`, silently stalling the GLD migration until caught and
+  fixed manually that evening). The earlier assumption in this file and
+  the trigger prompts ("market closed → orders queue") was simply wrong for
+  this order type. Both live triggers now handle this: use dollar-based
+  market orders in regular hours as normal; outside regular hours, use
+  whole-share LIMIT orders with `market_hours` set to `extended_hours` or
+  `all_day_hours` at a marketable price, and always re-check order state
+  after placing rather than assuming it filled or queued.
+- **The 50/200-day SMA windows themselves have never been validated** --
+  every other parameter here (per-state weights, QLD, XLU, GLD, the
+  substate ideas) went through this project's search/holdout discipline;
+  the classifier's own windows were just inherited from
+  `research/leverage_ma.md`. A sweep (`paper-track/ma_window_sweep.py`,
+  2026-08-31) found shorter pairs (10/100, 20/100) beat 50/200 on both
+  search and holdout Sharpe simultaneously -- a real effect -- but at
+  2-2.5x the state-transition rate, with no transaction-cost or
+  wash-sale-drag modeling to check whether that edge survives real
+  friction. Not adopted; would require re-optimizing every per-state
+  weight against the new classifier's states, not just swapping the
+  windows. See also `paper-track/three_ma_split_check.py` -- a third
+  (20-day) MA usefully splits state A in one direction (de-lever once
+  price is already confirmed above it) but not the other; partial,
+  unconfirmed on its own. A genuine three-MA classifier (STACK x POSITION
+  regime, `paper-track/three_ma_classifier.py`) was tried for 10/50/100
+  and 50/100/200 and REJECTED for both -- search-period Sharpe looks much
+  better (1.09 -> 1.8-2.1) but holdout Sharpe gets WORSE than the plain
+  50/200 baseline (1.17 -> 0.95-1.00), the textbook overfitting signature
+  from fitting many small independently-weighted cells. CAGR also drops
+  hard (25.5% -> ~18%) and 10/50/100 more than triples the transition
+  rate. Cleaner rejection than the two-MA sweep above -- this one fails
+  the search/holdout check outright, not just a turnover-cost caveat.
+  A gentler variant -- running a fast "micro" classifier (10/100) alongside
+  the live "macro" one (50/200) in parallel, splitting each macro state by
+  whether the two agree, rather than merging into one bigger state machine
+  (`paper-track/micro_macro_agreement.py`) -- avoids the overfitting blowup
+  (only 2 cells per state, not a cross-product) but nets out to a wash: two
+  individually-real, holdout-confirmed signals (A when micro confirms;
+  D when micro diverges) don't compose into a net full-timeline
+  improvement once blended at micro=10/100 (Sharpe 1.124 vs live 1.138,
+  CAGR down ~4pp, MaxDD better by ~6pp).
+
+  A broader sweep of the micro pair itself (`paper-track/micro_macro_sweep.py`,
+  2026-09-01) found the SAME two cells (A/agree, D/diverge) validate across
+  every micro pair tried (9 windows) -- consistent, not fragile to exact
+  parameterization -- and several pairs (30/100, 30/150) beat live 50/200 on
+  full-timeline, search, AND holdout Sharpe SIMULTANEOUSLY, not the
+  search-up/holdout-down pattern that sank the merged 3-MA classifier. Best
+  (30/150): Sharpe 1.171 vs 1.138, search 1.140 vs 1.090, holdout 1.203 vs
+  1.174, MaxDD -21.9% vs -29.7%, CAGR 21.6% vs 25.5% (real cost). Turnover
+  ~50% higher than macro-only (16.7/yr vs 11.2/yr), much milder than
+  10/100's ~25/yr. This is the strongest, best-behaved finding from the
+  whole MA-window research line -- flagged as a serious candidate, not
+  filed away, but NOT YET IMPLEMENTED: no transaction-cost/wash-sale-drag
+  modeling at the higher turnover, only A and D are touched (B/C/E/F stay
+  at live weights), and it would add a second classifier plus a doubled
+  per-state weight table to state.py -- a real complexity increase.
+  Revisit before adopting.
+
+  Turnover-cost modeling done (`paper-track/turnover_cost_model.py`,
+  2026-09-01): the objection does NOT hold up. At a calibrated 4bps
+  one-way spread/slippage rate, the micro-30/150 design's annualized cost
+  drag is LOWER than live 50/200-only (0.49pp/yr vs 0.74pp/yr) despite
+  more total transitions, because most of the extra ones are small
+  agree/diverge weight tweaks (~0.2 turnover fraction) rather than the
+  old design's fewer-but-all-expensive full state changes (up to ~2.0
+  turnover fraction). Net Sharpe: old 1.111, new 1.149 -- edge holds
+  across a 2-15bps cost sensitivity range. The remaining open items before
+  implementation: wash-sale drag isn't NAV-modeled (it's a tax-timing
+  effect, reported only directionally), and it still needs the second
+  classifier + doubled per-state weight table built into `state.py` and
+  the live triggers.
+
+  A follow-up (`paper-track/confident_a_leverage.py`, 2026-09-01) tested
+  whether GATING extra leverage to only the confident (agree) weeks could
+  push CAGR higher without the Sharpe cost -- the naive "lever up when
+  confident" hypothesis. The data says the opposite: Sharpe improves
+  monotonically as the agree-side TQQQ weight falls TOWARD ZERO (5 of 7
+  micro pairs tested peak at 0% TQQQ / 100% core during agree weeks), not
+  as it rises. Likely mechanism: leverage's edge comes from catching
+  acceleration/inflection early in a trend, before both a fast and slow
+  signal confirm it -- once both already agree the trend is mature, and
+  TQQQ's decay increasingly outweighs its beta. Same trade-off shape as
+  everything else here (CAGR falls right alongside Sharpe's improvement,
+  21.15% -> 19.99% at the Sharpe optimum) -- does not unlock higher
+  return without cost. Confirms this whole micro/macro family is a
+  smoothing trade, not a return-boosting one.
+
+  Three more independently-constructed signals converged on the SAME
+  de-lever-when-confirmed direction for state A: price vs its own 20-day
+  SMA (`paper-track/three_ma_split_check.py`), QQQ's own realized-vol
+  percentile (a corrected re-read of `paper-track/a1a2_deepdive.py`'s
+  actual blind-search result, not its originally-proposed weights), and
+  VIX percentile. All four signals overlap substantially with each other
+  (~75-80% pairwise agreement) and each validated a near-zero-TQQQ weight
+  on ISOLATED holdout for its own "confident" majority. A 4-signal
+  majority-vote composite (`paper-track/combined_confidence_signal.py`)
+  made this even cleaner in isolation -- large samples (250-332 weeks),
+  strong isolated-holdout confirmation at every vote threshold.
+
+  **But the full-timeline, cost-adjusted test reverses all of it**
+  (`paper-track/composite_turnover_cost.py`, 2026-09-01): live's unchanged
+  80/20 core/TQQQ is the actual full-portfolio OPTIMUM. Sharpe declines
+  MONOTONICALLY as the confident-weeks weight is de-levered away from
+  80/20 (1.111 at 80/20 -> 1.054 at the fully de-levered 100/0), across
+  every cost assumption tested. Mechanism: isolated-holdout validation
+  checks a candidate weight against ONLY that cell's own return variance,
+  which is blind to how those weeks interact with the rest of the
+  multi-state portfolio. State A is the majority state and already
+  contributes the strategy's steadiest return stream (mostly free of the
+  worse drawdowns concentrated in D/E/F); trimming its return specifically
+  in its most-confirmed weeks removes some of the portfolio's best Sharpe
+  contribution -- a real full-timeline cost invisible to the isolated test.
+  **Net verdict on the entire state-A confidence line of research
+  (four converging signals, all corroborating in isolation): REJECTED.**
+  This was the most thoroughly-investigated idea of the whole research
+  effort and it is a clean rejection at the level that actually matters,
+  not an ambiguous one. No live weights changed. The broader lesson,
+  carried forward: isolated-cell validation is necessary (it catches
+  corner solutions) but not sufficient -- always re-check any candidate
+  change at the full-timeline, cost-adjusted level before trusting it.
+
+# Part II — Research record
+
+Dated evidence for every row and overlay, and every idea that was tried and
+rejected. Read the relevant section before proposing a change; if it is
+listed under a rejection, do not re-run it without a genuinely new reason.
+
+| Date | Section | Outcome |
+|---|---|---|
+| — | Why each row is what it is | rationale per state |
+| — | What was tried and rejected | standing rejections |
+| — | Transition structure | context only |
+| 2026-08-31 | The XLU update to state E | applied |
+| 2026-08-31 | The GLD core-blend addition | superseded, then removed |
+| 2026-09-01 | Gold: standalone top-slice / removed | removed (owner) |
+| 2026-09-01 | Micro overlay for states A and D | disabled 09-02 |
+| 2026-09-01 | State D: QLD/XLU reweight, reverted | reverted (owner) |
+| 2026-09-01 | 26-year stress test | led to vol targeting |
+| 2026-09-02 | State F -> 100% cash; F episode census | applied |
+| 2026-09-02 | D and E substates on full history | negative |
+| 2026-09-02 | Improvement search on full history | B edge applied; rest rejected |
+| 2026-09-02 | The return frontier | A/D step applied |
+| 2026-09-06 | Downturn review D/E/F | negative |
+| 2026-09-06 | Whole-strategy review | collapses/after-tax: no change |
+| 2026-09-06 | Return frontier, step 2 | applied |
+| 2026-09-06 | Fast re-entry overlay (Part I) | applied |
+| 2026-09-06 | Pair study | negative |
+| 2026-09-06 | Post-change re-checks | confirmed |
+
+### Why each row is what it is (short version — full backtests in the
+evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
+plus `paper-track/four_leg_overlay.py` for the 2026-08-31 QLD update)
+
+QLD joined TQQQ as a second satellite instrument 2026-08-31, after
+`four_leg_overlay.py` searched each state's (core, TQQQ, QLD) split
+independently against the prior TQQQ-only baseline, one state at a time,
+full-timeline Sharpe as the objective, search period pre-2020-01-01 checked
+against a 2020+ holdout. Only changes that held up on holdout were adopted:
+
+- **A** (62% of weeks — largest state by far): satellite trimmed 35%→20%
+  (still 100% TQQQ, QLD not used here), +0.030 full-timeline Sharpe,
+  confirmed on holdout (1.116). Best-evidenced change in this update.
+- **D** (13.5% of history, second-most after A): the single biggest
+  structural change in the table — drops core AND TQQQ entirely for
+  leverage + cash, +0.025 full-timeline Sharpe, confirmed on holdout (1.088)
+  at the original 70% QLD / 30% cash split. Moderate (not thin, not large)
+  sample; flagged as the row most worth re-checking if D's live behavior
+  ever looks off, given the size of the jump relative to the evidence base.
+  **Re-examined 2026-09-01** (an XLU tilt was tried and reverted the same
+  day) — see "State D: QLD/XLU reweight, tried and reverted" below.
+- **B, C, F**: four-leg search found "better" search-period weights for all
+  three, but each made FULL-timeline Sharpe *worse* (-0.036, -0.069, -0.106
+  respectively) — search-only overfitting, not adopted. Confirms rather than
+  displaces their existing rationale (below).
+- **E**: four-leg search's "best" was 100% cash — a corner solution (cash's
+  near-zero variance trivially wins a Sharpe objective regardless of real
+  foregone return, a recurring artifact in this project's search work) —
+  rejected regardless of its Sharpe number. Superseded by the XLU update
+  below, which changes E a different way (not more cash — a defensive
+  equity leg instead of half of core).
+
+Original (pre-QLD, TQQQ-only) per-state rationale, still operative for B, C,
+F (E's is superseded, see above and below):
+
+- **B**: every axis tested (satellite weight, core/cash split) points toward
+  MORE leverage, monotonically, with no plateau found even at 80%
+  satellite. Only 4 independent episodes in 16 years (22/16/30/29 trading
+  days) — direction trusted, magnitude not. 25/75 is a deliberately
+  conservative pick below the raw ~80% peak.
+- **C**: monotonic — full deployment, no satellite, no cash, confirmed best
+  on every axis tested.
+- **F**: satellite strictly hurts, faster than E. Core/cash sweep found F's
+  own max drawdown is COMPLETELY UNAFFECTED by F's weight across the full
+  0-100% range — reducing exposure here is close to free efficiency, not a
+  risk trade-off. 14.3% of history, third-most.
+
+### What was tried and rejected
+
+A full joint grid search across all six states simultaneously (12 free
+dimensions) found a config with better full-window Sharpe (0.988 vs 0.978)
+but WORSE holdout Sharpe (0.949 vs 0.961) than what's live. Re-fitting the
+same search using ONLY 2015-2019 data and checking 2020+ collapsed from
+search Sharpe 1.446 to holdout Sharpe 0.579 — the worst result anywhere in
+this evaluation. Free-form joint optimization overfits fast; every live
+parameter here was set by single-state analysis with an economic story, not
+blind search. Don't re-introduce unconstrained joint tuning.
+
+Substate research (VIX/credit-spread/breadth/utilities-relative-strength,
+both level and rate-of-change versions — `paper-track/substate_research.py`,
+`substate_research_deltas.py`) tested whether any of the six states should be
+split further by external market data. Nothing survived a corner-solution
+check, a holdout check, AND a placebo check (random meaningless splits
+cleared the same "looks like a finding" bar ~10% of the time by chance).
+Below-state partitioning isn't supported by the available history — six
+states is treated as the right granularity, not a stepping stone to a finer
+one.
+
+State F substate on 50dma SLOPE (2026-09-01) — rejected, and the
+investigation produced a MORE IMPORTANT correction, below. A search for
+factors predicting the direction of individual state-F weeks (bucketed as
+big-up >=+3%, big-down <=-3%, mild) tested, in order: 14 cross-asset ETFs,
+VIX, credit spreads, breadth, rates, and finally ~20 moving-average
+relationships (distances, MA-vs-MA spreads, slopes, acceleration,
+vol-normalised distances, death-cross age). Only the 50dma's SLOPE (its
+20-day rate of change) looked promising: steeper decline preceding bigger
+bounces, a capitulation/mean-reversion story. It appeared to survive
+search/holdout, episode breadth (11 of 14), exclusion of 2022, and
+parameter-insensitivity. **It was still wrong**, for two reasons worth
+remembering:
+  1. EXPOSURE CONFOUND. Ranking the 50dma slope against its own trailing
+     2-year distribution splits state-F weeks 55/7, not ~50/50 -- inside an
+     established downtrend the 50dma is almost always falling relative to a
+     window dominated by uptrend weeks. So the "rule" was really "hold 60%
+     core in 89% of F weeks", averaging 54% exposure vs the live 30%. Most
+     of its apparent edge was simply holding more, not signal. ALWAYS
+     exposure-match before crediting a conditional weight rule -- and note
+     that an "inverted rule performs badly" sanity check proves NOTHING
+     under this confound (inverting also halves average exposure).
+  2. IT DIED ON MORE DATA. See below.
+
+**The 2015+ backtest window was hiding both bear markets (found 2026-09-01).**
+Every state-F number in this file and in the evaluation artifact was computed
+on data starting 2015-11 (SPMO's inception, which caps the *strategy*
+backtest). But a factor/state study needs only QQQ daily closes, so it can run
+much further back. `data/qqq_long_history.csv` now holds a merged QQQ daily
+series from **1999-09-15** (fetched via get_equity_historicals, splice
+verified against the existing 2009+ kairos series across 102 overlapping days
+at a price ratio of exactly 1.000000). Re-running state F on it:
+
+| | 2009-2026 (what everything above used) | Full 1999-2026 |
+|---|---|---|
+| F weeks / episodes | 62 / 14 | **197 / 28** |
+| QQQ compounded over F weeks | **+17.5%** | **-39.4%** |
+| big_up / big_down / mild | 20 / 14 / 28 | 50 / 58 / 89 |
+
+The post-2015 window contains no sustained bear market except 2022 -- it
+excludes the 2000-02 dot-com crash and the 2008-09 GFC, i.e. exactly the
+episodes state F exists for. On the real history QQQ *loses* ~39% cumulatively
+across F weeks and big-down weeks outnumber big-up ones. Any framing of
+"state F underperforms QQQ, why so defensive" is an artifact of the truncated
+sample; F's defensive posture is validated much more strongly than the
+2015+ numbers suggest (and this finding is what drove F to 100% cash on
+2026-09-02 — see below), and the risk/return frontier computed for F on the
+short sample understates the case for staying defensive. The slope signal
+itself also died here: permutation p went the WRONG way with 3.2x the data
+(0.083 -> 0.189) and episode breadth flipped from 11-helped/2-hurt to
+11-helped/15-hurt. A real effect strengthens with more data.
+
+### Transition structure (context, not a trading rule)
+
+States move through a loop, not randomly: A→D is 96% of A's transitions; D
+forks to A (73%) or E (27%); E forks to D (55%) or F (45%); F→C is 79% of
+F's transitions; C forks to B (56%) or F (44%); B→A is 69% of B's
+transitions. No state jumps directly to its opposite (A never → F, F never →
+A) — always transits through the middle. C is the highest-stakes junction:
+near coin-flip odds (56/44) deciding between the two most opposite postures
+in the whole table (B's 75% satellite vs F's 70% cash), a bigger weight swing
+than any other transition. Tested whether a leading indicator (distance to
+200dma at C's entry, or the state prior to C) could predict C's outcome in
+advance — real-looking signal, but only 18 total C-episodes with overlapping
+distributions; not enough to build a rule on. React to the confirmed
+destination state, nothing more.
+
+### The XLU update to state E (2026-08-31)
+
+E's 50% core allocation was fully replaced with 50% XLU (utilities sector) —
+cash unchanged at 50%. This is the single most-validated speculative change
+in this file, having survived three independent passes where every other
+candidate tested failed at least one:
+
+1. **Five-leg search** (`paper-track/five_leg_xlu_search.py`): XLU added as a
+   standalone leg (not blended into core), one state varied at a time
+   against the live baseline, full-timeline Sharpe, search/holdout split.
+   E: +0.043 Sharpe, holdout-confirmed (1.092). D also looked promising here
+   (+0.020) but did NOT survive step 3 below — see the rejection note.
+2. **Finer-grid robustness check**: E's peak is a narrow, single-asset
+   corner (100% of the state-E-search grid's top results cluster near 100%
+   XLU) — inherently narrow by construction, not necessarily fake, but
+   flagged for extra scrutiny given this project's history with corner
+   solutions.
+3. **Isolated single-state validation**
+   (`paper-track/isolated_state_validation.py`): the decisive test. Search
+   and holdout computed using ONLY state E's own discontiguous weeks (13
+   search weeks, 19 holdout weeks pre/post 2020-01-01), cash fixed at 50% to
+   avoid the degenerate-cash-corner trap, NO anchoring to the rest of the
+   portfolio's variance. Candidate (0 core / 0 TQQQ / 0 QLD / 50% XLU / 50%
+   cash) beat the live weights (50% core / 50% cash) on isolated holdout:
+   +7.5% return, Sharpe 0.873 vs live's +4.5%, Sharpe 0.635.
+
+**What was tested alongside XLU and rejected**: SPY blended into core
+(monotonically worse on every metric, including the weak years it was meant
+to help — diversifying the core dilutes the momentum tilt the strategy
+leans into). SCHD, VYM, USMV (all low-fee, 0.06-0.15%, dividend-quality/
+low-vol factor tilts) blended into core AND as standalone state-specific
+legs — all flat-to-worse, none matched XLU's magnitude even at a loose bar
+(`paper-track/defensive_core_blend.py`,
+`paper-track/five_leg_search_all_candidates.py`). BRK.B as a standalone leg
+showed a real signal in E under method (1) but did NOT survive isolated
+validation (3) — live weights beat it in isolation
+(`paper-track/isolated_state_validation.py`). **D/XLU is the clearest
+cautionary result**: it passed methods (1) and looked non-corner and
+holdout-confirmed, but FAILED isolated validation — D's apparent gain was
+an artifact of blending with the rest of the portfolio's variance, not a
+real property of D's own weeks. D's weights are UNCHANGED from the QLD
+update above.
+
+**GLD (gold, tested 2026-08-31, after XLU was already live)**: the loose
+full-timeline search (`paper-track/five_leg_search_all_candidates.py`) found
+a state-E signal even larger than XLU's original one (+0.142 vs +0.043,
+100% GLD corner) — big enough, given this project's history of oversized
+loose-search signals turning out fake (D/XLU, E/BRK.B), to demand the
+decisive test before touching anything live. Two isolated checks
+(`paper-track/gld_validation.py`, `paper-track/isolated_state_validation.py`
+extended to GLD): (a) against the pre-XLU baseline (50% core/50% cash), GLD
+alone "holds up" (+17.3% holdout return, Sharpe 3.70, vs live's +4.5%/0.635)
+— but that's the wrong comparison now that XLU is actually live; (b) run
+head-to-head against XLU directly, with XLU included as a free option in the
+same isolated search grid, the search step itself — using only state E's 13
+pre-2020 search weeks, blind to the holdout — picked 100% XLU over GLD every
+time. GLD only "wins" if you look at the 19 holdout weeks in hindsight and
+pick the asset that did better there (+18.9% GLD vs +12.4% XLU, driven
+mostly by one COVID week, 2020-03-20: XLU -17.1% vs GLD -2.2%) — exactly the
+holdout-cherry-pick this project's search→holdout discipline exists to
+reject. States A, B, D were also checked and GLD did not hold up in any of
+them (live weights beat it on isolated holdout in each). **Verdict: GLD
+rejected as a state-specific replacement/standalone leg** (it does not
+belong in state E in place of or alongside XLU). It was tested again the
+same day in a completely different role — blended into the core across
+every state, not competing with XLU at all — and adopted there; see "The
+GLD core-blend addition (2026-08-31)" below. Data cached at
+`data/defensive_candidates/GLD.csv` for the record.
+
+**Full calendar-year effect** (`paper-track/calendar_year_report.py`-style
+check, run 2026-08-31): flips 2016 from -4.0% to +4.5%, improves 2022 from
+-16.6% to -14.3%, every other year unchanged (states outside E don't
+reference this leg). Cumulative return over the full 10.9yr window improves
+from +1130.8% to +1305.4%.
+
+**Caveat, carried forward, don't re-litigate**: this rests on state E's own
+thin sample (32 weeks total, 19 in the isolated holdout) — the most-validated
+speculative change in this file is still built on less independent history
+than A or D. Revisit if E's live behavior ever looks off.
+
+### The GLD core-blend addition (2026-08-31) — SUPERSEDED 2026-09-01
+
+**Superseded the next day** by moving gold out of the core into a standalone
+top-slice — see "Gold: from core-blend to standalone top-slice" further
+below for why and the comparison data. Kept below as history: the
+core-blend numbers are still real backtest results and the reasoning for
+holding *some* gold at all still applies: only the *mechanism* (in-core
+blend vs. standalone leg) changed, not the underlying case for gold
+exposure. Core is pure SPMO again as of 2026-09-01.
+
+The core changed from 100% SPMO to a fixed 75% SPMO / 25% GLD blend, applied
+identically in every state that has a nonzero core weight (`CORE_SPMO_FRAC`,
+`CORE_GLD_FRAC` in `paper-track/state.py`). This is unrelated to GLD's
+rejection as a state-E leg above — that test asked "can GLD replace or
+compete with XLU as a state-specific defensive position" (no); this one
+asks "does a small permanent gold sleeve inside the core improve the whole
+portfolio's risk profile" (yes, modestly).
+
+Unlike every other core-blend candidate tested before it (SPY, SCHD, VYM,
+USMV — see "What was tried and rejected" below, all monotonically worse or
+flat-to-worse on every metric including the two weak years), GLD improves
+max drawdown **consistently in both halves of the data**, not just in
+hindsight on holdout:
+
+| Metric | 100% SPMO (prior) | 75/25 SPMO/GLD (live) |
+|---|---|---|
+| CAGR | 24.91% | 24.46% (-0.45pp) |
+| Sharpe, full timeline | 1.065 | 1.110 (+0.045) |
+| Sharpe, pre-2020 (search) | 0.967 | 0.966 (-0.001, noise-level) |
+| Sharpe, post-2020 (holdout) | 1.123 | 1.191 (+0.068) |
+| Max drawdown | -30.36% | -27.35% (+3.0pp better) |
+| 2016 (weak year) | -4.0% | -3.8% |
+| 2022 (weak year) | -16.6% | -15.4% |
+
+The pre-2020 search-period Sharpe cost is negligible — the same
+both-sides-hold-up pattern that validated E/XLU, not the holdout-only
+pattern behind every rejected candidate (D/XLU, E/BRK.B, GLD-as-E-leg
+above, the A1/D1 substate ideas below). Two honest caveats, not
+disqualifying but worth carrying forward: (1) a meaningful share of the
+full/holdout-period benefit comes from GLD's own large 2020 and 2025
+rallies landing in years the core was already strong (added beta from a
+second bull run, not pure downside cushioning) rather than repeatable
+diversification value — don't expect the full effect to recur if gold goes
+flat for a few years; (2) 90/10 and 50/50 blends were also tested (see the
+weekly-report conversation record) — 90/10 costs almost nothing but buys
+less protection, 50/50 buys more protection but the pre-2020 Sharpe cost
+turns clearly negative (-0.023); 75/25 was chosen as the middle of that
+dial, not because it's a local optimum the data singled out.
+
+Rejected in the same core-blend role: SPY, SCHD, VYM, USMV (see below) —
+none matched XLU's original core-blend result, let alone GLD's. Confirmed
+tradable, fractional, in the live account (576391551).
+
+### Gold: from core-blend to standalone top-slice (2026-09-01, historical)
+
+The in-core 75/25 SPMO/gold blend above had a structural flaw not visible
+until checked directly: because `core_weight` is **0% in states D and E**
+(`TARGET_WEIGHTS`), blending gold into the core meant gold exposure
+silently dropped to **zero exactly in pullback and breakdown** — the states
+where a safe-haven asset would matter most. Prompted by the user asking to
+double-check the 25% weight (gold had just had a historically strong
+decade, including +62.3% in 2025 alone — worth checking the case wasn't an
+artifact of one outlier year), then to explicitly move gold outside the
+core and re-evaluate.
+
+**Standalone gold beat the in-core design on every metric, in every period
+tested**, including the honest checks (excl-2025, pre-2020 search, 2020-24
+holdout — not just the full-timeline number 2025 can inflate):
+
+| Period | Best in-core Sharpe (25-30% of core) | Standalone Sharpe (20%, every state) |
+|---|---|---|
+| Full timeline | 1.183 | 1.244 |
+| Excl. 2025 | 1.117 | 1.164 |
+| Pre-2020 search | 1.151 | 1.247 |
+| 2020-24 holdout | 1.128 | 1.154 |
+
+**Isolation check** (is this gold-specific, or just generic de-risking?): a
+standalone slice of plain **cash** at the same weight underperforms the
+gold slice on both Sharpe and CAGR in every period — cash's MaxDD is
+marginally better in isolation (zero volatility, expected), but gold's
+extra return more than compensates on a risk-adjusted basis. Confirms real
+diversification value, not a dilution artifact.
+
+**Per-state weight optimization was tried and rejected** — classic
+overfitting on thin per-state samples. States C and E "optimized" to a
+nonsensical 0% with search-period Sharpe above 4.8 (corner-solution
+artifacts from 10-13-week samples); states B, D, F all pushed to the grid
+edge (40-50%); state F's holdout Sharpe **collapsed from 3.81 (search) to
+0.058 (holdout)** — the same search-only-overfit pattern documented
+elsewhere in this file. The full-timeline composite built from each state's
+"optimal" weight looked best of everything tested (Sharpe 1.276) but
+**lost to the simple uniform 20% weight on the one honest test** (2020-24
+holdout: per-state 1.073 vs. uniform 20%'s 1.154) — reject per-state
+weighting for the same reason every other search-only-overfit result in
+this file was rejected.
+
+**A defensive tilt (more gold in D/E/F than A/B/C) was also tried and
+rejected** — the user's own hypothesis, tested directly and refuted by the
+data. A 2D grid over (offense weight, defense weight) found the Sharpe
+surface ridges along **offense ≈ defense**, not toward extra defense
+weight — at every offense level tested, the best-performing defense weight
+was statistically indistinguishable from just using the same weight as
+offense. Every deliberately defense-tilted combination underperformed the
+flat/uniform version at the same total gold budget on the honest 2020-24
+holdout (0% offense / 35% defense, the most extreme tilt tested, scored
+worst of everything: holdout Sharpe 1.099 vs. uniform 20/20's 1.154).
+Reason: offense states (A/B/C) are 407 of 564 weeks — most of the
+timeline — so starving them of gold to concentrate it in the 157
+defense-state weeks removes diversification value during the majority of
+history to fund a bigger position during the minority.
+
+**Weight chosen: 20%** (`STANDALONE_GOLD_FRAC` in `paper-track/state.py`).
+15% was also defensible (same flat-plateau shape held up in every check),
+but 20% strictly dominated it — better Sharpe, CAGR, AND MaxDD in every
+single period tested, no tradeoff either way.
+
+**Mechanism**: `target_weights_with_gold(state, micro_agrees)` composes the
+micro overlay with this — every leg from `target_weights_with_micro()` is
+scaled by 0.80, and gold added at a flat 0.20, in every state, every time.
+This is the function live triggers call now; `validate_weights_6leg()` is
+its matching guard (6 legs: core, tqqq, qld, xlu, gold, cash).
+
+**One caution carried forward, same as the in-core version's**: this
+backtest window is an unusually strong decade for gold. Even the honest
+2020-24 holdout keeps showing "more gold is better" as weight rises past
+40% — treat that climb skeptically rather than chasing it; it likely
+reflects gold's trailing tailwind more than a structural edge that will
+persist at arbitrarily high weights. 20% was chosen from the flat,
+well-evidenced part of the curve, not the extrapolated tail.
+
+### Gold: removed 2026-09-01 (user decision)
+
+Gold is out of the live design entirely, by explicit user instruction —
+not because the backtest evidence turned against it. `STANDALONE_GOLD_FRAC`
+is set to `0.0` in `paper-track/state.py`; the code path
+(`target_weights_with_gold()`, `validate_weights_6leg()`,
+`TARGET_WEIGHT_LEGS_WITH_GOLD`) is kept intact, not deleted, in case gold
+is reconsidered later — flip the constant back to reactivate it.
+
+For the record, the same-day research trail below (kept as history, not
+current design) never found a reason in the numbers to drop it: candidate
+replacements were tested (BTAL, TLT, DBC, PDBC, KMLM — see
+`paper-track/tlt_standalone_test.py`, `multi_candidate_test.py`,
+`btal_downturn_test.py`), downturn-only variants of both gold and BTAL
+were tested and rejected (concentrating a diversifier only in D/E/F
+underperforms holding it flat everywhere, for every candidate tried),
+alternate uses of the freed-up 20% were tested (extra cash, extra
+leverage, extra core, both uniform and bucketed by offense/defense
+regime — see `gold_removed_realloc.py`, `gold_removed_bucketed.py`,
+`sensitivity_full.py`), and a full continuous-fraction sensitivity sweep
+confirmed gold's chosen 20% sits on a genuine, non-overfit part of the
+Sharpe surface. None of that changes the outcome here: this section
+documents the design that was in place from 2026-09-01 (the standalone
+top-slice) through its removal the same day, kept for continuity in case
+the decision is revisited.
 
 ### Micro overlay for states A and D (added 2026-09-01, DISABLED 2026-09-02)
 
@@ -363,360 +1196,68 @@ placed for either the tilt or the revert — the account has been on 70%
 QLD/30% cash for D throughout; per the user's standing instruction, trading
 is deferred until the full portfolio design is finalized.
 
-### Why each row is what it is (short version — full backtests in the
-evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
-plus `paper-track/four_leg_overlay.py` for the 2026-08-31 QLD update)
+### 26-year stress test: the design had a -65% drawdown in it (2026-09-01)
 
-QLD joined TQQQ as a second satellite instrument 2026-08-31, after
-`four_leg_overlay.py` searched each state's (core, TQQQ, QLD) split
-independently against the prior TQQQ-only baseline, one state at a time,
-full-timeline Sharpe as the objective, search period pre-2020-01-01 checked
-against a 2020+ holdout. Only changes that held up on holdout were adopted:
+**Read this together with "Volatility targeting" above: everything in this
+section describes the design BEFORE the vol overlay went live the same day.
+The overlay cut the worst case from ~-65/-70% to about -42%; the 2026-09-02
+reweight (B fix + return-frontier step) then moved it to about -32%. The section is
+kept as-is because it is what motivated adding the overlay.**
 
-- **A** (62% of weeks — largest state by far): satellite trimmed 35%→20%
-  (still 100% TQQQ, QLD not used here), +0.030 full-timeline Sharpe,
-  confirmed on holdout (1.116). Best-evidenced change in this update.
-- **D** (13.5% of history, second-most after A): the single biggest
-  structural change in the table — drops core AND TQQQ entirely for
-  leverage + cash, +0.025 full-timeline Sharpe, confirmed on holdout (1.088)
-  at the original 70% QLD / 30% cash split. Moderate (not thin, not large)
-  sample; flagged as the row most worth re-checking if D's live behavior
-  ever looks off, given the size of the jump relative to the evidence base.
-  **Re-examined 2026-09-01** (an XLU tilt was tried and reverted the same
-  day) — see "State D: QLD/XLU reweight, tried and reverted" below.
-- **B, C, F**: four-leg search found "better" search-period weights for all
-  three, but each made FULL-timeline Sharpe *worse* (-0.036, -0.069, -0.106
-  respectively) — search-only overfitting, not adopted. Confirms rather than
-  displaces their existing rationale (below).
-- **E**: four-leg search's "best" was 100% cash — a corner solution (cash's
-  near-zero variance trivially wins a Sharpe objective regardless of real
-  foregone return, a recurring artifact in this project's search work) —
-  rejected regardless of its Sharpe number. Superseded by the XLU update
-  below, which changes E a different way (not more cash — a defensive
-  equity leg instead of half of core).
+`paper-track/long_history_backtest.py` runs the LIVE weights (same
+`target_weights_with_micro`, same 4bps cost model, weekly rebalance) from
+2000-07 to 2026-08 by substituting instruments that have long history:
+QQQ total return as the core, SYNTHETIC 2x/3x for QLD/TQQQ, real XLU, and
+3-month T-bill as cash. The synthetic leverage is validated against the real
+funds over their full overlap -- TQQQ real CAGR 42.22% vs synthetic 42.14%
+(gap -0.08pp/yr), QLD 35.01% vs 34.63% (-0.39pp/yr) -- using a single
+0.6%/yr underlying-income term that is approximately QQQ's real dividend
+yield and fits BOTH the 2x and 3x fund, which a fitted fudge factor would
+not. Run with `--validate` to re-check. **Caveat: core is QQQ, not SPMO, so
+read this as a test of the REGIME MACHINERY, not of the live design's
+absolute returns.**
 
-Original (pre-QLD, TQQQ-only) per-state rationale, still operative for B, C,
-F (E's is superseded, see above and below):
+| period | strat CAGR | QQQ CAGR | strat Sharpe | strat MaxDD |
+|---|---|---|---|---|
+| 2000-07..2015-10 (**100% out-of-sample**) | 4.51% | 1.79% | 0.311 | **-65.11%** |
+| 2015-11..2026-08 (the fitted window) | 23.11% | 19.24% | 1.051 | -26.75% |
+| Full 2000..2026 | 11.84% | 8.67% | 0.617 | **-65.11%** |
 
-- **B**: every axis tested (satellite weight, core/cash split) points toward
-  MORE leverage, monotonically, with no plateau found even at 80%
-  satellite. Only 4 independent episodes in 16 years (22/16/30/29 trading
-  days) — direction trusted, magnitude not. 25/75 is a deliberately
-  conservative pick below the raw ~80% peak.
-- **C**: monotonic — full deployment, no satellite, no cash, confirmed best
-  on every axis tested.
-- **F**: satellite strictly hurts, faster than E. Core/cash sweep found F's
-  own max drawdown is COMPLETELY UNAFFECTED by F's weight across the full
-  0-100% range — reducing exposure here is close to free efficiency, not a
-  risk trade-off. 14.3% of history, third-most.
+Two findings, pulling in opposite directions.
 
-### The XLU update to state E (2026-08-31)
+**The good one: the regime machinery survives genuine out-of-sample data.**
+Every per-state weight in `state.py` was fit inside the 2015-11+ window, so
+2000-2015 is data no parameter has ever seen. Over it the strategy still beat
+QQQ on CAGR (4.51% vs 1.79%) and Sharpe (0.311 vs 0.196), and it cushioned
+every real bear: dot-com -54.7% vs QQQ's -72.8%, GFC -28.1% vs -38.3%, 2022
+-17.6% vs -28.8%. That is meaningful validation -- the design is not merely
+an artifact of the window it was fit in.
 
-E's 50% core allocation was fully replaced with 50% XLU (utilities sector) —
-cash unchanged at 50%. This is the single most-validated speculative change
-in this file, having survived three independent passes where every other
-candidate tested failed at least one:
+**The bad one: max drawdown is -65%, not -26%** (pre-vol-targeting; ~-42%
+with the overlay, ~-32% after the 2026-09-02 reweight). Every drawdown figure
+elsewhere in this file comes from the 2015-11+ window and is roughly
+2.5x too optimistic about the worst case. The dot-com decline alone takes
+this design down -61.9% peak-to-trough. Anyone reading "-25.96% MaxDD" as
+the risk of this strategy is reading a number produced by a sample with both
+century-defining bear markets removed.
 
-1. **Five-leg search** (`paper-track/five_leg_xlu_search.py`): XLU added as a
-   standalone leg (not blended into core), one state varied at a time
-   against the live baseline, full-timeline Sharpe, search/holdout split.
-   E: +0.043 Sharpe, holdout-confirmed (1.092). D also looked promising here
-   (+0.020) but did NOT survive step 3 below — see the rejection note.
-2. **Finer-grid robustness check**: E's peak is a narrow, single-asset
-   corner (100% of the state-E-search grid's top results cluster near 100%
-   XLU) — inherently narrow by construction, not necessarily fake, but
-   flagged for extra scrutiny given this project's history with corner
-   solutions.
-3. **Isolated single-state validation**
-   (`paper-track/isolated_state_validation.py`): the decisive test. Search
-   and holdout computed using ONLY state E's own discontiguous weeks (13
-   search weeks, 19 holdout weeks pre/post 2020-01-01), cash fixed at 50% to
-   avoid the degenerate-cash-corner trap, NO anchoring to the rest of the
-   portfolio's variance. Candidate (0 core / 0 TQQQ / 0 QLD / 50% XLU / 50%
-   cash) beat the live weights (50% core / 50% cash) on isolated holdout:
-   +7.5% return, Sharpe 0.873 vs live's +4.5%, Sharpe 0.635.
+Two specific failure modes the recent window also hides, both WHIPSAW rather
+than trend:
+  - **2011: strategy -22.2% while QQQ was +4.1%** -- a 26pp underperformance
+    in an UP year. The classifier churned all six states (A:20 B:5 C:2 D:9
+    E:7 F:9 weeks) through the Aug-2011 crash/recovery, repeatedly
+    de-risking into lows and re-levering into highs.
+  - **COVID 2020: strategy -15.9% vs QQQ -7.1%** -- same mechanism, a crash
+    too fast for a 50/200 classifier to help, then a recovery it was too
+    slow to rejoin.
+Both are the known cost of trend-following: it pays for protection against
+sustained declines with losses in sharp round trips. The 2015-11+ window
+contains one clean trend-bear (2022) and so shows mostly the benefit.
 
-**What was tested alongside XLU and rejected**: SPY blended into core
-(monotonically worse on every metric, including the weak years it was meant
-to help — diversifying the core dilutes the momentum tilt the strategy
-leans into). SCHD, VYM, USMV (all low-fee, 0.06-0.15%, dividend-quality/
-low-vol factor tilts) blended into core AND as standalone state-specific
-legs — all flat-to-worse, none matched XLU's magnitude even at a loose bar
-(`paper-track/defensive_core_blend.py`,
-`paper-track/five_leg_search_all_candidates.py`). BRK.B as a standalone leg
-showed a real signal in E under method (1) but did NOT survive isolated
-validation (3) — live weights beat it in isolation
-(`paper-track/isolated_state_validation.py`). **D/XLU is the clearest
-cautionary result**: it passed methods (1) and looked non-corner and
-holdout-confirmed, but FAILED isolated validation — D's apparent gain was
-an artifact of blending with the rest of the portfolio's variance, not a
-real property of D's own weeks. D's weights are UNCHANGED from the QLD
-update above.
-
-**GLD (gold, tested 2026-08-31, after XLU was already live)**: the loose
-full-timeline search (`paper-track/five_leg_search_all_candidates.py`) found
-a state-E signal even larger than XLU's original one (+0.142 vs +0.043,
-100% GLD corner) — big enough, given this project's history of oversized
-loose-search signals turning out fake (D/XLU, E/BRK.B), to demand the
-decisive test before touching anything live. Two isolated checks
-(`paper-track/gld_validation.py`, `paper-track/isolated_state_validation.py`
-extended to GLD): (a) against the pre-XLU baseline (50% core/50% cash), GLD
-alone "holds up" (+17.3% holdout return, Sharpe 3.70, vs live's +4.5%/0.635)
-— but that's the wrong comparison now that XLU is actually live; (b) run
-head-to-head against XLU directly, with XLU included as a free option in the
-same isolated search grid, the search step itself — using only state E's 13
-pre-2020 search weeks, blind to the holdout — picked 100% XLU over GLD every
-time. GLD only "wins" if you look at the 19 holdout weeks in hindsight and
-pick the asset that did better there (+18.9% GLD vs +12.4% XLU, driven
-mostly by one COVID week, 2020-03-20: XLU -17.1% vs GLD -2.2%) — exactly the
-holdout-cherry-pick this project's search→holdout discipline exists to
-reject. States A, B, D were also checked and GLD did not hold up in any of
-them (live weights beat it on isolated holdout in each). **Verdict: GLD
-rejected as a state-specific replacement/standalone leg** (it does not
-belong in state E in place of or alongside XLU). It was tested again the
-same day in a completely different role — blended into the core across
-every state, not competing with XLU at all — and adopted there; see "The
-GLD core-blend addition (2026-08-31)" below. Data cached at
-`data/defensive_candidates/GLD.csv` for the record.
-
-**Full calendar-year effect** (`paper-track/calendar_year_report.py`-style
-check, run 2026-08-31): flips 2016 from -4.0% to +4.5%, improves 2022 from
--16.6% to -14.3%, every other year unchanged (states outside E don't
-reference this leg). Cumulative return over the full 10.9yr window improves
-from +1130.8% to +1305.4%.
-
-**Caveat, carried forward, don't re-litigate**: this rests on state E's own
-thin sample (32 weeks total, 19 in the isolated holdout) — the most-validated
-speculative change in this file is still built on less independent history
-than A or D. Revisit if E's live behavior ever looks off.
-
-### The GLD core-blend addition (2026-08-31) — SUPERSEDED 2026-09-01
-
-**Superseded the next day** by moving gold out of the core into a standalone
-top-slice — see "Gold: from core-blend to standalone top-slice" further
-below for why and the comparison data. Kept below as history: the
-core-blend numbers are still real backtest results and the reasoning for
-holding *some* gold at all still applies: only the *mechanism* (in-core
-blend vs. standalone leg) changed, not the underlying case for gold
-exposure. Core is pure SPMO again as of 2026-09-01.
-
-The core changed from 100% SPMO to a fixed 75% SPMO / 25% GLD blend, applied
-identically in every state that has a nonzero core weight (`CORE_SPMO_FRAC`,
-`CORE_GLD_FRAC` in `paper-track/state.py`). This is unrelated to GLD's
-rejection as a state-E leg above — that test asked "can GLD replace or
-compete with XLU as a state-specific defensive position" (no); this one
-asks "does a small permanent gold sleeve inside the core improve the whole
-portfolio's risk profile" (yes, modestly).
-
-Unlike every other core-blend candidate tested before it (SPY, SCHD, VYM,
-USMV — see "What was tried and rejected" below, all monotonically worse or
-flat-to-worse on every metric including the two weak years), GLD improves
-max drawdown **consistently in both halves of the data**, not just in
-hindsight on holdout:
-
-| Metric | 100% SPMO (prior) | 75/25 SPMO/GLD (live) |
-|---|---|---|
-| CAGR | 24.91% | 24.46% (-0.45pp) |
-| Sharpe, full timeline | 1.065 | 1.110 (+0.045) |
-| Sharpe, pre-2020 (search) | 0.967 | 0.966 (-0.001, noise-level) |
-| Sharpe, post-2020 (holdout) | 1.123 | 1.191 (+0.068) |
-| Max drawdown | -30.36% | -27.35% (+3.0pp better) |
-| 2016 (weak year) | -4.0% | -3.8% |
-| 2022 (weak year) | -16.6% | -15.4% |
-
-The pre-2020 search-period Sharpe cost is negligible — the same
-both-sides-hold-up pattern that validated E/XLU, not the holdout-only
-pattern behind every rejected candidate (D/XLU, E/BRK.B, GLD-as-E-leg
-above, the A1/D1 substate ideas below). Two honest caveats, not
-disqualifying but worth carrying forward: (1) a meaningful share of the
-full/holdout-period benefit comes from GLD's own large 2020 and 2025
-rallies landing in years the core was already strong (added beta from a
-second bull run, not pure downside cushioning) rather than repeatable
-diversification value — don't expect the full effect to recur if gold goes
-flat for a few years; (2) 90/10 and 50/50 blends were also tested (see the
-weekly-report conversation record) — 90/10 costs almost nothing but buys
-less protection, 50/50 buys more protection but the pre-2020 Sharpe cost
-turns clearly negative (-0.023); 75/25 was chosen as the middle of that
-dial, not because it's a local optimum the data singled out.
-
-Rejected in the same core-blend role: SPY, SCHD, VYM, USMV (see below) —
-none matched XLU's original core-blend result, let alone GLD's. Confirmed
-tradable, fractional, in the live account (576391551).
-
-### Gold: removed 2026-09-01 (user decision)
-
-Gold is out of the live design entirely, by explicit user instruction —
-not because the backtest evidence turned against it. `STANDALONE_GOLD_FRAC`
-is set to `0.0` in `paper-track/state.py`; the code path
-(`target_weights_with_gold()`, `validate_weights_6leg()`,
-`TARGET_WEIGHT_LEGS_WITH_GOLD`) is kept intact, not deleted, in case gold
-is reconsidered later — flip the constant back to reactivate it.
-
-For the record, the same-day research trail below (kept as history, not
-current design) never found a reason in the numbers to drop it: candidate
-replacements were tested (BTAL, TLT, DBC, PDBC, KMLM — see
-`paper-track/tlt_standalone_test.py`, `multi_candidate_test.py`,
-`btal_downturn_test.py`), downturn-only variants of both gold and BTAL
-were tested and rejected (concentrating a diversifier only in D/E/F
-underperforms holding it flat everywhere, for every candidate tried),
-alternate uses of the freed-up 20% were tested (extra cash, extra
-leverage, extra core, both uniform and bucketed by offense/defense
-regime — see `gold_removed_realloc.py`, `gold_removed_bucketed.py`,
-`sensitivity_full.py`), and a full continuous-fraction sensitivity sweep
-confirmed gold's chosen 20% sits on a genuine, non-overfit part of the
-Sharpe surface. None of that changes the outcome here: this section
-documents the design that was in place from 2026-09-01 (the standalone
-top-slice) through its removal the same day, kept for continuity in case
-the decision is revisited.
-
-### Gold: from core-blend to standalone top-slice (2026-09-01, historical)
-
-The in-core 75/25 SPMO/gold blend above had a structural flaw not visible
-until checked directly: because `core_weight` is **0% in states D and E**
-(`TARGET_WEIGHTS`), blending gold into the core meant gold exposure
-silently dropped to **zero exactly in pullback and breakdown** — the states
-where a safe-haven asset would matter most. Prompted by the user asking to
-double-check the 25% weight (gold had just had a historically strong
-decade, including +62.3% in 2025 alone — worth checking the case wasn't an
-artifact of one outlier year), then to explicitly move gold outside the
-core and re-evaluate.
-
-**Standalone gold beat the in-core design on every metric, in every period
-tested**, including the honest checks (excl-2025, pre-2020 search, 2020-24
-holdout — not just the full-timeline number 2025 can inflate):
-
-| Period | Best in-core Sharpe (25-30% of core) | Standalone Sharpe (20%, every state) |
-|---|---|---|
-| Full timeline | 1.183 | 1.244 |
-| Excl. 2025 | 1.117 | 1.164 |
-| Pre-2020 search | 1.151 | 1.247 |
-| 2020-24 holdout | 1.128 | 1.154 |
-
-**Isolation check** (is this gold-specific, or just generic de-risking?): a
-standalone slice of plain **cash** at the same weight underperforms the
-gold slice on both Sharpe and CAGR in every period — cash's MaxDD is
-marginally better in isolation (zero volatility, expected), but gold's
-extra return more than compensates on a risk-adjusted basis. Confirms real
-diversification value, not a dilution artifact.
-
-**Per-state weight optimization was tried and rejected** — classic
-overfitting on thin per-state samples. States C and E "optimized" to a
-nonsensical 0% with search-period Sharpe above 4.8 (corner-solution
-artifacts from 10-13-week samples); states B, D, F all pushed to the grid
-edge (40-50%); state F's holdout Sharpe **collapsed from 3.81 (search) to
-0.058 (holdout)** — the same search-only-overfit pattern documented
-elsewhere in this file. The full-timeline composite built from each state's
-"optimal" weight looked best of everything tested (Sharpe 1.276) but
-**lost to the simple uniform 20% weight on the one honest test** (2020-24
-holdout: per-state 1.073 vs. uniform 20%'s 1.154) — reject per-state
-weighting for the same reason every other search-only-overfit result in
-this file was rejected.
-
-**A defensive tilt (more gold in D/E/F than A/B/C) was also tried and
-rejected** — the user's own hypothesis, tested directly and refuted by the
-data. A 2D grid over (offense weight, defense weight) found the Sharpe
-surface ridges along **offense ≈ defense**, not toward extra defense
-weight — at every offense level tested, the best-performing defense weight
-was statistically indistinguishable from just using the same weight as
-offense. Every deliberately defense-tilted combination underperformed the
-flat/uniform version at the same total gold budget on the honest 2020-24
-holdout (0% offense / 35% defense, the most extreme tilt tested, scored
-worst of everything: holdout Sharpe 1.099 vs. uniform 20/20's 1.154).
-Reason: offense states (A/B/C) are 407 of 564 weeks — most of the
-timeline — so starving them of gold to concentrate it in the 157
-defense-state weeks removes diversification value during the majority of
-history to fund a bigger position during the minority.
-
-**Weight chosen: 20%** (`STANDALONE_GOLD_FRAC` in `paper-track/state.py`).
-15% was also defensible (same flat-plateau shape held up in every check),
-but 20% strictly dominated it — better Sharpe, CAGR, AND MaxDD in every
-single period tested, no tradeoff either way.
-
-**Mechanism**: `target_weights_with_gold(state, micro_agrees)` composes the
-micro overlay with this — every leg from `target_weights_with_micro()` is
-scaled by 0.80, and gold added at a flat 0.20, in every state, every time.
-This is the function live triggers call now; `validate_weights_6leg()` is
-its matching guard (6 legs: core, tqqq, qld, xlu, gold, cash).
-
-**One caution carried forward, same as the in-core version's**: this
-backtest window is an unusually strong decade for gold. Even the honest
-2020-24 holdout keeps showing "more gold is better" as weight rises past
-40% — treat that climb skeptically rather than chasing it; it likely
-reflects gold's trailing tailwind more than a structural edge that will
-persist at arbitrarily high weights. 20% was chosen from the flat,
-well-evidenced part of the curve, not the extrapolated tail.
-
-### What was tried and rejected
-
-A full joint grid search across all six states simultaneously (12 free
-dimensions) found a config with better full-window Sharpe (0.988 vs 0.978)
-but WORSE holdout Sharpe (0.949 vs 0.961) than what's live. Re-fitting the
-same search using ONLY 2015-2019 data and checking 2020+ collapsed from
-search Sharpe 1.446 to holdout Sharpe 0.579 — the worst result anywhere in
-this evaluation. Free-form joint optimization overfits fast; every live
-parameter here was set by single-state analysis with an economic story, not
-blind search. Don't re-introduce unconstrained joint tuning.
-
-Substate research (VIX/credit-spread/breadth/utilities-relative-strength,
-both level and rate-of-change versions — `paper-track/substate_research.py`,
-`substate_research_deltas.py`) tested whether any of the six states should be
-split further by external market data. Nothing survived a corner-solution
-check, a holdout check, AND a placebo check (random meaningless splits
-cleared the same "looks like a finding" bar ~10% of the time by chance).
-Below-state partitioning isn't supported by the available history — six
-states is treated as the right granularity, not a stepping stone to a finer
-one.
-
-State F substate on 50dma SLOPE (2026-09-01) — rejected, and the
-investigation produced a MORE IMPORTANT correction, below. A search for
-factors predicting the direction of individual state-F weeks (bucketed as
-big-up >=+3%, big-down <=-3%, mild) tested, in order: 14 cross-asset ETFs,
-VIX, credit spreads, breadth, rates, and finally ~20 moving-average
-relationships (distances, MA-vs-MA spreads, slopes, acceleration,
-vol-normalised distances, death-cross age). Only the 50dma's SLOPE (its
-20-day rate of change) looked promising: steeper decline preceding bigger
-bounces, a capitulation/mean-reversion story. It appeared to survive
-search/holdout, episode breadth (11 of 14), exclusion of 2022, and
-parameter-insensitivity. **It was still wrong**, for two reasons worth
-remembering:
-  1. EXPOSURE CONFOUND. Ranking the 50dma slope against its own trailing
-     2-year distribution splits state-F weeks 55/7, not ~50/50 -- inside an
-     established downtrend the 50dma is almost always falling relative to a
-     window dominated by uptrend weeks. So the "rule" was really "hold 60%
-     core in 89% of F weeks", averaging 54% exposure vs the live 30%. Most
-     of its apparent edge was simply holding more, not signal. ALWAYS
-     exposure-match before crediting a conditional weight rule -- and note
-     that an "inverted rule performs badly" sanity check proves NOTHING
-     under this confound (inverting also halves average exposure).
-  2. IT DIED ON MORE DATA. See below.
-
-**The 2015+ backtest window was hiding both bear markets (found 2026-09-01).**
-Every state-F number in this file and in the evaluation artifact was computed
-on data starting 2015-11 (SPMO's inception, which caps the *strategy*
-backtest). But a factor/state study needs only QQQ daily closes, so it can run
-much further back. `data/qqq_long_history.csv` now holds a merged QQQ daily
-series from **1999-09-15** (fetched via get_equity_historicals, splice
-verified against the existing 2009+ kairos series across 102 overlapping days
-at a price ratio of exactly 1.000000). Re-running state F on it:
-
-| | 2009-2026 (what everything above used) | Full 1999-2026 |
-|---|---|---|
-| F weeks / episodes | 62 / 14 | **197 / 28** |
-| QQQ compounded over F weeks | **+17.5%** | **-39.4%** |
-| big_up / big_down / mild | 20 / 14 / 28 | 50 / 58 / 89 |
-
-The post-2015 window contains no sustained bear market except 2022 -- it
-excludes the 2000-02 dot-com crash and the 2008-09 GFC, i.e. exactly the
-episodes state F exists for. On the real history QQQ *loses* ~39% cumulatively
-across F weeks and big-down weeks outnumber big-up ones. Any framing of
-"state F underperforms QQQ, why so defensive" is an artifact of the truncated
-sample; F's defensive posture is validated much more strongly than the
-2015+ numbers suggest (and this finding is what drove F to 100% cash on
-2026-09-02 — see below), and the risk/return frontier computed for F on the
-short sample understates the case for staying defensive. The slope signal
-itself also died here: permutation p went the WRONG way with 3.2x the data
-(0.083 -> 0.189) and episode breadth flipped from 11-helped/2-hurt to
-11-helped/15-hurt. A real effect strengthens with more data.
+The state mix also differs materially, which is why the recent window
+flatters the design: state F was 8.2% of the fitted window but 15.2% of the
+full history, and state A 62.2% vs 52.2%. The recent era simply had more
+established uptrend and less established downtrend than the long run.
 
 ### State F -> 100% cash (changed 2026-09-02)
 
@@ -879,7 +1420,7 @@ this account's stated objective is to outperform SPY and QQQ. Lowering it is
 the honest way to buy drawdown protection if that objective ever changes --
 a deliberate return-for-risk trade, not a free improvement.
 
-### Improvement search on full history (2026-09-02) — PROPOSED, awaiting decision
+### Improvement search on full history (2026-09-02) — B edge APPLIED 09-02, rest rejected
 
 Prompted by the by-year tables: the strategy's losses to QQQ cluster in sharp
 recovery years and one whipsaw year, and every per-state weight was fit on the
@@ -998,133 +1539,6 @@ Reading it:
 - Proxy leverage in 2000-02 runs through SYNTHETIC TQQQ/QLD; real funds did
   not exist. The regime behaviour is the finding, not the decimals.
 
-### Fast re-entry overlay, 20/100 (2026-09-06) — APPLIED
-
-`FAST_REENTRY_ENABLED`, `FAST_SHORT_N = 20`, `FAST_LONG_N = 100`,
-`FAST_REENTRY_MAP`, `compute_fast_states()`, `effective_state()` in
-`state.py`; `target_weights_with_voltarget(..., fast_state=)`. Tests:
-`paper-track/fast_ma_overlay_test.py`, `fast_ma_overlay_r2.py`.
-
-**Why.** Comparing the live design to a published "100% TQQQ above the
-50-day, cash below" switch showed the two use the same line (six 2025 switch
-dates all within 0–2 days of our A/B/C ↔ D/E/F transitions) and that the
-whole 2025 gap (switch +59%, live +16%) was our re-entry ladder: C (1.0x)
-→ B (1.25x) → A (2.0x) took from 1 May to 24 June while the switch was 3x
-from day one. Raising B/C weights outright fails on the 26y record (B is a
-failed bounce in 17/27 episodes; C at A weights makes 2022 −18%). The
-overlay instead reads the SAME six-state machine on a 20/100 pair and uses
-it only to skip ladder rungs when the fast reading already confirms:
-
-| macro | fast | weights held |
-|---|---|---|
-| B or C | A or B | **A** (50/50) |
-| F | A, B or C | **C** (100% core) |
-| anything else | — | unchanged |
-
-A, D, E are untouched; the overlay never de-risks; it is not a state.
-`effective_state()` is what `needs_rebalance()`'s `regime_changed` compares.
-
-**Evidence.** 26y proxy 17.98% / 0.739 / −36.4% → **19.77% / 0.779 /
-−34.8%**; Sharpe up in both eras (search 0.922 → 0.937, holdout 0.594 →
-**0.655**, the largest out-of-sample gain of anything tested this session);
-exposure- and beta-matched controls PASS at k = 1.000 (same average
-exposure — the gain is timing, not risk); max-statistic permutation over a
-9-window grid p = 0.01; plateau 20/80 – 30/100 all both-era positive; per
-year better 15/27, flat 8, worse 4 (2000 −8pp, 2022 −5pp, 2018 −4pp, 2003
-−3pp — bear-market rallies). Real SPMO-era weekly 26.60% / 1.004 / −31.4%
-→ 27.99% / 1.030 / −31.4%; 2019 +38 → +50, 2023 +52 → +60, 2025 +13 → +18,
-2022 −13 → −17. Rebalances/yr 38 → 42. In 2025 it would have held 100%
-core from 24 Apr (macro still F) and A weights from 2 May (macro C)
-instead of 24 Jun.
-
-**Rejected variants (do not re-run):** fast windows with a 10- or 15-day
-short leg (MaxDD −41 to −47%, holdout gain gone — 15/60 holdout 0.586 <
-live); 20/60 (+1pp real return, −38% MaxDD — the non-Pareto sibling);
-combining 20/60 and 20/100 by AND (= 20/100), OR (= 20/60), or a strict
-P>20>60>100 stack (no effect) or a loose one (−43% MaxDD, 2022 −27%);
-using the fast reading to EXIT early (A + fast down → D weights: worse both
-eras); E + fast up → D weights (no effect); requiring fast confirmation
-before any macro transition (worse). The 30/150 micro overlay disabled
-09-02 was a different design (changed A/D, fit on 2015+, nothing on
-holdout) and stays disabled.
-
-New standing figures: worst case about **−35%** (proxy), 2022-type year
-about **−17%** real / −27% proxy.
-
-### Return frontier, step 2 (2026-09-06) — APPLIED
-
-Owner decision after the whole-strategy review ("what if I want more"). The
-frontier ladder (ad-hoc run, figures reproduced by `improvement_search.py`'s
-harness and `return_frontier.py`'s real-instrument rows):
-
-| rung | 26y CAGR | Sharpe | MaxDD | 2022 | real CAGR | real Sharpe | real MaxDD |
-|---|---|---|---|---|---|---|---|
-| 2026-09-02 design (A70/30, D85% QLD) | 15.69% | 0.752 | -32.4% | -21.0% | 23.25% | 1.061 | -26.7% |
-| A60/40 | 16.55% | 0.747 | -34.2% | -21.6% | 24.44% | 1.031 | -28.6% |
-| A60/40 + D100% QLD | 17.19% | 0.744 | -34.7% | -22.9% | 25.50% | 1.030 | -29.6% |
-| **A50/50 + D100% QLD (APPLIED)** | **17.98%** | **0.740** | **-36.5%** | **-23.5%** | **26.60%** | **1.004** | **-31.4%** |
-| A50/50 + VT 25% | 17.57% | 0.721 | -37.8% | -26.5% | 26.63% | 0.992 | -32.3% |
-| A40/60 + VT 25% | 18.34% | 0.716 | -39.5% | -27.2% | 27.60% | 0.964 | -34.1% |
-| A50/50, vol target OFF | 16.84% | 0.674 | -54.6% | -27.4% | 27.47% | 0.989 | -38.3% |
-
-What was learned mapping it: **A leverage is the cheap rung** (~+0.85pp CAGR
-per 10pp of TQQQ for ~-1.8pp MaxDD, Sharpe nearly flat); **D leverage is
-nearly free**; **raising the vol target is the expensive rung** (+0.2pp CAGR
-for a 2022-type year going from -22% to -26%); **B leverage has negative
-expected return on the 26y record** (QQQ negative in 17/27 B episodes, 4
-exits straight to F) and only looks good on the 2015+ window where every
-bounce succeeded — B stays 75/25; **vol target off is a trap** (less return
-than A50/50 with it on, -55% MaxDD, 6 years underwater). Beyond A50/50 the
-real-window Sharpe drops below 1.0.
-
-New standing figures: worst case about **-36%** (proxy), COVID-shaped event
-about **-34%**, 2022-type year about **-24%**, 2025 tariff-shaped event about
-**-25%**. Search/holdout Sharpe 0.922 / 0.594 (was 0.941 / 0.603). This is a
-return-for-drawdown trade the owner priced, not an edge. Effective exposure
-in A is now 2.0x; a -5% QQQ day is about a -10% strategy day. Real-instrument
-2020 under this design: +43.8% vs QQQ +47.6% (Feb-Mar -21%, April lag -10pp);
-2024: +48.1% vs +24.8%; 2026 YTD to Aug: +24.8% vs +17.4%.
-
-### Zero-target-leg sweep (added 2026-09-04)
-
-`needs_rebalance()` now fires when any leg's target is **exactly 0%** but it is
-still held above **`ZERO_LEG_EPS` = 0.10%**, regardless of total L1 drift.
-
-**Why.** On 2026-09-04 realised vol fell to 19.78%, below the 20% target, so
-the multiplier hit 1.0 and the cash target became exactly 0.00% — while the
-account still held 0.50% BOXX. Total drift was 0.99%, inside the 3% band, so
-nothing traded and nothing would have until an unrelated move pushed drift
-past 3%. The return drag is trivial (~5bp/yr while it lasts); the real cost is
-that the stub contributed 0.5pp of the 0.99% reading and never decays, so a
-permanent floor on the drift metric makes a 3% band behave like a ~2.5% band
-for genuine drift.
-
-**This is not the per-leg threshold removed on 2026-09-01.** That one decided
-which legs to SKIP once a rebalance had fired, and left small legs adrift.
-This only ever ADDS a reason to fire; when it fires, every leg still goes to
-target. The two rules are not in tension.
-
-**The evidence says free, not profitable** (`paper-track/zero_leg_sweep_test.py`,
-daily 2000-2026 proxy). CAGR, Sharpe and MaxDD are identical to three decimal
-places in all three eras — full 15.69% / 0.752 / −32.4%, OOS 11.25% / 0.603,
-fitted 22.29% / 0.941 — for +0.2 rebalances/yr and +0.01x turnover. It is
-adopted for coherence ("target 0% means hold 0%"), not for return. Anyone
-re-deriving this should know the numbers neither argue for it nor against
-removing it.
-
-The stub is rarer than it looks: a zero leg set to exactly 0 stays at 0 under
-drift, so it only reappears when the target *changes* to zero while something
-is still held. Stub days are 0.7% of history without the rule and 0.0% with
-it. It cannot oscillate. 0.25% and 0.50% epsilons test identically but leave
-~0.16% stubs standing; 0.10% (~$100 on this account, above fractional-fill
-dust) was taken because it clears the case completely.
-
-**Standing lesson: before trusting any state-level statistic, check whether
-the sample window contains the market conditions that state is meant to
-handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
-prices (state classification, regime statistics, signal research); the
-2015-11 floor is only binding where SPMO/QLD/XLU/BOXX leg returns are needed.
-
 ### Downturn review: states D/E/F (2026-09-06) — NEGATIVE, no change
 
 Prompted by the Jan-2024..Sep-2026 monthly table (down-capture vs QQQ 1.44x,
@@ -1184,7 +1598,7 @@ robustness:**
 ones already on the frontier table — A/B leverage and the vol target — and
 those are return-for-drawdown trades the owner has already priced.
 
-### Whole-strategy review (2026-09-06) — one PROPOSED change, awaiting decision
+### Whole-strategy review (2026-09-06) — no change (after-tax proposal declined)
 
 `paper-track/strategy_review.py` and `strategy_review_r2.py`. Four questions
 the project had not asked before; results:
@@ -1243,396 +1657,83 @@ the project had not asked before; results:
   is assumed. If the account is tax-advantaged none of this applies and
   the live D row stays.
 
-  **Proposed: `D = (0.60, 0.40, 0.00, 0.00, 0.00)`. Not applied — needs the
-  owner's confirmation that the account is taxable.**
+  **Proposed `D = (0.60, 0.40, 0.00, 0.00, 0.00)` on after-tax grounds — DECLINED
+  by the owner 2026-09-06 (gains are offset by a separate tax-loss-harvesting
+  account, so after-tax is not the objective). On pre-tax merits alone it is a
+  tie on real instruments and was not applied. D later moved to 100% QLD
+  ("Return frontier, step 2").**
 
-### 26-year stress test: the design had a -65% drawdown in it (2026-09-01)
+### Return frontier, step 2 (2026-09-06) — APPLIED
 
-**Read this together with "Volatility targeting" above: everything in this
-section describes the design BEFORE the vol overlay went live the same day.
-The overlay cut the worst case from ~-65/-70% to about -42%; the 2026-09-02
-reweight (B fix + return-frontier step) then moved it to about -32%. The section is
-kept as-is because it is what motivated adding the overlay.**
+Owner decision after the whole-strategy review ("what if I want more"). The
+frontier ladder (ad-hoc run, figures reproduced by `improvement_search.py`'s
+harness and `return_frontier.py`'s real-instrument rows):
 
-`paper-track/long_history_backtest.py` runs the LIVE weights (same
-`target_weights_with_micro`, same 4bps cost model, weekly rebalance) from
-2000-07 to 2026-08 by substituting instruments that have long history:
-QQQ total return as the core, SYNTHETIC 2x/3x for QLD/TQQQ, real XLU, and
-3-month T-bill as cash. The synthetic leverage is validated against the real
-funds over their full overlap -- TQQQ real CAGR 42.22% vs synthetic 42.14%
-(gap -0.08pp/yr), QLD 35.01% vs 34.63% (-0.39pp/yr) -- using a single
-0.6%/yr underlying-income term that is approximately QQQ's real dividend
-yield and fits BOTH the 2x and 3x fund, which a fitted fudge factor would
-not. Run with `--validate` to re-check. **Caveat: core is QQQ, not SPMO, so
-read this as a test of the REGIME MACHINERY, not of the live design's
-absolute returns.**
+| rung | 26y CAGR | Sharpe | MaxDD | 2022 | real CAGR | real Sharpe | real MaxDD |
+|---|---|---|---|---|---|---|---|
+| 2026-09-02 design (A70/30, D85% QLD) | 15.69% | 0.752 | -32.4% | -21.0% | 23.25% | 1.061 | -26.7% |
+| A60/40 | 16.55% | 0.747 | -34.2% | -21.6% | 24.44% | 1.031 | -28.6% |
+| A60/40 + D100% QLD | 17.19% | 0.744 | -34.7% | -22.9% | 25.50% | 1.030 | -29.6% |
+| **A50/50 + D100% QLD (APPLIED)** | **17.98%** | **0.740** | **-36.5%** | **-23.5%** | **26.60%** | **1.004** | **-31.4%** |
+| A50/50 + VT 25% | 17.57% | 0.721 | -37.8% | -26.5% | 26.63% | 0.992 | -32.3% |
+| A40/60 + VT 25% | 18.34% | 0.716 | -39.5% | -27.2% | 27.60% | 0.964 | -34.1% |
+| A50/50, vol target OFF | 16.84% | 0.674 | -54.6% | -27.4% | 27.47% | 0.989 | -38.3% |
 
-| period | strat CAGR | QQQ CAGR | strat Sharpe | strat MaxDD |
-|---|---|---|---|---|
-| 2000-07..2015-10 (**100% out-of-sample**) | 4.51% | 1.79% | 0.311 | **-65.11%** |
-| 2015-11..2026-08 (the fitted window) | 23.11% | 19.24% | 1.051 | -26.75% |
-| Full 2000..2026 | 11.84% | 8.67% | 0.617 | **-65.11%** |
+What was learned mapping it: **A leverage is the cheap rung** (~+0.85pp CAGR
+per 10pp of TQQQ for ~-1.8pp MaxDD, Sharpe nearly flat); **D leverage is
+nearly free**; **raising the vol target is the expensive rung** (+0.2pp CAGR
+for a 2022-type year going from -22% to -26%); **B leverage has negative
+expected return on the 26y record** (QQQ negative in 17/27 B episodes, 4
+exits straight to F) and only looks good on the 2015+ window where every
+bounce succeeded — B stays 75/25; **vol target off is a trap** (less return
+than A50/50 with it on, -55% MaxDD, 6 years underwater). Beyond A50/50 the
+real-window Sharpe drops below 1.0.
 
-Two findings, pulling in opposite directions.
+New standing figures: worst case about **-36%** (proxy), COVID-shaped event
+about **-34%**, 2022-type year about **-24%**, 2025 tariff-shaped event about
+**-25%**. Search/holdout Sharpe 0.922 / 0.594 (was 0.941 / 0.603). This is a
+return-for-drawdown trade the owner priced, not an edge. Effective exposure
+in A is now 2.0x; a -5% QQQ day is about a -10% strategy day. Real-instrument
+2020 under this design: +43.8% vs QQQ +47.6% (Feb-Mar -21%, April lag -10pp);
+2024: +48.1% vs +24.8%; 2026 YTD to Aug: +24.8% vs +17.4%.
 
-**The good one: the regime machinery survives genuine out-of-sample data.**
-Every per-state weight in `state.py` was fit inside the 2015-11+ window, so
-2000-2015 is data no parameter has ever seen. Over it the strategy still beat
-QQQ on CAGR (4.51% vs 1.79%) and Sharpe (0.311 vs 0.196), and it cushioned
-every real bear: dot-com -54.7% vs QQQ's -72.8%, GFC -28.1% vs -38.3%, 2022
--17.6% vs -28.8%. That is meaningful validation -- the design is not merely
-an artifact of the window it was fit in.
+### Pair study: macro × fast state pairs (2026-09-06) — NEGATIVE, no change
 
-**The bad one: max drawdown is -65%, not -26%** (pre-vol-targeting; ~-42%
-with the overlay, ~-32% after the 2026-09-02 reweight). Every drawdown figure
-elsewhere in this file comes from the 2015-11+ window and is roughly
-2.5x too optimistic about the worst case. The dot-com decline alone takes
-this design down -61.9% peak-to-trough. Anyone reading "-25.96% MaxDD" as
-the risk of this strategy is reading a number produced by a sample with both
-century-defining bear markets removed.
+`paper-track/pair_study.py`, `pair_study_r2.py`, `pair_mix_search.py`.
+Every day is one of 36 (macro 50/200, fast 20/100) pairs. Census, then
+one-change tests (hold a different row on a pair's days), pair-specific
+weight mixes, and cash-in-pair, on both fast windows (20/100 and 20/60):
 
-Two specific failure modes the recent window also hides, both WHIPSAW rather
-than trend:
-  - **2011: strategy -22.2% while QQQ was +4.1%** -- a 26pp underperformance
-    in an UP year. The classifier churned all six states (A:20 B:5 C:2 D:9
-    E:7 F:9 weeks) through the Aug-2011 crash/recovery, repeatedly
-    de-risking into lows and re-levering into highs.
-  - **COVID 2020: strategy -15.9% vs QQQ -7.1%** -- same mechanism, a crash
-    too fast for a 50/200 classifier to help, then a recovery it was too
-    slow to rejoin.
-Both are the known cost of trend-following: it pays for protection against
-sustained declines with losses in sharp round trips. The 2015-11+ window
-contains one clean trend-bear (2022) and so shows mostly the benefit.
+- The three cells the overlay acts on (CA, CB, FC) are the cleanest positive
+  reads. EC (45 d) is the only small cell consistent in both halves (−44
+  bp/day) and already holds the defensive row. Cells under ~100 days have
+  halves that disagree in sign — anecdotes, not signals.
+- **DD → E/F/C** and **EF → C/D/A** pass the both-era filter on the proxy
+  (DD→E: 21.24% / 0.856, controls pass, max-stat p = 0.03) but **fail on
+  real instruments** (DD→E 23.85% / 0.940 vs live 27.99% / 1.030, with
+  ±15–20pp year swings; EF→C flat-to-worse). DD's "zero return" has no
+  internal structure (returns by depth below the 50d are +5/+3/+7 bp in the
+  middle bins).
+- 20/60 pairs: best gain +0.047 Sharpe, permutation p = 0.20. Nothing.
+- Pair-specific mixes (38 vectors × 9 big cells, chosen on search-era
+  Sharpe): proxy 24.4% / 0.933 both eras, **real 22.47% / 0.873** — the
+  clearest overfit signature in the project.
+- Fitting on the SPMO era alone, split-half both ways: each half picks a
+  different set of pairs, looks superb on its own years (Sharpe 1.3) and
+  loses 10–15pp/yr on the other half.
+- Cash in any further pair: no single pair improves real instruments;
+  combinations cost 0.6–5.4pp/yr real.
 
-The state mix also differs materially, which is why the recent window
-flatters the design: state F was 8.2% of the fitted window but 15.2% of the
-full history, and state A 62.2% vs 52.2%. The recent era simply had more
-established uptrend and less established downtrend than the long run.
+**Standing lesson:** a pair cell is a signal only above ~200 days AND only if
+it survives on real instruments; the proxy alone has enough freedom to fit
+any cell.
 
-### Transition structure (context, not a trading rule)
+### Post-change re-checks (2026-09-06) — all confirmed
 
-States move through a loop, not randomly: A→D is 96% of A's transitions; D
-forks to A (73%) or E (27%); E forks to D (55%) or F (45%); F→C is 79% of
-F's transitions; C forks to B (56%) or F (44%); B→A is 69% of B's
-transitions. No state jumps directly to its opposite (A never → F, F never →
-A) — always transits through the middle. C is the highest-stakes junction:
-near coin-flip odds (56/44) deciding between the two most opposite postures
-in the whole table (B's 75% satellite vs F's 70% cash), a bigger weight swing
-than any other transition. Tested whether a leading indicator (distance to
-200dma at C's entry, or the state prior to C) could predict C's outcome in
-advance — real-looking signal, but only 18 total C-episodes with overlapping
-distributions; not enough to build a rule on. React to the confirmed
-destination state, nothing more.
-
-## Safety guards
-
-1. **`validate_weights(state, core, tqqq, qld, xlu, cash)`** — every trigger,
-   every run, right after `target_weights()`. Weights must sum to 1.0
-   (±0.5%) and the state must be a valid letter. `WeightSanityError` →
-   abort, report, do not trade.
-2. **`circuit_breaker_check(actual_total_value, implied_total_value)`** —
-   every trigger, before placing any order. `implied_total_value` = sum of
-   each held position's quantity × live quote, reconstructed independently
-   from `get_equity_positions` + `get_equity_quotes`. `actual_total_value` =
-   `get_portfolio`'s own `total_value`. These are two views of the same
-   number, not two predictions — a gap beyond 2% tolerance means a data
-   error, bad fill, unaccounted position, or bug, not market volatility.
-   `CircuitBreakerTripped` → abort, report, do not trade. This is
-   deliberately NOT a "the market moved a lot" breaker — large moves are
-   expected at up to 2.5x effective exposure and are the design working as
-   intended, not a fault condition.
-3. **Wash-sale flagging** — `paper-track/wash_sale.py`,
-   `flag_wash_sales()` + `summarize()`, run on the strategy-era trade list
-   whenever there's a loss-sale. Splits realized losses into usable vs.
-   wash-sale-deferred; never report a deferred loss as reducing this year's
-   tax liability. TQQQ resizes and BOXX buy/sell cycles are now frequent
-   enough that wash sales are closer to the normal case than the exception.
-4. **Compute in code, never hand-add** (added 2026-08-31, after a real
-   incident) — any live financial figure derived by combining two or more
-   other numbers (a "today's total," a "new cumulative," a period subtotal)
-   must be computed programmatically from the raw records
-   (`get_pnl_trade_history`, `get_realized_pnl`, etc.), never composed by
-   hand in prose. On 2026-08-31 a weekly report's headline realized-P&L
-   figures were hand-added and ended up double-counting a pre-existing
-   loss, reporting both "today's total" and "new cumulative" wrong until an
-   independent code-based recomputation caught it (see the weekly report
-   artifact's correction note for that date). `paper-track/consistency_check.py`
-   has a `check_pnl_sum(trade_pnls, expected_total)` helper for exactly this:
-   sum the raw per-trade records and assert the result matches the account's
-   own independently-reported aggregate before reporting either figure. The
-   same file's `check_target_weights()` asserts every row of `TARGET_WEIGHTS`
-   sums to 1.0, independent of `validate_weights()`'s per-run check — run it
-   after any edit to `TARGET_WEIGHTS`. `check_core_blend_fracs()` does the
-   same for `CORE_SPMO_FRAC`/`CORE_GLD_FRAC` (now 1.0/0.0 — core is pure
-   SPMO since gold moved to a standalone leg 2026-09-01) — run it after any
-   edit to the core blend. `check_gold_overlay()` asserts every
-   (state, micro_agrees) combination from `target_weights_with_gold()` sums
-   to 1.0 — run it after any edit to `STANDALONE_GOLD_FRAC` or the micro
-   overlay weights. See `paper-track/README.md` for which scripts in that
-   directory are load-bearing vs. historical record.
-
-   **BOXX data bug, found and fixed 2026-09-01**: BOXX's price feed
-   (`/home/user/robinhood/data/kairos/etf/BOXX.csv`, pulled via
-   `get_equity_historicals`) was a flat placeholder (100.0301) for every
-   date from 2022-01-03 through 2022-12-28 -- not real price data; BOXX's
-   actual listing predates the reliable part of that feed and the vendor
-   backfilled a constant stub before it. `build_cash_index()` only falls
-   back to the T-bill rate when a date is genuinely MISSING from BOXX's
-   history, so this stub silently made every cash leg read a fake 0%
-   return for all of 2022 instead of the real ~1.6-2%+ T-bill yield that
-   year (rates were rising fast). Backtest-only -- live trading pulls
-   real-time quotes, not this historical file, so no live trade was ever
-   affected. Fixed in `paper-track/backtest_overlay_etf.py`'s
-   `load_daily_csv()` via `_strip_boxx_flat_stub()`, which every script in
-   this directory that loads BOXX.csv picks up automatically (all of them
-   import `load_daily_csv` from that one module). Effect on results: small
-   and mostly confined to 2022 and to cash-heavy states (F's isolated
-   annualized return moved from 8.2% to 9.2%, Sharpe 1.081 to 1.211;
-   full-strategy net Sharpe moved from 1.098 to 1.113) -- it did NOT
-   reverse any design conclusion in this file (the state D revert, the
-   micro overlay's edge over the old design, gold's removal) when
-   re-checked against the fix.
-
-## Drawdown-from-high watch (added 2026-09-01)
-
-Informational only — never gates or triggers a trade. The user funds this
-account with occasional manual deposits (transferred by hand, not
-automated) and wanted an objective signal for "is this a real dip worth
-adding extra money to," rather than reacting to any single red day. A
-single day's move is too frequent to be useful: QQQ alone has closed down
-≥2% ~14x/year historically (1.3% daily stdev, so a -2% day is only ~1.5σ).
-Cumulative drawdown from a rolling high is far rarer and a more meaningful
-signal — the strategy's own 2015-2026 backtested daily series (state-
-weighted, not raw QQQ) crossed -5% off its 52-week high ~2.5x/year, -10%
-~1.4x/year, -15% only 3 times in 10.9 years (Dec 2018, Mar 2020, Mar
-2023), -20% exactly once (the Mar 2020 COVID crash).
-
-Mechanism (`paper-track/drawdown_tracker.py`): the daily trigger computes
-the STRATEGY's own daily return every day it runs (yesterday's confirmed
-state's weights, from `target_weights_with_voltarget` (CHANGED 2026-09-01
-from `target_weights_with_micro` — the tracker must describe the portfolio
-actually held, or it alerts on drawdowns the account never had; vol targeting
-cuts full-period MaxDD from -69.9% to -41.6%, so an un-vol-targeted series
-fires the -5%/-10% tiers earlier and more often than reality), dotted with
-that day's official-close-to-close leg returns — SPMO/TQQQ/QLD/XLU/BOXX; gold/IAU
-removed 2026-09-01, no longer part of this), and
-appends it to a small local log (`data/live_nav_index.csv`) via
-`record_return(date, daily_return)`. This builds an independent,
-cash-flow-blind return index — deliberately NOT the account's raw
-`total_value`, so that a manual deposit never itself looks like a new high
-or distorts the reading. `current_drawdown()` compares the latest index
-value to its rolling 252-trading-day high (or all-time high, until the log
-has a year of history — it started empty 2026-09-01, so this runs as an
-all-time-high tracker through roughly September 2027). Thresholds checked:
-**-5%** (low-conviction "worth a look," included at the user's request
-despite being the noisiest tier — ~2.5x/year in backtest), **-10%** (worth
-a modest add), **-15%** and **-20%** (rare, genuinely major dislocations).
-`newly_crossed()` fires only the FIRST day a threshold is breached, not
-every day the account stays below it, so this alerts once per episode, not
-daily during a drawdown.
-
-Separately, at the user's explicit request, a single-day move of **-2% or
-worse** in the strategy's own daily return (the same number computed for
-the log above) is ALSO flagged every time it happens — this one is NOT
-deduplicated like the cumulative-drawdown tiers, since each such day is its
-own event, not a sustained episode. Per this session's own check, this is
-a genuinely frequent occurrence (~10x/year for the strategy's own
-state-weighted series, ~14x/year for raw QQQ) — the user was told this
-explicitly and asked for it anyway, so treat every occurrence as
-low-conviction "FYI" framing, not an escalation.
-
-**Push notifications** (added 2026-09-01, at the user's explicit request):
-both live triggers call the `PushNotification` tool — a real interrupt to
-the user's phone/desktop, not just text in the session transcript — for
-three specific events, and only these three: (1) any regime shift (macro
-state change, or a micro-agreement flip within states A/D), (2) a newly
-crossed drawdown-from-high tier (-5/-10/-15/-20%), (3) any single day at
--2% or worse. Every other routine event (no-change days, ordinary weekly
-reports) stays as in-session/artifact reporting only — pushing for those
-would defeat the purpose by making the signal-to-noise ratio worse.
-
-## Cadence
-
-- **Friday, 15:55 ET** — full weekly routine: compute state, rebalance
-  everything (SPMO core + TQQQ/QLD satellite + BOXX), realized P&L +
-  wash-sale report, update the weekly report artifact.
-- **Monday–Thursday, 15:55 ET** — state-change check only. If the regime
-  hasn't changed since yesterday's confirmed close: no action, no report, no
-  artifact touch (expected outcome most days, ~8 transitions/year). If it
-  has: rebalance immediately to the new state's target weights.
-- Both use the SAME `target_weights()` / `compute_states()` / safety guards.
-  Overlap is intentional and harmless: if the daily check already moved a
-  position to target mid-week, Friday's diff just finds it there and trades
-  nothing extra.
-
-## Reports
-
-- **Weekly report artifact**: https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14
-  — running log, newest week at top, updated by every trigger that trades.
-- **Evaluation artifact**: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2
-  — full backtests, per-state sensitivity, search/holdout checks, the joint
-  grid search failure, calendar-year tables.
-
-## Known limitations (carry these into every report, don't re-litigate them)
-
-- Every parameter here is fit on the same ~11-year SPMO window (16+ years
-  for the QQQ-only regime signal). One real bear market (2022) in the
-  strategy's own live-comparable history — n≈1 for the thing the whole
-  design is supposed to protect against. **This is not a footnote — it
-  actively distorts state-level statistics.** Demonstrated 2026-09-01: on
-  the 2015+ window QQQ *gains* +17.5% across state-F weeks, but on the full
-  1999-2026 history (`data/qqq_long_history.csv`) it *loses* -39.4%, because
-  the short window excludes the 2000-02 and 2008-09 bears. Anything that only
-  needs QQQ prices should be re-checked on the long series before it is
-  believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -36% (proxy, 2000-2026) as of the
-  2026-09-06 reweight (A=50/50, D=100% QLD; -32% under the 09-02 design; see
-  "Return frontier, step 2"). The paragraph below carries the 09-02 figure
-  for the record.** Previously: about -32% (proxy, 2000-2026) as of the
-  2026-09-02 reweight; it was -42% before that and -65 to -70% before
-  volatility targeting was added 2026-09-01.** Do not quote the -19%/-27%
-  SPMO-era figures as the worst case. History of the figure: Measured over 2000-2026 with the QQQ-core
-  proxy (`paper-track/long_history_backtest.py`, `drift_band_test.py`):
-  live weights WITHOUT the vol overlay draw down -69.6% (dot-com alone
-  -67.2%); the CURRENT live design, vol target 20% + 3% drift band, draws
-  down -42.1% (dot-com -38.2%); the 2026-09-02 design (B=75/25, A=70/30,
-  D=85% QLD, micro off) draws down **-32.4%**. QQQ buy-and-hold over the same
-  span is -80.2%. Quote the SPMO-era figure only as "max drawdown in the
-  SPMO-era window", never as the worst case. Cutting the tail from ~-70% to
-  ~-42% is the main reason the vol overlay earned its place; the B fix took
-  it the rest of the way. The same run also shows two whipsaw failures
-  the recent window hides -- 2011 (strategy -22.2% while QQQ was +4.1%) and
-  COVID-2020 (-15.9% vs QQQ's -7.1%) -- which are the standing cost of
-  trend-following through sharp round trips, not fixable by reweighting.
-- B's weights were 25/75 until 2026-09-02, resting on 4 episodes; the full-history
-  re-sweep (27 episodes) reversed the direction to 75/25. The old note, for the record:
-  B's weights (25/75/0) rest on 4 independent episodes. Trust the direction,
-  not the magnitude.
-- Complexity has grown faster than the account: six states × three legs ×
-  wash-sale tracking × a tax-deferral instrument × three independently
-  firing triggers × a monthly reconciliation check. Every added piece is
-  something that can silently break. When extending this further, prefer
-  editing this file and `state.py` over adding new standalone mechanisms.
-- **Dollar-based/fractional market orders placed outside regular hours get
-  CANCELLED by the broker, not queued** (discovered 2026-08-31, the hard
-  way — a real ~$15.2k after-hours SPMO sell sat as `state='cancelled'`,
-  not `'queued'`, silently stalling the GLD migration until caught and
-  fixed manually that evening). The earlier assumption in this file and
-  the trigger prompts ("market closed → orders queue") was simply wrong for
-  this order type. Both live triggers now handle this: use dollar-based
-  market orders in regular hours as normal; outside regular hours, use
-  whole-share LIMIT orders with `market_hours` set to `extended_hours` or
-  `all_day_hours` at a marketable price, and always re-check order state
-  after placing rather than assuming it filled or queued.
-- **The 50/200-day SMA windows themselves have never been validated** --
-  every other parameter here (per-state weights, QLD, XLU, GLD, the
-  substate ideas) went through this project's search/holdout discipline;
-  the classifier's own windows were just inherited from
-  `research/leverage_ma.md`. A sweep (`paper-track/ma_window_sweep.py`,
-  2026-08-31) found shorter pairs (10/100, 20/100) beat 50/200 on both
-  search and holdout Sharpe simultaneously -- a real effect -- but at
-  2-2.5x the state-transition rate, with no transaction-cost or
-  wash-sale-drag modeling to check whether that edge survives real
-  friction. Not adopted; would require re-optimizing every per-state
-  weight against the new classifier's states, not just swapping the
-  windows. See also `paper-track/three_ma_split_check.py` -- a third
-  (20-day) MA usefully splits state A in one direction (de-lever once
-  price is already confirmed above it) but not the other; partial,
-  unconfirmed on its own. A genuine three-MA classifier (STACK x POSITION
-  regime, `paper-track/three_ma_classifier.py`) was tried for 10/50/100
-  and 50/100/200 and REJECTED for both -- search-period Sharpe looks much
-  better (1.09 -> 1.8-2.1) but holdout Sharpe gets WORSE than the plain
-  50/200 baseline (1.17 -> 0.95-1.00), the textbook overfitting signature
-  from fitting many small independently-weighted cells. CAGR also drops
-  hard (25.5% -> ~18%) and 10/50/100 more than triples the transition
-  rate. Cleaner rejection than the two-MA sweep above -- this one fails
-  the search/holdout check outright, not just a turnover-cost caveat.
-  A gentler variant -- running a fast "micro" classifier (10/100) alongside
-  the live "macro" one (50/200) in parallel, splitting each macro state by
-  whether the two agree, rather than merging into one bigger state machine
-  (`paper-track/micro_macro_agreement.py`) -- avoids the overfitting blowup
-  (only 2 cells per state, not a cross-product) but nets out to a wash: two
-  individually-real, holdout-confirmed signals (A when micro confirms;
-  D when micro diverges) don't compose into a net full-timeline
-  improvement once blended at micro=10/100 (Sharpe 1.124 vs live 1.138,
-  CAGR down ~4pp, MaxDD better by ~6pp).
-
-  A broader sweep of the micro pair itself (`paper-track/micro_macro_sweep.py`,
-  2026-09-01) found the SAME two cells (A/agree, D/diverge) validate across
-  every micro pair tried (9 windows) -- consistent, not fragile to exact
-  parameterization -- and several pairs (30/100, 30/150) beat live 50/200 on
-  full-timeline, search, AND holdout Sharpe SIMULTANEOUSLY, not the
-  search-up/holdout-down pattern that sank the merged 3-MA classifier. Best
-  (30/150): Sharpe 1.171 vs 1.138, search 1.140 vs 1.090, holdout 1.203 vs
-  1.174, MaxDD -21.9% vs -29.7%, CAGR 21.6% vs 25.5% (real cost). Turnover
-  ~50% higher than macro-only (16.7/yr vs 11.2/yr), much milder than
-  10/100's ~25/yr. This is the strongest, best-behaved finding from the
-  whole MA-window research line -- flagged as a serious candidate, not
-  filed away, but NOT YET IMPLEMENTED: no transaction-cost/wash-sale-drag
-  modeling at the higher turnover, only A and D are touched (B/C/E/F stay
-  at live weights), and it would add a second classifier plus a doubled
-  per-state weight table to state.py -- a real complexity increase.
-  Revisit before adopting.
-
-  Turnover-cost modeling done (`paper-track/turnover_cost_model.py`,
-  2026-09-01): the objection does NOT hold up. At a calibrated 4bps
-  one-way spread/slippage rate, the micro-30/150 design's annualized cost
-  drag is LOWER than live 50/200-only (0.49pp/yr vs 0.74pp/yr) despite
-  more total transitions, because most of the extra ones are small
-  agree/diverge weight tweaks (~0.2 turnover fraction) rather than the
-  old design's fewer-but-all-expensive full state changes (up to ~2.0
-  turnover fraction). Net Sharpe: old 1.111, new 1.149 -- edge holds
-  across a 2-15bps cost sensitivity range. The remaining open items before
-  implementation: wash-sale drag isn't NAV-modeled (it's a tax-timing
-  effect, reported only directionally), and it still needs the second
-  classifier + doubled per-state weight table built into `state.py` and
-  the live triggers.
-
-  A follow-up (`paper-track/confident_a_leverage.py`, 2026-09-01) tested
-  whether GATING extra leverage to only the confident (agree) weeks could
-  push CAGR higher without the Sharpe cost -- the naive "lever up when
-  confident" hypothesis. The data says the opposite: Sharpe improves
-  monotonically as the agree-side TQQQ weight falls TOWARD ZERO (5 of 7
-  micro pairs tested peak at 0% TQQQ / 100% core during agree weeks), not
-  as it rises. Likely mechanism: leverage's edge comes from catching
-  acceleration/inflection early in a trend, before both a fast and slow
-  signal confirm it -- once both already agree the trend is mature, and
-  TQQQ's decay increasingly outweighs its beta. Same trade-off shape as
-  everything else here (CAGR falls right alongside Sharpe's improvement,
-  21.15% -> 19.99% at the Sharpe optimum) -- does not unlock higher
-  return without cost. Confirms this whole micro/macro family is a
-  smoothing trade, not a return-boosting one.
-
-  Three more independently-constructed signals converged on the SAME
-  de-lever-when-confirmed direction for state A: price vs its own 20-day
-  SMA (`paper-track/three_ma_split_check.py`), QQQ's own realized-vol
-  percentile (a corrected re-read of `paper-track/a1a2_deepdive.py`'s
-  actual blind-search result, not its originally-proposed weights), and
-  VIX percentile. All four signals overlap substantially with each other
-  (~75-80% pairwise agreement) and each validated a near-zero-TQQQ weight
-  on ISOLATED holdout for its own "confident" majority. A 4-signal
-  majority-vote composite (`paper-track/combined_confidence_signal.py`)
-  made this even cleaner in isolation -- large samples (250-332 weeks),
-  strong isolated-holdout confirmation at every vote threshold.
-
-  **But the full-timeline, cost-adjusted test reverses all of it**
-  (`paper-track/composite_turnover_cost.py`, 2026-09-01): live's unchanged
-  80/20 core/TQQQ is the actual full-portfolio OPTIMUM. Sharpe declines
-  MONOTONICALLY as the confident-weeks weight is de-levered away from
-  80/20 (1.111 at 80/20 -> 1.054 at the fully de-levered 100/0), across
-  every cost assumption tested. Mechanism: isolated-holdout validation
-  checks a candidate weight against ONLY that cell's own return variance,
-  which is blind to how those weeks interact with the rest of the
-  multi-state portfolio. State A is the majority state and already
-  contributes the strategy's steadiest return stream (mostly free of the
-  worse drawdowns concentrated in D/E/F); trimming its return specifically
-  in its most-confirmed weeks removes some of the portfolio's best Sharpe
-  contribution -- a real full-timeline cost invisible to the isolated test.
-  **Net verdict on the entire state-A confidence line of research
-  (four converging signals, all corroborating in isolation): REJECTED.**
-  This was the most thoroughly-investigated idea of the whole research
-  effort and it is a clean rejection at the level that actually matters,
-  not an ambiguous one. No live weights changed. The broader lesson,
-  carried forward: isolated-cell validation is necessary (it catches
-  corner solutions) but not sufficient -- always re-check any candidate
-  change at the full-timeline, cost-adjusted level before trusting it.
+Under the 2.0x design, re-swept: vol target 15–25% × 10/30/60-day lookback
+(20% / 30d still the point — 17.5% is +0.001 Sharpe for −0.8pp proxy /
+−1.3pp real; 10-day lookbacks push MaxDD to −40..−48%); drift band 2–8%
+(flat, 19.8% / 0.78 / −34.7% throughout; only trades/yr change: 53 / 42 /
+31 / 24 — 5% is a free option if fewer trades are wanted); A row at 2.0x
+with less TQQQ (25/25/50 or 100% QLD: identical proxy, −0.2 to −0.5pp real —
+SPMO's momentum is worth more than the decay saved).
