@@ -1038,6 +1038,65 @@ handle.** Use `data/qqq_long_history.csv` for anything that only needs QQQ
 prices (state classification, regime statistics, signal research); the
 2015-11 floor is only binding where SPMO/QLD/XLU/BOXX leg returns are needed.
 
+### Downturn review: states D/E/F (2026-09-06) — NEGATIVE, no change
+
+Prompted by the Jan-2024..Sep-2026 monthly table (down-capture vs QQQ 1.44x,
+worst relative months all D/E/F months). `paper-track/downturn_review.py`
+and `downturn_review_r2.py`; outputs in the session scratchpad.
+
+**Attribution first.** Decomposing strategy-minus-QQQ by the state in force
+on the signal day (26y proxy, live design): A +62.5pp, B +6.8pp, C -1.0pp,
+**D +29.9pp**, **E -18.6pp**, **F +98.3pp**. D is a net *positive*
+contributor over 26 years (33.6%/yr vs QQQ 23.2%/yr on D days) and F is the
+largest single source of edge. E is the only downturn state that loses, and
+it loses almost entirely in the search era (-16.6pp of the -18.6pp): E days
+there are V-bottom rebound days (Dec 2018, Mar 2020, Mar 2025) where QQQ
+compounded +43.7%/yr while E held 39% exposure. On the holdout, E is a wash
+(-2.0pp). On the real-instrument 2024-2026 daily window: A +20.0pp,
+D +1.4pp, E +1.4pp, **F -5.0pp** (the 12-day April 2025 F whipsaw),
+C -2.7pp. So the 1.44x down-capture in the monthly table is **not** a
+D/E/F problem: it is 1.3-1.4x leverage in A/B on down days, which is the
+price of the 2026-09-02 return-frontier step.
+
+**Seven new tests, one survivor, and that survivor was rejected on
+robustness:**
+
+- P2 D composition beyond the T1 grid (core/QLD blends, XLU inside D,
+  TQQQ-half). Four rows improve Sharpe in both eras and pass both controls,
+  best `D=(0,0,0.70,0.15,0.15)`: 15.49% / 0.768 / -31.8% vs live 15.69% /
+  0.752 / -32.4%. That is -0.2pp CAGR for +0.016 Sharpe — a Sharpe-for-
+  return trade, the wrong direction for this account's objective. Not
+  applied; on file as the option if the objective ever shifts.
+- P3 D substate on price proximity to the 200d SMA (the one QQQ signal the
+  2026-09-02 substate search did not include). `D & gap200<2% -> cash`
+  looked like a clean Pareto win (16.58% / 0.803 / -32.0%, both eras,
+  both controls, max-stat permutation p=0.03). **Rejected anyway:** (i)
+  cliff — at X=2.5% it collapses to 14.97/0.744/-37.3 and holdout Sharpe
+  0.61 -> 0.49; (ii) the next-day return profile by gap bin is
+  non-monotonic (negative below 1.5%, then +45bp and +74bp t=3.7 in the
+  2-3% bins — the rule's edge is an accident of where a rebound bin sits);
+  (iii) SPY as an independent series shows no such profile at all (every
+  bin flat to slightly positive); (iv) the real-instrument weekly check is
+  mixed (X=2% slightly worse). Consistent with the earlier 108-candidate
+  negative: there is no D/E substate.
+- P4 lower vol target (10%/15%) inside D, E, DE, DEF, CDE: worse on every
+  metric, both eras.
+- P5 synthetic inverse exposure (-1x, ER 0.95%, short proceeds at T-bill)
+  in F and/or E: 0.25 short in F is a hair better full-period
+  (15.86/0.756/-31.9) but worse in the search era; every larger size
+  raises MaxDD. Fails both-era. (No PSQ/SQQQ data on disk; not worth
+  acquiring.)
+- P6 asymmetric hysteresis (fast exit / slow re-entry and the reverse, 8
+  pairs): nothing beats symmetric 1%/1% on both eras.
+- P7 strategy-NAV drawdown kill switch (cut risk after -10/-15/-20% from
+  the 252d high, restore when recovered): all far worse (CAGR 4.6-13.5%),
+  because every deep drawdown in the record was followed by a recovery
+  the switch sat out.
+
+**Verdict:** no change to D/E/F. The honest levers on downturn pain are the
+ones already on the frontier table — A/B leverage and the vol target — and
+those are return-for-drawdown trades the owner has already priced.
+
 ### 26-year stress test: the design had a -65% drawdown in it (2026-09-01)
 
 **Read this together with "Volatility targeting" above: everything in this
