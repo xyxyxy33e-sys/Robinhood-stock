@@ -2,32 +2,37 @@
 artifact (https://claude.ai/code/artifact/c21e2827-b249-4f72-b8bc-7edbea289636)
 from state.py's CURRENT design, plus the by-year table. Writes DATA.js, COMPARE.js
 and byyear.json to the scratchpad path below; splice them into the artifact's
-script block in place of the existing constants. OLD_W / OLD_MICRO pin the
-1 Sep 2026 design as the comparison baseline -- update them if the baseline
-should move."""
+script block in place of the existing constants.
+
+NEW = the live design as of 2026-09-06 (A=50/50, D=100% QLD, 20/100 fast
+re-entry overlay on B/C/F). OLD = the 2026-09-02 design (A=70/30, D=85% QLD,
+no fast overlay) -- the prior comparison baseline, kept as the "before"
+column so the frontier-step-2 + overlay improvement is visible."""
 import json, math, sys
 sys.path.insert(0,'paper-track')
 import voltarget_live_backtest as VL
-from state import TARGET_WEIGHTS, MICRO_OVERLAY_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED
+from state import TARGET_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED, compute_fast_states, effective_state
 from long_history_backtest import load_px
 from four_leg_overlay import last_trading_day_per_week
 assert not MICRO_OVERLAY_ENABLED
 rows=VL.build(); rows=rows[0] if isinstance(rows,tuple) else rows
 qqq=load_px('data/qqq_long_history.csv'); spy=load_px('data/spy_long_history.csv')
+qd=sorted(qqq); fast=compute_fast_states(qd,qqq)
 wkq=last_trading_day_per_week(sorted(qqq)); wks=last_trading_day_per_week(sorted(spy))
 d0_to_key={v:k for k,v in wkq.items()}
 keys=sorted(wkq)
-# end date of each row's week = next weekly key's qqq date
 end_date={}
 for r in rows:
     k=d0_to_key[r['d0']]; nk=keys[keys.index(k)+1]; end_date[r['d0']]=wkq[nk]
-OLD_W={'A':(.8,.2,0,0,0),'B':(.25,.75,0,0,0),'C':(1,0,0,0,0),'D':(0,0,.7,0,.3),'E':(0,0,0,.5,.5),'F':(.3,0,0,0,.7)}
-OLD_MICRO={('A',True):(.88,.12,0,0,0),('D',False):(.56,0,.14,0,.3)}
+# 2026-09-02 design (previous baseline, no fast overlay): A 70/30, D 85% QLD
+OLD_W={'A':(.7,.3,0,0,0),'B':(.75,.25,0,0,0),'C':(1,0,0,0,0),'D':(0,0,.85,0,.15),'E':(0,0,0,.5,.5),'F':(0,0,0,0,1)}
 def vt(w,v):
     m=1.0 if not v else min(1.0,VOL_TARGET_PA/v); risky=sum(w[:4]); return tuple(x*m for x in w[:4])+(1-risky*m,)
-def new_w(r): return vt(TARGET_WEIGHTS[r['state']], r['vol'])
+def new_w(r):
+    st=effective_state(r['state'], fast[r['d0']])
+    return vt(TARGET_WEIGHTS[st], r['vol'])
 def old_w(r):
-    k=(r['state'],r['agree']); return vt(OLD_MICRO.get(k, OLD_W[r['state']]), r['vol'])
+    return vt(OLD_W[r['state']], r['vol'])
 def nav(wfn):
     prev=None; out=[]; n=1.0
     for r in rows:
@@ -38,10 +43,9 @@ NEW=nav(new_w); OLD=nav(old_w)
 spmo=[];q=[];s=[];a=b=c=1.0
 for r in rows:
     a*=1+r['bench_spmo']; b*=1+r['bench_qqq']; spmo.append(a); q.append(b)
-    # SPY price-only, same weekly grid
     k=d0_to_key[r['d0']]; nk=keys[keys.index(k)+1]
     c*= spy[wks[nk]]/spy[wks[k]]; s.append(c)
-DATA=[dict(date=end_date[r['d0']],state=r['state'],strategy=round(NEW[i],6),spmo=round(spmo[i],6),qqq=round(q[i],6),spy=round(s[i],6)) for i,r in enumerate(rows)]
+DATA=[dict(date=end_date[r['d0']],state=effective_state(r['state'],fast[r['d0']]),strategy=round(NEW[i],6),spmo=round(spmo[i],6),qqq=round(q[i],6),spy=round(s[i],6)) for i,r in enumerate(rows)]
 CMP=[dict(date=end_date[r['d0']],state=r['state'],agree=bool(r['agree']),old=round(OLD[i],6),new=round(NEW[i],6),spmo=round(spmo[i],6),qqq=round(q[i],6),spy=round(s[i],6)) for i,r in enumerate(rows)]
 out='/tmp/claude-0/-home-user-Robinhood-stock/e898e69c-6aab-5817-bca0-552f786d2da8/scratchpad/'
 open(out+'DATA.js','w').write('const DATA = '+json.dumps(DATA)+';')
@@ -55,7 +59,6 @@ def st(navs):
 print(f"{len(rows)} weeks {DATA[0]['date']}..{DATA[-1]['date']}")
 for lab,v in (('NEW',NEW),('OLD',OLD),('SPMO',spmo),('QQQ',q),('SPY',s)):
     c1,s1,m1,t=st(v); print(f"{lab:<5} CAGR {c1*100:6.2f}%  Sharpe {s1:.3f}  MaxDD {m1*100:6.1f}%  {t:.3f}x")
-# by-year
 def by(v):
     y={};prev=1.0
     for d,x in zip([r['date'] for r in DATA],v):
