@@ -1922,3 +1922,13 @@ holdout CAGR 18.1%, worst holdout year −19.1%), real weekly 33.34% /
 2023 +73.4, 2024 +64.5, 2025 +28.9, 2026 YTD +35.9. Worst-case figure to
 carry: **about −35%**.
 
+**Floor on the bottom rung (same day, `leverage_under_trim_r4.py`) —
+NEGATIVE.** Owner asked for 1/.67/.33/.15 after seeing Jul–Aug 2020 sit at
+0% under step ⅓. A 40/60 throughout: proxy 23.60 / 0.918 / −35.2 (S 1.112,
+H 0.771) → 23.42 / 0.912 / −35.2 (S 1.104, H 0.766); real weekly 33.34 /
+1.233 → 33.03 / 1.222; real daily 31.86 / 1.154 → 31.70 / 1.147. Floors of
+.10 and .25 sit on the same line. 2020 real daily: +40.3% → +41.0% (Jul
++2.4, Aug +3.3 instead of 0/0) with max drawdown −25.2% → −26.8%. The
+floor pays in melt-ups (2009 +1.6, 2023 +2.1 proxy) and gives it back at
+tops (2003 −2.1, 2007 −1.3, 2024 −1.9, 2026 −1.8). Not applied.
+
