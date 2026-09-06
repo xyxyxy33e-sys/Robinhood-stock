@@ -270,3 +270,28 @@ if __name__ == "__main__":
     check_gold_overlay()
     check_voltarget_overlay()
     check_rebalance_band()
+
+def check_fast_reentry():
+    """Fast re-entry overlay (2026-09-06): only B/C/F ever change, only toward
+    MORE exposure, never with a fast reading that is itself defensive."""
+    from state import (effective_state, FAST_REENTRY_MAP, FAST_REENTRY_ENABLED,
+                       FAST_SHORT_N, FAST_LONG_N, target_weights_with_voltarget,
+                       TARGET_WEIGHTS)
+    assert FAST_REENTRY_ENABLED and (FAST_SHORT_N, FAST_LONG_N) == (20, 100), "fast window must stay 20/100"
+    for m in 'ABCDEF':
+        for f in 'ABCDEF':
+            e = effective_state(m, f)
+            if m in 'ADE':
+                assert e == m, f"overlay must not touch {m}"
+            if f in 'DEF':
+                assert e == m, f"a defensive fast reading must never change {m}"
+            if e != m:
+                assert (m, f) in FAST_REENTRY_MAP
+                assert sum(TARGET_WEIGHTS[e][:4]) >= sum(TARGET_WEIGHTS[m][:4]), "overlay only adds exposure"
+        assert effective_state(m, None) == m
+        assert target_weights_with_voltarget(m, False, 0.15) == target_weights_with_voltarget(m, False, 0.15, fast_state=None)
+    assert effective_state('C', 'A') == 'A' and effective_state('B', 'B') == 'A' and effective_state('F', 'C') == 'C'
+    assert effective_state('F', 'D') == 'F' and effective_state('C', 'C') == 'C'
+    print("OK: fast re-entry overlay touches only B/C/F, only adds exposure, and is a no-op without a fast reading")
+
+check_fast_reentry()

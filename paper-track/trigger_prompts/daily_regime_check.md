@@ -30,8 +30,18 @@ reimplementation:
     passed through because the function signature needs it, but it changes
     no weight and is NOT a regime change.
   - `realized_vol(dates, px, as_of=<today>)` → annualized 30-trading-day vol
-  - `target_weights_with_voltarget(state, micro_agrees, vol)` → the 5 live
-    weights (core, tqqq, qld, xlu, cash)
+  - `compute_fast_states(dates, px)[<today>]` → today's FAST (20/100) reading
+    of the same six-state machine. Added 2026-09-06: the fast re-entry
+    overlay. It is NOT a state of its own -- it only decides whether a macro
+    B/C day holds A weights (fast in A/B) or a macro F day holds C weights
+    (fast in A/B/C). See `effective_state()`.
+  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>)`
+    → the 5 live weights (core, tqqq, qld, xlu, cash). **The `fast_state`
+    argument is mandatory for live use** -- omitting it silently runs the
+    pre-overlay design.
+  - `effective_state(state, fast_state)` → the state whose weight row is
+    actually held. Report BOTH the macro state and the effective state
+    whenever they differ.
 
 `target_weights_with_voltarget()` is THE live weight function as of
 2026-09-01. Do not call `target_weights()`, `target_weights_with_micro()`, or
@@ -58,9 +68,12 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
 
     do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
 
-where `regime_changed` = today's MACRO state (A–F) differs from yesterday's
-confirmed close. A `micro_agrees` flip alone is NOT a regime change as of
-2026-09-02 — the overlay is disabled, so a flip moves no weight. The rule it implements:
+where `regime_changed` = today's EFFECTIVE state (`effective_state(macro,
+fast)`, A–F) differs from yesterday's confirmed close. That covers both a
+macro transition and the fast re-entry overlay switching on or off (added
+2026-09-06) — either one moves the weight row, so either one fires. A
+`micro_agrees` flip alone is NOT a regime change as of 2026-09-02 — that
+overlay is disabled, so a flip moves no weight. The rule it implements:
 
   - **regime changed → always rebalance**, no matter how small the drift. A
     state transition is never gated by the band.
@@ -114,8 +127,9 @@ a tier is breached, not every day underwater.
 ## 5. Push notifications — exactly three events, nothing else
 
 Call the `PushNotification` tool (a real interrupt to the user's phone) ONLY
-for: (1) a regime shift — a macro state change (micro flips no longer count,
-2026-09-02); (2) a newly crossed drawdown tier; (3) any single day at -2% or
+for: (1) a regime shift — a MACRO state change (micro flips no longer count,
+2026-09-02; the fast re-entry overlay switching on/off is reported in-session
+but is NOT a push event); (2) a newly crossed drawdown tier; (3) any single day at -2% or
 worse in the strategy's own daily return. Event (3) is NOT deduplicated —
 each such day is its own event — and is frequent (~10x/year), so frame it as
 low-conviction FYI, not an escalation. Everything else stays in-session.
@@ -143,7 +157,8 @@ low-conviction FYI, not an escalation. Everything else stays in-session.
 On a within-band day: no report, no artifact edit — just end. On a rebalance:
 append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
-newest week at top, stating the old state, new state, the vol reading and
+newest week at top, stating the old state, new state (macro AND effective,
+if the fast overlay is active), the vol reading and
 multiplier, the drift and which condition fired (regime change vs drift band),
 the weights traded to, and the fills.
 

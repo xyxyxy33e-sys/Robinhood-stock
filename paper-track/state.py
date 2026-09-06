@@ -754,7 +754,65 @@ def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND,
     return False, drift, f'drift {drift*100:.1f}% within band {band*100:.0f}%'
 
 
-def target_weights_with_voltarget(state, micro_agrees, vol):
+# ---------------------------------------------------------------------------
+# FAST RE-ENTRY OVERLAY -- added 2026-09-06 (paper-track/fast_ma_overlay_test.py,
+# fast_ma_overlay_r2.py; STRATEGY.md "Fast re-entry overlay").
+#
+# The 50/200 classifier re-enters after a bottom in three steps -- C (100%
+# core) -> B (75/25) -> A (50/50) -- which is what lost 2025 to a plain
+# TQQQ/cash switch on the SAME 50-day line (May 1 -> Nov 18 2025: switch +73%,
+# live +29%). This overlay reads the SAME six-state machine on a faster
+# 20/100-day pair and uses it ONLY to skip rungs of that ladder:
+#     macro B or C, fast A or B      -> hold state-A weights now
+#     macro F,      fast A, B or C   -> hold state-C weights (100% core) now
+# Nothing changes in A, D or E. It is NOT a state of its own and never
+# de-risks -- it only ever adds exposure on the way back up.
+#
+# Evidence (26y proxy, live design 17.98% / 0.739 / -36.4%): 19.77% / 0.779 /
+# -34.8%, Sharpe up in BOTH eras (search 0.922->0.937, holdout 0.594->0.655,
+# the largest out-of-sample gain of anything tested 2026-09-06), exposure-
+# and beta-matched controls pass at k=1.000 (same average exposure -- the gain
+# is timing), max-statistic permutation over a 9-window grid p=0.01, and a
+# plateau from 20/80 to 30/100. Real SPMO-era weekly: 26.60% -> 27.99%,
+# Sharpe 1.004 -> 1.030, MaxDD unchanged. Cost: bear-market rallies -- 2022
+# real -13.1% -> -16.9%, 2000 proxy -8pp. Short windows FAIL: 10-15-day fast
+# windows push MaxDD to -41..-47% and lose the holdout gain (15/60: holdout
+# 0.586 < live). 20/60 has ~1pp more real-era return but -38% MaxDD; 20/100
+# is the Pareto point. Combining 20/60 and 20/100 (AND / OR / 3-MA stack)
+# adds nothing beyond one or the other. Do not shorten FAST_SHORT_N below 20.
+#
+# The 30/150 micro overlay (disabled 2026-09-02) was a different thing: it
+# changed A and D weights, was fit on 2015+ and did nothing on holdout. This
+# one touches only B/C/F and is validated on the holdout first.
+FAST_REENTRY_ENABLED = True
+FAST_SHORT_N = 20
+FAST_LONG_N = 100
+FAST_REENTRY_MAP = {          # (macro state, fast state) -> state whose weights to hold
+    ('B', 'A'): 'A', ('B', 'B'): 'A',
+    ('C', 'A'): 'A', ('C', 'B'): 'A',
+    ('F', 'A'): 'C', ('F', 'B'): 'C', ('F', 'C'): 'C',
+}
+
+
+def compute_fast_states(dates, px, buf=0.01):
+    """Per-date fast (20/100) six-state reading -- the SAME classifier as
+    compute_states(), faster windows. Feed the result for the decision date
+    to target_weights_with_voltarget(fast_state=...)."""
+    return dict(zip(dates, compute_states(dates, px, buf=buf,
+                                          short_n=FAST_SHORT_N, long_n=FAST_LONG_N)))
+
+
+def effective_state(state, fast_state):
+    """The state whose TARGET_WEIGHTS row is held, after the fast re-entry
+    overlay. fast_state=None (or overlay disabled) -> the macro state. A
+    change in THIS value is what counts as a regime change for
+    needs_rebalance() -- it is what actually moves the weights."""
+    if not FAST_REENTRY_ENABLED or fast_state is None:
+        return state
+    return FAST_REENTRY_MAP.get((state, fast_state), state)
+
+
+def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -766,8 +824,12 @@ def target_weights_with_voltarget(state, micro_agrees, vol):
     Returns 5 legs (core, tqqq, qld, xlu, cash). The four risky legs are
     scaled by the multiplier and the freed weight goes to cash, so the tuple
     still sums to 1.0. With cap=1.0 the multiplier is <=1, so cash can only
-    increase and never goes negative."""
-    core, tqqq, qld, xlu, cash = target_weights_with_micro(state, micro_agrees)
+    increase and never goes negative.
+
+    fast_state: the 20/100 reading for the same date from compute_fast_states()
+    (added 2026-09-06). Live triggers MUST pass it -- omitting it silently
+    runs the pre-overlay design. None is accepted so old backtests still run."""
+    core, tqqq, qld, xlu, cash = target_weights_with_micro(effective_state(state, fast_state), micro_agrees)
     mult = vol_target_multiplier(vol)
     risky = core + tqqq + qld + xlu
     return (core * mult, tqqq * mult, qld * mult, xlu * mult, 1.0 - risky * mult)

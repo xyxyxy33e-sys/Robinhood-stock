@@ -998,6 +998,59 @@ Reading it:
 - Proxy leverage in 2000-02 runs through SYNTHETIC TQQQ/QLD; real funds did
   not exist. The regime behaviour is the finding, not the decimals.
 
+### Fast re-entry overlay, 20/100 (2026-09-06) — APPLIED
+
+`FAST_REENTRY_ENABLED`, `FAST_SHORT_N = 20`, `FAST_LONG_N = 100`,
+`FAST_REENTRY_MAP`, `compute_fast_states()`, `effective_state()` in
+`state.py`; `target_weights_with_voltarget(..., fast_state=)`. Tests:
+`paper-track/fast_ma_overlay_test.py`, `fast_ma_overlay_r2.py`.
+
+**Why.** Comparing the live design to a published "100% TQQQ above the
+50-day, cash below" switch showed the two use the same line (six 2025 switch
+dates all within 0–2 days of our A/B/C ↔ D/E/F transitions) and that the
+whole 2025 gap (switch +59%, live +16%) was our re-entry ladder: C (1.0x)
+→ B (1.25x) → A (2.0x) took from 1 May to 24 June while the switch was 3x
+from day one. Raising B/C weights outright fails on the 26y record (B is a
+failed bounce in 17/27 episodes; C at A weights makes 2022 −18%). The
+overlay instead reads the SAME six-state machine on a 20/100 pair and uses
+it only to skip ladder rungs when the fast reading already confirms:
+
+| macro | fast | weights held |
+|---|---|---|
+| B or C | A or B | **A** (50/50) |
+| F | A, B or C | **C** (100% core) |
+| anything else | — | unchanged |
+
+A, D, E are untouched; the overlay never de-risks; it is not a state.
+`effective_state()` is what `needs_rebalance()`'s `regime_changed` compares.
+
+**Evidence.** 26y proxy 17.98% / 0.739 / −36.4% → **19.77% / 0.779 /
+−34.8%**; Sharpe up in both eras (search 0.922 → 0.937, holdout 0.594 →
+**0.655**, the largest out-of-sample gain of anything tested this session);
+exposure- and beta-matched controls PASS at k = 1.000 (same average
+exposure — the gain is timing, not risk); max-statistic permutation over a
+9-window grid p = 0.01; plateau 20/80 – 30/100 all both-era positive; per
+year better 15/27, flat 8, worse 4 (2000 −8pp, 2022 −5pp, 2018 −4pp, 2003
+−3pp — bear-market rallies). Real SPMO-era weekly 26.60% / 1.004 / −31.4%
+→ 27.99% / 1.030 / −31.4%; 2019 +38 → +50, 2023 +52 → +60, 2025 +13 → +18,
+2022 −13 → −17. Rebalances/yr 38 → 42. In 2025 it would have held 100%
+core from 24 Apr (macro still F) and A weights from 2 May (macro C)
+instead of 24 Jun.
+
+**Rejected variants (do not re-run):** fast windows with a 10- or 15-day
+short leg (MaxDD −41 to −47%, holdout gain gone — 15/60 holdout 0.586 <
+live); 20/60 (+1pp real return, −38% MaxDD — the non-Pareto sibling);
+combining 20/60 and 20/100 by AND (= 20/100), OR (= 20/60), or a strict
+P>20>60>100 stack (no effect) or a loose one (−43% MaxDD, 2022 −27%);
+using the fast reading to EXIT early (A + fast down → D weights: worse both
+eras); E + fast up → D weights (no effect); requiring fast confirmation
+before any macro transition (worse). The 30/150 micro overlay disabled
+09-02 was a different design (changed A/D, fit on 2015+, nothing on
+holdout) and stays disabled.
+
+New standing figures: worst case about **−35%** (proxy), 2022-type year
+about **−17%** real / −27% proxy.
+
 ### Return frontier, step 2 (2026-09-06) — APPLIED
 
 Owner decision after the whole-strategy review ("what if I want more"). The

@@ -31,8 +31,18 @@ reimplementation:
     2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still passed through because
     the signature needs it, but it changes no weight and is not a regime change.
   - `realized_vol(dates, px, as_of=<today>)` → annualized 30-trading-day vol
-  - `target_weights_with_voltarget(state, micro_agrees, vol)` → the 5 live
-    weights (core, tqqq, qld, xlu, cash)
+  - `compute_fast_states(dates, px)[<today>]` → today's FAST (20/100) reading
+    of the same six-state machine. Added 2026-09-06: the fast re-entry
+    overlay. It is NOT a state of its own -- it only decides whether a macro
+    B/C day holds A weights (fast in A/B) or a macro F day holds C weights
+    (fast in A/B/C). See `effective_state()`.
+  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>)`
+    → the 5 live weights (core, tqqq, qld, xlu, cash). **The `fast_state`
+    argument is mandatory for live use** -- omitting it silently runs the
+    pre-overlay design.
+  - `effective_state(state, fast_state)` → the state whose weight row is
+    actually held. Report BOTH the macro state and the effective state
+    whenever they differ.
 
 `target_weights_with_voltarget()` is THE live weight function as of
 2026-09-01: it applies the (now inert) micro overlay and then scales the four risky legs
@@ -68,7 +78,9 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
 
     do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
 
-  - **regime changed → always rebalance**, whatever the drift.
+  - **regime changed → always rebalance**, whatever the drift. Regime =
+    the EFFECTIVE state (`effective_state(macro, fast)`), so the fast
+    re-entry overlay switching on or off counts (2026-09-06).
   - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.03),
     i.e. roughly "1.5 percentage points of the portfolio is in the wrong leg".
   - **a leg whose target is EXACTLY 0% but is still held above 0.10%
@@ -117,8 +129,9 @@ for SPMO/TQQQ/QLD/XLU/BOXX, append via
 
 ## 5. Push notifications — exactly three events, nothing else
 
-`PushNotification` ONLY for: (1) a regime shift — a macro state change (micro
-flips no longer count, 2026-09-02); (2) a newly crossed drawdown tier;
+`PushNotification` ONLY for: (1) a regime shift — a MACRO state change (micro
+flips no longer count, 2026-09-02; the fast re-entry overlay switching is
+reported but is not a push event); (2) a newly crossed drawdown tier;
 (3) any single day at -2% or worse in the strategy's own daily return. Event
 (3) is NOT deduplicated and is frequent (~10x/year) — frame as low-conviction
 FYI. A routine weekly rebalance with no regime change is NOT a push event.
@@ -162,15 +175,17 @@ aggregate BEFORE reporting either figure — a real double-counting incident on
 
 Update the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
-newest week at top: state and label, `micro_agrees`, the realized-vol reading
+newest week at top: macro state and label, fast (20/100) reading and the
+effective state if it differs, `micro_agrees`, the realized-vol reading
 and resulting multiplier, target vs. actual weights per leg, trades placed and
 fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-36%** on the
+market in it; the strategy's true max drawdown is about **-35%** on the
 2000-2026 stress test (design of 2026-09-06: A=50/50 core/TQQQ, B=75/25,
-D=100% QLD, F=cash, micro off, vol target 20%; it was -32% under the
+D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, micro off, vol
+target 20%; it was -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol
 targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
 SPMO-era window shows -- never quote those as the worst case. Also carry:

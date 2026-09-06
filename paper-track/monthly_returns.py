@@ -32,7 +32,7 @@ import sys
 from collections import defaultdict
 
 sys.path.insert(0, 'paper-track')
-from state import (compute_states, compute_micro_agreement, realized_vol,
+from state import (compute_fast_states, effective_state, compute_states, compute_micro_agreement, realized_vol,
                    target_weights_with_voltarget, needs_rebalance)
 from backtest_overlay_etf import load_daily_csv
 from long_history_backtest import load_px
@@ -74,13 +74,15 @@ def simulate(px, qqq, days, vol_target=True):
     qd = sorted(qqq)
     states = dict(zip(qd, compute_states(qd, qqq)))
     micro = compute_micro_agreement(qd, qqq)
+    fast = compute_fast_states(qd, qqq)          # 2026-09-06 fast re-entry overlay
     held = prev = None
     out = []
     for i in range(1, len(days)):
         d0, d1 = days[i - 1], days[i]
         st, ag = states[d0], micro[d0]
         vol = realized_vol(qd, qqq, as_of=d0) if vol_target else None
-        t = target_weights_with_voltarget(st, ag, vol)
+        t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0])
+        st = effective_state(st, fast[d0])          # regime = the row actually held
         cost = 0.0
         if held is None:
             held = list(t)
