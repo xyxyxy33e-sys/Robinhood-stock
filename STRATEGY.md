@@ -752,6 +752,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Gap-to-200d rules in other states | negative |
 | 2026-09-06 | Pair study | negative |
 | 2026-09-06 | Post-change re-checks | confirmed |
+| 2026-09-06 | Leverage under the trim; trim step sweep | leverage: no edge; steeper step: candidate |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -1829,3 +1830,57 @@ Under the 2.0x design, re-swept: vol target 15–25% × 10/30/60-day lookback
 31 / 24 — 5% is a free option if fewer trades are wanted); A row at 2.0x
 with less TQQQ (25/25/50 or 100% QLD: identical proxy, −0.2 to −0.5pp real —
 SPMO's momentum is worth more than the decay saved).
+
+### Leverage under the trim; trim step sweep (2026-09-06) — leverage NO EDGE; steeper trim step is a CANDIDATE (not applied)
+
+Question: does the graded extension trim make more A/B leverage
+sensible? Scripts: `paper-track/leverage_under_trim.py` (ladders) and
+`leverage_under_trim_r2.py` (schedule variants, permutation, real daily).
+Everything below runs the FULL live design (fast 20/100 + graded trim +
+VT 20%).
+
+A ladder (core/TQQQ), proxy 26y CAGR / Sharpe / MaxDD, search S, holdout H,
+real weekly:
+
+| A row | proxy | S / H | real weekly |
+|---|---|---|---|
+| 50/50 (live) | 21.7 / 0.890 / −33.3 | 1.075 / 0.748 | 30.7 / 1.211 / −25.3 |
+| 40/60 | 23.1 / 0.894 / −35.2 | 1.084 / 0.748 | 32.5 / 1.193 / −27.4 |
+| 30/70 | 24.4 / 0.895 / −37.2 | 1.090 / 0.746 | 34.2 / 1.173 / −29.5 |
+| 0/100 | 28.1 / 0.894 / −42.5 | 1.095 / 0.740 | 39.0 / 1.115 / −37.6 |
+
+Sharpe is flat on the proxy, flat-to-down on the holdout, and DOWN on
+real instruments at every step; MaxDD grows ~2pp per 10pp of TQQQ. The
+beta-matched control Sharpe equals the live Sharpe at every rung, i.e.
+leverage remains a pure risk dial — the trim does not turn it into an
+edge. B ladder (60/40, 50/50) is negative on the proxy and holdout and
+only +0.5–0.8pp real. VT 22/25/30% with the trim on: proxy Sharpe
+0.879/0.867/0.843, holdout 0.732/0.717/0.687 — still expensive. Verdict:
+same as the 09-06 frontier note — more leverage is a preference, not an
+improvement; the trim does not change that.
+
+What the sweep DID find: the trim STEP (0.25, chosen without a sweep) is
+too shallow. Multiplier at 0/1/2/3 votes, A 50/50:
+
+| schedule | proxy | S / H | expo-ctl | real weekly | real daily (band) |
+|---|---|---|---|---|---|
+| 1/.75/.5/.25 (live) | 21.7 / 0.890 / −33.3 | 1.075 / 0.748 | 0.744 | 30.7 / 1.211 / −25.3 | 29.3 / 1.122 / −32.6 |
+| 1/.67/.33/0 (step ⅓) | 22.2 / 0.912 / −33.3 | 1.100 / 0.769 | 0.747 | 31.4 / 1.248 / −25.0 | 29.6 / 1.146 / −32.6 |
+| 1/.5/.25/0 | 22.3 / 0.922 / −33.3 | 1.105 / 0.782 | 0.748 | 31.3 / 1.254 / −24.4 | 29.6 / 1.153 / −32.6 |
+| 1/.5/0/0 | 22.5 / 0.931 / −33.3 | 1.118 / 0.788 | 0.750 | 31.8 / 1.274 / −24.4 | — |
+| 1/0/0/0 | 22.4 / 0.937 / −33.3 | 1.108 / 0.805 | 0.752 | 30.7 / 1.249 / −24.4 | — |
+
+Response is monotone in trim depth (a surface, not a spike), improves
+both eras, beats the exposure-matched control, and the max-statistic
+permutation over the 8 schedules (vote labels shuffled among effective-A
+days, counts kept, 200 shuffles) gives p = 0.00. Real daily with band
+mechanics: +0.02–0.03 Sharpe, CAGR +0.3pp, trades/yr unchanged. Cost is
+behavioural: at 3 votes the A row goes to 100% cash (9.2% of A days on
+the proxy; 17.7% at ≥2 votes for the 1/.5/0/0 form). Per-year real
+daily: 2020 gives back 5–8pp (+39 → +31..34), 2021/2024/2025/2026 gain
+2–4pp each. NOT applied — owner's call; the minimal change is
+`EXTENSION_STEP = 1/3`. If more return is wanted, spending the Sharpe on
+A 40/60 under step ⅓ gives proxy 23.6 / 0.918 / −35.2 (H 0.771), real
+daily 31.9 / 1.154 / −33.2 — i.e. higher CAGR than live at a better
+Sharpe than live, for ~2pp more proxy MaxDD.
+
