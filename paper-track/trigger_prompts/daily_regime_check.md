@@ -19,6 +19,19 @@ rebalances/year total across all causes (up from ~55 since the volatility
 estimator changed 2026-09-07: more frequent, smaller trims; turnover is
 essentially unchanged).
 
+## CHANGE FREEZE until 2026-12-07
+
+The live design is FROZEN by owner decision (2026-09-07). Do not change
+weights, overlays or parameters, and do not "apply" a research result,
+however good the backtest looks. Between 09-05 and 09-07 the design changed
+five times in the first three weeks of live trading, and when finally tested
+against a persistence-respecting null only ONE of those changes cleared 5%.
+Measurement, bug fixes, doc/code consistency fixes and RECORDED-but-unapplied
+research are all still fine. The freeze ends on the date, or on a genuine
+failure (a guard tripping, a failed fill, a drawdown tier breaching, or live
+behaviour diverging from the backtest) -- NOT on a better backtest.
+See "Change freeze" in STRATEGY.md.
+
 ## 0. Execution convention — what the signal is computed on
 
 This trigger fires at 15:55 ET and trades immediately, using the SAME
@@ -219,6 +232,19 @@ low-conviction FYI, not an escalation. Everything else stays in-session.
   - After filling, re-verify holdings against target and report the resulting
     L1 drift; it should be near zero. Anything above the band after a
     completed rebalance means a fill failed — investigate, do not ignore.
+  - **Record execution quality for EVERY filled leg** (added 2026-09-07).
+    After fills, call `paper-track/fill_quality.py`'s
+    `record_fill(date, symbol, side, quantity, fill_price, ref_price)` once
+    per leg, where `ref_price` is the OFFICIAL CLOSE of the signal session
+    (pass `ref_kind` if you had to use anything else). Then report
+    `summarize()`'s notional-weighted slippage in bps against the **4bp
+    one-way cost model the backtests assume**. This gates nothing and must
+    never block or delay a trade -- it is measurement only. It exists because
+    one session of execution lag costs 3.1pp of CAGR and 4.8pp of drawdown,
+    larger than any design change made this week, and until now nothing
+    checked it. Flag any single leg worse than 25bp; persistent
+    notional-weighted slippage worse than 4bp means the live design is not
+    the backtested one and is worth more attention than any parameter.
 
 ## 7. Reporting
 

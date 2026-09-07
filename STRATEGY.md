@@ -18,7 +18,7 @@ C row when the fast read is A/B/C.
 
 | Effective state | Row | Exposure |
 |---|---|---|
-| A | 40% SPMO / 60% TQQQ | 2.2x |
+| A | 50% SPMO / 50% TQQQ | 2.0x |
 | B | 75% SPMO / 25% TQQQ | 1.5x |
 | C | 100% SPMO | 1.0x |
 | D | 100% QLD | 2.0x |
@@ -32,15 +32,18 @@ of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
 `min(1, 20% / max(10d, 30d) realized QQQ vol)` with the remainder in BOXX. Rebalance on any change of effective
 state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
 
-**Standing figures** (design of 2026-09-07: A 40/60, trim step ⅓, vol
-estimator max(10d, 30d)). 26-year QQQ-core proxy 2000–2026: **23.6% CAGR /
-Sharpe 0.94 / max drawdown −34.7%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
-Real instruments, weekly, Nov 2015–Aug 2026: **32.5% / 1.24 / −27.4%**
-(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%); real daily with
-the drift band **31.9% / 1.21 / −30.1%**, ~69 rebalances/yr. Search-era
-Sharpe 1.158, holdout (2000–2015) 0.781 and 18.0%/yr. A 2022-type year is
-about −20% real / −28% proxy; a COVID-shaped event about −25% to −35%; a
-−5% QQQ day is about −11%.
+**Standing figures** (design of 2026-09-07 final: A 50/50, trim step ⅓,
+vol estimator max(10d, 30d)). 26-year QQQ-core proxy 2000–2026: **22.1%
+CAGR / Sharpe 0.94 / max drawdown −32.8%** (QQQ buy-and-hold 8.7% / 0.45 /
+−80%). Real instruments, weekly, Nov 2015–Aug 2026: **30.7% / 1.26 /
+−25.3%** (QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%); real
+daily with the drift band **29.7% / 1.20 / −29.5%**, ~69 rebalances/yr.
+Search-era Sharpe 1.150, holdout (2000–2015) 0.780 and 17.1%/yr. A
+2022-type year is about −19% real / −27% proxy; a COVID-shaped event about
+−25% to −33%; a −5% QQQ day is about −10%. **Execution assumption: these
+figures assume fills at the signal-session close. One session of lag costs
+about 3.1pp of CAGR and 4.8pp of drawdown — see the reconciliation below,
+and `fill_quality.py`, which now measures it.**
 
 **Change log (newest first).**
 
@@ -62,6 +65,62 @@ hand-maintained until 2026-09-07, when an outside review found the detailed
 table still reading A = 50/50 and the overlay chain still reading 0.25 per
 vote, two days after the code moved to 40/60 and ⅓. Do not hand-edit them;
 regenerate.
+
+## Change freeze (2026-09-07 — READ THIS BEFORE PROPOSING ANY DESIGN CHANGE)
+
+**No design changes until 2026-12-07, or until the strategy actually fails.**
+Owner-approved. This binds future sessions, including whichever model reads
+this next. If you are about to propose a weight change, a new overlay, a
+parameter tweak or a "small free option", the answer is no — record it in the
+research log as a candidate and leave the live design alone.
+
+**Why.** Between 2026-09-05 and 2026-09-07 the design changed five times:
+A 70/30 → 50/50, D 85% → 100% QLD, trim step 0.25 → ⅓, A 50/50 → 40/60 →
+50/50, and vol30 → max(10d, 30d). Live trading began 2026-08-17, so the
+design changed five times in the first three weeks of live operation and we
+have essentially no live evidence about any of it. When those changes were
+finally tested against a persistence-respecting null (circular block
+bootstrap, same day), only the extension trim cleared 5%: the fast re-entry
+overlay came in at P = 0.080 and the volatility estimator at P = 0.097.
+Between this work and an outside report, well over a hundred configurations
+have now been scored on the same 26 years of data. **The search itself has
+become the dominant risk** — each additional test raises the chance the next
+"winner" is noise, and the iteration was fast enough that this was not
+noticed until it was pointed out.
+
+**What is allowed during the freeze.**
+- Measurement, monitoring and reporting (e.g. `fill_quality.py`).
+- Bug fixes, and doc/code consistency fixes.
+- Research that is RECORDED but NOT applied.
+- Acting on a genuine failure: a guard tripping, a fill failing, a drawdown
+  tier breaching, or live behaviour diverging from the backtest.
+
+**What ends the freeze.** Either the date, or a real failure. "The backtest
+says something better exists" is NOT a reason — that was true every day this
+week and is exactly the condition the freeze exists to interrupt.
+
+**Standing candidates, deliberately NOT applied** (revisit after the freeze,
+with live data in hand): the 5% drift band (documented as performance-neutral
+at lower turnover, and more attractive now that the faster estimator runs
+~69 rebalances/yr); a floor on the extension trim's bottom rung (tested
+negative 09-07); extension-threshold hysteresis (tested negative 09-07).
+
+## Execution quality — measured, not assumed (2026-09-07)
+
+`paper-track/fill_quality.py`. The drawdown reconciliation showed one extra
+session between signal and fill costs 3.1pp of CAGR and 4.8pp of drawdown,
+which is larger than any design change argued over this week — and nothing
+measured it. Every rebalance now records, per leg, the realised fill price
+against the official close of the signal session, with `slippage_bps`
+COST-POSITIVE for both sides (a buy above the reference and a sell below it
+are both positive = money lost). `summarize()` reports notional-weighted
+slippage, because a bad fill on a $30k leg is not the same event as a bad
+fill on a $500 stub. It gates nothing and never blocks a trade.
+
+The number to watch is the notional-weighted figure against the **4bp
+one-way cost model the backtests assume**. Persistently worse than that means
+the live design is not the backtested one, and it is worth more attention
+than any parameter.
 
 Everything below the line "Research record" is history and evidence — what
 was tried, what was kept, what was rejected and why. It is there so nothing
@@ -103,7 +162,7 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 
 | State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |
 |---|---|---|---|---|---|---|
-| A | 40% | 60% | 0% | 0% | 0% | 2.2x |
+| A | 50% | 50% | 0% | 0% | 0% | 2.0x |
 | B | 75% | 25% | 0% | 0% | 0% | 1.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
 | D | 0% | 0% | 100% | 0% | 0% | 2.0x |
@@ -786,6 +845,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-07 | Outside review round 2: spec/control/churn audit | 3 defects FIXED; hysteresis negative |
 | 2026-09-07 | vol estimator vol30 → max(vol10, vol30) | owner decision; real daily +0.05 Sharpe / +3pp MaxDD, both proxy eras up, real WEEKLY CAGR −0.85pp; block bootstrap NOT significant |
 | 2026-09-07 | Block bootstrap + leave-one-regime-out; drawdown reconciliation | trim survives, overlay/estimator do not; −39/−40% gap = execution lag |
+| 2026-09-07 | A 40/60 → **50/50** (reverted); CHANGE FREEZE; fill-quality tracking | owner decision after the bootstrap; see "Change freeze" |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -2238,4 +2298,22 @@ loop standalone and produced 26.04% / −33.7% against the standing 23.55% /
 −34.7%. The difference was entirely the engine — costless daily rebalancing
 versus the band, the cost model and drift-and-hold. Always reconcile through
 `improvement_search.run()`, never a fresh loop.
+
+### A 40/60 → 50/50, reverted (2026-09-07, owner decision)
+
+The 09-06 step to A 40/60 spent the step-⅓ trim's Sharpe gain on leverage.
+After the block bootstrap the owner stepped back. The revert improves BOTH
+Sharpe and drawdown on every harness and costs CAGR, which is exactly what
+the leverage ladder predicted (real-instrument Sharpe falls monotonically as
+A leverage rises):
+
+| | 26y proxy | search / holdout | real weekly | real daily (band) |
+|---|---|---|---|---|
+| A 40/60 | 23.55 / 0.942 / −34.7 | 1.158 / 0.781 | 32.49 / 1.240 / −27.4 | 31.94 / 1.206 / −30.1 |
+| **A 50/50 (live)** | **22.12 / 0.938 / −32.8** | **1.150 / 0.780** | **30.67 / 1.260 / −25.3** | **29.69 / 1.202 / −29.5** |
+
+Real weekly Sharpe 1.260 is the highest recorded for any design in this file,
+and −25.3% is the smallest real drawdown since the overlays went in. Cost:
+1.8pp of real weekly CAGR. Proxy holdout is unchanged within noise
+(0.781 → 0.780).
 

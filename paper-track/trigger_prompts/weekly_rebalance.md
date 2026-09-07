@@ -19,6 +19,19 @@ so by Friday the portfolio is often already within band — in that case trade
 nothing and still produce the weekly report. The weekly report is unconditional;
 the weekly TRADE is not.
 
+## CHANGE FREEZE until 2026-12-07
+
+The live design is FROZEN by owner decision (2026-09-07). Do not change
+weights, overlays or parameters, and do not "apply" a research result,
+however good the backtest looks. Between 09-05 and 09-07 the design changed
+five times in the first three weeks of live trading, and when finally tested
+against a persistence-respecting null only ONE of those changes cleared 5%.
+Measurement, bug fixes, doc/code consistency fixes and RECORDED-but-unapplied
+research are all still fine. The freeze ends on the date, or on a genuine
+failure (a guard tripping, a failed fill, a drawdown tier breaching, or live
+behaviour diverging from the backtest) -- NOT on a better backtest.
+See "Change freeze" in STRATEGY.md.
+
 ## 0. Execution convention — what the signal is computed on
 
 This trigger fires at 15:55 ET and trades immediately, using the SAME
@@ -173,6 +186,19 @@ When it does fire:
   - After filling, re-verify holdings against target and report the resulting
     L1 drift; it should be near zero. Anything above the band after a
     completed rebalance means a fill failed — investigate, do not ignore.
+  - **Record execution quality for EVERY filled leg** (added 2026-09-07).
+    After fills, call `paper-track/fill_quality.py`'s
+    `record_fill(date, symbol, side, quantity, fill_price, ref_price)` once
+    per leg, where `ref_price` is the OFFICIAL CLOSE of the signal session
+    (pass `ref_kind` if you had to use anything else). Then report
+    `summarize()`'s notional-weighted slippage in bps against the **4bp
+    one-way cost model the backtests assume**. This gates nothing and must
+    never block or delay a trade -- it is measurement only. It exists because
+    one session of execution lag costs 3.1pp of CAGR and 4.8pp of drawdown,
+    larger than any design change made this week, and until now nothing
+    checked it. Flag any single leg worse than 25bp; persistent
+    notional-weighted slippage worse than 4bp means the live design is not
+    the backtested one and is worth more attention than any parameter.
 
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 
@@ -241,8 +267,8 @@ fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-35%** on the
-2000-2026 stress test (design of 2026-09-06, third revision: A=40/60 core/TQQQ, B=75/25,
+market in it; the strategy's true max drawdown is about **-33%** on the
+2000-2026 stress test (design of 2026-09-06, third revision: A=50/50 core/TQQQ, B=75/25,
 D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
 trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
 100/150/200-day SMAs), micro off, vol target 20%; it was -33% with A=50/50 and step 0.25 earlier the same day, -32% under the
@@ -252,15 +278,14 @@ SPMO-era window shows -- never quote those as the worst case. An outside
 replay reaching -39% to -40% was RECONCILED 2026-09-07: it is not a data,
 fee or proxy difference (core proxy, financing spread and expense ratios move
 it by <=0.5pp), it is EXECUTION LAG. One extra session between signal and fill
-takes the SAME design from -34.7% to -39.5%, two sessions to -40.3%, and one
-session also costs 3.1pp of CAGR. So -35% is the figure for trading AT the
+took the A=40/60 design from -34.7% to -39.5%, two sessions to -40.3%, and one
+session also costs 3.1pp of CAGR. So -33% is the figure for trading AT the
 signal close, which is what this trigger does; -40% is the figure if execution
-routinely slips a day. Neither is a loss ceiling. This is why the 15:55
+routinely slips a day (measured at A=40/60; A=50/50 is ~2pp better throughout). Neither is a loss ceiling. This is why the 15:55
 convention in section 0 matters operationally, not just pedantically.
 Also carry:
 the 2026-09-06 reweight is the SECOND deliberate step up the return frontier,
-so live-era stress events are larger than before (and the 40/60 A row of
-the third revision adds ~2pp of drawdown on top) (COVID-shaped drawdowns about
+so live-era stress events are larger than before (COVID-shaped drawdowns about
 -25% to -35%, a 2022-type year about -20% real / -28% proxy) -- that is by design, not a fault.
 
 Evidence discipline when commenting on the overlays: a circular BLOCK

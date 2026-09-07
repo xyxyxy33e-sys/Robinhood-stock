@@ -420,3 +420,40 @@ def check_vol_estimator():
 
 
 check_vol_estimator()
+
+
+def check_fill_quality():
+    """Execution-quality tracker (2026-09-07): slippage must be COST-POSITIVE
+    for both sides, notional-weighted, and must refuse bad input rather than
+    returning a plausible-looking number."""
+    import tempfile, os
+    from fill_quality import slippage_bps, record_fill, summarize
+    # a buy filled ABOVE the reference is a cost; a sell BELOW it is a cost
+    assert abs(slippage_bps('buy', 101.0, 100.0) - 100.0) < 1e-9
+    assert abs(slippage_bps('sell', 99.0, 100.0) - 100.0) < 1e-9
+    # beating the reference is negative (a gain)
+    assert slippage_bps('buy', 99.0, 100.0) < 0 and slippage_bps('sell', 101.0, 100.0) < 0
+    assert slippage_bps('buy', 100.0, 100.0) == 0.0
+    for bad in (('buy', None, 100.0), ('buy', 100.0, None), ('buy', 0.0, 100.0),
+                ('buy', 100.0, -1.0), ('hold', 100.0, 100.0)):
+        try:
+            slippage_bps(*bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"slippage_bps accepted {bad!r}")
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'fq.csv')
+        # big leg slightly bad, tiny leg very bad -> weighted must track the BIG one
+        record_fill('2026-09-08', 'TQQQ', 'buy', 1000, 100.10, 100.0, path=p)
+        record_fill('2026-09-08', 'BOXX', 'sell', 1, 99.0, 100.0, path=p)
+        s = summarize(path=p)
+        assert s['n'] == 2
+        assert 9.0 < s['weighted_bps'] < 12.0, s['weighted_bps']
+        assert 54.0 < s['simple_bps'] < 56.0, s['simple_bps']
+        assert s['worst']['symbol'] == 'BOXX' and len(s['flagged']) == 1
+        assert summarize(path=os.path.join(d, 'missing.csv'))['n'] == 0
+    print("OK: fill-quality tracker -- cost-positive both sides, notional-weighted, rejects bad input")
+
+
+check_fill_quality()

@@ -311,7 +311,7 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # proxy and a 2022-type year is about -25%. Do not read the higher CAGR as a
 # discovery -- it is bought with drawdown, and the owner priced it.
 TARGET_WEIGHTS = {
-    'A': (0.40, 0.60, 0.00, 0.00, 0.00),   # 2026-09-06 (third step): was (0.50, 0.50) -- owner spent the step-1/3 trim's Sharpe on leverage; earlier (0.70, 0.30), (0.80, 0.20)
+    'A': (0.50, 0.50, 0.00, 0.00, 0.00),   # 2026-09-07: REVERTED from (0.40, 0.60). The 09-06 step up spent the step-1/3 trim's Sharpe gain on leverage; the owner stepped back after the block bootstrap showed real-instrument Sharpe falls monotonically as A leverage rises and only the trim itself survives a persistence-respecting test. Earlier: (0.70, 0.30), (0.80, 0.20)
     'B': (0.75, 0.25, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.25, 0.75, ...) -- the one EDGE found, see block above
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
     'D': (0.00, 0.00, 1.00, 0.00, 0.00),   # 2026-09-06: was (0,0,0.85,0,0.15) -- frontier step 2; 2026-09-02: was (0,0,0.70,0,0.30)
