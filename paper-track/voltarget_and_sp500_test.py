@@ -80,7 +80,14 @@ def realised_vol(px, dates, idx, lookback):
 
 def build(core_px, core_div, lev2, lev3, signal_px, xlu_px, rate_on):
     """Weekly rows for one instrument set. signal_px drives the classifier."""
-    ds = sorted(core_px)
+    # 2026-09-07 FIX: weeks were derived from the CORE series alone, and the
+    # per-row guard only checked the core and signal series. When any other
+    # leg (XLU, the 2x or 3x proxy) ended earlier or skipped a session, the
+    # row builder raised KeyError on that date -- this script crashed with
+    # KeyError '2026-08-28' because XLU's series stopped short of core's.
+    # Derive the calendar from the INTERSECTION of every series the legs are
+    # read from, which is what monthly_returns.py already does.
+    ds = sorted(set(core_px) & set(lev2) & set(lev3) & set(xlu_px))
     core = total_return_index(core_px, core_div)
     xl = total_return_index(xlu_px, XLU_DIV_PA)
     cash = cash_index(ds, rate_on)
@@ -96,6 +103,10 @@ def build(core_px, core_div, lev2, lev3, signal_px, xlu_px, rate_on):
         d0, d1 = wk[keys[i]], wk[keys[i + 1]]
         st, ag = states.get(d0), micro.get(d0)
         if st is None or ag is None or d0 < START or d0 not in didx:
+            continue
+        # every leg must have BOTH endpoints; skip rather than KeyError
+        if any(d not in series for d in (d0, d1)
+               for series in (core, lev3, lev2, xl, cash)):
             continue
         rows.append(dict(
             d0=d0, d1=d1, state=st, w=target_weights_with_micro(st, ag),

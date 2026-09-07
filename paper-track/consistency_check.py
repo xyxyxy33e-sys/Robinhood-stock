@@ -375,3 +375,48 @@ def check_live_target_weights_strict():
 
 check_strategy_md_matches_code()
 check_live_target_weights_strict()
+
+
+def check_vol_estimator():
+    """max(vol10, vol30) estimator (2026-09-07): may only RAISE the vol
+    estimate, hence only shrink the multiplier; None-handling unchanged."""
+    import math
+    from state import (realized_vol, realized_vol_live, VOL_LOOKBACK_DAYS,
+                       VOL_FAST_LOOKBACK_DAYS, VOL_ESTIMATOR_MAX_ENABLED,
+                       vol_target_multiplier)
+    assert VOL_ESTIMATOR_MAX_ENABLED and VOL_FAST_LOOKBACK_DAYS == 10 and VOL_LOOKBACK_DAYS == 30
+    # a calm series with one violent recent stretch: fast must dominate
+    dates = [f"d{i:03d}" for i in range(80)]
+    px = {}
+    v = 100.0
+    for i, d in enumerate(dates):
+        v *= 1 + (0.0005 if i < 65 else (0.05 if i % 2 else -0.05))
+        px[d] = v
+    slow = realized_vol(dates, px, lookback=30)
+    fast = realized_vol(dates, px, lookback=10)
+    live = realized_vol_live(dates, px)
+    assert fast > slow, "test series should have a hotter fast window"
+    assert live == max(slow, fast) == fast
+    assert vol_target_multiplier(live) <= vol_target_multiplier(slow), "max estimator must not lever UP"
+    # calm throughout: fast below slow -> live must equal slow, never the lower fast
+    # volatile through i=69 then calm: the 30d window (50..79) straddles both,
+    # the 10d window (70..79) is calm, so fast < slow.
+    dates2 = [f"e{i:03d}" for i in range(80)]
+    px2 = {}
+    v = 100.0
+    for i, d in enumerate(dates2):
+        v *= 1 + (0.0005 if i >= 70 else (0.04 if i % 2 else -0.04))
+        px2[d] = v
+    s2 = realized_vol(dates2, px2, lookback=30)
+    f2 = realized_vol(dates2, px2, lookback=10)
+    assert f2 < s2 and realized_vol_live(dates2, px2) == s2, "must fall back to the SLOW reading, not the min"
+    # insufficient history -> None, same as the 30d estimator
+    short = [f"s{i:02d}" for i in range(12)]
+    spx = {d: 100.0 + i for i, d in enumerate(short)}
+    assert realized_vol(short, spx, lookback=30) is None
+    assert realized_vol_live(short, spx) is None, "None-handling must match the 30d estimator"
+    assert vol_target_multiplier(None) == 1.0
+    print("OK: vol estimator max(10d, 30d) -- only raises vol, never levers up, None-safe")
+
+
+check_vol_estimator()

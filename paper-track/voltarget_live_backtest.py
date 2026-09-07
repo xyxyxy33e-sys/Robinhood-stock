@@ -19,7 +19,7 @@ import sys
 from datetime import date, timedelta
 
 sys.path.insert(0, 'paper-track')
-from state import (compute_states, compute_micro_agreement, realized_vol,
+from state import (realized_vol_live, compute_states, compute_micro_agreement, realized_vol,
                    target_weights_with_micro, target_weights_with_voltarget,
                    validate_weights, VOL_TARGET_PA, VOL_LOOKBACK_DAYS)
 from backtest_overlay_etf import load_daily_csv, load_tbill, build_cash_index
@@ -59,7 +59,12 @@ def build():
             continue
         rows.append(dict(
             d0=d0, state=st, agree=ag,
-            vol=realized_vol(qd, qqq, as_of=d0),
+            # 2026-09-07: 'vol' is the LIVE estimator max(10d, 30d); 'vol30'
+            # is the plain 30-day reading, kept so a comparison against a
+            # PRE-2026-09-07 design is run on that design's own spec rather
+            # than silently upgraded to today's estimator.
+            vol=realized_vol_live(qd, qqq, as_of=d0),
+            vol30=realized_vol(qd, qqq, as_of=d0),
             legs=(spmo[wk['spmo'][k1]] / spmo[wk['spmo'][k0]] - 1,
                   tqqq[wk['tqqq'][k1]] / tqqq[wk['tqqq'][k0]] - 1,
                   qld[wk['qld'][k1]] / qld[wk['qld'][k0]] - 1,

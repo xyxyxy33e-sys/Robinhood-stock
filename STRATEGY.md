@@ -29,17 +29,18 @@ C row when the fast read is A/B/C.
 of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
 200d} are true and scale the A row's risky legs by 1 − ⅓ × votes
 (×⅔ / ×⅓ / ×0 — three votes is 100% cash). Then the four risky legs are scaled by
-`min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX. Rebalance on any change of effective
+`min(1, 20% / max(10d, 30d) realized QQQ vol)` with the remainder in BOXX. Rebalance on any change of effective
 state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
 
-**Standing figures.** 26-year QQQ-core proxy 2000–2026: **23.6% CAGR /
-Sharpe 0.92 / max drawdown −35.2%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
-Real instruments, weekly, Nov 2015–Aug 2026: **33.3% / 1.23 / −27.0%**
+**Standing figures** (design of 2026-09-07: A 40/60, trim step ⅓, vol
+estimator max(10d, 30d)). 26-year QQQ-core proxy 2000–2026: **23.6% CAGR /
+Sharpe 0.94 / max drawdown −34.7%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
+Real instruments, weekly, Nov 2015–Aug 2026: **32.5% / 1.24 / −27.4%**
 (QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%); real daily with
-the drift band 31.9% / 1.15 / −33.2%, ~55 rebalances/yr. Search-era Sharpe
-1.112, holdout (2000–2015) 0.771. A 2022-type year is about −20% real /
-−28% proxy; a COVID-shaped event about −25% to −35%; a −5% QQQ day is about
-−11%.
+the drift band **31.9% / 1.21 / −30.1%**, ~69 rebalances/yr. Search-era
+Sharpe 1.158, holdout (2000–2015) 0.781 and 18.0%/yr. A 2022-type year is
+about −20% real / −28% proxy; a COVID-shaped event about −25% to −35%; a
+−5% QQQ day is about −11%.
 
 **Change log (newest first).**
 
@@ -123,8 +124,10 @@ it directly: two overlays apply on top, and the function that applies both is
    the four risky legs are scaled by `extension_scale(eff, gaps)` = 1 −
    ⅓ × votes over `EXTENSION_RULES` (×⅔ / ×⅓ / ×0). Section "Extension
    trim" below.
-3. **Volatility targeting** (2026-09-01): the four risky legs of that row are
-   scaled by `min(1, 0.20 / realized_vol_30d)` and the freed weight goes to
+3. **Volatility targeting** (2026-09-01; estimator changed 2026-09-07): the
+   four risky legs of that row are scaled by
+   `min(1, 0.20 / realized_vol_live)` where `realized_vol_live` is
+   **max(10-day, 30-day)** annualized realized QQQ vol, and the freed weight goes to
    cash. Section "Volatility targeting" below.
 
 `micro_agrees` is still passed (the signature needs it) but the 30/150 micro
@@ -781,6 +784,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Leverage under the trim; trim step sweep | step ⅓ + A 40/60 APPLIED (owner) |
 | 2026-09-07 | Outside report review; max(vol10, vol30) estimator | candidate, not applied |
 | 2026-09-07 | Outside review round 2: spec/control/churn audit | 3 defects FIXED; hysteresis negative |
+| 2026-09-07 | vol estimator vol30 → max(vol10, vol30) | owner decision; real daily +0.05 Sharpe / +3pp MaxDD, both proxy eras up, real WEEKLY CAGR −0.85pp |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -2099,4 +2103,61 @@ max(5,30) 31.45 / 1.208 / −32.5 at 81 rebalances/yr; **max(10,30) 31.94 /
 31.64 / 1.168 / −31.9 at 61. 10 is an interior optimum on drawdown and
 CAGR, not a corner; 5 buys 12 more rebalances a year for a worse drawdown.
 Still unapplied.
+
+### Volatility estimator max(10d, 30d) — APPLIED 2026-09-07 (owner decision)
+
+`VOL_FAST_LOOKBACK_DAYS = 10`, `VOL_ESTIMATOR_MAX_ENABLED = True`,
+`realized_vol_live()` in `state.py`; live triggers call it instead of
+`realized_vol()`. Taking the MAX means the fast window can only ever RAISE
+the estimate, so it can only de-lever faster and never lever up faster.
+
+| | proxy 26y | search / holdout | real weekly | real daily (band) |
+|---|---|---|---|---|
+| vol30 (was) | 23.60 / 0.918 / −35.2 | 1.112 / 0.771 | 33.34 / 1.233 / −27.0 | 31.86 / 1.154 / −33.2 |
+| **max(10,30) (live)** | **23.55 / 0.942 / −34.7** | **1.158 / 0.781** | **32.49 / 1.240 / −27.4** | **31.94 / 1.206 / −30.1** |
+
+Holds at 10bp and 20bp costs; turnover essentially unchanged (17.1 →
+17.2x/yr) though rebalances rise 55 → 69/yr. A surface, not a spike: every
+max(fast, slow) pair beats its own single-window counterpart, and 10 is an
+INTERIOR optimum on the real daily harness — max(5,30) 1.208 Sharpe but 81
+rebalances/yr and −32.5% MaxDD; max(15,30) 1.185; max(20,30) 1.168.
+
+**Accepted costs, stated plainly.** This did NOT clear the usual bar
+("better on the proxy AND on real instruments on every metric"): real
+WEEKLY CAGR falls 33.34% → 32.49% and weekly MaxDD widens −27.0% → −27.4%.
+The weekly harness re-decides only weekly, which largely wastes a 10-day
+reading, so the daily harness is the more faithful test — but that is an
+argument, not evidence, and the two real harnesses disagree. It also raises
+execution sensitivity: an extra session of lag costs this estimator 2.2pp
+of CAGR against 1.4pp for vol30.
+
+**CORRECTION — this was NOT a new idea.** I told the owner we had never
+tested a two-window max. Wrong: `improvement_search.py` T4 tested
+`max(10d,30d)` on 2026-09-02 and the record REJECTED it ("proxy +0.016
+Sharpe / −1.8pp MaxDD in both eras, but real instruments −0.73pp CAGR and
+Sharpe 1.116 → 1.105. Mixed; not enough to justify a change"). The real
+weekly CAGR cost is the SAME objection then and now. What is genuinely new
+is the real DAILY result, which was not run in September, and the current
+design (A 40/60, fast overlay, trim step ⅓) it now sits on top of.
+
+**Harness consistency (bugs fixed the same day).** Changing the live
+estimator silently makes any harness still on 30-day vol report a
+DIFFERENT strategy than the one being traded. Fixed:
+`monthly_returns.simulate()` and `voltarget_live_backtest.build()` now call
+`realized_vol_live()`, which also flows to `return_frontier.real_rows()`
+and `strategy_summary_data.py`. `improvement_search.build()` rows keep
+`vol` as the plain 30-day reading so every figure recorded here before
+2026-09-07 stays reproducible, and add `vol_live` for anything meant to
+represent the live design. One bug was introduced and caught in the same
+pass: `strategy_summary_data.py`'s OLD (2026-09-02 design) comparison
+series began reading the new estimator too, flattering-then-misstating it
+at 22.76% instead of 23.25%; the weekly row now carries both `vol` (live)
+and `vol30`, and any pre-09-07 design is compared on its own spec.
+
+**Unrelated pre-existing bug fixed.** `voltarget_and_sp500_test.py` crashed
+with `KeyError: '2026-08-28'`: it derived its weekly calendar from the CORE
+series alone and guarded only the core and signal series, so any other leg
+(here XLU) ending earlier raised on `d1`. It now derives the calendar from
+the intersection of every series a leg reads from and skips rows missing an
+endpoint.
 

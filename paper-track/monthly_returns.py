@@ -32,7 +32,7 @@ import sys
 from collections import defaultdict
 
 sys.path.insert(0, 'paper-track')
-from state import (compute_fast_states, effective_state, compute_extension_gaps, extension_votes, compute_states, compute_micro_agreement, realized_vol,
+from state import (compute_fast_states, effective_state, compute_extension_gaps, extension_votes, compute_states, compute_micro_agreement, realized_vol, realized_vol_live,
                    target_weights_with_voltarget, needs_rebalance)
 from backtest_overlay_etf import load_daily_csv
 from long_history_backtest import load_px
@@ -81,7 +81,10 @@ def simulate(px, qqq, days, vol_target=True):
     for i in range(1, len(days)):
         d0, d1 = days[i - 1], days[i]
         st, ag = states[d0], micro[d0]
-        vol = realized_vol(qd, qqq, as_of=d0) if vol_target else None
+        # 2026-09-07: must use the LIVE estimator, max(10d, 30d). This harness
+        # reports the figures we quote for the live design; leaving it on the
+        # plain 30-day reading would silently report a DIFFERENT strategy.
+        vol = realized_vol_live(qd, qqq, as_of=d0) if vol_target else None
         t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gaps=gaps[d0])
         eff = effective_state(st, fast[d0])
         st = (eff, extension_votes(eff, gaps[d0]))   # regime = row held + trim votes

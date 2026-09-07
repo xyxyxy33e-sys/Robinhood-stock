@@ -49,7 +49,14 @@ reimplementation:
   - `compute_micro_agreement(dates, px)` → `micro_agrees` bool. INERT since
     2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still passed through because
     the signature needs it, but it changes no weight and is not a regime change.
-  - `realized_vol(dates, px, as_of=<today>)` → annualized 30-trading-day vol
+  - `realized_vol_live(dates, px, as_of=<today>)` → **the live volatility
+    estimate: max(10-day, 30-day) annualized realized vol** (changed
+    2026-09-07; was the plain 30-day figure). Taking the max means the fast
+    window can only RAISE the estimate, so it can only ever de-lever faster,
+    never lever up faster. Returns None on the same insufficient-history
+    condition the 30-day estimator did, so the "None → multiplier 1.0"
+    fallback is unchanged. Report BOTH legs and which one binds. Do not call
+    `realized_vol()` directly for live weights.
   - `compute_fast_states(dates, px)[<today>]` → today's FAST (20/100) reading
     of the same six-state machine. Added 2026-09-06: the fast re-entry
     overlay. It is NOT a state of its own -- it only decides whether a macro
@@ -82,8 +89,8 @@ reimplementation:
 by `min(1.0, VOL_TARGET_PA / realized_vol)`, routing the freed weight to cash.
 Do not call `target_weights()`, `target_weights_with_micro()`, or
 `target_weights_with_gold()` for live weights — they all omit the volatility
-overlay. If `realized_vol` returns None, pass it through: the multiplier
-degrades to 1.0, the correct fallback. Report the vol reading and the
+overlay. If `realized_vol_live` returns None, pass it through: the multiplier
+degrades to 1.0, the correct fallback. Report both vol legs, which binds, and the
 resulting multiplier every week, even when nothing trades — it is the main new
 moving part and should be visible.
 

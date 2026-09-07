@@ -9,7 +9,8 @@ STRATEGY.md agrees with this output.  Usage: python3 paper-track/gen_live_tables
 import sys
 sys.path.insert(0, 'paper-track')
 from state import (TARGET_WEIGHTS, EXTENSION_RULES, EXTENSION_STEP, STATE_LABEL,
-                   VOL_TARGET_PA, VOL_LOOKBACK_DAYS, FAST_SHORT_N, FAST_LONG_N)
+                   VOL_TARGET_PA, VOL_LOOKBACK_DAYS, VOL_FAST_LOOKBACK_DAYS,
+                   VOL_ESTIMATOR_MAX_ENABLED, FAST_SHORT_N, FAST_LONG_N)
 
 LEV = (1.0, 3.0, 2.0, 0.5, 0.0)   # core, TQQQ, QLD, XLU, cash
 
@@ -53,7 +54,10 @@ def overlay_chain():
     return (f"extension trim: votes over ({rules}); risky legs of the A row scaled by "
             f"1 - {EXTENSION_STEP:.4g} x votes ({steps}); "
             f"fast re-entry {FAST_SHORT_N}/{FAST_LONG_N}; "
-            f"vol target {VOL_TARGET_PA:.0%} on {VOL_LOOKBACK_DAYS}d realized vol")
+            f"vol target {VOL_TARGET_PA:.0%} on "
+            + (f"max({VOL_FAST_LOOKBACK_DAYS}d, {VOL_LOOKBACK_DAYS}d)" if VOL_ESTIMATOR_MAX_ENABLED
+               else f"{VOL_LOOKBACK_DAYS}d")
+            + " realized vol")
 
 
 if __name__ == '__main__':

@@ -77,6 +77,12 @@ def build(buf=0.01, micro_buf=0.01):
         rows.append(dict(
             d=d0, state=states[j], agree=micro_states[j] in ('A', 'B'),
             vol=_vol(r30), vol10=_vol(r10), vol60=_vol(r60),
+            # 2026-09-07: 'vol' stays the plain 30-day reading so every
+            # figure recorded in STRATEGY.md before this date stays
+            # reproducible. 'vol_live' is the LIVE estimator, max(10d, 30d)
+            # -- use it for anything meant to represent the live design.
+            vol_live=(_vol(r30) if _vol(r10) is None or _vol(r30) is None
+                      else max(_vol(r30), _vol(r10))),
             semivol=_semivol(r30), ewma=None,
             legs=(D['core'][d1] / D['core'][d0] - 1, D['lev3'][d1] / D['lev3'][d0] - 1,
                   D['lev2'][d1] / D['lev2'][d0] - 1, D['xl'][d1] / D['xl'][d0] - 1,

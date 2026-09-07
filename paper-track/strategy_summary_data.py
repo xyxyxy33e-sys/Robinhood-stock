@@ -34,7 +34,9 @@ def new_w(r):
     if f<1: w=tuple(x*f for x in w[:4])+(1-f*sum(w[:4]),)
     return vt(w, r['vol'])
 def old_w(r):
-    return vt(OLD_W[r['state']], r['vol'])
+    # the 2026-09-02 design used the plain 30-day estimator -- compare it on
+    # its OWN spec, not on today's max(10d, 30d) (2026-09-07)
+    return vt(OLD_W[r['state']], r['vol30'])
 def nav(wfn):
     prev=None; out=[]; n=1.0
     for r in rows:

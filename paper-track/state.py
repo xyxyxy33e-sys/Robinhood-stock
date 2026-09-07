@@ -584,6 +584,25 @@ TARGET_WEIGHT_LEGS_WITH_GOLD = ('core', 'tqqq', 'qld', 'xlu', 'gold', 'cash')
 # cost in that (bull-dominated) window is smaller than the proxy suggests.
 VOL_TARGET_PA = 0.20        # annualized target volatility for the risky sleeve
 VOL_LOOKBACK_DAYS = 30      # trading days (= 6.0 calendar weeks)
+# 2026-09-07: the volatility ESTIMATOR became max(vol10, vol30) -- the fast
+# window only ever RAISES the estimate, so it can only de-lever, never lever
+# up. Idea came from an outside report; tested on the live design in
+# vol_estimator_family.py / vol_estimator_daily.py. Real DAILY with the drift
+# band (the harness that matches how we actually trade): 31.86% / 1.154 /
+# -33.2% -> 31.94% / 1.206 / -30.1%, holding at 10bp and 20bp costs, turnover
+# essentially unchanged (17.1 -> 17.2x/yr) though rebalances rise 55 -> 69/yr.
+# 26y proxy 0.918 -> 0.942 with BOTH eras up (search 1.112 -> 1.158, holdout
+# 0.771 -> 0.781). It is a surface, not a spike: every max(fast, slow) pair
+# beats its own single-window counterpart and 10 is an interior optimum
+# (max(5,30) 1.208 Sharpe but 81 rebalances/yr and a worse drawdown;
+# max(15,30) 1.185). KNOWN COST, accepted by the owner: real WEEKLY CAGR
+# falls 33.34% -> 32.49% and weekly MaxDD widens -27.0% -> -27.4%, so this
+# did NOT clear the usual "better on proxy AND real on every metric" bar --
+# the weekly harness re-decides only weekly, which largely wastes a 10-day
+# reading. It also raises execution sensitivity: an extra session of lag
+# costs this estimator 2.2pp of CAGR against 1.4pp for vol30 alone.
+VOL_FAST_LOOKBACK_DAYS = 10   # trading days; the fast leg of the max
+VOL_ESTIMATOR_MAX_ENABLED = True
 VOL_TARGET_CAP = 1.0        # never exceed the un-scaled weights; do NOT raise
 TRADING_DAYS_PER_YEAR = 252
 
@@ -607,6 +626,25 @@ def realized_vol(dates, px, as_of=None, lookback=VOL_LOOKBACK_DAYS):
     mean = sum(rets) / len(rets)
     var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
     return (var ** 0.5) * (TRADING_DAYS_PER_YEAR ** 0.5)
+
+
+def realized_vol_live(dates, px, as_of=None):
+    """THE volatility estimate live triggers must use (2026-09-07).
+
+    max(realized_vol(30d), realized_vol(10d)) when VOL_ESTIMATOR_MAX_ENABLED,
+    otherwise the plain 30-day figure. Taking the MAX means the fast window
+    can only ever raise the estimate, hence only ever shrink the multiplier:
+    this de-levers faster into a shock and never levers up faster out of one.
+
+    Returns None only when the SLOW window has insufficient history (the
+    same condition the 30-day estimator returned None for), so callers keep
+    the existing "None -> multiplier 1.0" fallback unchanged. A None fast
+    reading with a valid slow one degrades to the slow reading."""
+    slow = realized_vol(dates, px, as_of=as_of, lookback=VOL_LOOKBACK_DAYS)
+    if slow is None or not VOL_ESTIMATOR_MAX_ENABLED:
+        return slow
+    fast = realized_vol(dates, px, as_of=as_of, lookback=VOL_FAST_LOOKBACK_DAYS)
+    return slow if fast is None else max(slow, fast)
 
 
 def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
