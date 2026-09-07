@@ -110,6 +110,9 @@ moving part and should be visible.
     `get_equity_quotes`; `actual` = `get_portfolio`'s own `total_value`. A gap
     beyond 2% means a data error or bad fill, not market volatility.
     `CircuitBreakerTripped` → abort, report, DO NOT TRADE.
+  - `MissingOverlayInputs` from `live_target_weights` → abort, report, DO NOT
+    TRADE. It means an overlay input was not computed; never fall back to
+    `target_weights_with_voltarget` to get past it.
 
 Optionally run `python3 paper-track/consistency_check.py` — it asserts every
 `TARGET_WEIGHTS` row, the (disabled) micro overlay, the (inert) gold overlay, and the
