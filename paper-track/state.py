@@ -962,6 +962,41 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
     risky = core + tqqq + qld + xlu
     return (core * mult, tqqq * mult, qld * mult, xlu * mult, 1.0 - risky * mult)
 
+
+class MissingOverlayInputs(ValueError):
+    """A live weight call omitted a mandatory overlay input."""
+
+
+def live_target_weights(state, micro_agrees, vol, fast_state, gaps):
+    """THE function live triggers must call (added 2026-09-07).
+
+    Identical maths to target_weights_with_voltarget(), but `fast_state` and
+    `gaps` are REQUIRED POSITIONAL arguments and are validated. Why this
+    exists: target_weights_with_voltarget() accepts fast_state=None and
+    gaps=None so pre-overlay backtests still run, which means a live caller
+    that forgets either one silently trades the OLD design and looks
+    successful doing it. Research keeps the permissive function; live gets a
+    function that cannot fail quietly.
+
+    Raises MissingOverlayInputs when an overlay is enabled and its input is
+    absent or malformed. `vol=None` is still allowed and still degrades the
+    multiplier to 1.0 -- that is a genuine fallback, not a missing input."""
+    if FAST_REENTRY_ENABLED:
+        if fast_state is None:
+            raise MissingOverlayInputs(
+                "fast_state is required: pass compute_fast_states(dates, px)[<date>]")
+        if fast_state not in STATE_LABEL:
+            raise MissingOverlayInputs(f"fast_state {fast_state!r} is not a state A-F")
+    if EXTENSION_TRIM_ENABLED:
+        if not isinstance(gaps, dict):
+            raise MissingOverlayInputs(
+                "gaps is required: pass compute_extension_gaps(dates, px)[<date>]")
+        missing = [n for n, _ in EXTENSION_RULES if n not in gaps]
+        if missing:
+            raise MissingOverlayInputs(f"gaps is missing window(s) {missing}")
+    return target_weights_with_voltarget(
+        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps)
+
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
     D='pullback in uptrend', E='breakdown', F='established downtrend',

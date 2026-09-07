@@ -40,16 +40,37 @@ def scaled(wfn, k):
     return f
 
 
-def beta_matched_control(rows, base_fn, target_beta):
+def beta_matched_control(rows, base_fn, target_beta, tol=0.01, kmax=8.0):
+    """Scale base_fn so its beta MATCHES target_beta, then evaluate it.
+
+    2026-09-07 FIX. The old version bisected on [0, 1], so it could only
+    scale the baseline DOWN. When the candidate had a HIGHER beta than the
+    baseline -- every rung of a leverage ladder -- the bisection saturated
+    at k = 1.0 and silently returned the UNSCALED baseline. That is not a
+    matched control, but callers labelled it PASS anyway. The bracket now
+    expands until it contains the target, and the returned metrics carry
+    `beta_achieved` / `beta_matched`; `controls()` FAILS an unmatched
+    control instead of reporting a comparison that was never made.
+    Note k > 1 drives the control's cash leg negative (synthetic borrowing);
+    that is intended for a like-for-like beta comparison, and
+    `cash_negative` records it."""
     lo, hi = 0.0, 1.0
-    for _ in range(25):
+    while beta_of(rows, scaled(base_fn, hi)) < target_beta and hi < kmax:
+        lo, hi = hi, hi * 2
+    for _ in range(40):
         mid = (lo + hi) / 2
         if beta_of(rows, scaled(base_fn, mid)) < target_beta:
             lo = mid
         else:
             hi = mid
     k = (lo + hi) / 2
-    return k, evaluate(rows, scaled(base_fn, k))
+    ev = evaluate(rows, scaled(base_fn, k))
+    ev['beta_achieved'] = beta_of(rows, scaled(base_fn, k))
+    ev['beta_target'] = target_beta
+    ev['beta_matched'] = abs(ev['beta_achieved'] - target_beta) <= tol
+    ev['k'] = k
+    ev['cash_negative'] = k > 1.0
+    return k, ev
 
 
 def mk(W=None, micro='both', volfn=None):

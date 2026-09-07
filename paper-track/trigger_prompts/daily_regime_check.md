@@ -17,6 +17,25 @@ This is a DRIFT-GATED check, not an unconditional daily rebalance. Most days
 the answer is "within band, no action, no report" — expect roughly 41
 rebalances/year total across all causes.
 
+## 0. Execution convention — what the signal is computed on
+
+This trigger fires at 15:55 ET and trades immediately, using the SAME
+session's prices for both the signal and the fills. The backtest convention
+is "decide on the close of session d0, hold the d0 -> d1 return", i.e. the
+trade happens at d0's close. The 15:55 snapshot is a five-minute-early PROXY
+for that close: the last daily bar returned by `get_equity_historicals` is
+not final at 15:55, so the SMA, state, gaps and realized-vol readings are all
+computed on a nearly-complete bar. That is the intended alignment, and the
+approximation is deliberate -- do NOT "fix" it by switching to the prior
+completed close, which would add a full session of lag. Added 2026-09-07
+after an outside review flagged the ambiguity; measured on real instruments,
+one EXTRA session of lag costs about 1.4pp of CAGR (31.9% -> 30.5%) and
+0.04 of Sharpe, so the five-minute gap is far smaller than that but is not
+zero. Two consequences to respect:
+  - Report readings as "15:55 snapshot", never as "the close".
+  - If a run happens outside 15:50-16:00 ET, say so in the report: the
+    further from the close, the worse the proxy.
+
 ## 1. Compute today's reading
 
 Pull QQQ daily closes via `get_equity_historicals` (adjustment_type='split',
@@ -35,10 +54,14 @@ reimplementation:
     overlay. It is NOT a state of its own -- it only decides whether a macro
     B/C day holds A weights (fast in A/B) or a macro F day holds C weights
     (fast in A/B/C). See `effective_state()`.
-  - `target_weights_with_voltarget(state, micro_agrees, vol, fast_state=<fast>, gaps=<gaps>)`
-    → the 5 live weights (core, tqqq, qld, xlu, cash). **The `fast_state`
-    argument is mandatory for live use** -- omitting it silently runs the
-    pre-overlay design.
+  - `live_target_weights(state, micro_agrees, vol, fast_state, gaps)`
+    -> the 5 live weights (core, tqqq, qld, xlu, cash). **Call THIS, not
+    `target_weights_with_voltarget`.** Added 2026-09-07: `fast_state` and
+    `gaps` are REQUIRED positional arguments and are validated, raising
+    `MissingOverlayInputs`. The older function accepts them as None so
+    pre-overlay backtests still run, which meant a live call that forgot one
+    silently traded the PRE-OVERLAY design and looked fine doing it. `vol=None`
+    is still accepted and still degrades the multiplier to 1.0.
   - `effective_state(state, fast_state)` → the state whose weight row is
     actually held. Report BOTH the macro state and the effective state
     whenever they differ.
@@ -53,8 +76,8 @@ reimplementation:
     for live use** like `fast_state` (do NOT use the legacy `gap200=`
     argument). Report the three gaps and the vote count every run.
 
-`target_weights_with_voltarget()` is THE live weight function as of
-2026-09-01. Do not call `target_weights()`, `target_weights_with_micro()`, or
+`live_target_weights()` is THE live weight function as of 2026-09-07
+(it wraps `target_weights_with_voltarget()`, live since 2026-09-01). Do not call `target_weights()`, `target_weights_with_micro()`, or
 `target_weights_with_gold()` for live weights — they all omit the volatility
 overlay. If `realized_vol` returns None (insufficient history), pass it
 through anyway: the multiplier degrades to 1.0, which is the correct fallback.

@@ -200,10 +200,26 @@ def live():
     return lambda r: vt(live_base(r, micro=False), r['vol'])
 
 
-def exposure_control(rows, target_exp):
+def exposure_control(rows, target_exp, tol=0.002, kmax=8.0):
+    """Scale the live baseline so its AVERAGE DEPLOYED CAPITAL matches
+    target_exp, then evaluate it.
+
+    2026-09-07 FIX, two defects. (1) The bracket was [0, 1], so the control
+    could only scale DOWN; a candidate deploying more capital saturated at
+    k = 1.0 and the "control" was just the unscaled baseline. The bracket now
+    expands and the result carries `exp_achieved` / `exp_matched`.
+    (2) READ THE UNITS. `run()`'s exposure is the sum of the four risky
+    WEIGHTS -- capital deployed -- NOT leverage. A 50/50 and a 40/60 SPMO
+    /TQQQ A row both deploy 100% and score identically here, so this control
+    says nothing about a change that only shifts weight between a 1x and a
+    3x instrument. Use `beta_matched_control()` for those. This control is
+    the right one for rules that move capital in and out (trims, cash
+    gates)."""
     lo, hi = 0.0, 1.0
     base = live()
-    for _ in range(25):
+    while run(rows, scaled(base, hi))[1] < target_exp and hi < kmax:
+        lo, hi = hi, hi * 2
+    for _ in range(40):
         mid = (lo + hi) / 2
         _, e = run(rows, scaled(base, mid))
         if e < target_exp:
@@ -211,7 +227,13 @@ def exposure_control(rows, target_exp):
         else:
             hi = mid
     k = (lo + hi) / 2
-    return k, evaluate(rows, scaled(base, k))
+    ev = evaluate(rows, scaled(base, k))
+    ev['exp_achieved'] = run(rows, scaled(base, k))[1]
+    ev['exp_target'] = target_exp
+    ev['exp_matched'] = abs(ev['exp_achieved'] - target_exp) <= tol
+    ev['k'] = k
+    ev['cash_negative'] = k > 1.0
+    return k, ev
 
 
 def controls(rows, label, cand_fn, ev):
@@ -219,11 +241,16 @@ def controls(rows, label, cand_fn, ev):
     k1, c1 = exposure_control(rows, ev['risky'])
     tb = beta_of(rows, cand_fn)
     k2, c2 = beta_matched_control(rows, live(), tb)
-    ok1 = ev['sharpe'] > c1['sharpe']
-    ok2 = ev['sharpe'] > c2['sharpe']
-    print(f"   controls for {label}: exposure-matched (k={k1:.3f}) Sharpe {c1['sharpe']:.3f} "
-          f"{'PASS' if ok1 else 'FAIL'}; beta-matched (beta {tb:.2f}, k={k2:.3f}) Sharpe "
-          f"{c2['sharpe']:.3f} {'PASS' if ok2 else 'FAIL'}")
+    # 2026-09-07: a control that did not reach the candidate's exposure/beta
+    # is NOT a comparison -- it must never be reported as PASS.
+    ok1 = ev['sharpe'] > c1['sharpe'] and c1.get('exp_matched', True)
+    ok2 = ev['sharpe'] > c2['sharpe'] and c2.get('beta_matched', True)
+    v1 = 'PASS' if ok1 else ('UNMATCHED' if not c1.get('exp_matched', True) else 'FAIL')
+    v2 = 'PASS' if ok2 else ('UNMATCHED' if not c2.get('beta_matched', True) else 'FAIL')
+    print(f"   controls for {label}: exposure-matched (k={k1:.3f}, deployed "
+          f"{c1.get('exp_achieved', float('nan')):.4f} vs {ev['risky']:.4f}) Sharpe "
+          f"{c1['sharpe']:.3f} {v1}; beta-matched (beta {tb:.2f}, k={k2:.3f}, achieved "
+          f"{c2.get('beta_achieved', float('nan')):.3f}) Sharpe {c2['sharpe']:.3f} {v2}")
     return ok1 and ok2
 
 

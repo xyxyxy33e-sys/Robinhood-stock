@@ -22,8 +22,8 @@ C row when the fast read is A/B/C.
 | B | 75% SPMO / 25% TQQQ | 1.5x |
 | C | 100% SPMO | 1.0x |
 | D | 100% QLD | 2.0x |
-| E | 50% XLU / 50% BOXX | 0.5x |
-| F | 100% BOXX | 0.0x |
+| E | 50% XLU / 50% BOXX | 0.25x |
+| F | 100% BOXX | 0.00x |
 
 **Extension trim (graded):** when the effective state is A, count how many
 of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
@@ -53,6 +53,14 @@ the drift band 31.9% / 1.15 / −33.2%, ~55 rebalances/yr. Search-era Sharpe
 | 2026-09-02 | B 25/75 → 75/25, A 80/20 → 70/30, D 70% → 85% QLD, F → 100% cash, micro overlay off | "State F -> 100% cash", "Improvement search", "The return frontier" |
 | 2026-09-01 | volatility targeting, 3% drift band, gold removed | "Volatility targeting", "26-year stress test" |
 | 2026-08-31 | SPMO core, QLD satellite, XLU in state E | "The XLU update to state E" |
+
+**The two weight tables and the overlay chain above are GENERATED from
+`state.py`** by `paper-track/gen_live_tables.py`, and
+`consistency_check.py` asserts this file matches the code. They were
+hand-maintained until 2026-09-07, when an outside review found the detailed
+table still reading A = 50/50 and the overlay chain still reading 0.25 per
+vote, two days after the code moved to 40/60 and ⅓. Do not hand-edit them;
+regenerate.
 
 Everything below the line "Research record" is history and evidence — what
 was tried, what was kept, what was rejected and why. It is there so nothing
@@ -94,12 +102,12 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 
 | State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |
 |---|---|---|---|---|---|---|
-| A | 50% | 50% | 0% | 0% | 0% | 2.0x |
+| A | 40% | 60% | 0% | 0% | 0% | 2.2x |
 | B | 75% | 25% | 0% | 0% | 0% | 1.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
 | D | 0% | 0% | 100% | 0% | 0% | 2.0x |
-| E | 0% | 0% | 0% | 50% | 50% | 0.5x |
-| F | 0% | 0% | 0% | 0% | 100% | 0.0x |
+| E | 0% | 0% | 0% | 50% | 50% | 0.25x |
+| F | 0% | 0% | 0% | 0% | 100% | 0.00x |
 
 `target_weights(state)` returns this row — the base table, the right
 reference for each state's RELATIVE risk posture. A live trigger never calls
@@ -113,7 +121,8 @@ it directly: two overlays apply on top, and the function that applies both is
    else changes. Section "Fast re-entry overlay" below.
 2. **Extension trim** (2026-09-06, graded): if the effective state is A,
    the four risky legs are scaled by `extension_scale(eff, gaps)` = 1 −
-   0.25 × votes over `EXTENSION_RULES`. Section "Extension trim" below.
+   ⅓ × votes over `EXTENSION_RULES` (×⅔ / ×⅓ / ×0). Section "Extension
+   trim" below.
 3. **Volatility targeting** (2026-09-01): the four risky legs of that row are
    scaled by `min(1, 0.20 / realized_vol_30d)` and the freed weight goes to
    cash. Section "Volatility targeting" below.
@@ -771,6 +780,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Post-change re-checks | confirmed |
 | 2026-09-06 | Leverage under the trim; trim step sweep | step ⅓ + A 40/60 APPLIED (owner) |
 | 2026-09-07 | Outside report review; max(vol10, vol30) estimator | candidate, not applied |
+| 2026-09-07 | Outside review round 2: spec/control/churn audit | 3 defects FIXED; hysteresis negative |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -1987,4 +1997,106 @@ stale in it, which is a principled reason to weight the daily test higher
 — but that is an argument, not evidence, and the two real harnesses
 disagree. Proxy per-year diffs are two-sided (2020 +5.8, 2018 +4.0, 2010
 +3.7 against 2003 −4.2, 2026 −3.3, 2023 −2.5). Owner's call.
+
+### Outside review round 2 (2026-09-07) — three real defects FIXED, one correction to the record
+
+A second outside critique. Four of its six points were verified true against
+the code; all are now fixed or measured.
+
+**(a) FIXED — the live spec contradicted the code.** Part I's DETAILED
+weight table still read A = 50/50 and the overlay chain still read 0.25 per
+vote, two days after the code moved to 40/60 and ⅓. My 09-06 edit had caught
+the at-a-glance table and missed these. Both weight tables and the overlay
+chain are now GENERATED from `state.py` by `paper-track/gen_live_tables.py`,
+and `consistency_check.py::check_strategy_md_matches_code()` fails the build
+if this file disagrees with the code. (The same pass corrected state E's
+effective exposure from 0.5x to 0.25x — 50% XLU at the documented 0.5x
+weighting is 0.25x, and the table had been wrong since it was written.)
+
+**(b) FIXED — the live weight function permitted silent fallback.**
+`target_weights_with_voltarget()` accepts `fast_state=None`/`gaps=None` so
+pre-overlay backtests still run; a live caller that omitted either silently
+traded the PRE-OVERLAY design. New `live_target_weights(state, micro_agrees,
+vol, fast_state, gaps)` takes both as REQUIRED positional arguments and
+raises `MissingOverlayInputs`; both trigger prompts now call it.
+
+**(c) FIXED — the exposure/beta-matched controls could not match upward, and
+one of them measures the wrong thing.** Both helpers bisected on [0, 1], so
+they could only scale the baseline DOWN. A candidate with HIGHER beta —
+every rung of a leverage ladder — saturated at k = 1.0 and the "control"
+was the UNSCALED baseline, reported as PASS. Both now expand the bracket and
+return `beta_achieved`/`exp_achieved` and a `matched` flag; `controls()`
+reports UNMATCHED instead of PASS. Separately, `exposure_control()` measures
+DEPLOYED CAPITAL (the sum of the four risky weights), not leverage: A 50/50
+and A 40/60 both deploy 100% and score identically, so that control is
+uninformative for any change that shifts weight between a 1x and a 3x
+instrument. Both limitations are now documented in the docstrings.
+
+**CORRECTION to the 09-06 leverage note.** It said the beta-matched control
+Sharpe "equals live at every rung, so leverage is a pure risk dial". That
+equality was the saturation artifact, not a result. Corrected (baseline =
+live A 40/60, beta 1.363):
+
+| A row | candidate beta | matched control k | control Sharpe | candidate Sharpe |
+|---|---|---|---|---|
+| 50/50 | 1.270 | 0.932 | 0.924 | 0.912 |
+| 40/60 (live) | 1.363 | 1.000 | 0.918 | 0.918 |
+| 30/70 | 1.456 | 1.068 | 0.914 | 0.922 |
+| 0/100 | 1.735 | 1.273 | 0.903 | 0.894 |
+
+The control DOES move, and the comparison is mixed (the scaled baseline wins
+at 50/50, the candidate wins slightly at 30/70), all within ±0.01 Sharpe.
+The CONCLUSION — extra leverage buys no Sharpe — still stands, and rests on
+the direct figures (proxy Sharpe flat, real Sharpe falling as leverage
+rises), not on the control. The stated evidence was wrong; the decision was
+not.
+
+**(d) MEASURED — extension-threshold churn is real and large; hysteresis
+FAILS the both-era bar.** The vote count changes 18.0x/yr, and **44% of
+those changes reverse to the prior count within 3 sessions** (49% within 5,
+51% within 10); 12.1% of effective-A days sit within 0.5pp of a threshold.
+Per-window hysteresis (a window turns on above t+band, off below t−band):
+
+| band | real daily CAGR / Sharpe / MaxDD | reb/yr | vote changes/yr | proxy Sharpe | holdout |
+|---|---|---|---|---|---|
+| 0 (live) | 31.86 / 1.154 / −33.2 | 55 | 18.0 | 0.918 | 0.771 |
+| 1.0pp | 32.57 / 1.167 / −33.2 | 47 | 8.2 | 0.903 | 0.733 |
+| 2.0pp | 28.95 / 1.072 / −33.2 | 44 | 4.1 | 0.847 | 0.709 |
+
+A 1pp band more than halves the churn and improves the SPMO era, but costs
+proxy Sharpe (0.918 → 0.903) and holdout Sharpe (0.771 → 0.733). Not
+applied. Caveat: the proxy run carries hysteresis state across `evaluate()`'s
+internal passes, which contaminates the first rows of a pass; the holdout gap
+is far larger than that effect but the figure is indicative, not exact.
+The reviewer's related point stands and is now recorded: the 100/150/200-day
+gaps are ~0.9 correlated, so three votes are ONE signal read three ways, not
+three independent confirmations — as the original note said, but the
+"p = 0.00" phrasing oversold it. That p is "0 of 200 shuffles", i.e. p < 0.005,
+and day-level shuffling breaks episode persistence, so it overstates
+significance for a persistent signal. Block-bootstrap versions are the right
+test and have not been run.
+
+**(e) NOT FIXED, documented — execution alignment.** The trigger fires at
+15:55 ET and uses that snapshot as a proxy for the session close, then trades
+immediately; the backtest decides on d0's close and earns d0→d1. So live is
+the backtest convention approximated five minutes early, NOT a day of
+misalignment. Measured: one extra full session of lag costs 1.4pp CAGR
+(31.9% → 30.5%) and 0.04 Sharpe, and costs the max(10,30) candidate more
+(31.9% → 29.8%), so a faster estimator would raise our execution sensitivity.
+Both prompts now state the convention explicitly and require readings to be
+reported as a "15:55 snapshot", never as "the close".
+
+**(f) OPEN — drawdown reconciliation.** The reviewer's longer synthetic
+replay reaches −39% to −40% depending on the core proxy, against our −35.2%.
+Different proxy construction (their SPMO substitute, financing model and
+leveraged-ETF synthesis differ from ours) is the likely cause and has NOT
+been reconciled. Until it is, treat −35% as OUR proxy's figure and roughly
+−40% as a plausible alternative construction; neither is a loss ceiling.
+
+**Answering "why not max(5–15, 30)"** (real daily, the decisive harness):
+max(5,30) 31.45 / 1.208 / −32.5 at 81 rebalances/yr; **max(10,30) 31.94 /
+1.206 / −30.1 at 69**; max(15,30) 31.78 / 1.185 / −30.9 at 66; max(20,30)
+31.64 / 1.168 / −31.9 at 61. 10 is an interior optimum on drawdown and
+CAGR, not a corner; 5 buys 12 more rebalances a year for a worse drawdown.
+Still unapplied.
 
