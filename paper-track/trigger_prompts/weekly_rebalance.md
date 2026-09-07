@@ -297,7 +297,15 @@ newest week at top: macro state and label, fast (20/100) reading and the
 effective state if it differs, the three extension gaps and the vote count,
 `micro_agrees`, both realized-vol legs with the binding one
 and resulting multiplier, target vs. actual weights per leg, trades placed and
-fills, realized P&L with the wash-sale split, and current drawdown-from-high.
+fills, realized P&L with the wash-sale split, current drawdown-from-high, and
+the notional-weighted slippage from the fill-quality tracker.
+
+If a FUNDING TRIGGER fired this week — a newly crossed 5% drawdown tier, or
+the effective state shifting from D/E/F into A/B/C — put it at the TOP of the
+entry: which trigger, the tier or the prior/new state, the account value, and
+the standing $5,000-per-event policy. Also list any funding triggers that fired
+earlier in the week on a Mon-Thu run, so the weekly entry is a complete record
+of the week's funding events even when the Friday run itself trades nothing.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear

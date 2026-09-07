@@ -281,13 +281,24 @@ trigger as a reason to deviate from the computed target weights.
 
 ## 7. Reporting
 
-On a within-band day: no report, no artifact edit — just end. On a rebalance:
-append to the weekly report artifact
+On a within-band day with NO funding trigger: no report, no artifact edit —
+just end.
+
+**A FUNDING TRIGGER ALWAYS PRODUCES A REPORT, even on a no-trade day.** A new
+drawdown tier can cross while the portfolio is comfortably within the drift
+band, and the shift into A/B/C is a regime change that will normally trade
+anyway — but do not rely on that. If either funding trigger fired, append an
+entry even if nothing was bought or sold, and put the trigger at the TOP of
+it: which trigger, the tier or the prior/new state, the account value, and the
+standing $5,000-per-event policy. (Added 2026-09-07 — before this, a tier
+crossing on a quiet day would have been silently dropped.)
+
+On a rebalance: append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top, stating the old state, new state (macro AND effective,
 if the fast overlay is active), the extension-trim vote count, both vol legs
 with the binding one and the resulting multiplier, the drift and which condition fired (regime change vs drift band),
-the weights traded to, and the fills.
+the weights traded to, the fills, and the notional-weighted slippage.
 
 Any live financial figure that combines two or more numbers (a daily total, a
 new cumulative) must be computed in code from raw records

@@ -2317,3 +2317,45 @@ and −25.3% is the smallest real drawdown since the overlays went in. Cost:
 1.8pp of real weekly CAGR. Proxy holdout is unchanged within noise
 (0.781 → 0.780).
 
+## Funding policy (owner, 2026-09-07) — reporting duty only
+
+The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
+on exactly two triggers.
+
+  1. **Each newly crossed 5% drawdown tier** (−5 / −10 / −15 / −20 / −25%
+     from the rolling 252-day high). ~5.2x/yr; historically 28 / 15 / 8 / 4 /
+     1 crossings by tier, worst quarter 5 (2018Q4).
+  2. **Each shift of the EFFECTIVE state from D/E/F into A/B/C** — the turn.
+     ~4.1x/yr, worst quarter 2.
+
+Together ~9 events/yr, ~$45k/yr, worst historical quarter $30k. Both are now
+push events in the triggers, and the single-day "−2% or worse" alert was
+REMOVED to make room (it fired ~10x/yr and was explicitly low-conviction).
+The triggers only REPORT these; they never move money.
+
+**Why these two and not the alternatives** (all measured 2026-09-07,
+`scratchpad dipfund.py` / `statefund.py`, $5k/event, 2015-11 → 2026-08):
+
+| trigger set | /yr | total | final | IRR | per $ |
+|---|---|---|---|---|---|
+| shift into A/B/C only | 4.1 | $220k | $3.21M | 31.3% | 10.05x |
+| drawdown tiers only | 5.2 | $280k | $3.05M | 30.6% | 8.03x |
+| **both (adopted)** | **9.0** | **$485k** | **$4.58M** | **31.5%** | 7.84x |
+| every strategy day < −3% | 9.3 | $500k | $4.52M | 31.3% | 7.53x |
+| annual lump each January | 1.1 | $60k | $2.17M | 30.2% | 13.56x |
+
+REJECTED and not to be reinvented: **entering F** (1.1x/yr) — the deployed
+sleeve on that day is **0.0%**, because F is 100% BOXX, so new money lands in
+cash; with a $2k/mo budget it left $235k of $260k uninvested and returned
+26.1%. **Any state change** (11.5x/yr) — no edge, up to $50k a quarter.
+**A −3% day** — most frequent, worst per-dollar efficiency, worst clustering
+($35k in a quarter).
+
+**Two honest caveats.** (a) Per-dollar efficiency FALLS as triggers are added
+— the annual lump is 13.56x — but that reflects less money working for
+longer, not better timing; the adopted pair ends at $4.58M against $2.17M.
+(b) Against a monthly schedule with the SAME budget, every trigger tested lost
+(deploy-immediately 31.2% vs 31.1% for the shift, 30.4% for tiers), because
+cash waiting out of a ~30% strategy is expensive. The owner does not want
+monthly contributions, so the schedule is not the live alternative — but if
+that ever changes, the schedule wins on the arithmetic.
