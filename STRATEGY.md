@@ -770,6 +770,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Pair study | negative |
 | 2026-09-06 | Post-change re-checks | confirmed |
 | 2026-09-06 | Leverage under the trim; trim step sweep | step ⅓ + A 40/60 APPLIED (owner) |
+| 2026-09-07 | Outside report review; max(vol10, vol30) estimator | candidate, not applied |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -1931,4 +1932,59 @@ H 0.771) → 23.42 / 0.912 / −35.2 (S 1.104, H 0.766); real weekly 33.34 /
 +2.4, Aug +3.3 instead of 0/0) with max drawdown −25.2% → −26.8%. The
 floor pays in melt-ups (2009 +1.6, 2023 +2.1 proxy) and gives it back at
 tops (2003 −2.1, 2007 −1.3, 2024 −1.9, 2026 −1.8). Not applied.
+
+### Outside report review; faster volatility estimator (2026-09-07) — CANDIDATE, not applied
+
+The owner shared an outside research report (data cutoff 31 Aug 2026)
+benchmarked against a PINNED OLD COMMIT of this repo (3b7f5a08), i.e. before
+the 6 Sep design. Its "original six-state" line is 24.70% / 0.975 / −27.7%
+on 2016+; our current design is 33.3% / 1.23 / −27.0% real weekly, so its
+baseline is not what we run and its head-to-head numbers cannot be read
+across. Three of its conclusions were checked against our own record:
+
+- **Its headline recommendation is a full TQQQ/cash sleeve** (200 DMA
+  regime, no SPMO), 38.45%/yr since 2016. This is the raincheckfund-shaped
+  strategy already reviewed and rejected on 2026-09-06. Its OWN 2000–2015
+  stress table agrees with that rejection: 8.34% CAGR / −61.4% MaxDD /
+  −24.0% worst rolling 3y for the TQQQ/cash family, against 9.52% /
+  −35.7% / −12.1% for our six-state design. Its own bootstrap puts the
+  return advantage at −2.03 to +2.67pp, spanning zero. No change.
+- **Its negative finding on "extension trimming" does not test our rule.**
+  It caps exposure at 2x above 110%/115% of the 50 DMA on the TQQQ/cash
+  sleeve; ours is a graded three-window vote (100/150/200d) on the A row of
+  the six-state design, validated both-era with p=0.00. Its 115% variant
+  never bound in-sample. Not evidence against ours.
+- **Its "D uses A allocation" suggestion** is against the old D row. Our D
+  became 100% QLD on 2026-09-06 on the frontier analysis. Not revisited.
+
+**The one genuinely new idea is the volatility ESTIMATOR: use
+max(vol10, vol30) instead of vol30.** We have swept the vol TARGET and the
+LOOKBACK but never a two-window max. Tested on the live design
+(`vol_estimator_family.py`, `vol_estimator_daily.py`):
+
+| estimator | 26y proxy | search / holdout | expo-ctl | real weekly | real daily (band) |
+|---|---|---|---|---|---|
+| **vol30 (live)** | 23.60 / 0.918 / −35.2 | 1.112 / 0.771 | 0.741 | 33.34 / 1.233 / −27.0 | 31.86 / 1.154 / −33.2 |
+| max(10,30) | 23.55 / 0.942 / −34.7 | 1.158 / 0.781 | 0.744 | 32.49 / 1.240 / −27.4 | 31.94 / 1.206 / −30.1 |
+| max(5,30) | 23.32 / 0.945 / −34.0 | 1.163 / 0.783 | 0.744 | 31.65 / 1.240 / −27.9 | — |
+| vol10 alone | 23.71 / 0.922 / −37.7 | 1.160 / 0.745 | 0.741 | 33.29 / 1.224 / −29.2 | — |
+| max(10,60) | 23.00 / 0.932 / −35.8 | 1.099 / 0.807 | 0.744 | 29.85 / 1.162 / −27.5 | — |
+
+It is a surface, not a spike: every max(fast, slow) pair beats its own
+single-window counterpart on Sharpe, and the good region is max(5–15, 30).
+Exposure- and beta-matched controls pass (0.744 and 0.920 vs 0.942). Real
+daily with the band is the strongest result — Sharpe 1.154 → 1.206, MaxDD
+−33.2% → −30.1%, CAGR flat — and it survives 10bp and 20bp costs
+(0.951 → 0.991 at 20bp). Turnover is essentially unchanged (17.1 → 17.2x
+of portfolio value per year) even though rebalances rise 55 → 69/yr: more
+frequent, smaller trims.
+
+**Why it is NOT applied.** It fails our standing bar, which requires
+improvement on the proxy AND on real instruments on every metric: real
+WEEKLY CAGR drops 33.34% → 32.49% and MaxDD widens −27.0% → −27.4%. The
+weekly harness only re-decides weekly, so a 10-day reading is largely
+stale in it, which is a principled reason to weight the daily test higher
+— but that is an argument, not evidence, and the two real harnesses
+disagree. Proxy per-year diffs are two-sided (2020 +5.8, 2018 +4.0, 2010
++3.7 against 2003 −4.2, 2026 −3.3, 2023 −2.5). Owner's call.
 
