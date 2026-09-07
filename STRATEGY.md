@@ -784,7 +784,8 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-06 | Leverage under the trim; trim step sweep | step ⅓ + A 40/60 APPLIED (owner) |
 | 2026-09-07 | Outside report review; max(vol10, vol30) estimator | candidate, not applied |
 | 2026-09-07 | Outside review round 2: spec/control/churn audit | 3 defects FIXED; hysteresis negative |
-| 2026-09-07 | vol estimator vol30 → max(vol10, vol30) | owner decision; real daily +0.05 Sharpe / +3pp MaxDD, both proxy eras up, real WEEKLY CAGR −0.85pp |
+| 2026-09-07 | vol estimator vol30 → max(vol10, vol30) | owner decision; real daily +0.05 Sharpe / +3pp MaxDD, both proxy eras up, real WEEKLY CAGR −0.85pp; block bootstrap NOT significant |
+| 2026-09-07 | Block bootstrap + leave-one-regime-out; drawdown reconciliation | trim survives, overlay/estimator do not; −39/−40% gap = execution lag |
 
 ### Why each row is what it is (short version — full backtests in the
 evaluation artifact: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2,
@@ -2160,4 +2161,81 @@ series alone and guarded only the core and signal series, so any other leg
 (here XLU) ending earlier raised on `d1`. It now derives the calendar from
 the intersection of every series a leg reads from and skips rows missing an
 endpoint.
+
+### Block bootstrap and leave-one-regime-out (2026-09-07) — the trim survives, the overlay and the estimator do NOT
+
+`paper-track/block_bootstrap.py`. The outside review was right that day-level
+shuffling destroys episode persistence and that "p = 0.00" (0 of 200 shuffles)
+means p < 0.005, not zero. Replacing that null with a CIRCULAR BLOCK bootstrap
+(2000 resamples, blocks of 20 and 60 sessions, paired on the same blocks, proxy
+2000–2026 daily, 6575 sessions) materially weakens two of the three claims.
+
+| change | point estimate | Sharpe 95% CI (60d blocks) | P(Sharpe diff ≤ 0) | verdict |
+|---|---|---|---|---|
+| fast re-entry overlay | +1.70pp/yr, +0.041 Sharpe | [−0.015, +0.096] | 0.080 | **NOT significant** |
+| graded extension trim (step ⅓) | +2.30pp/yr, +0.143 Sharpe | [+0.025, +0.266] | 0.007 | **survives** |
+| max(10,30) vol estimator | −0.04pp/yr, +0.024 Sharpe | [−0.012, +0.065] | 0.097 | **NOT significant** |
+| all three together | +3.96pp/yr, +0.208 Sharpe | [+0.070, +0.348] | 0.002 | survives |
+
+Log-return intervals are wider still: only the fast overlay and the composite
+exclude zero (P ≈ 0.03), and the TRIM's return advantage does not
+(P ≈ 0.10) even though its Sharpe advantage does. Block length barely matters
+(20d and 60d agree), which is reassuring about the resampling itself.
+
+**What this changes.** The earlier "p = 0.01" for the overlay and "p = 0.00"
+for the trim were against an i.i.d. day-shuffled null and overstated both. The
+honest position now: the extension trim has a Sharpe edge that survives a
+persistence-respecting test; the fast overlay and the volatility estimator do
+NOT clear 5% on their own, and are held on the strength of the point estimate,
+the both-era behaviour and the controls, not on significance. The composite
+design is significant, but that is partly the trim carrying it. Nothing is
+being un-applied on this basis — it is a downgrade of confidence, not of the
+design — but no future note should quote "p = 0.00" for these.
+
+**Leave-one-major-regime-out** (drop the window, recompute the Sharpe
+difference): every comparison keeps its sign in every drop, so none of it is
+one episode. Fast overlay +0.033 to +0.062 (weakest without the GFC); trim
++0.121 to +0.153 (weakest without the SPMO era); estimator +0.010 to +0.028;
+composite +0.193 to +0.229. Dropping the whole SPMO era — the window every
+parameter was fit in — leaves the trim at +0.121 and the composite at +0.193,
+which is the single most reassuring number here.
+
+### Drawdown reconciliation (2026-09-07) — RESOLVED: it is execution lag
+
+`paper-track/drawdown_reconciliation.py`. The outside replay reported ~−39% to
+−40% against our −34.7%. Varying one construction choice at a time through the
+repo's OWN engine (3% band, 4bp one-way cost, drift-and-hold):
+
+| construction | CAGR | Sharpe | MaxDD |
+|---|---|---|---|
+| ours: QQQ core, 2000–2026 (standing) | 23.55% | 0.942 | −34.7% |
+| restricted to 2000–2015 | 16.89% | 0.740 | −32.8% |
+| SPY core instead of QQQ | 22.48% | 0.940 | −33.9% |
+| financing +100bp | 22.70% | 0.916 | −35.1% |
+| financing +100bp + SPY core | 21.65% | 0.913 | −34.1% |
+| heavier fees (ER 1.5/1.2) + financing +100bp | 22.44% | 0.907 | −35.2% |
+| **+ 1 extra session of execution lag** | **20.46%** | **0.846** | **−39.5%** |
+| **+ 2 extra sessions of lag** | **18.53%** | **0.782** | **−40.3%** |
+
+Core proxy, financing spread and expense ratios move the drawdown by at most
+0.5pp and CANNOT account for the gap. **Execution lag accounts for all of
+it**: one extra session gives −39.5%, two give −40.3%, bracketing the reported
+−39% to −40% exactly. That is consistent with the reviewer's own stated
+method — "completed-close signals and next-session-close fills" — which is
+precisely one session later than our convention (decide on d0's close, hold
+the d0 → d1 return). So the two figures are not in conflict: they measure the
+same strategy under different execution assumptions, and the reviewer's own
+point (1) about execution alignment is the explanation for their point (6).
+
+**Operational consequence, and it is a real one.** Our −35% assumes we trade
+at (or within five minutes of) the close on the signal date. A single session
+of slippage costs 3.1pp of CAGR AND 4.8pp of drawdown. Execution discipline is
+therefore not a bookkeeping detail — it is worth more than most of the design
+changes argued over this week. The triggers now say so.
+
+A note found while doing this: a first attempt reimplemented the simulation
+loop standalone and produced 26.04% / −33.7% against the standing 23.55% /
+−34.7%. The difference was entirely the engine — costless daily rebalancing
+versus the band, the cost model and drift-and-hold. Always reconcile through
+`improvement_search.run()`, never a fresh loop.
 
