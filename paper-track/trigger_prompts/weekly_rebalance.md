@@ -268,10 +268,11 @@ fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
 market in it; the strategy's true max drawdown is about **-33%** on the
-2000-2026 stress test (design of 2026-09-06, third revision: A=50/50 core/TQQQ, B=75/25,
+2000-2026 stress test (design of 2026-09-07 final: A=50/50 core/TQQQ, B=75/25,
 D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
 trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
-100/150/200-day SMAs), micro off, vol target 20%; it was -33% with A=50/50 and step 0.25 earlier the same day, -32% under the
+100/150/200-day SMAs), micro off, vol target 20% on max(10d,30d) realized vol;
+it was -34.7% during the one day the A row sat at 40/60 on 09-06, -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol
 targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
 SPMO-era window shows -- never quote those as the worst case. An outside
@@ -286,7 +287,7 @@ convention in section 0 matters operationally, not just pedantically.
 Also carry:
 the 2026-09-06 reweight is the SECOND deliberate step up the return frontier,
 so live-era stress events are larger than before (COVID-shaped drawdowns about
--25% to -35%, a 2022-type year about -20% real / -28% proxy) -- that is by design, not a fault.
+-25% to -33%, a 2022-type year about -19% real / -27% proxy) -- that is by design, not a fault.
 
 Evidence discipline when commenting on the overlays: a circular BLOCK
 bootstrap (2026-09-07) downgraded two claims that earlier day-shuffled tests
