@@ -133,6 +133,14 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
     weekly report. Report the drift figure so a long quiet stretch is visible
     rather than looking like a trigger that failed to run.
 
+Known behaviour, not a bug: the extension vote count changes about 18x/year
+and roughly 44% of those changes reverse within three sessions, so some
+rebalances are round trips. A hysteresis band was tested 2026-09-07 and
+REJECTED (it helps the SPMO era and costs holdout Sharpe). Do not add one.
+Likewise the max(10,30) estimator trades more often than the 30-day one did
+(~69 vs ~55 rebalances/yr, turnover essentially unchanged); that is the
+applied design, not drift to be damped.
+
 When it does fire:
 
   - Dollar target per leg = weight × `get_portfolio`'s `total_value`.
@@ -231,11 +239,28 @@ trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
 100/150/200-day SMAs), micro off, vol target 20%; it was -33% with A=50/50 and step 0.25 earlier the same day, -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol
 targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
-SPMO-era window shows -- never quote those as the worst case. Also carry:
+SPMO-era window shows -- never quote those as the worst case. An outside
+replay reaching -39% to -40% was RECONCILED 2026-09-07: it is not a data,
+fee or proxy difference (core proxy, financing spread and expense ratios move
+it by <=0.5pp), it is EXECUTION LAG. One extra session between signal and fill
+takes the SAME design from -34.7% to -39.5%, two sessions to -40.3%, and one
+session also costs 3.1pp of CAGR. So -35% is the figure for trading AT the
+signal close, which is what this trigger does; -40% is the figure if execution
+routinely slips a day. Neither is a loss ceiling. This is why the 15:55
+convention in section 0 matters operationally, not just pedantically.
+Also carry:
 the 2026-09-06 reweight is the SECOND deliberate step up the return frontier,
 so live-era stress events are larger than before (and the 40/60 A row of
 the third revision adds ~2pp of drawdown on top) (COVID-shaped drawdowns about
 -25% to -35%, a 2022-type year about -20% real / -28% proxy) -- that is by design, not a fault.
+
+Evidence discipline when commenting on the overlays: a circular BLOCK
+bootstrap (2026-09-07) downgraded two claims that earlier day-shuffled tests
+overstated. The graded extension trim survives (Sharpe 95% CI [+0.025,
++0.266], P(<=0) = 0.007); the fast re-entry overlay (P = 0.080) and the
+max(10,30) volatility estimator (P = 0.097) do NOT clear 5% on their own.
+Do not quote "p = 0.00" for any of them. Leave-one-major-regime-out keeps
+every sign in every drop, including dropping the whole SPMO fitting window.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.

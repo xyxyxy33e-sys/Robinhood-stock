@@ -136,6 +136,14 @@ overlay is disabled, so a flip moves no weight. The rule it implements:
   - **within band → NO TRADE.** Still do steps 4 and 5, then stop. No report,
     no artifact edit.
 
+Known behaviour, not a bug: the extension vote count changes about 18x/year
+and roughly 44% of those changes reverse within three sessions, so some
+rebalances are round trips. A hysteresis band was tested 2026-09-07 and
+REJECTED (it helps the SPMO era and costs holdout Sharpe). Do not add one.
+Likewise the max(10,30) estimator trades more often than the 30-day one did
+(~69 vs ~55 rebalances/yr, turnover essentially unchanged); that is the
+applied design, not drift to be damped.
+
 This replaces the old "state-change only" daily rule AND the old per-leg
 "$100 or 0.3%" trade threshold, both removed 2026-09-01. Do not reintroduce a
 per-leg minimum: when a rebalance fires, take EVERY leg to target. The band
@@ -210,6 +218,14 @@ new cumulative) must be computed in code from raw records
 (`get_pnl_trade_history` / `get_realized_pnl`), never hand-added in prose —
 `paper-track/consistency_check.py`'s `check_pnl_sum()` exists for this and a
 real double-counting incident on 2026-08-31 is why.
+
+Evidence discipline when commenting on the overlays: a circular BLOCK
+bootstrap (2026-09-07) downgraded two claims that earlier day-shuffled tests
+overstated. The graded extension trim survives (Sharpe 95% CI [+0.025,
++0.266], P(<=0) = 0.007); the fast re-entry overlay (P = 0.080) and the
+max(10,30) volatility estimator (P = 0.097) do NOT clear 5% on their own.
+Do not quote "p = 0.00" for any of them. Leave-one-major-regime-out keeps
+every sign in every drop, including dropping the whole SPMO fitting window.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.
