@@ -32,8 +32,13 @@ approximation is deliberate -- do NOT "fix" it by switching to the prior
 completed close, which would add a full session of lag. Added 2026-09-07
 after an outside review flagged the ambiguity; measured on real instruments,
 one EXTRA session of lag costs about 1.4pp of CAGR (31.9% -> 30.5%) and
-0.04 of Sharpe, so the five-minute gap is far smaller than that but is not
-zero. Two consequences to respect:
+0.04 of Sharpe -- and about 2.2pp under the max(10,30) estimator now live,
+which reacts faster and is therefore MORE sensitive to execution delay. The
+same lag is also the ENTIRE explanation for an outside replay's -39% to -40%
+proxy drawdown against our -34.7% (see the limitations note in section 7).
+So the five-minute gap is far smaller than that but is not zero, and
+execution discipline is worth more than most design changes. Two
+consequences to respect:
   - Report readings as "15:55 snapshot", never as "the close".
   - If a run happens outside 15:50-16:00 ET, say so in the report: the
     further from the close, the worse the proxy.
@@ -80,9 +85,10 @@ reimplementation:
     1 − ⅓ × votes (×⅔ / ×⅓ / ×0 — three votes puts the A row 100%
     in BOXX) before vol targeting. Step 0.25 → ⅓ on 2026-09-06 (later).
     `extension_votes(effective_state, gaps)` gives the count. Pass the dict
-    as `gaps=<gaps>` to `target_weights_with_voltarget(...)` — **mandatory
-    for live use** like `fast_state` (do NOT use the legacy `gap200=`
-    argument). Report the three gaps and the vote count every run.
+    as `gaps=<gaps>` to the live weight function (do NOT use the legacy
+    `gap200=` argument). Report the three gaps and the vote count every run.
+    NOTE the three windows are ~0.9 correlated — they are ONE signal read
+    three ways, not three independent confirmations.
 
 `live_target_weights()` is THE live weight function as of 2026-09-07
 (it wraps `target_weights_with_voltarget()`, live since 2026-09-01): it applies the (now inert) micro overlay and then scales the four risky legs
@@ -226,7 +232,7 @@ Update the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top: macro state and label, fast (20/100) reading and the
 effective state if it differs, the three extension gaps and the vote count,
-`micro_agrees`, the realized-vol reading
+`micro_agrees`, both realized-vol legs with the binding one
 and resulting multiplier, target vs. actual weights per leg, trades placed and
 fills, realized P&L with the wash-sale split, and current drawdown-from-high.
 

@@ -14,8 +14,10 @@ strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
 
 This is a DRIFT-GATED check, not an unconditional daily rebalance. Most days
-the answer is "within band, no action, no report" — expect roughly 41
-rebalances/year total across all causes.
+the answer is "within band, no action, no report" — expect roughly 69
+rebalances/year total across all causes (up from ~55 since the volatility
+estimator changed 2026-09-07: more frequent, smaller trims; turnover is
+essentially unchanged).
 
 ## 0. Execution convention — what the signal is computed on
 
@@ -30,8 +32,14 @@ approximation is deliberate -- do NOT "fix" it by switching to the prior
 completed close, which would add a full session of lag. Added 2026-09-07
 after an outside review flagged the ambiguity; measured on real instruments,
 one EXTRA session of lag costs about 1.4pp of CAGR (31.9% -> 30.5%) and
-0.04 of Sharpe, so the five-minute gap is far smaller than that but is not
-zero. Two consequences to respect:
+0.04 of Sharpe -- and about 2.2pp under the max(10,30) estimator now live,
+which reacts faster and is therefore MORE sensitive to execution delay. The
+same lag is also the ENTIRE explanation for an outside replay's -39% to -40%
+proxy drawdown against our -34.7% (reconciled 2026-09-07: core proxy,
+financing and fees move it by <=0.5pp; one extra session takes it to -39.5%,
+two to -40.3%). So the five-minute gap is far smaller than that but is not
+zero, and execution discipline is worth more than most design changes. Two
+consequences to respect:
   - Report readings as "15:55 snapshot", never as "the close".
   - If a run happens outside 15:50-16:00 ET, say so in the report: the
     further from the close, the worse the proxy.
@@ -79,9 +87,10 @@ reimplementation:
     1 − ⅓ × votes (×⅔ / ×⅓ / ×0 — three votes puts the A row 100%
     in BOXX) before vol targeting. Step 0.25 → ⅓ on 2026-09-06 (later).
     `extension_votes(effective_state, gaps)` gives the count. Pass the dict
-    as `gaps=<gaps>` to `target_weights_with_voltarget(...)` — **mandatory
-    for live use** like `fast_state` (do NOT use the legacy `gap200=`
-    argument). Report the three gaps and the vote count every run.
+    as `gaps=<gaps>` to the live weight function (do NOT use the legacy
+    `gap200=` argument). Report the three gaps and the vote count every run.
+    NOTE the three windows are ~0.9 correlated — they are ONE signal read
+    three ways, not three independent confirmations.
 
 `live_target_weights()` is THE live weight function as of 2026-09-07
 (it wraps `target_weights_with_voltarget()`, live since 2026-09-01). Do not call `target_weights()`, `target_weights_with_micro()`, or
@@ -99,6 +108,14 @@ through anyway: the multiplier degrades to 1.0, which is the correct fallback.
     `get_equity_quotes`; `actual` = `get_portfolio`'s own `total_value`.
     A gap beyond 2% means a data error or bad fill, not market volatility.
     `CircuitBreakerTripped` → abort, report, DO NOT TRADE.
+  - `MissingOverlayInputs` from `live_target_weights` → abort, report, DO NOT
+    TRADE. It means an overlay input was not computed; never fall back to
+    `target_weights_with_voltarget` to get past it.
+
+Running `python3 paper-track/consistency_check.py` is cheap and now also
+asserts that STRATEGY.md's weight tables match `state.py`, that the live
+weight function rejects missing overlay inputs, and that the max(10,30)
+estimator can only raise the vol reading, never lower it.
 
 ## 3. Decide whether to trade — the drift band
 
@@ -160,7 +177,7 @@ runs are all calm state-A uptrends.
 ## 4. Drawdown-from-high watch (informational only — never gates a trade)
 
 Compute the STRATEGY's own daily return: yesterday's confirmed state's
-weights — from **`target_weights_with_voltarget`**, i.e. the weights actually
+weights — from the live weight function, i.e. the weights actually
 held, WITH the volatility overlay — dotted with today's
 official-close-to-close leg returns for SPMO/TQQQ/QLD/XLU/BOXX. Append it via
 `paper-track/drawdown_tracker.py`'s `record_return(date, daily_return)` to
@@ -209,8 +226,8 @@ On a within-band day: no report, no artifact edit — just end. On a rebalance:
 append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top, stating the old state, new state (macro AND effective,
-if the fast overlay is active), the extension-trim vote count, the vol reading and
-multiplier, the drift and which condition fired (regime change vs drift band),
+if the fast overlay is active), the extension-trim vote count, both vol legs
+with the binding one and the resulting multiplier, the drift and which condition fired (regime change vs drift band),
 the weights traded to, and the fills.
 
 Any live financial figure that combines two or more numbers (a daily total, a
