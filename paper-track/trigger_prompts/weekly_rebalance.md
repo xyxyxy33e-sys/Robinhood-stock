@@ -213,12 +213,46 @@ for SPMO/TQQQ/QLD/XLU/BOXX, append via
 
 ## 5. Push notifications — exactly three events, nothing else
 
-`PushNotification` ONLY for: (1) a regime shift — a MACRO state change (micro
-flips no longer count, 2026-09-02; the fast re-entry overlay switching is
-reported but is not a push event); (2) a newly crossed drawdown tier;
-(3) any single day at -2% or worse in the strategy's own daily return. Event
-(3) is NOT deduplicated and is frequent (~10x/year) — frame as low-conviction
-FYI. A routine weekly rebalance with no regime change is NOT a push event.
+Call the `PushNotification` tool (a real interrupt to the user's phone) ONLY
+for these three, and nothing else:
+
+  1. **A regime shift** — a MACRO state change. (Micro flips have not counted
+     since 2026-09-02.)
+  2. **A newly crossed drawdown tier** (-5 / -10 / -15 / -20 / -25% from the
+     rolling 252-day high, via `newly_crossed()`). **This is also a FUNDING
+     TRIGGER** — see below.
+  3. **The EFFECTIVE state shifting from D/E/F into A/B/C** — the turn.
+     **This is a FUNDING TRIGGER.** Added 2026-09-07. Note this one DOES fire
+     when the shift is driven by the fast re-entry overlay alone, which is a
+     deliberate exception to the rule that overlay switches are not push
+     events: the owner funds on this signal, so they need to see it.
+
+REMOVED 2026-09-07: the old event (3), "any single day at -2% or worse in the
+strategy's own daily return". It fired ~10x/year as an explicit low-conviction
+FYI and was never actionable. The owner's funding policy uses drawdown TIERS
+and the turn instead, both of which are above. Do not reinstate a single-day
+return alert.
+
+If a macro shift into A/B/C happens, events 1 and 3 are the same event — send
+ONE notification, and say it is a funding trigger.
+
+## 5a. Funding triggers — what to tell the owner
+
+The owner funds the account episodically, not monthly, on **$5,000 per event**
+at exactly two signals (2026-09-07):
+
+  - **each newly crossed 5% drawdown tier** (~5.2x/yr historically), and
+  - **each shift of the effective state from D/E/F into A/B/C** (~4.1x/yr).
+
+Together about 9 events/year, roughly $45k/year, worst historical quarter
+$30k. When either fires, say so explicitly and name which one, the tier or
+the prior/new state, and the account value. Do NOT compute or suggest a
+different amount, do not net the two against each other, and do not invent
+additional funding signals — funding on a -3% day, on any state change, or on
+entry into F were all tested 2026-09-07 and rejected (entering F is the worst
+of them: the strategy is 100% BOXX there, so new money would land in cash).
+This is a REPORTING duty only. Never move money, and never treat a funding
+trigger as a reason to deviate from the computed target weights.
 
 ## 6. Realized P&L and wash sales
 
