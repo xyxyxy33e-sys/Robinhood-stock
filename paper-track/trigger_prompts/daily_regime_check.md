@@ -57,6 +57,17 @@ consequences to respect:
   - If a run happens outside 15:50-16:00 ET, say so in the report: the
     further from the close, the worse the proxy.
 
+## 0a. Market-holiday guard
+
+Before doing anything else, confirm the US equity market actually traded
+today. The cron fires Mon–Thu regardless of the exchange calendar, and on
+2026-09-07 (Labor Day) it fired on a closed market and was only caught
+because the run checked. Cheapest reliable check: pull the QQQ quote and
+compare `previous_close_date` and the last daily bar's date against today.
+If today is a holiday or an early close that has already passed, report
+"market closed, no action" and STOP — do not compute a reading, do not
+trade, do not append to the artifact.
+
 ## 1. Compute today's reading
 
 Pull QQQ daily closes via `get_equity_historicals` (adjustment_type='split',
@@ -64,7 +75,10 @@ enough history for a 200-day SMA plus the 30-day vol window — 18 months is
 ample). Then, using `paper-track/state.py`'s OWN functions — never a
 reimplementation:
 
-  - `compute_states(dates, px)` → today's macro state (A–F)
+  - `compute_states(dates, px)` → today's macro state (A–F). NOTE this returns
+    a LIST aligned to `dates`, not a dict — zip it with `dates` or index by
+    position. `compute_fast_states` and `compute_extension_gaps` DO return
+    dicts keyed by date.
   - `compute_micro_agreement(dates, px)` → today's `micro_agrees` bool. INERT
     since 2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still computed and
     passed through because the function signature needs it, but it changes
@@ -111,6 +125,10 @@ reimplementation:
 overlay. If `realized_vol_live` returns None (insufficient history), pass it
 through anyway: the multiplier degrades to 1.0, which is the correct fallback.
 
+**Trade what the code returns, never a number written in prose** — here,
+in STRATEGY.md, or in any past report. `state.py`'s `TARGET_WEIGHTS` is
+authoritative.
+
 ## 2. Safety guards — before any order, every run
 
   - `validate_weights(state, core, tqqq, qld, xlu, cash)` immediately after
@@ -118,9 +136,11 @@ through anyway: the multiplier degrades to 1.0, which is the correct fallback.
   - `circuit_breaker_check(actual_total_value, implied_total_value)` before
     placing any order. `implied` = sum of each position's quantity × live
     quote, rebuilt independently from `get_equity_positions` +
-    `get_equity_quotes`; `actual` = `get_portfolio`'s own `total_value`.
-    A gap beyond 2% means a data error or bad fill, not market volatility.
-    `CircuitBreakerTripped` → abort, report, DO NOT TRADE.
+    `get_equity_quotes`, PLUS the account's cash; `actual` =
+    `get_portfolio`'s own `total_value`. A gap beyond 2% means a data error
+    or bad fill, not market volatility. `CircuitBreakerTripped` → abort,
+    report, DO NOT TRADE. Note this guard reconciles two views of the SAME
+    balance — it does NOT detect a deposit, and a deposit is not a failure.
   - `MissingOverlayInputs` from `live_target_weights` → abort, report, DO NOT
     TRADE. It means an overlay input was not computed; never fall back to
     `target_weights_with_voltarget` to get past it.
@@ -129,6 +149,17 @@ Running `python3 paper-track/consistency_check.py` is cheap and now also
 asserts that STRATEGY.md's weight tables match `state.py`, that the live
 weight function rejects missing overlay inputs, and that the max(10,30)
 estimator can only raise the vol reading, never lower it.
+
+## 2a. Unexpected cash — deposits and withdrawals
+
+If the account's cash differs materially from what the last run left behind
+(a deposit or withdrawal you did not place), the target weights still apply
+to the FULL `total_value` — new money is deployed to target, not held aside.
+But a large unannounced balance change is worth one question before acting:
+if the change exceeds 20% of the prior account value, report the reading and
+the trades it implies and ASK the owner before placing them, rather than
+deploying silently. Below that threshold, deploy to target and note the
+change in the report. A deposit is not a circuit-breaker event.
 
 ## 3. Decide whether to trade — the drift band
 
@@ -203,7 +234,12 @@ alerting on a drawdown that isn't happening.
 Then `current_drawdown()` vs the rolling 252-day high (all-time high until the
 log has a year — it started empty 2026-09-01) and `newly_crossed()` for the
 -5% / -10% / -15% / -20% tiers. `newly_crossed()` fires only on the FIRST day
-a tier is breached, not every day underwater.
+a tier is breached, not every day underwater. `current_drawdown()` returns a
+TUPLE (drawdown, peak_date, peak_value, current_date, current_value) — take
+element 0 for the drawdown itself.
+
+Record the return only ONCE per session, and only for a completed session.
+An intraday or off-schedule run must NOT append a row.
 
 ## 5. Push notifications — exactly three events, nothing else
 
@@ -212,7 +248,7 @@ for these three, and nothing else:
 
   1. **A regime shift** — a MACRO state change. (Micro flips have not counted
      since 2026-09-02.)
-  2. **A newly crossed drawdown tier** (-5 / -10 / -15 / -20 / -25% from the
+  2. **A newly crossed drawdown tier** (-5 / -10 / -15 / -20% from the
      rolling 252-day high, via `newly_crossed()`). **This is also a FUNDING
      TRIGGER** — see below.
   3. **The EFFECTIVE state shifting from D/E/F into A/B/C** — the turn.
@@ -248,18 +284,26 @@ of them: the strategy is 100% BOXX there, so new money would land in cash).
 This is a REPORTING duty only. Never move money, and never treat a funding
 trigger as a reason to deviate from the computed target weights.
 
+The $5,000 figure is the standing policy, not a cap on what the owner may
+choose to send. If a deposit larger than the policy amount arrives, deploy it
+to target under section 2a — do not hold the excess back to match the policy.
+
 ## 6. Order mechanics, when trading
 
   - Compute dollar targets = weight × `get_portfolio`'s `total_value`.
   - **No per-leg minimum.** Once the band has fired, every leg goes to target,
     however small its trade. (The old $100/0.3% skip was removed 2026-09-01.)
-  - Sell before buy so proceeds are available.
+  - Sell before buy so proceeds are available. Check this explicitly when the
+    buy side exceeds available buying power — a leg being liquidated to zero
+    is what funds the buys.
   - Marketable limit orders: at/through the bid for sells, the ask for buys.
-    During regular hours (this trigger fires at 15:55 ET, so normally yes)
-    fractional/dollar-based orders are fine. If any order must go
-    extended-hours, it must be a WHOLE-SHARE limit order with
-    `market_hours='extended_hours'` — fractional and dollar-based orders are
-    rejected outside regular hours.
+    Do not chase more than 0.3% through the touch. During regular hours (this
+    trigger fires at 15:55 ET, so normally yes) fractional/dollar-based orders
+    are fine. If any order must go extended-hours, it must be a WHOLE-SHARE
+    limit order with `market_hours='extended_hours'` — fractional and
+    dollar-based orders are rejected outside regular hours. Note a LIMIT order
+    cannot be fractional in any session; to liquidate a fractional stub
+    completely, use a market order in regular hours.
   - The cash leg is held as **BOXX**, never as idle buying power.
   - XLU is fractional-tradable in regular hours only.
   - After filling, re-verify holdings against target and report the resulting
@@ -278,6 +322,11 @@ trigger as a reason to deviate from the computed target weights.
     checked it. Flag any single leg worse than 25bp; persistent
     notional-weighted slippage worse than 4bp means the live design is not
     the backtested one and is worth more attention than any parameter.
+    IMPORTANT when interpreting a flag: on a same-session 15:55 run the
+    reference IS effectively the fill session, so a large number is genuine
+    execution slippage. On any run where the signal session and the fill
+    session differ, most of the number is the overnight GAP, not broker
+    execution — say which it is rather than reporting a gap as bad execution.
 
 ## 7. Reporting
 
@@ -300,6 +349,11 @@ if the fast overlay is active), the extension-trim vote count, both vol legs
 with the binding one and the resulting multiplier, the drift and which condition fired (regime change vs drift band),
 the weights traded to, the fills, and the notional-weighted slippage.
 
+To edit that artifact you must FIRST call the Artifact tool with
+`action: "read"` and its URL, then build your edit on the version that comes
+back and diff local against live before republishing — a publish to an
+artifact this session has not read is refused.
+
 Any live financial figure that combines two or more numbers (a daily total, a
 new cumulative) must be computed in code from raw records
 (`get_pnl_trade_history` / `get_realized_pnl`), never hand-added in prose —
@@ -313,6 +367,11 @@ overstated. The graded extension trim survives (Sharpe 95% CI [+0.025,
 max(10,30) volatility estimator (P = 0.097) do NOT clear 5% on their own.
 Do not quote "p = 0.00" for any of them. Leave-one-major-regime-out keeps
 every sign in every drop, including dropping the whole SPMO fitting window.
+
+Never reproduce a standing performance figure by reimplementing the backtest
+loop — call `improvement_search.run()` (or the harness that owns the figure).
+A hand-rolled loop silently rebalances costlessly every day and produces
+numbers that look right and are not.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.
