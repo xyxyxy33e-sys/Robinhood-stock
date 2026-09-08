@@ -189,3 +189,20 @@ ORDER BY h.rep_pd_date, h.rank, p.week_start;
 Because `spmo_weekly_prices` doesn't cover all 561 tickers (see gaps above),
 any such join should be an outer join, or should be aware that some
 `(ticker)` values will simply return zero price rows.
+
+## vxncls.csv (added 2026-09-08)
+
+CBOE NASDAQ-100 Volatility Index, daily close, from FRED series `VXNCLS`
+(https://fred.stlouisfed.org/graph/fredgraph.csv?id=VXNCLS).
+Span 2001-02-02 .. 2026-09-04. Market holidays carry an EMPTY value — forward-fill,
+do not drop, or a holiday silently shortens any lookback computed from it.
+
+Why it is here: VXN is the Nasdaq-100 volatility index, i.e. the volatility index
+that MATCHES this strategy's QQQ classifier and QQQ vol target. VIXCLS (S&P 500)
+is the wrong index for this design and only starts 2008 — using it made 49% of the
+2000-2015 holdout invisible and produced a NEGATIVE variance risk premium against
+QQQ realized vol, which is itself the symptom of the mismatch. VXN starts 2001, so
+it covers all but the first seven months of the holdout.
+
+Cross-checked on the 2026-09-02..04 overlap against an independent EODHD VXN.INDX
+pull: 21.07 / 20.16 / 20.04 on both sources, exact match.

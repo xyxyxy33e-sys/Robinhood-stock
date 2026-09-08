@@ -2319,6 +2319,11 @@ and −25.3% is the smallest real drawdown since the overlays went in. Cost:
 
 ### VIX as the volatility-target input (2026-09-08) — NEGATIVE, not applied
 
+> **Superseded on the instrument question by the VXN section below (2026-09-08).**
+> VXN is the matched (Nasdaq-100) index and starts 2001, not 2008. Every
+> conclusion here was re-run on it. The conclusions held; the reasoning did
+> not need the wrong index to reach them.
+
 Asked by the owner: "have we tested VIX correlation?" VIX had been tested four
 times before, always as a FILTER or SUBSTATE SPLITTER, and rejected every
 time: level/change in the 0-for-6 defensive-layer search (09-01), median and
@@ -2421,6 +2426,11 @@ is not the binding constraint, the result is.
 
 ### VIX % change, VIX cutoff, and DMA-on-VIX as overlays (2026-09-08) — NEGATIVE, not applied
 
+> **Superseded on the instrument question by the VXN section below (2026-09-08).**
+> VXN is the matched (Nasdaq-100) index and starts 2001, not 2008. Every
+> conclusion here was re-run on it. The conclusions held; the reasoning did
+> not need the wrong index to reach them.
+
 Owner follow-up to the estimator test: "also consider vix daily percentage
 change and vix cutoff line — and what about the dma idea on vix". All three
 were genuinely open. `substate_research_deltas.py` had tested VIX POINT deltas
@@ -2502,6 +2512,84 @@ significance is not. Recorded because the discriminator result is the one
 thread worth pulling if VXN with a pre-2008 history ever becomes available —
 the same open item left by the estimator test. 40 candidates were swept to
 find 5 survivors; that is stated here rather than buried.
+
+### Everything re-run on VXN, the matched index (2026-09-08) — NEGATIVE, not applied
+
+Owner: "try everything with vxn instead — VXN has been available since January
+2001." Correct on both counts, and it fixed the two defects the VIX work had
+flagged against itself. Source: FRED `VXNCLS`, saved to `data/vxncls.csv`,
+2001-02-02 .. 2026-09-04, cross-checked against an independent EODHD
+`VXN.INDX` pull on the overlap (21.07 / 20.16 / 20.04, exact match).
+Scripts: `paper-track/vxn_full_test.py`, `paper-track/vxn_validate.py`.
+
+**The instrument mismatch is confirmed and repaired.** The VIX test measured a
+NEGATIVE variance risk premium (mean VIX − mean QQQ realized vol30 = −1.34 vol
+points), which is backwards and was itself the evidence of using S&P implied
+vol against a Nasdaq strategy. On VXN it is **+2.66 vol points (k = 0.8815)** —
+the textbook positive sign. And holdout coverage goes from **51% to 96%**: the
+dot-com bust, invisible to every VIX variant, is now in the window.
+
+**PART 1 — VXN as the vol-target input: still loses.** All on VXN-covered rows:
+
+| estimator | CAGR/Sharpe/MDD | S / H | real weekly |
+|---|---|---|---|
+| **max(10,30) — LIVE** | 23.55 / **0.983** / −32.8 | 1.150 / 0.853 | 30.67 / **1.260** / −25.3 |
+| VXN raw | 21.32 / 0.925 / −34.4 | 1.075 / 0.806 | 29.26 / 1.217 / −25.3 |
+| VXN scaled | 22.34 / 0.917 / −37.1 | 1.059 / 0.804 | 31.14 / 1.220 / −28.3 |
+| max(v30, VXN) | 21.22 / 0.931 / −32.4 | 1.077 / 0.817 | 29.12 / 1.243 / −24.6 |
+| max(v10, v30, VXNsc) | 22.56 / 0.963 / −32.7 | 1.124 / 0.838 | 29.84 / 1.254 / −25.9 |
+
+Nothing beats live in either era. The estimator conclusion therefore survives
+the instrument correction and is no longer confounded by it.
+
+**PART 2 — the overlay families collapse from 5 survivors to 1.** Same 40
+candidates (% change × 5 thresholds, cutoff × 7, DMA × 8, all × 2 depths),
+now on 6,237 rows from 2001-11. Exactly **one** beats live in both eras:
+
+| | CAGR/Sharpe/MDD | S / H | expo | ctl | reb/yr | real wkly |
+|---|---|---|---|---|---|---|
+| **LIVE** | 23.66 / 0.984 / −32.8 | 1.150 / 0.854 | 67.8% | 0.780 | 68 | **1.260** |
+| VXN SMA20 rising ×0.5 | 19.58 / 1.039 / −27.5 | 1.240 / 0.889 | 53.2% | 0.801 | 81 | 1.271 |
+
+**That collapse is the headline.** On the WRONG index over a SHORTER window,
+five of forty survived. Moving to the RIGHT index with 25 years instead of 18
+should strengthen a real signal; instead it eliminated four of the five,
+including both of the VIX front-runners. One survivor in forty is roughly what
+chance delivers at a nominal 5% threshold. The VIX "survivors" were noise.
+
+**The discriminator REPLICATES, and it is the one durable finding.** The same
+rules on QQQ's own realized vol30: RVsma20-rising 0.924, RV>SMA50 0.929 —
+both below live's 0.984, with bootstrap Sharpe differences NEGATIVE
+(P(≤0) = 0.80, 0.81). So implied vol really does carry something trailing
+realized vol does not, and that now holds on both indices independently. It is
+a genuine asymmetry. It is simply not big enough to matter.
+
+**The survivor still fails significance, and fails it the same way.** Block
+bootstrap vs live, 2000 resamples, paired, 6,379 sessions:
+
+- Sharpe: point +0.055, **P(≤0) = 0.181–0.208**, 95% CI [−0.074, +0.183] —
+  spans zero, nowhere near 5%. (VIX's best was 0.124; VXN's is *worse*.)
+- Log return: point **−3.35pp/yr**, P(≤0) = 0.973–0.977, 20-day-block CI
+  [−6.67, −0.06]pp — **excludes zero on the losing side.**
+
+Leave-one-regime-out is genuinely favourable this time and now includes the
+dot-com bust: +0.066 (dot-com), +0.087 (GFC), +0.048 (COVID), +0.068 (2022),
++0.035 (SPMO era) — all positive, which the VIX version could not demonstrate.
+Turnover rises 68 → 81 rebalances/yr. Real weekly is a wash: 1.271 vs 1.260.
+
+**What this family actually is.** Every variant that "works" cuts deployed
+capital from ~68% to ~53%, buys 5–7pp of drawdown (−32.8% → −26 to −29%), and
+costs 3–5pp/yr of CAGR, with a Sharpe change inside noise. That is a RISK
+PREFERENCE DIAL, structurally identical to the leverage ladder — the same
+trade the owner declined on 09-07, pointing the other way. It is not an edge.
+Against the standing objective (outperform SPY and QQQ) a 3–4pp/yr CAGR give-up
+is the wrong direction, so this would need to be wanted for its drawdown, not
+adopted for its Sharpe.
+
+**Verdict: not applied.** Three VIX/VXN research lines are now closed —
+implied vol as the estimator input, as a % -change trigger, as a level cutoff,
+and as a DMA overlay. The volatility-index question is answered on the correct
+instrument with 25 years of history; it does not need revisiting.
 
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
