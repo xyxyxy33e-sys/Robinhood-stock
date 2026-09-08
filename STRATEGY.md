@@ -2419,6 +2419,90 @@ this session can obtain.
 Not applied, and nothing here argues for applying anything — the change freeze
 is not the binding constraint, the result is.
 
+### VIX % change, VIX cutoff, and DMA-on-VIX as overlays (2026-09-08) — NEGATIVE, not applied
+
+Owner follow-up to the estimator test: "also consider vix daily percentage
+change and vix cutoff line — and what about the dma idea on vix". All three
+were genuinely open. `substate_research_deltas.py` had tested VIX POINT deltas
+and `substate_research.py` a VIX>25 cutoff, but both as SUBSTATE SPLITTERS on
+weekly rows under sample floors that left several cells untestable — never as
+global overlays. And the 0-for-6 search's DMA slope rule was on QQQ's own
+moving average, never on VIX's. Tested in `paper-track/vix_overlay_test.py`
+(40 candidates) and `paper-track/vix_dma_validate.py`.
+
+Each overlay multiplies the four risky legs by g ≤ 1 AFTER the live trim and
+vol target, so every one is a cash gate and `exposure_control()` is the right
+control. All variants including the baseline run on the same 2008+ rows.
+
+**Families A and B fail outright.** Daily-%-change triggers and level cutoffs
+were swept across 5 thresholds × 2 de-lever depths and 7 × 2 respectively.
+NOT ONE beat live in both eras. The best % -change variant (>25% → ×0.5,
+Sharpe 1.100 vs live 1.095) is a near-no-op — daily VIX jumps above 25% are
+rare enough that it barely fires. Cutoffs are worse the tighter they get:
+VIX>18 → cash gives Sharpe 0.663 against live's 1.095, because a static line
+sits the strategy out of most of the sample. Both ideas are answered.
+
+**Family C — DMA on VIX — is the one that survives the screen, and by a lot.**
+5 of 40 candidates beat live in both eras, all at a HALF de-lever (×0.5), all
+with drawdowns 3–9pp shallower, all beating their exposure-matched control:
+
+| rule | CAGR/Sharpe/MDD | S / H | expo | ctl Sharpe | reb/yr | real weekly Sharpe |
+|---|---|---|---|---|---|---|
+| **LIVE** | 26.55 / 1.064 / −32.8 | 1.150 / 0.938 | 70.7% | 0.890 | 68 | **1.260** |
+| VIX>SMA20 ×0.5 | 21.32 / 1.119 / −23.2 | 1.238 / 0.951 | 56.4% | 0.907 | 86 | 1.261 |
+| VIX>SMA50 ×0.5 | 22.60 / 1.154 / −25.6 | 1.261 / 1.006 | 57.9% | 0.905 | 79 | 1.195 |
+| VIXsma20 rising ×0.5 | 22.29 / 1.158 / −26.2 | 1.306 / 0.949 | 55.7% | 0.907 | 83 | 1.287 |
+| VIXsma50 rising ×0.5 | 21.00 / 1.091 / −25.8 | 1.173 / 0.975 | 56.1% | 0.907 | 77 | **1.361** |
+
+**THE DISCRIMINATOR, and the one genuinely new finding here.** "VIX above its
+own moving average" is a vol-is-accelerating detector, and QQQ's own REALIZED
+vol has a moving average too. If realized-vol-DMA did the same job, VIX would
+add nothing we cannot compute from price alone — no external feed, no
+S&P-vs-Nasdaq mismatch, history back to 2000 instead of 2008. So the identical
+four rules were run on realized vol30:
+
+| rule | Sharpe | S / H | real weekly |
+|---|---|---|---|
+| RV>SMA20 ×0.5 | 0.996 | 1.016 / 0.967 | 1.249 |
+| RV>SMA50 ×0.5 | 1.031 | 1.144 / 0.865 | 1.308 |
+| RVsma20 rising ×0.5 | 1.019 | 1.110 / 0.884 | 1.270 |
+| RVsma50 rising ×0.5 | 1.075 | 1.192 / 0.909 | 1.341 |
+
+Every realized-vol version is WORSE than live (1.064) on full-period Sharpe,
+and their bootstrap Sharpe differences are NEGATIVE (P(≤0) = 0.67–0.72).
+So the VIX result is **not** just "vol accelerating" — implied vol carries
+something trailing realized vol does not. That is the first time VIX has
+added anything in this repo, and it is worth remembering.
+
+**But it does not clear the bar, for two independent reasons.**
+
+*The Sharpe gain is not distinguishable from noise.* Circular block bootstrap,
+2000 resamples, paired, vs live: Sharpe P(≤0) = **0.124–0.266** across all VIX
+variants at both block lengths; every 95% CI spans zero (e.g. VIX>SMA50
+[−0.062, +0.243]). Nothing reaches 10%, let alone 5%.
+
+*The return cost IS close to significant, in the wrong direction.* Point
+estimates are **−3.2 to −4.2pp/yr** of log return with P(≤0) = 0.94–0.98, and
+VIX>SMA20's 60-day-block CI is [−8.45, −0.03]pp — excluding zero on the losing
+side. So this buys an unprovable Sharpe gain with a well-evidenced 3–4pp/yr
+CAGR loss. That is the same trade the leverage ladder offered in the other
+direction, which the owner declined on 09-07.
+
+Three more marks against, none fatal alone: turnover rises 68 → 77–86
+rebalances/yr; **no variant is best on both harnesses** (VIX>SMA50 has the top
+proxy Sharpe and a WORSE real weekly figure, 1.195 vs 1.260; VIXsma50-rising
+has the top real figure and a middling proxy) which is the signature of noise
+being fitted across 40 candidates; and VIXsma20-rising's edge collapses to
++0.011 Sharpe when the SPMO era is dropped, i.e. nearly all of it is 2015+.
+Leave-one-regime-out is otherwise favourable in sign for the VIX rules
+(+0.067 to +0.127 across GFC / COVID / 2022 drops).
+
+**Verdict: not applied.** The screen is real, the discriminator is real, the
+significance is not. Recorded because the discriminator result is the one
+thread worth pulling if VXN with a pre-2008 history ever becomes available —
+the same open item left by the estimator test. 40 candidates were swept to
+find 5 survivors; that is stated here rather than buried.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
