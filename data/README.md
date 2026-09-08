@@ -215,3 +215,11 @@ before 2008 — that copy starts 2008-01-02, which is a truncation of the downlo
 the limit of the series. Every VIX result in STRATEGY.md dated on or before 2026-09-08
 that cites a "VIX starts 2008" constraint was limited by that file, not by the data.
 Holidays carry an EMPTY value; forward-fill, do not drop.
+
+## vxvcls.csv (added 2026-09-08, research line `vol_term_structure`)
+
+CBOE S&P 500 3-Month Volatility Index, daily close, FRED `VXVCLS`,
+2007-12-04 .. 2026-09-04, 4,894 rows, 176 holiday blanks — forward-fill in code.
+Used with `vixcls_full.csv` for the VIX/VXV term-structure slope. FRED carries NO
+short-end (VIX9D/VXST), NO 6-month (VXMT), and NO Nasdaq 3-month series — all probed,
+all absent — so the S&P slope is the only obtainable term structure.

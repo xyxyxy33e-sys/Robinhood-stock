@@ -2828,6 +2828,41 @@ works precisely because it is NOT vol-normalized: "extended" in price terms
 is the overheated signal; "extended in sigma terms" is a low-vol signal in
 disguise. Same lesson as the rest of the day — vol scales, vol does not time.
 
+#### Line 4 — volatility term structure (VIX vs 3-month VXV) — SIGNAL TOO SMALL
+
+Front-month against 3-month implied vol; backwardation (near > far) is stress
+that is here rather than forecast. `paper-track/vol_term_structure.py`, data
+`data/vxvcls.csv` (FRED, 2007-12+). FRED has no short-end, no 6-month and no
+Nasdaq term-structure series — all probed — so this is an S&P slope applied
+to a QQQ book; checked directly, it forecasts QQQ forward vol (36.2%) as well
+as SPY's (35.6%) in the stress cell, so the instrument mismatch that killed
+VIX-level signals did not bite here. Baseline on the 4,710 VXV rows: 25.29% /
+1.024 / −32.8%, S 1.150 H 0.848. Dot-com is outside the window.
+
+*Mechanism first.* Backwardation covers 10.1% of days in 131 episodes with a
+**median run of one day**; 80% overlaps high realized vol; it fires on 2% of
+state-A days vs 38–44% of E/F days. Forward 21-day QQQ return in
+backwardation is **+2.32%** vs +1.24% in contango (t = 0.5) — no return
+penalty, because the stress has already happened. What it does forecast is
+*vol*: forward/current vol 0.81 vs 0.77 after conditioning on level. That ~5%
+relative difference is the entire incremental content.
+
+| use | ΔSharpe vs exposure-matched live |
+|---|---|
+| cash gate on top of the vol target (g = 0 / 0.5) | −0.000 / +0.016, fails search era |
+| gate INSTEAD of the vol target, matched | −0.011 to −0.041, MDD 2–5pt worse |
+| **modulator** of the vol target, h = 1.25 / 1.5 / 2.0, T re-calibrated | **+0.011 / +0.016 / +0.017, both eras**; sign-flip loses; MDD flat |
+| rebalance trigger on entry into backwardation | +0.0003, inside a random-rebalance placebo band |
+| realized 10d/60d ratio (discriminator) | −0.021 — the implied slope knows something realized does not |
+
+24 candidates, 5 both-era (4 are the same modulator family). Every bootstrap
+Sharpe CI straddles zero (h = 1.5: [−0.027, +0.064], P(≤0) = 0.25); dropping
+COVID cuts the modulator to +0.002–0.006; real rows agree in sign and size;
+2022 is a −2.4pp loss year. Directionally right in every control and too
+small to matter: the vol target already captures most of what the slope
+knows. It cannot replace the vol target, and as a cash gate or a trigger it
+is a null.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
