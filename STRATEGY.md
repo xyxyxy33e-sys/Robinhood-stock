@@ -2863,6 +2863,42 @@ small to matter: the vol target already captures most of what the slope
 knows. It cannot replace the vol target, and as a cash gate or a trigger it
 is a null.
 
+#### Line 3 — range-based volatility estimators — NO SIGNAL (and a useful reason)
+
+Parkinson / Garman–Klass / Rogers–Satchell / Yang–Zhang estimators as
+drop-in replacements for the live max(cc10, cc30). `paper-track/range_vol.py`.
+First job was data: a full-history QQQ OHLC series now exists at
+`data/qqq_ohlc.csv` (1999–2026, opens and closes matching the long history
+**to the cent on 6,784 of 6,784 days**, independently cross-checked). The
+estimators were verified on synthetic GBM: 5.7–9.2× the efficiency of
+close-to-close at n = 10, exactly as the literature says.
+
+41 candidates, exposure-matched by re-calibrating T to live's 66.21%:
+
+| variant | T* | Sharpe | S / H | reb/yr | real weekly |
+|---|---|---|---|---|---|
+| **LIVE max(cc10, cc30)** | 0.200 | **0.938** | **1.150 / 0.780** | 68 | **1.260** |
+| GK10 | 0.147 | 0.926 | 1.123 / 0.773 | 77 | 1.226 |
+| YZ10 | 0.179 | 0.910 | 1.117 / 0.753 | 77 | 1.206 |
+| max(GK10, cc30) | 0.189 | 0.920 | 1.102 / 0.780 | 59 | 1.243 |
+| max(GK5, GK30) (best) | 0.166 | 0.940 | 1.134 / 0.790 | 68 | 1.238 |
+
+0 of 41 both-era at matched exposure; the top three sit at bootstrap P(≤0)
+≈ 0.5 and lose on both real harnesses (real daily 1.185 vs 1.202). At a
+fixed T = 0.20 the naive swap is a leverage dial: range estimators read low on
+QQQ, so the book holds 70–71% instead of 66% and drawdown goes to −36…−41%.
+
+*Why — the finding worth keeping.* The extra precision is real (placebo:
+0.940 vs 0.891 block-permuted) but it lands in the wrong place. Range
+estimators are sharper in the **calm** region (forecast RMSE 0.34 vs 0.41),
+where a cap-1.0 overlay does nothing anyway. In the **bite** region
+(forward vol > 20%) live's max(cc10, cc30) is the *best* forecaster tested
+(RMSE 0.394 vs GK10's 0.477), because **~30% of QQQ's crash variance is
+overnight gaps** — which intraday ranges never see. Yang–Zhang, which models
+the overnight component, is unbiased on synthetic data but still loses live,
+because its gap term is just close-to-close by another name. The live
+estimator is close-to-close precisely where it matters.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**

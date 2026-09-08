@@ -223,3 +223,14 @@ CBOE S&P 500 3-Month Volatility Index, daily close, FRED `VXVCLS`,
 Used with `vixcls_full.csv` for the VIX/VXV term-structure slope. FRED carries NO
 short-end (VIX9D/VXST), NO 6-month (VXMT), and NO Nasdaq 3-month series — all probed,
 all absent — so the S&P slope is the only obtainable term structure.
+
+## qqq_ohlc.csv (added 2026-09-08, research line `range_vol`)
+
+QQQ daily open/high/low/close, split-adjusted, 1999-09-15 .. 2026-09-04, 6,784
+sessions. Source: Robinhood `get_equity_historicals` day bars (Alpha Vantage
+`outputsize=full` is premium-gated on the available key), fetched in two ≤5000-bar
+chunks plus a 3-day call to recover 2013-12-31; interpolated bars dropped.
+Cross-checks: opens AND closes match `qqq_long_history.csv` to the cent on 6,784 of
+6,784 days; all four columns agree with an independent EODHD pull within $0.005 on
+the 251-day overlap; the 2000-03-20 2:1 split is consistently adjusted; no
+high/low violations. This is the first full-history OHLC series in the repo.
