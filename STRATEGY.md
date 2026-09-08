@@ -2317,6 +2317,108 @@ and −25.3% is the smallest real drawdown since the overlays went in. Cost:
 1.8pp of real weekly CAGR. Proxy holdout is unchanged within noise
 (0.781 → 0.780).
 
+### VIX as the volatility-target input (2026-09-08) — NEGATIVE, not applied
+
+Asked by the owner: "have we tested VIX correlation?" VIX had been tested four
+times before, always as a FILTER or SUBSTATE SPLITTER, and rejected every
+time: level/change in the 0-for-6 defensive-layer search (09-01), median and
+VIX>25 substate splits (`substate_research.py`, zero surviving combinations),
+VIX rate-of-change for state F (`substate_research_deltas.py`, the headline
+finding evaporated once the split was taken at the median — the "top quartile"
+of VIX jumps had a *negative* median, i.e. it meant "VIX fell less"), and VIX
+percentile as one of four signals in the state-A confidence composite
+(validated on isolated holdout, then fully reversed by
+`composite_turnover_cost.py`).
+
+None of those asked the obvious remaining question. The vol overlay — the part
+that actually sizes the book daily — runs entirely on REALIZED vol, and all
+eleven candidates in `vol_estimator_family.py` are realized-vol windows.
+Implied vol had never been in that family. Tested now in
+`paper-track/vix_estimator_test.py`.
+
+**Two constraints decided the design of the test.**
+
+1. *Coverage.* VIXCLS starts 2008-01-02. The standing holdout is 2000–2015,
+   so only 51% of holdout days (1,972 of 3,856) have VIX at all, and the
+   2000–02 bear — the regime the holdout exists to test — is invisible to any
+   VIX variant. Letting a VIX variant fall back to realized vol pre-2008 would
+   silently blend two designs, so EVERY variant (realized included) is
+   evaluated on the same 2008+ rows. These figures are therefore NOT
+   comparable to the full-window numbers elsewhere in this file.
+2. *Level vs timing.* Raw implied vol fed into min(1, 0.20/vol) changes how
+   much risk is held, so any Sharpe difference would confound forecasting
+   skill with de-levering — the trap the DMA-slope rule fell into. VIX is
+   therefore tested both raw and rescaled by a single constant fitted on the
+   SEARCH era only (k = mean(v30)/mean(VIX)), which removes the level
+   difference and leaves only timing.
+
+**Result: every VIX variant loses, in both eras, on proxy AND real
+instruments, and with deeper drawdowns.** All rows 2008+, S = 2015-11+,
+H = 2008–2015:
+
+| estimator | proxy CAGR/Sharpe/MDD | S / H | real weekly |
+|---|---|---|---|
+| vol30 (ref) | 25.57 / 1.000 / −33.3 | 1.100 / 0.855 | 31.40 / 1.248 / −25.0 |
+| **max(10,30) — LIVE** | **25.57 / 1.034 / −32.8** | **1.150 / 0.869** | **30.67 / 1.260 / −25.3** |
+| VIX raw | 24.11 / 0.953 / −37.6 | 1.049 / 0.809 | 30.60 / 1.190 / −31.2 |
+| VIX scaled | 23.31 / 0.946 / −37.0 | 1.036 / 0.809 | 29.42 / 1.173 / −30.9 |
+| max(v30, VIX raw) | 23.41 / 0.960 / −33.1 | 1.061 / 0.811 | 29.72 / 1.224 / −25.8 |
+| max(v30, VIX sc) | 22.88 / 0.956 / −33.1 | 1.054 / 0.811 | 28.98 / 1.212 / −26.2 |
+| max(v10, v30, VIX sc) | 23.09 / 0.982 / −32.3 | 1.097 / 0.814 | 28.84 / 1.232 / −25.8 |
+| 50/50 blend v30+VIX sc | 24.57 / 0.976 / −35.3 | 1.073 / 0.832 | 30.56 / 1.211 / −27.7 |
+
+Not one variant beats the live estimator on either era. Scaling makes VIX
+WORSE, not better, which kills the "it only looked bad because it de-levers"
+defence — the level was not the problem, the timing was. ADDING VIX to the
+live max(10,30) degrades it (1.034 → 0.982). Every VIX-driven variant carries
+a deeper real drawdown than live (−25.8 to −31.2 vs −25.3).
+
+**Why, mechanically.** VIX is a 30-day forward-looking estimate that
+correlates +0.808 with trailing realized vol30 — it is mostly the same signal
+with a lead. The overlay does not need a lead: it re-reads every session and
+the drift band re-trades within days. What the overlay needs is a fast local
+reading of how violent *this week* is, which max(10,30) supplies and a
+30-day-horizon implied number smooths away. That is the same reason vol60
+loses to vol30 and vol30 loses to max(10,30).
+
+**Correlation, measured separately** (`paper-track/vix_corr.py`, 4,690
+sessions 2008+, live design). Contemporaneous and predictive are reported
+apart because conflating them is easy — an alignment bug in the first pass of
+this very analysis did exactly that. `build()` sets `row['d'] = d0` and
+`row['legs']` = the d0→d1 return, so pairing a return with VIX at `row['d']`
+is a PREDICTIVE pairing, not a contemporaneous one:
+
+| | |
+|---|---|
+| corr(strategy return, same-session VIX change) | **−0.535** |
+| corr(QQQ return, same-session VIX change) | −0.753 *(sanity check)* |
+| corr(strategy return, VIX level) | +0.003 |
+| corr(VIX level at d0, next-session return) | +0.003 |
+| corr(VIX change to d0, next-session return) | +0.032 |
+
+Two things worth keeping. The strategy's sensitivity to VIX moves is about
+**30% lower than QQQ's** (−0.535 vs −0.753) — that is the vol overlay and the
+cash gate doing their job. And VIX has **no predictive content** for this
+strategy's next-session return (+0.003 / +0.032), which is consistent with
+four prior failures and with this one. High-VIX days are not bad days for the
+book: top-decile VIX sessions average **+15.9 bp/day against +10.4 bp
+overall**, because the strategy is already de-levered into BOXX by then.
+
+**One caveat, stated rather than buried: VIX is S&P 500 implied vol, and this
+design is entirely on QQQ.** The evidence is in the test's own output — the
+variance risk premium came out NEGATIVE (mean VIX − mean QQQ vol30 = −1.34 vol
+points, k = 1.0726), the opposite of the textbook, precisely because QQQ
+realizes more vol than the S&P implies. The matched instrument is VXN
+(Nasdaq-100). VXN was fetched and is real, but the available data plan caps it
+at ONE YEAR (2025-09-08 → 2026-09-04), which cannot support the search/holdout
+discipline. So the honest scope of this result is: *S&P 500 implied vol is not
+a better input than QQQ realized vol for a QQQ vol target, clearly and in
+every variant.* A VXN test remains open and would need a longer history than
+this session can obtain.
+
+Not applied, and nothing here argues for applying anything — the change freeze
+is not the binding constraint, the result is.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
