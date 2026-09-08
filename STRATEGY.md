@@ -2899,6 +2899,47 @@ the overnight component, is unbiased on synthetic data but still loses live,
 because its gap term is just close-to-close by another name. The live
 estimator is close-to-close precisely where it matters.
 
+#### Line 1 — variance risk premium as a time-varying signal — SIGNAL TOO SMALL
+
+VXN minus QQQ realized vol, used as a causal daily series rather than the
+single constant it had been. `paper-track/vrp_signal.py`, full output in
+`research_notes/vrp_signal_run.log`. 63 variants (28 tilts, 35 vol-target
+modulators), every one with sign-flip, QQQ-core and real-row runs, plus 18
+decomposition controls. Same rows for all: 6,176 proxy rows from 2002-02
+(live on those rows 22.76 / 0.986 / −32.0, S 1.151 H 0.852) and all 564 real
+rows. The research agent finished the science and was cut off by a session
+limit before writing the note; the note was written from its final run.
+
+*The effect exists at a fraction of the textbook size.* Causal trailing
+quintiles: top-VRP days see QQQ +1.98% over the next 21 sessions vs +0.70% for
+bottom-VRP, but the spread is t = 1.2 with overlap respected, the middle
+quintiles are not monotone, and next-day predictive correlation is +0.027
+(t 2.2) and gone by 21 days.
+
+*As a modulator of the vol target, exposure-matched* (m = min(1, T/(vol·e^(−k·vrp))),
+T re-bisected to live's 69.28%): 17 of 35 both-era, every sign-flip loses,
+drawdown flat-to-better.
+
+| variant | Sharpe | S / H | vs live | real | bootstrap Sharpe P(≤0) |
+|---|---|---|---|---|---|
+| **live** | 0.986 | 1.151 / 0.852 | — | 1.260 | — |
+| q10 exp k=4 (best) | 1.014 | 1.213 / 0.857 | +0.028 | 1.276 | — |
+| q21 exp k=2 | 0.999 | 1.170 / 0.861 | +0.013 | 1.271 | **0.10** |
+| q30 exp k=2 | 0.995 | 1.160 / 0.862 | +0.009 | 1.274 | 0.18 |
+
+The RETURN gain clears 5% for several (q21 k=2: +0.6pp/yr, CI [+0.08, +1.12],
+P = 0.01); the SHARPE gain never does (P 0.10–0.34). Decomposition is the
+useful result: implied-level-only gives −0.001…−0.042, realized-only gives
+−0.021…+0.003, the premium gives +0.009…+0.028 — **it needs both halves, so
+it is the premium, not a convex vol response**. Leave-one-regime-out positive
+in every drop for every survivor; survives 10bp costs, dies at 20bp; survives
+5-session smoothing (which also cuts churn). As a core/satellite tilt it is
+weaker (2 of 28 both-era, P ≈ 0.21).
+
+Best-of-63, +0.01–0.03 Sharpe, +0.5–0.9pp/yr — inside the execution-lag cost
+the project already measured (3.1pp/yr per session). Real, consistent, and too
+small to act on.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**

@@ -1,0 +1,557 @@
+SPY covers 6778/6778 proxy dates; 0 missing
+QQQ-core rows 6575, SPY-core rows 6575
+
+SANITY -- QQQ-core live: 22.12/0.938/-32.8 S 1.150 H 0.780   (standing: 22.12/0.938/-32.8, 1.150/0.780)
+SPY-core live:          20.82/0.934/-32.0 S 1.151 H 0.770
+
+VXN-VIX gap: search-era median +3.90 vol pts, full range -12.8..+41.6
+corr(implied gap, realized QQQ-SPY vol gap) = +0.914
+
+====================================================================================================
+RESEARCH LINE vrp_signal -- variance risk premium as a time-varying signal
+====================================================================================================
+
+SAME-ROWS RESTRICTION: VXN starts 2001-02-02; trailing 252-session thresholds need a full window.
+  proxy rows used 2002-02-07..2026-08-26: 6176 of 6575 (holdout 3457, search 2719); dropped 399 rows 2000-07..2002-02-07
+  real weekly rows used: 564 of 564 (2015-11-06..2026-08-21)
+  every variant below, INCLUDING the live baseline, is scored on exactly these rows.
+
+LIVE on same rows -- SPY-core: 22.76/0.986/-32.0  S 1.151 H 0.852  expo 69.28% beta 1.307
+                     QQQ-core: 24.51/1.005/-32.8  S 1.150 H 0.887
+                     real wk : 30.67/1.260/-25.3   (standing full-rr figure 30.67/1.260/-25.3)
+
+====================================================================================================
+(c) DESCRIPTIVE -- does the VRP effect exist in THIS data?
+====================================================================================================
+
+Distribution of the daily VRP series (vol points = x100), all covered dates:
+  def       n       first   mean    sd     p5    p25    p50    p75    p95   %neg
+  q30    6428  2001-02-02   3.25  5.66  -5.96   0.88   3.71   6.19  10.80  20.0%
+  q21    6428  2001-02-02   3.48  5.87  -5.62   0.98   3.82   6.59  11.23  18.8%
+  q10    6428  2001-02-02   3.88  6.93  -6.74   0.80   4.30   7.68  13.26  20.6%
+  s30    6748  1999-10-27   3.32  5.29  -4.36   1.41   3.73   6.02  10.24  16.2%
+  by era (q30): holdout mean +3.69 p50 +3.90 %neg 17.2%   search mean +2.66 p50 +3.42 %neg 23.8%   
+
+Autocorrelation of the daily VRP series:
+  def       lag1     lag5    lag21    lag63   lag252
+  q30      0.943    0.766    0.153    0.015    0.016
+  q21      0.934    0.722    0.067    0.031    0.007
+  q10      0.891    0.534    0.071    0.049   -0.033
+  s30      0.933    0.748    0.148    0.043    0.006
+
+ALIGNMENT SANITY: corr(QQQ d0->d1, VXN change d0->d1) = -0.652  (expected about -0.75)
+
+Predictive correlation: VRP at d0 vs FORWARD return (Pearson; t-stat naive, for h>1 divided by sqrt(h) for overlap):
+  def  target                 h=1               h=5              h=21
+  q30  QQQ        +0.027 (t+2.16)   +0.016 (t+0.57)   +0.026 (t+0.45)
+  q30  SPY        +0.023 (t+1.85)   +0.015 (t+0.53)   +0.019 (t+0.34)
+  q21  QQQ        +0.027 (t+2.16)   +0.004 (t+0.14)   -0.008 (t-0.14)
+  q21  SPY        +0.024 (t+1.91)   +0.006 (t+0.22)   -0.008 (t-0.13)
+  q10  QQQ        +0.026 (t+2.11)   +0.011 (t+0.41)   -0.001 (t-0.01)
+  q10  SPY        +0.034 (t+2.71)   +0.035 (t+1.25)   -0.005 (t-0.09)
+  s30  QQQ        +0.032 (t+2.63)   +0.016 (t+0.60)   +0.024 (t+0.43)
+  s30  SPY        +0.036 (t+2.94)   +0.031 (t+1.13)   +0.038 (t+0.67)
+  corr(VRP q30 at d0, LIVE strategy d0->d1 return) = +0.018 (t +1.38)
+  corr(VRP q21 at d0, LIVE strategy d0->d1 return) = +0.021 (t +1.65)
+  corr(VRP q10 at d0, LIVE strategy d0->d1 return) = +0.021 (t +1.68)
+  corr(VRP s30 at d0, LIVE strategy d0->d1 return) = +0.017 (t +1.34)
+
+Forward QQQ returns by VRP quintile -- q30, FULL-SAMPLE quintiles (descriptive):
+  quintile       n   fwd1d%   fwd5d%  fwd21d%  21d Sh   %A/B
+  Q1(low)     1286    0.031    0.167    0.736    0.36    43%
+  Q2          1286    0.046    0.305    1.154    0.72    67%
+  Q3          1285    0.010    0.240    0.941    0.60    71%
+  Q4          1286    0.050    0.105    0.924    0.51    67%
+  Q5(high)    1285    0.113    0.399    1.506    0.73    59%
+  Q5-Q1 fwd5d: +0.232%  (overlap-adjusted t +0.71)
+  Q5-Q1 fwd21d: +0.771%  (overlap-adjusted t +0.60)
+
+Forward QQQ returns by VRP quintile -- q30, CAUSAL trailing-252 quintiles (tradeable):
+  quintile       n   fwd1d%   fwd5d%  fwd21d%  21d Sh   %A/B
+  Q1(low)     1394    0.012    0.139    0.699    0.39    47%
+  Q2          1156    0.121    0.472    1.423    0.94    67%
+  Q3          1160   -0.029    0.080    0.985    0.60    71%
+  Q4          1186    0.004    0.113    0.900    0.56    72%
+  Q5(high)    1281    0.185    0.621    1.983    1.17    64%
+  Q5-Q1 fwd5d: +0.481%  (overlap-adjusted t +1.77)
+  Q5-Q1 fwd21d: +1.284%  (overlap-adjusted t +1.19)
+
+  ... causal, HOLDOUT era only:
+  quintile       n   fwd1d%   fwd5d%  fwd21d%  21d Sh   %A/B
+  Q1(low)      776    0.004    0.010    0.079    0.05    44%
+  Q2           689    0.106    0.445    1.110    0.74    66%
+  Q3           716   -0.074   -0.097    0.926    0.57    66%
+  Q4           645    0.016    0.084    0.588    0.36    68%
+  Q5(high)     631    0.191    0.692    1.846    0.99    54%
+  Q5-Q1 fwd5d: +0.682%  (overlap-adjusted t +1.74)
+  Q5-Q1 fwd21d: +1.767%  (overlap-adjusted t +1.15)
+
+  ... causal, SEARCH era only:
+  quintile       n   fwd1d%   fwd5d%  fwd21d%  21d Sh   %A/B
+  Q1(low)      618    0.024    0.303    1.503    0.79    51%
+  Q2           467    0.142    0.511    1.885    1.26    67%
+  Q3           444    0.043    0.366    1.079    0.66    78%
+  Q4           541   -0.010    0.147    1.272    0.83    77%
+  Q5(high)     650    0.179    0.551    2.116    1.41    73%
+  Q5-Q1 fwd5d: +0.248%  (overlap-adjusted t +0.65)
+  Q5-Q1 fwd21d: +0.613%  (overlap-adjusted t +0.40)
+
+Forward returns by VRP quintile -- s30 (VIX - SPY rv30), causal:
+  quintile       n   fwd1d%   fwd5d%  fwd21d%  21d Sh   %A/B
+  Q1(low)     1397    0.043    0.330    0.462    0.23    48%
+  Q2          1183    0.034    0.191    1.090    0.60    64%
+  Q3          1317    0.003   -0.087    0.318    0.17    68%
+  Q4          1261   -0.005    0.152    0.728    0.42    69%
+  Q5(high)    1339    0.150    0.515    2.123    1.13    57%
+  Q5-Q1 fwd5d: +0.186%  (overlap-adjusted t +0.62)
+  Q5-Q1 fwd21d: +1.661%  (overlap-adjusted t +1.40)
+
+Forward returns by VRP quintile -- q10, causal:
+  quintile       n   fwd1d%   fwd5d%  fwd21d%  21d Sh   %A/B
+  Q1(low)     1313    0.003    0.067    0.709    0.38    43%
+  Q2          1212    0.057    0.187    0.914    0.53    61%
+  Q3          1261    0.073    0.355    1.189    0.75    71%
+  Q4          1162    0.046    0.399    1.337    0.92    75%
+  Q5(high)    1229    0.120    0.436    1.856    1.17    70%
+  Q5-Q1 fwd5d: +0.369%  (overlap-adjusted t +1.31)
+  Q5-Q1 fwd21d: +1.147%  (overlap-adjusted t +1.05)
+
+====================================================================================================
+(a) VRP as a TILT between core and TQQQ in states A/B (constant deployed capital)
+====================================================================================================
+
+variant                       SPY-core CAGR/Sh/MDD      S      H   beta   | beta-m Sh S/H  | const-tilt S/H    | flip S/H  | QQQ-core S/H | real Sh
+q30 d=0.10 med t252              22.42/0.962/-32.2  1.144  0.813  1.310   |0.985 1.150/0.852  |+0.003 1.151/0.852  |1.129/0.869  |1.143/0.860  |1.263          
+q30 d=0.10 q2575 t252            22.45/0.966/-32.1  1.117  0.842  1.310   |0.985 1.150/0.852  |+0.004 1.151/0.852  |1.164/0.850  |1.126/0.884  |1.263          
+q30 d=0.10 neg0 t252             22.38/0.979/-31.3  1.145  0.844  1.292   |0.987 1.152/0.853  |-0.015 1.149/0.851  |1.149/0.856  |1.148/0.882  |1.275          
+q30 d=0.20 med t252              22.01/0.931/-33.2  1.130  0.766  1.313   |0.985 1.150/0.852  |+0.006 1.152/0.852  |1.099/0.877  |1.128/0.827  |1.252          
+q30 d=0.20 q2575 t252            22.10/0.942/-33.0  1.082  0.827  1.314   |0.985 1.150/0.852  |+0.007 1.152/0.852  |1.172/0.842  |1.098/0.876  |1.257          
+q30 d=0.20 neg0 t252             22.02/0.971/-31.5  1.140  0.835  1.277   |0.987 1.152/0.853  |-0.030 1.147/0.851  |1.146/0.859  |1.144/0.876  |1.288          
+q21 d=0.10 med t252              23.62/1.001/-32.9  1.158  0.872  1.318   |0.984 1.149/0.851  |+0.011 1.152/0.852  |1.116/0.807  |1.154/0.908  |1.284  BOTH >bm flipLoses
+q21 d=0.10 q2575 t252            22.92/0.980/-31.4  1.147  0.845  1.315   |0.985 1.149/0.851  |+0.009 1.152/0.852  |1.132/0.846  |1.145/0.884  |1.282           flipLoses
+q21 d=0.10 neg0 t252             22.66/0.988/-31.6  1.157  0.851  1.295   |0.986 1.151/0.853  |-0.012 1.149/0.851  |1.137/0.851  |1.155/0.887  |1.286           flipLoses
+q21 d=0.20 med t252              24.38/1.005/-34.7  1.155  0.881  1.328   |0.984 1.148/0.851  |+0.022 1.154/0.852  |1.071/0.753  |1.151/0.922  |1.294  BOTH >bm flipLoses
+q21 d=0.20 q2575 t252            23.06/0.971/-30.9  1.140  0.832  1.324   |0.984 1.149/0.851  |+0.018 1.154/0.852  |1.109/0.833  |1.136/0.877  |1.295           flipLoses
+q21 d=0.20 neg0 t252             22.56/0.989/-31.2  1.163  0.849  1.283   |0.987 1.152/0.853  |-0.024 1.147/0.851  |1.124/0.847  |1.159/0.886  |1.310           flipLoses
+q10 d=0.10 med t252              22.95/0.985/-32.1  1.106  0.885  1.319   |0.984 1.149/0.851  |+0.012 1.152/0.852  |1.162/0.792  |1.118/0.922  |1.247           flipLoses
+q10 d=0.10 q2575 t252            23.03/0.988/-31.5  1.122  0.879  1.317   |0.985 1.149/0.851  |+0.010 1.152/0.852  |1.161/0.811  |1.130/0.911  |1.248           flipLoses
+q10 d=0.10 neg0 t252             22.60/0.986/-31.9  1.153  0.850  1.295   |0.986 1.151/0.853  |-0.012 1.149/0.851  |1.140/0.852  |1.153/0.888  |1.254           flipLoses
+q10 d=0.20 med t252              23.04/0.974/-33.2  1.055  0.907  1.330   |0.984 1.148/0.851  |+0.024 1.154/0.852  |1.162/0.725  |1.081/0.951  |1.221           flipLoses
+q10 d=0.20 q2575 t252            23.24/0.985/-31.9  1.089  0.899  1.327   |0.984 1.149/0.851  |+0.021 1.154/0.852  |1.167/0.764  |1.104/0.931  |1.231           flipLoses
+q10 d=0.20 neg0 t252             22.42/0.984/-31.7  1.156  0.846  1.283   |0.987 1.152/0.853  |-0.024 1.147/0.851  |1.129/0.849  |1.156/0.886  |1.246           flipLoses
+s30 d=0.10 med t252              21.44/0.930/-32.8  1.084  0.803  1.306   |0.986 1.151/0.852  |-0.001 1.151/0.852  |1.189/0.879  |1.094/0.851  |1.238          
+s30 d=0.10 q2575 t252            22.58/0.971/-32.3  1.124  0.845  1.308   |0.986 1.151/0.852  |+0.001 1.151/0.852  |1.162/0.846  |1.127/0.886  |1.268          
+s30 d=0.10 neg0 t252             22.69/0.988/-31.2  1.160  0.849  1.297   |0.986 1.151/0.852  |-0.010 1.149/0.851  |1.140/0.854  |1.157/0.885  |1.274           flipLoses
+s30 d=0.20 med t252              20.07/0.868/-34.4  1.013  0.747  1.304   |0.986 1.151/0.852  |-0.002 1.151/0.852  |1.218/0.896  |1.035/0.810  |1.203          
+s30 d=0.20 q2575 t252            22.34/0.950/-33.6  1.093  0.832  1.310   |0.985 1.150/0.852  |+0.003 1.151/0.852  |1.165/0.834  |1.100/0.880  |1.267          
+s30 d=0.20 neg0 t252             22.60/0.989/-31.3  1.168  0.844  1.287   |0.987 1.152/0.853  |-0.020 1.148/0.851  |1.127/0.854  |1.163/0.881  |1.287           flipLoses
+q30 d=0.10 med exp               22.16/0.962/-31.7  1.121  0.831  1.291   |0.987 1.152/0.853  |-0.016 1.149/0.851  |1.150/0.852  |1.127/0.878  |1.266          
+q30 d=0.10 q2575 exp             22.40/0.969/-31.1  1.122  0.845  1.299   |0.986 1.151/0.852  |-0.008 1.150/0.852  |1.159/0.849  |1.130/0.887  |1.287          
+q30 d=0.20 med exp               21.50/0.928/-33.2  1.083  0.800  1.275   |0.987 1.152/0.853  |-0.032 1.146/0.851  |1.140/0.843  |1.098/0.860  |1.257          
+q30 d=0.20 q2575 exp             22.03/0.950/-30.5  1.092  0.833  1.292   |0.987 1.152/0.853  |-0.015 1.149/0.851  |1.166/0.841  |1.107/0.881  |1.307          
+
+  live: SPY-core 1.151/0.852  QQQ-core 1.150/0.887  real 1.260
+  'beta-m' = live scaled to the variant's beta; 'const-tilt' = fixed A/B core->TQQQ shift dc with the same beta;
+  'flip' = sign-flipped signal. BOTH = beats live on search and holdout; >bm = beats beta-matched live on both.
+
+Tilt activity on A/B rows (fraction of A/B rows tilted toward TQQQ / toward core):
+  q30 med   : toward TQQQ  53.1%  toward core  46.9%  (A/B rows 3916; holdout share toward core 51.1%)
+  q30 q2575 : toward TQQQ  26.2%  toward core  21.6%  (A/B rows 3916; holdout share toward core 22.2%)
+  q30 neg0  : toward TQQQ   0.0%  toward core  14.2%  (A/B rows 3916; holdout share toward core 12.3%)
+  q21 med   : toward TQQQ  55.4%  toward core  44.6%  (A/B rows 3916; holdout share toward core 48.4%)
+  q21 q2575 : toward TQQQ  27.9%  toward core  19.5%  (A/B rows 3916; holdout share toward core 19.9%)
+  q21 neg0  : toward TQQQ   0.0%  toward core  11.7%  (A/B rows 3916; holdout share toward core 9.5%)
+  q10 med   : toward TQQQ  55.0%  toward core  45.0%  (A/B rows 3916; holdout share toward core 49.1%)
+  q10 q2575 : toward TQQQ  27.7%  toward core  18.5%  (A/B rows 3916; holdout share toward core 20.2%)
+  q10 neg0  : toward TQQQ   0.0%  toward core  12.9%  (A/B rows 3916; holdout share toward core 11.2%)
+  s30 med   : toward TQQQ  51.6%  toward core  48.4%  (A/B rows 3916; holdout share toward core 51.3%)
+  s30 q2575 : toward TQQQ  24.9%  toward core  21.1%  (A/B rows 3916; holdout share toward core 23.0%)
+  s30 neg0  : toward TQQQ   0.0%  toward core  10.1%  (A/B rows 3916; holdout share toward core 10.7%)
+
+====================================================================================================
+(b) VRP as a MODULATOR of the vol-target multiplier, T re-calibrated to live's exposure
+====================================================================================================
+
+live exposure on P 69.28% (T=0.20); real rows live exposure 70.06%
+variant                  T*   expo  SPY-core CAGR/Sh/MDD      S      H | flip T*     Sh          S/H  | QQQ-core S/H | real Sh   expo
+q30 pw k=0.25         0.219 69.28%     22.99/0.982/-31.9  1.135  0.859  |  0.186  0.969  1.147/0.824  |1.137/0.891  |1.251  69.5%       flipLoses
+q30 pw k=0.5          0.240 69.28%     22.93/0.969/-32.9  1.102  0.861  |  0.178  0.953  1.142/0.798  |1.107/0.892  |1.234  69.2%       flipLoses
+q30 pw k=1            0.288 69.28%     22.79/0.946/-33.6  1.056  0.857  |  0.169  0.941  1.142/0.775  |1.061/0.888  |1.223  68.9%       flipLoses
+q30 exp k=2           0.195 69.28%     23.43/0.995/-31.6  1.160  0.862  |  0.206  0.960  1.122/0.827  |1.160/0.894  |1.274  69.4%  BOTH flipLoses
+q30 exp k=4           0.193 69.28%     23.72/0.993/-32.1  1.151  0.865  |  0.214  0.933  1.097/0.795  |1.155/0.900  |1.271  68.9%  BOTH flipLoses
+q30 exp k=8           0.193 69.28%     23.60/0.972/-33.2  1.105  0.864  |  0.247  0.888  1.078/0.728  |1.111/0.900  |1.240  68.3%       flipLoses
+q30 pow k=0.5         0.195 69.28%     23.22/0.989/-31.6  1.155  0.856  |  0.209  0.958  1.112/0.833  |1.157/0.889  |1.275  69.4%  BOTH flipLoses
+q30 pow k=1           0.194 69.28%     23.53/0.988/-32.4  1.148  0.859  |  0.224  0.933  1.094/0.801  |1.152/0.892  |1.272  69.0%       flipLoses
+q21 pw k=0.25         0.218 69.28%     23.26/0.992/-31.2  1.150  0.866  |  0.187  0.958  1.130/0.817  |1.153/0.901  |1.269  69.4%       flipLoses
+q21 pw k=0.5          0.238 69.28%     23.45/0.988/-31.6  1.131  0.873  |  0.178  0.932  1.110/0.785  |1.138/0.909  |1.262  69.0%       flipLoses
+q21 pw k=1            0.281 69.28%     23.64/0.977/-32.8  1.104  0.876  |  0.170  0.900  1.085/0.745  |1.114/0.913  |1.259  68.6%       flipLoses
+q21 exp k=2           0.195 69.28%     23.49/0.999/-31.3  1.170  0.861  |  0.206  0.954  1.110/0.826  |1.173/0.896  |1.271  69.5%  BOTH flipLoses
+q21 exp k=4           0.193 69.28%     23.90/1.002/-31.2  1.168  0.869  |  0.216  0.914  1.074/0.781  |1.172/0.904  |1.269  69.0%  BOTH flipLoses
+q21 exp k=8           0.192 69.28%     24.26/1.000/-33.5  1.161  0.872  |  0.251  0.848  1.009/0.713  |1.168/0.909  |1.248  68.2%  BOTH flipLoses
+q21 pow k=0.5         0.195 69.28%     23.30/0.994/-31.2  1.164  0.858  |  0.209  0.953  1.103/0.831  |1.166/0.891  |1.272  69.5%  BOTH flipLoses
+q21 pow k=1           0.194 69.28%     23.58/0.994/-31.4  1.161  0.860  |  0.227  0.919  1.079/0.788  |1.165/0.895  |1.268  69.1%  BOTH flipLoses
+q10 pw k=0.25         0.219 69.28%     23.18/0.994/-32.6  1.166  0.857  |  0.186  0.955  1.115/0.822  |1.164/0.891  |1.253  69.6%  BOTH flipLoses
+q10 pw k=0.5          0.238 69.28%     23.30/0.991/-33.3  1.157  0.860  |  0.178  0.927  1.080/0.798  |1.154/0.894  |1.239  69.3%  BOTH flipLoses
+q10 pw k=1            0.281 69.28%     23.44/0.983/-34.2  1.146  0.855  |  0.170  0.893  1.040/0.768  |1.141/0.889  |1.235  69.0%       flipLoses
+q10 exp k=2           0.194 69.28%     23.55/1.006/-32.1  1.194  0.856  |  0.209  0.939  1.078/0.825  |1.191/0.889  |1.277  69.6%  BOTH flipLoses
+q10 exp k=4           0.190 69.28%     24.03/1.014/-32.5  1.213  0.857  |  0.221  0.868  0.984/0.770  |1.209/0.893  |1.276  69.3%  BOTH flipLoses
+q10 exp k=8           0.188 69.28%     24.38/1.013/-32.4  1.217  0.855  |  0.270  0.793  0.909/0.693  |1.213/0.893  |1.256  68.8%  BOTH flipLoses
+q10 pow k=0.5         0.194 69.28%     23.29/0.998/-32.3  1.183  0.850  |  0.215  0.939  1.092/0.813  |1.180/0.884  |1.270  69.8%       flipLoses
+q10 pow k=1           0.191 69.28%     23.66/1.004/-32.7  1.194  0.853  |  0.245  0.875  1.030/0.746  |1.193/0.888  |1.262  69.5%  BOTH flipLoses
+s30 pw k=0.25         0.215 69.28%     23.11/0.989/-32.3  1.154  0.854  |  0.188  0.969  1.135/0.835  |1.157/0.885  |1.269  70.0%  BOTH flipLoses
+s30 pw k=0.5          0.231 69.28%     23.17/0.981/-33.4  1.141  0.851  |  0.181  0.955  1.121/0.820  |1.148/0.881  |1.266  69.9%       flipLoses
+s30 pw k=1            0.263 69.28%     23.09/0.964/-34.4  1.116  0.837  |  0.173  0.948  1.109/0.817  |1.126/0.867  |1.266  70.0%       flipLoses
+s30 exp k=2           0.193 69.28%     23.25/0.989/-31.5  1.152  0.857  |  0.209  0.965  1.132/0.829  |1.153/0.888  |1.270  69.8%  BOTH flipLoses
+s30 exp k=4           0.188 69.28%     23.29/0.980/-32.1  1.132  0.855  |  0.218  0.940  1.120/0.794  |1.136/0.885  |1.262  69.5%       flipLoses
+s30 exp k=8           0.182 69.28%     22.88/0.953/-33.3  1.083  0.844  |  0.253  0.908  1.093/0.760  |1.091/0.875  |1.228  69.4%       flipLoses
+s30 pow k=0.5         0.190 69.28%     23.23/0.988/-31.7  1.149  0.856  |  0.216  0.957  1.117/0.828  |1.152/0.887  |1.268  69.7%       flipLoses
+s30 pow k=1           0.185 69.28%     23.13/0.974/-32.7  1.119  0.854  |  0.242  0.939  1.121/0.794  |1.124/0.885  |1.257  69.5%       flipLoses
+
+  live: SPY-core 22.76/0.986/-32.0 S 1.151 H 0.852; QQQ-core 1.150/0.887; real 1.260
+  Each variant's T* is bisected so its average deployed exposure on P equals live's; the flip (g -> 1/g) is
+  re-calibrated separately. Real rows use the proxy-calibrated T*, so their exposure is reported, not matched.
+
+====================================================================================================
+SURVIVOR TESTS -- block bootstrap and leave-one-regime-out for anything beating live on BOTH eras
+====================================================================================================
+
+[a] q21 d=0.10 med t252: beats live both eras. beats beta-matched both eras: True; beats const-tilt both eras: True; flip both-era: False; QQQ-core both: True; real Sharpe 1.284 vs 1.260
+
+  q21 d=0.10 med t252  vs live: point +0.70pp/yr log-return, +0.015 Sharpe
+     block 20d: logret 95% [-0.21,+1.66]pp P(<=0)=0.066 | Sharpe 95% [-0.022,+0.053] P(<=0)=0.223
+     block 60d: logret 95% [-0.21,+1.63]pp P(<=0)=0.067 | Sharpe 95% [-0.022,+0.052] P(<=0)=0.212
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.014 / +0.70pp
+       drop GFC 2007-2009              +0.007 / +0.47pp
+       drop COVID 2020                 +0.014 / +0.68pp
+       drop 2022 bear                  +0.010 / +0.62pp
+       drop whole SPMO era 2015-11+    +0.020 / +0.66pp
+
+  q21 d=0.10 med t252  vs const-tilt dc=+0.011: point +0.54pp/yr log-return, +0.015 Sharpe
+     block 20d: logret 95% [-0.36,+1.50]pp P(<=0)=0.120 | Sharpe 95% [-0.023,+0.052] P(<=0)=0.231
+     block 60d: logret 95% [-0.34,+1.44]pp P(<=0)=0.120 | Sharpe 95% [-0.023,+0.051] P(<=0)=0.215
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.014 / +0.54pp
+       drop GFC 2007-2009              +0.006 / +0.31pp
+       drop COVID 2020                 +0.014 / +0.53pp
+       drop 2022 bear                  +0.009 / +0.45pp
+       drop whole SPMO era 2015-11+    +0.020 / +0.54pp
+
+[a] q21 d=0.20 med t252: beats live both eras. beats beta-matched both eras: True; beats const-tilt both eras: True; flip both-era: False; QQQ-core both: True; real Sharpe 1.294 vs 1.260
+
+  q21 d=0.20 med t252  vs live: point +1.32pp/yr log-return, +0.020 Sharpe
+     block 20d: logret 95% [-0.58,+3.20]pp P(<=0)=0.075 | Sharpe 95% [-0.059,+0.095] P(<=0)=0.310
+     block 60d: logret 95% [-0.55,+3.19]pp P(<=0)=0.084 | Sharpe 95% [-0.055,+0.092] P(<=0)=0.317
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.018 / +1.33pp
+       drop GFC 2007-2009              +0.004 / +0.88pp
+       drop COVID 2020                 +0.018 / +1.27pp
+       drop 2022 bear                  +0.008 / +1.16pp
+       drop whole SPMO era 2015-11+    +0.029 / +1.20pp
+
+  q21 d=0.20 med t252  vs const-tilt dc=+0.022: point +0.99pp/yr log-return, +0.018 Sharpe
+     block 20d: logret 95% [-0.92,+2.83]pp P(<=0)=0.144 | Sharpe 95% [-0.060,+0.092] P(<=0)=0.324
+     block 60d: logret 95% [-0.81,+2.81]pp P(<=0)=0.139 | Sharpe 95% [-0.055,+0.091] P(<=0)=0.329
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.017 / +0.99pp
+       drop GFC 2007-2009              +0.002 / +0.54pp
+       drop COVID 2020                 +0.017 / +0.96pp
+       drop 2022 bear                  +0.007 / +0.80pp
+       drop whole SPMO era 2015-11+    +0.029 / +0.96pp
+
+[b] q30 exp k=2: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.274 vs 1.260
+
+  q30 exp k=2  vs live: point +0.55pp/yr log-return, +0.009 Sharpe
+     block 20d: logret 95% [+0.04,+1.06]pp P(<=0)=0.018 | Sharpe 95% [-0.012,+0.032] P(<=0)=0.192
+     block 60d: logret 95% [+0.06,+1.01]pp P(<=0)=0.015 | Sharpe 95% [-0.012,+0.029] P(<=0)=0.180
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.009 / +0.55pp
+       drop GFC 2007-2009              +0.008 / +0.51pp
+       drop COVID 2020                 +0.013 / +0.56pp
+       drop 2022 bear                  +0.006 / +0.52pp
+       drop whole SPMO era 2015-11+    +0.010 / +0.54pp
+
+[b] q30 exp k=4: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.271 vs 1.260
+
+  q30 exp k=4  vs live: point +0.79pp/yr log-return, +0.007 Sharpe
+     block 20d: logret 95% [-0.08,+1.69]pp P(<=0)=0.040 | Sharpe 95% [-0.030,+0.043] P(<=0)=0.343
+     block 60d: logret 95% [-0.06,+1.65]pp P(<=0)=0.033 | Sharpe 95% [-0.029,+0.043] P(<=0)=0.334
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.006 / +0.76pp
+       drop GFC 2007-2009              +0.007 / +0.76pp
+       drop COVID 2020                 +0.011 / +0.75pp
+       drop 2022 bear                  +0.002 / +0.75pp
+       drop whole SPMO era 2015-11+    +0.013 / +0.86pp
+
+[b] q30 pow k=0.5: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.275 vs 1.260
+
+  q30 pow k=0.5  vs live: point +0.38pp/yr log-return, +0.004 Sharpe
+     block 20d: logret 95% [-0.06,+0.82]pp P(<=0)=0.046 | Sharpe 95% [-0.015,+0.023] P(<=0)=0.339
+     block 60d: logret 95% [-0.05,+0.81]pp P(<=0)=0.046 | Sharpe 95% [-0.016,+0.023] P(<=0)=0.343
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.003 / +0.38pp
+       drop GFC 2007-2009              +0.005 / +0.38pp
+       drop COVID 2020                 +0.007 / +0.41pp
+       drop 2022 bear                  +0.001 / +0.35pp
+       drop whole SPMO era 2015-11+    +0.004 / +0.36pp
+
+[b] q21 exp k=2: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.271 vs 1.260
+
+  q21 exp k=2  vs live: point +0.60pp/yr log-return, +0.013 Sharpe
+     block 20d: logret 95% [+0.08,+1.12]pp P(<=0)=0.012 | Sharpe 95% [-0.007,+0.034] P(<=0)=0.100
+     block 60d: logret 95% [+0.12,+1.10]pp P(<=0)=0.009 | Sharpe 95% [-0.007,+0.034] P(<=0)=0.107
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.011 / +0.56pp
+       drop GFC 2007-2009              +0.013 / +0.58pp
+       drop COVID 2020                 +0.011 / +0.49pp
+       drop 2022 bear                  +0.012 / +0.60pp
+       drop whole SPMO era 2015-11+    +0.009 / +0.48pp
+
+[b] q21 exp k=4: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.269 vs 1.260
+
+  q21 exp k=4  vs live: point +0.93pp/yr log-return, +0.016 Sharpe
+     block 20d: logret 95% [+0.04,+1.83]pp P(<=0)=0.022 | Sharpe 95% [-0.020,+0.054] P(<=0)=0.168
+     block 60d: logret 95% [+0.05,+1.77]pp P(<=0)=0.021 | Sharpe 95% [-0.019,+0.052] P(<=0)=0.184
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.013 / +0.83pp
+       drop GFC 2007-2009              +0.015 / +0.86pp
+       drop COVID 2020                 +0.012 / +0.70pp
+       drop 2022 bear                  +0.015 / +0.95pp
+       drop whole SPMO era 2015-11+    +0.017 / +0.91pp
+
+[b] q21 exp k=8: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.248 vs 1.260
+
+  q21 exp k=8  vs live: point +1.22pp/yr log-return, +0.014 Sharpe
+     block 20d: logret 95% [-0.09,+2.62]pp P(<=0)=0.035 | Sharpe 95% [-0.036,+0.071] P(<=0)=0.299
+     block 60d: logret 95% [-0.22,+2.71]pp P(<=0)=0.048 | Sharpe 95% [-0.043,+0.071] P(<=0)=0.321
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.010 / +1.07pp
+       drop GFC 2007-2009              +0.016 / +1.22pp
+       drop COVID 2020                 +0.006 / +0.87pp
+       drop 2022 bear                  +0.010 / +1.21pp
+       drop whole SPMO era 2015-11+    +0.020 / +1.37pp
+
+[b] q21 pow k=0.5: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.272 vs 1.260
+
+  q21 pow k=0.5  vs live: point +0.44pp/yr log-return, +0.008 Sharpe
+     block 20d: logret 95% [-0.02,+0.91]pp P(<=0)=0.033 | Sharpe 95% [-0.011,+0.028] P(<=0)=0.178
+     block 60d: logret 95% [-0.02,+0.91]pp P(<=0)=0.028 | Sharpe 95% [-0.010,+0.027] P(<=0)=0.185
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.007 / +0.42pp
+       drop GFC 2007-2009              +0.009 / +0.43pp
+       drop COVID 2020                 +0.008 / +0.39pp
+       drop 2022 bear                  +0.007 / +0.45pp
+       drop whole SPMO era 2015-11+    +0.006 / +0.36pp
+
+[b] q21 pow k=1: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.268 vs 1.260
+
+  q21 pow k=1  vs live: point +0.67pp/yr log-return, +0.008 Sharpe
+     block 20d: logret 95% [-0.09,+1.45]pp P(<=0)=0.043 | Sharpe 95% [-0.023,+0.040] P(<=0)=0.284
+     block 60d: logret 95% [-0.15,+1.49]pp P(<=0)=0.060 | Sharpe 95% [-0.024,+0.039] P(<=0)=0.309
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.006 / +0.63pp
+       drop GFC 2007-2009              +0.008 / +0.63pp
+       drop COVID 2020                 +0.004 / +0.47pp
+       drop 2022 bear                  +0.007 / +0.70pp
+       drop whole SPMO era 2015-11+    +0.008 / +0.61pp
+
+[b] q10 pw k=0.25: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.253 vs 1.260
+
+  q10 pw k=0.25  vs live: point +0.35pp/yr log-return, +0.009 Sharpe
+     block 20d: logret 95% [-0.24,+0.90]pp P(<=0)=0.110 | Sharpe 95% [-0.017,+0.033] P(<=0)=0.247
+     block 60d: logret 95% [-0.18,+0.87]pp P(<=0)=0.090 | Sharpe 95% [-0.014,+0.031] P(<=0)=0.215
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.010 / +0.38pp
+       drop GFC 2007-2009              +0.006 / +0.24pp
+       drop COVID 2020                 +0.004 / +0.22pp
+       drop 2022 bear                  +0.014 / +0.48pp
+       drop whole SPMO era 2015-11+    +0.005 / +0.32pp
+
+[b] q10 pw k=0.5: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.239 vs 1.260
+
+  q10 pw k=0.5  vs live: point +0.44pp/yr log-return, +0.006 Sharpe
+     block 20d: logret 95% [-0.48,+1.43]pp P(<=0)=0.195 | Sharpe 95% [-0.033,+0.048] P(<=0)=0.398
+     block 60d: logret 95% [-0.45,+1.39]pp P(<=0)=0.179 | Sharpe 95% [-0.032,+0.042] P(<=0)=0.384
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.008 / +0.49pp
+       drop GFC 2007-2009              -0.002 / +0.17pp
+       drop COVID 2020                 -0.002 / +0.20pp
+       drop 2022 bear                  +0.016 / +0.69pp
+       drop whole SPMO era 2015-11+    +0.008 / +0.57pp
+
+[b] q10 exp k=2: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.277 vs 1.260
+
+  q10 exp k=2  vs live: point +0.65pp/yr log-return, +0.020 Sharpe
+     block 20d: logret 95% [-0.06,+1.37]pp P(<=0)=0.035 | Sharpe 95% [-0.010,+0.050] P(<=0)=0.091
+     block 60d: logret 95% [-0.03,+1.39]pp P(<=0)=0.030 | Sharpe 95% [-0.008,+0.049] P(<=0)=0.088
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.021 / +0.67pp
+       drop GFC 2007-2009              +0.021 / +0.63pp
+       drop COVID 2020                 +0.007 / +0.30pp
+       drop 2022 bear                  +0.023 / +0.74pp
+       drop whole SPMO era 2015-11+    +0.004 / +0.32pp
+
+[b] q10 exp k=4: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.276 vs 1.260
+
+  q10 exp k=4  vs live: point +1.03pp/yr log-return, +0.028 Sharpe
+     block 20d: logret 95% [-0.17,+2.30]pp P(<=0)=0.051 | Sharpe 95% [-0.022,+0.080] P(<=0)=0.143
+     block 60d: logret 95% [-0.16,+2.31]pp P(<=0)=0.051 | Sharpe 95% [-0.022,+0.078] P(<=0)=0.145
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.031 / +1.07pp
+       drop GFC 2007-2009              +0.029 / +0.99pp
+       drop COVID 2020                 +0.004 / +0.36pp
+       drop 2022 bear                  +0.035 / +1.22pp
+       drop whole SPMO era 2015-11+    +0.004 / +0.57pp
+
+[b] q10 exp k=8: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.256 vs 1.260
+
+  q10 exp k=8  vs live: point +1.32pp/yr log-return, +0.028 Sharpe
+     block 20d: logret 95% [-0.41,+3.11]pp P(<=0)=0.080 | Sharpe 95% [-0.047,+0.103] P(<=0)=0.242
+     block 60d: logret 95% [-0.41,+3.16]pp P(<=0)=0.072 | Sharpe 95% [-0.043,+0.100] P(<=0)=0.221
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.033 / +1.37pp
+       drop GFC 2007-2009              +0.026 / +1.15pp
+       drop COVID 2020                 -0.003 / +0.44pp
+       drop 2022 bear                  +0.041 / +1.67pp
+       drop whole SPMO era 2015-11+    +0.003 / +0.88pp
+
+[b] q10 pow k=1: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.262 vs 1.260
+
+  q10 pow k=1  vs live: point +0.74pp/yr log-return, +0.018 Sharpe
+     block 20d: logret 95% [-0.33,+1.84]pp P(<=0)=0.093 | Sharpe 95% [-0.027,+0.064] P(<=0)=0.218
+     block 60d: logret 95% [-0.27,+1.85]pp P(<=0)=0.086 | Sharpe 95% [-0.022,+0.062] P(<=0)=0.216
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.020 / +0.77pp
+       drop GFC 2007-2009              +0.019 / +0.69pp
+       drop COVID 2020                 +0.001 / +0.26pp
+       drop 2022 bear                  +0.026 / +0.92pp
+       drop whole SPMO era 2015-11+    +0.001 / +0.39pp
+
+[b] s30 pw k=0.25: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: False; real Sharpe 1.269 vs 1.260
+
+  s30 pw k=0.25  vs live: point +0.29pp/yr log-return, +0.003 Sharpe
+     block 20d: logret 95% [-0.19,+0.78]pp P(<=0)=0.109 | Sharpe 95% [-0.017,+0.023] P(<=0)=0.405
+     block 60d: logret 95% [-0.19,+0.82]pp P(<=0)=0.136 | Sharpe 95% [-0.017,+0.025] P(<=0)=0.386
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.003 / +0.32pp
+       drop GFC 2007-2009              +0.003 / +0.29pp
+       drop COVID 2020                 +0.005 / +0.31pp
+       drop 2022 bear                  +0.002 / +0.28pp
+       drop whole SPMO era 2015-11+    +0.002 / +0.21pp
+
+[b] s30 exp k=2: beats live both eras (exposure-matched). flip both-era: False; QQQ-core both: True; real Sharpe 1.270 vs 1.260
+
+  s30 exp k=2  vs live: point +0.40pp/yr log-return, +0.004 Sharpe
+     block 20d: logret 95% [-0.07,+0.86]pp P(<=0)=0.048 | Sharpe 95% [-0.016,+0.024] P(<=0)=0.342
+     block 60d: logret 95% [-0.10,+0.87]pp P(<=0)=0.057 | Sharpe 95% [-0.018,+0.025] P(<=0)=0.348
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.004 / +0.43pp
+       drop GFC 2007-2009              +0.001 / +0.35pp
+       drop COVID 2020                 +0.008 / +0.42pp
+       drop 2022 bear                  +0.001 / +0.38pp
+       drop whole SPMO era 2015-11+    +0.005 / +0.32pp
+
+VARIANT COUNT: 60 primary variants (28 tilt + 32 modulator), each also run as a sign-flip and on the QQQ-core proxy and real rows; 18 beat live on both eras on the SPY-core proxy.
+
+====================================================================================================
+(d) DECOMPOSITION + ROBUSTNESS of the modulator (controls, not new variants)
+====================================================================================================
+  g = exp(-k*(IV - rv)) = exp(-k*IV) * exp(+k*rv). With T re-calibrated the constant
+  is absorbed, so two controls isolate the two halves:
+    IV-level only : g = exp(-k*IV)   (implied level, no premium)  -- vxn_full_test PART 1 territory
+    rv-only       : g = exp(+k*rv)   (steeper response to realized vol, no implied input at all)
+  If rv-only reproduces the gain, the 'VRP' is just a convex realized-vol response.
+
+control                        T*  SPY-core CAGR/Sh/MDD      S      H  dLogret  dSharpe  | QQQ-core S/H | real Sh
+q30 VRP exp k=2             0.195     23.43/0.995/-31.6  1.160  0.862    +0.55   +0.009  |1.160/0.894  |1.274  BOTH
+q30 IV-level k=2            0.120     23.16/0.985/-31.4  1.158  0.846    +0.33   -0.001  |1.158/0.882  |1.285
+q30 rv-only  k=2            0.334     22.76/0.979/-31.6  1.141  0.846    +0.01   -0.007  |1.141/0.879  |1.249
+q30 VRP exp k=4             0.193     23.72/0.993/-32.1  1.151  0.865    +0.79   +0.007  |1.155/0.900  |1.271  BOTH
+q30 IV-level k=4            0.075     22.80/0.944/-35.7  1.109  0.812    +0.03   -0.042  |1.112/0.848  |1.275
+q30 rv-only  k=4            0.574     22.56/0.965/-31.6  1.110  0.846    -0.16   -0.021  |1.113/0.876  |1.233
+
+q21 VRP exp k=2             0.195     23.49/0.999/-31.3  1.170  0.861    +0.60   +0.013  |1.173/0.896  |1.271  BOTH
+q21 IV-level k=2            0.120     23.16/0.985/-31.4  1.158  0.846    +0.33   -0.001  |1.158/0.882  |1.285
+q21 rv-only  k=2            0.333     22.96/0.987/-32.0  1.155  0.851    +0.16   +0.002  |1.156/0.883  |1.239
+q21 VRP exp k=4             0.193     23.90/1.002/-31.2  1.168  0.869    +0.93   +0.016  |1.172/0.904  |1.269  BOTH
+q21 IV-level k=4            0.075     22.80/0.944/-35.7  1.109  0.812    +0.03   -0.042  |1.112/0.848  |1.275
+q21 rv-only  k=4            0.569     22.95/0.982/-32.4  1.139  0.853    +0.16   -0.004  |1.142/0.885  |1.218
+
+q10 VRP exp k=2             0.194     23.55/1.006/-32.1  1.194  0.856    +0.65   +0.020  |1.191/0.889  |1.277  BOTH
+q10 IV-level k=2            0.120     23.16/0.985/-31.4  1.158  0.846    +0.33   -0.001  |1.158/0.882  |1.285
+q10 rv-only  k=2            0.331     22.89/0.989/-33.0  1.166  0.845    +0.11   +0.003  |1.163/0.880  |1.239
+q10 VRP exp k=4             0.190     24.03/1.014/-32.5  1.213  0.857    +1.03   +0.028  |1.209/0.893  |1.276  BOTH
+q10 IV-level k=4            0.075     22.80/0.944/-35.7  1.109  0.812    +0.03   -0.042  |1.112/0.848  |1.275
+q10 rv-only  k=4            0.557     22.81/0.984/-34.0  1.163  0.838    +0.05   -0.002  |1.159/0.872  |1.225
+
+
+  q21 VRP exp k=4  vs q21 rv-only k=4 (exposure-matched): point +0.77pp/yr log-return, +0.021 Sharpe
+     block 20d: logret 95% [-0.33,+1.99]pp P(<=0)=0.085 | Sharpe 95% [-0.024,+0.067] P(<=0)=0.172
+     block 60d: logret 95% [-0.31,+1.99]pp P(<=0)=0.082 | Sharpe 95% [-0.025,+0.066] P(<=0)=0.180
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.019 / +0.68pp
+       drop GFC 2007-2009              +0.012 / +0.52pp
+       drop COVID 2020                 +0.015 / +0.46pp
+       drop 2022 bear                  +0.015 / +0.69pp
+       drop whole SPMO era 2015-11+    +0.016 / +0.79pp
+
+  q10 VRP exp k=2  vs q10 rv-only k=2 (exposure-matched): point +0.54pp/yr log-return, +0.017 Sharpe
+     block 20d: logret 95% [-0.09,+1.21]pp P(<=0)=0.052 | Sharpe 95% [-0.008,+0.044] P(<=0)=0.114
+     block 60d: logret 95% [-0.10,+1.17]pp P(<=0)=0.057 | Sharpe 95% [-0.009,+0.042] P(<=0)=0.105
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.018 / +0.53pp
+       drop GFC 2007-2009              +0.012 / +0.40pp
+       drop COVID 2020                 +0.012 / +0.33pp
+       drop 2022 bear                  +0.015 / +0.52pp
+       drop whole SPMO era 2015-11+    +0.010 / +0.46pp
+
+COST SENSITIVITY (one-way spread 4bp live, 10bp, 20bp): Sharpe S/H and full, live vs top modulators
+     4bp  live 0.986 (1.151/0.852) | q21 exp k=4 1.002 (1.168/0.869) BOTH | q10 exp k=2 1.006 (1.194/0.856) BOTH | q30 exp k=2 0.995 (1.160/0.862) BOTH | q21 pow k=0.5 0.994 (1.164/0.858) BOTH
+    10bp  live 0.901 (1.065/0.769) | q21 exp k=4 0.912 (1.077/0.780) BOTH | q10 exp k=2 0.915 (1.101/0.766)      | q30 exp k=2 0.908 (1.072/0.776) BOTH | q21 pow k=0.5 0.907 (1.075/0.771) BOTH
+    20bp  live 0.760 (0.921/0.629) | q21 exp k=4 0.762 (0.925/0.630) BOTH | q10 exp k=2 0.762 (0.946/0.615)      | q30 exp k=2 0.764 (0.925/0.633) BOTH | q21 pow k=0.5 0.761 (0.927/0.627)     
+  turnover proxy (L1 traded/yr from cost drag): live 33.2x | q21 exp k=4 36.5x | q10 exp k=2 36.2x | q30 exp k=2 34.6x | q21 pow k=0.5 34.7x
+
+SIGNAL LAG: modulator driven by the PREVIOUS session's VRP (T re-calibrated)
+  q21 exp k=4 lag1: T* 0.192  23.25/0.982/-31.1  S 1.122 H 0.868  dLogret +0.40pp dSharpe -0.004
+  q10 exp k=2 lag1: T* 0.194  23.31/0.999/-32.0  S 1.168 H 0.863  dLogret +0.45pp dSharpe +0.013  BOTH
+  q30 exp k=2 lag1: T* 0.195  22.99/0.981/-31.3  S 1.135 H 0.857  dLogret +0.19pp dSharpe -0.004
+
+YEAR-BY-YEAR log-return difference vs live (pp):
+  q21 exp k=4         02:+3.0 03:+4.5 04:+0.1 05:-0.2 06:+0.1 07:+1.1 08:+1.0 09:+2.0 10:+0.4 11:+2.4 12:+0.7 13:-0.2 14:-1.6 15:+0.1 16:-1.9 17:-0.0 18:+1.6 19:-0.6 20:+6.2 21:+1.4 22:+0.4 23:+2.8 24:+0.2 25:-1.9 26:+1.1
+  q10 exp k=2         02:+0.0 03:+0.8 04:+0.2 05:-0.5 06:+0.3 07:+2.0 08:+0.3 09:-0.0 10:+3.1 11:-0.0 12:+0.5 13:-1.0 14:-1.1 15:+0.4 16:-1.2 17:+0.0 18:+2.5 19:+0.2 20:+8.8 21:+2.5 22:-1.5 23:+0.1 24:-0.5 25:+0.2 26:-0.3
+  tilt q21 d=0.10 med 02:+0.6 03:-0.5 04:+1.5 05:-3.5 06:+2.0 07:+3.4 08:+2.3 09:+1.2 10:+2.0 11:+2.1 12:+1.9 13:+3.3 14:-3.5 15:-3.5 16:-2.5 17:+1.5 18:-0.1 19:+1.6 20:+1.3 21:-0.7 22:+2.5 23:+5.3 24:-0.2 25:+0.7 26:-1.6
+
+MULTIPLIER DIFFERENCE (candidate minus live risky weight sum), q21 exp k=4, by VRP sign and state:
+  A vrp<0   n=  437  mean exposure diff -6.55pp
+  A vrp>=0  n= 3403  mean exposure diff +1.04pp
+  B vrp<0   n=   22  mean exposure diff -5.82pp
+  B vrp>=0  n=   54  mean exposure diff +5.95pp
+  C vrp<0   n=  213  mean exposure diff -13.13pp
+  C vrp>=0  n=  183  mean exposure diff +6.11pp
+  D vrp<0   n=  205  mean exposure diff -8.33pp
+  D vrp>=0  n=  723  mean exposure diff +3.15pp
+  E vrp<0   n=  126  mean exposure diff -5.74pp
+  E vrp>=0  n=  237  mean exposure diff +3.60pp
+  F vrp<0   n=  152  mean exposure diff +0.00pp
+  F vrp>=0  n=  421  mean exposure diff +0.00pp
+
+SMOOTHED modulator (5-session mean VRP), T re-calibrated; also with 1-session lag and at 10bp cost
+  (3 extra variants, counted in the total)
+  q21 exp k=4 sm5 lag0: T* 0.191 23.84/1.002/-31.4 S 1.149 H 0.884 dLogret +0.88pp dSharpe +0.017      turnover 34.6x | 10bp: 0.917 (1.063/0.799) vs live 0.901 | real 1.278
+  q21 exp k=4 sm5 lag1: T* 0.190 23.63/0.996/-31.4 S 1.138 H 0.882 dLogret +0.71pp dSharpe +0.010      turnover 34.5x | 10bp: 0.911 (1.051/0.797) vs live 0.901
+
+  q21 exp k=4 sm5  vs live: point +0.88pp/yr log-return, +0.017 Sharpe
+     block 20d: logret 95% [+0.01,+1.73]pp P(<=0)=0.025 | Sharpe 95% [-0.018,+0.051] P(<=0)=0.189
+     block 60d: logret 95% [+0.03,+1.80]pp P(<=0)=0.022 | Sharpe 95% [-0.018,+0.053] P(<=0)=0.175
+     leave-one-regime-out (Sharpe diff / log-return diff):
+       drop dot-com 2000-2002          +0.012 / +0.77pp
+       drop GFC 2007-2009              +0.018 / +0.91pp
+       drop COVID 2020                 +0.017 / +0.80pp
+       drop 2022 bear                  +0.012 / +0.85pp
+       drop whole SPMO era 2015-11+    +0.032 / +1.21pp
+  q10 exp k=2 sm5 lag0: T* 0.193 23.56/1.008/-31.7 S 1.183 H 0.866 dLogret +0.65pp dSharpe +0.022 BOTH turnover 34.4x | 10bp: 0.921 (1.095/0.781) vs live 0.901 BOTH | real 1.288
+  q10 exp k=2 sm5 lag1: T* 0.193 23.53/1.006/-31.9 S 1.177 H 0.868 dLogret +0.63pp dSharpe +0.021 BOTH turnover 34.2x | 10bp: 0.920 (1.090/0.783) vs live 0.901 BOTH
+  q30 exp k=2 sm5 lag0: T* 0.194 23.28/0.992/-31.5 S 1.150 H 0.865 dLogret +0.43pp dSharpe +0.007      turnover 33.7x | 10bp: 0.908 (1.064/0.782) vs live 0.901 | real 1.271
+  q30 exp k=2 sm5 lag1: T* 0.193 23.20/0.991/-31.6 S 1.148 H 0.864 dLogret +0.36pp dSharpe +0.005      turnover 33.6x | 10bp: 0.906 (1.062/0.781) vs live 0.901
+
+FINAL VARIANT COUNT: 63 (28 tilt + 35 modulator incl. 3 smoothed), plus per-variant sign-flip, QQQ-core and real-row runs and 18 decomposition controls.
