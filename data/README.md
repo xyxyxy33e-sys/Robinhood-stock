@@ -206,3 +206,12 @@ it covers all but the first seven months of the holdout.
 
 Cross-checked on the 2026-09-02..04 overlap against an independent EODHD VXN.INDX
 pull: 21.07 / 20.16 / 20.04 on both sources, exact match.
+
+## vixcls_full.csv (added 2026-09-08)
+
+CBOE Volatility Index (S&P 500), daily close, FRED `VIXCLS`, 1990-01-02 .. 2026-09-07.
+Supersedes `/home/user/robinhood/data/kairos/VIXCLS.csv` for anything needing history
+before 2008 — that copy starts 2008-01-02, which is a truncation of the download, NOT
+the limit of the series. Every VIX result in STRATEGY.md dated on or before 2026-09-08
+that cites a "VIX starts 2008" constraint was limited by that file, not by the data.
+Holidays carry an EMPTY value; forward-fill, do not drop.

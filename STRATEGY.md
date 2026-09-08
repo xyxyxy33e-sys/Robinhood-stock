@@ -2323,6 +2323,14 @@ and −25.3% is the smallest real drawdown since the overlays went in. Cost:
 > VXN is the matched (Nasdaq-100) index and starts 2001, not 2008. Every
 > conclusion here was re-run on it. The conclusions held; the reasoning did
 > not need the wrong index to reach them.
+>
+> **CORRECTION, same day:** the "VIX starts 2008 / 51% holdout coverage"
+> constraint stated in this section is WRONG. It was a property of the local
+> file `/home/user/robinhood/data/kairos/VIXCLS.csv`, which is a truncated
+> download, not of the series: FRED's VIXCLS runs from **1990-01-02**. The
+> full series is now at `data/vixcls_full.csv`. The conclusions here are
+> unaffected — they were re-derived on VXN, which is the right index
+> regardless — but the coverage figure should not be quoted.
 
 Asked by the owner: "have we tested VIX correlation?" VIX had been tested four
 times before, always as a FILTER or SUBSTATE SPLITTER, and rejected every
@@ -2430,6 +2438,14 @@ is not the binding constraint, the result is.
 > VXN is the matched (Nasdaq-100) index and starts 2001, not 2008. Every
 > conclusion here was re-run on it. The conclusions held; the reasoning did
 > not need the wrong index to reach them.
+>
+> **CORRECTION, same day:** the "VIX starts 2008 / 51% holdout coverage"
+> constraint stated in this section is WRONG. It was a property of the local
+> file `/home/user/robinhood/data/kairos/VIXCLS.csv`, which is a truncated
+> download, not of the series: FRED's VIXCLS runs from **1990-01-02**. The
+> full series is now at `data/vixcls_full.csv`. The conclusions here are
+> unaffected — they were re-derived on VXN, which is the right index
+> regardless — but the coverage figure should not be quoted.
 
 Owner follow-up to the estimator test: "also consider vix daily percentage
 change and vix cutoff line — and what about the dma idea on vix". All three
@@ -2590,6 +2606,92 @@ adopted for its Sharpe.
 implied vol as the estimator input, as a % -change trigger, as a level cutoff,
 and as a DMA overlay. The volatility-index question is answered on the correct
 instrument with 25 years of history; it does not need revisiting.
+
+### The VXN−VIX vol gap as a core/satellite tilt (2026-09-08) — STRONGEST CANDIDATE, still not applied
+
+Owner's idea: "SPMO is based on S&P 500 / VIX; TQQQ and QLD are based on QQQ /
+VXN. So if we look at both volatilities and track the gap in between, should
+help with our weights?" This is the best-posed question put to the design so
+far, and it exposes a real inconsistency worth stating on its own: **the vol
+overlay scales the WHOLE book — the SPMO leg included — by min(1, 0.20 / QQQ's
+realized vol). The S&P sleeve is being sized by the Nasdaq's volatility.**
+
+It is also structurally different from every VIX/VXN candidate before it.
+Those were all CASH GATES, which "work" by holding less risk and died to
+`exposure_control`. This is a TILT BETWEEN TWO RISKY LEGS at constant deployed
+capital: when the gap is wide (Nasdaq priced to be relatively more violent),
+shift weight from TQQQ to SPMO; when narrow, the reverse. So the de-levering
+confound does not apply and `beta_matched_control` / a constant-tilt control
+are the right tests.
+
+**Two harness problems had to be fixed first, both caught in this session's
+own output.**
+
+1. *The 26-year proxy is structurally blind to this.* `improvement_search.data()`
+   models `core` as QQQ total return, so in the proxy BOTH legs are QQQ and
+   there is no S&P/Nasdaq divergence to exploit. STRATEGY.md already said the
+   proxy is blind to core-leg questions. Fixed by building an **SPY-core
+   proxy** — the same machinery with `core` swapped to SPY total return.
+   Validated: with core left as QQQ it reproduces the standing figures exactly
+   (22.12 / 0.938 / −32.8, S 1.150 H 0.780).
+2. *The first threshold was contaminated.* Using the SEARCH-era median of the
+   gap put only 31% of all rows and **5% of holdout rows** above it — the rule
+   spent 2001–2015 permanently tilted to the satellite, i.e. adding leverage
+   with a threshold fitted on later data. That is why all 8 first-pass
+   variants "won" and won monotonically in delta. Replaced with a **causal
+   trailing median** (500 sessions), built once from the DAILY series and
+   attached by date — an earlier attempt built it per-row-list and burned 500
+   *weeks* on the weekly rows, cutting real confirmation from 564 rows to 64.
+
+**Result on the corrected harness** (SPY-core proxy 2003–2026, 5,927 rows;
+real SPMO weekly 564 rows; tilt δ = 0.20 between core and TQQQ in states A/B):
+
+| | CAGR/Sharpe/MDD | S / H | beta | real weekly |
+|---|---|---|---|---|
+| **LIVE** | 23.98 / 1.016 / −32.0 | 1.151 / **0.901** | 1.352 | 1.260 |
+| const tilt δ=0.05 (no signal) | 24.94 / 1.019 / −33.1 | 1.157 / 0.903 | 1.403 | 1.254 |
+| **gap tilt δ=0.20** | 26.57 / **1.063** / −36.5 | 1.271 / 0.890 | 1.384 | **1.372** |
+| gap tilt δ=0.20, SIGN-FLIPPED | 20.27 / 0.896 / −33.9 | 0.953 / 0.847 | 1.320 | 1.075 |
+
+**The signal is real.** Both controls pass decisively. Against a constant tilt
+carrying the same beta it adds **+0.044 proxy / +0.118 real** Sharpe — so it is
+not disguised leverage. Sign-flipped it collapses (1.063 → 0.896 proxy,
+1.372 → 1.075 real), which a noise signal cannot do. Real-instrument
+confirmation is large and consistent across both gap definitions (1.372 with
+the implied gap, 1.377 with the realized one, vs live's 1.260).
+
+**But it fails this project's own bar, and it fails it on the evidence that
+matters most.** Extending the window to include the GFC — possible only after
+the data correction below — flipped the holdout: **H 0.890 vs live's 0.901**,
+so it no longer improves in both eras. Block bootstrap Sharpe P(≤0) =
+**0.115 / 0.120**, well short of 5%. On the shorter 2010+ window it had looked
+like P = 0.029; the entire Sharpe result was concentrated in a stretch with no
+bear market in it. Max drawdown worsens 32.0% → 36.5%.
+
+What *is* significant is the RETURN: **+2.07pp/yr, P(≤0) = 0.019**, 95% CI
+[+0.12, +4.09]pp at both block lengths. So this is a genuine
+return-frontier step with a real timing signal inside it — more CAGR, deeper
+drawdown, Sharpe up but not provably so. That is a risk-preference decision,
+not an edge, and it belongs to the owner rather than to a backtest.
+
+**Verdict: not applied, and the change freeze is not the only reason.** It is
+recorded as the strongest candidate this line of research has produced and the
+one worth re-examining when the freeze lifts on 2026-12-07 — with fresh
+attention to the holdout, since that is where it breaks.
+
+**DATA CORRECTION, and it invalidates a constraint asserted earlier today.**
+`/home/user/robinhood/data/kairos/VIXCLS.csv` starts 2008-01-02, and both VIX
+sections above cite that as the limit of the data. It is not — it is a
+truncated download. FRED's VIXCLS runs from **1990-01-02**, now saved as
+`data/vixcls_full.csv`. With it, the implied gap runs from 2003 instead of
+2010, which is what made the holdout test above possible and what changed the
+answer. The earlier VIX conclusions stand (they were re-derived on VXN, the
+correct index), but any "VIX only starts 2008" claim in this file is wrong.
+Correlation between the implied and realized gaps also rises from +0.739 to
+**+0.914** on the full series — they are very nearly the same signal.
+
+Scripts: `paper-track/volgap_test.py` (SPY-core proxy, first pass and its
+controls), `paper-track/volgap_causal2.py` (causal threshold, final result).
 
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
