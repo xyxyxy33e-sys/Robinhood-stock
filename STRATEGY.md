@@ -2749,6 +2749,85 @@ sleeve and daily SPMO history is not in the repo. A true SPMO vol series would
 sit between SPY's and QQQ's, which if anything weakens the tested variants
 further, since the ordering above is monotone toward QQQ vol.
 
+### Five volatility research lines (2026-09-08, owner-directed, run independently)
+
+After a day in which every vol-based TIMING overlay failed and vol as a
+SCALING input kept working, the owner asked for five remaining ideas to be
+tested independently and deeply. Each ran under the shared contract in
+`paper-track/research_notes/BRIEFING.md` (reuse the harness, causal
+thresholds, same rows for every variant, exposure/beta match, placebo,
+block bootstrap, leave-one-regime-out, report the candidate count). Full
+writeups in `paper-track/research_notes/<line>.md`. Verdicts on one scale:
+*no signal / signal too small / risk-preference dial / candidate*.
+
+#### Line 5 — vol-modulated hysteresis buffer — NO SIGNAL
+
+The 50/200 classifier uses a fixed 1% hysteresis. Hypothesis: scale the
+buffer with realized vol so noise does not flip the state in turbulent tapes.
+`paper-track/vol_hysteresis.py`, 21 variants (clamp range × estimator ×
+macro/fast/both), buffer path pinned so its SEARCH-era mean equals 1%
+(shape changes, mean does not). Sanity: a constant-1% variant reproduces
+`compute_states()` element-for-element and the rebuilt rows reproduce live
+exactly.
+
+| variant | Sharpe | S / H | real | whipsaws (10d) |
+|---|---|---|---|---|
+| **LIVE** | **0.938** | **1.150 / 0.780** | **1.260** | 91 |
+| macro, live-vol, clamp 0.2–4% | 0.915 | 1.123 / 0.760 | 1.250 | 97 |
+| fast only, live-vol, 0.5–2% (best) | 0.936 | 1.141 / 0.783 | 1.260 | — |
+| both, vol30 | 0.899 | 1.113 / 0.739 | 1.246 | 103 |
+| **sign-flipped placebo** (narrower in turbulence) | 0.947 | 1.162 / 0.787 | 1.268 | 123 |
+
+0 of 21 beat live in both eras. The placebo — the *opposite* of the
+hypothesis — beats it in all six pairings, and is itself inside noise
+(bootstrap P(≤0) = 0.31). Year-block-shuffled vol: P(placebo ≥ real) = 0.73.
+
+*Why, measured:* the premise is true — whipsaws per 1,000 days run 5.9 / 14.1
+/ 21.4 across vol terciles. But the vol-scaled buffer cuts high-vol whipsaws
+47 → 29 while raising low-vol 13 → 31 and mid 31 → 37: net **91 → 97**. It
+relocates whipsaws from turbulent to calm tapes and adds more than it
+removes, while delaying genuine breaks where delay costs most (2009: −2.2 to
+−4.2pp). Whipsaw count is not the objective; T2's rejection of a wider fixed
+buffer stands.
+
+#### Line 2 — vol-normalized (z-scored) extension trim — NO SIGNAL
+
+The trim is the one overlay that survived the block bootstrap, so this tried
+to refine it: express each gap as a z-score (gap ÷ vol·√(n/252)) so a 10%
+stretch means the same thing at 12% vol and 35% vol. `paper-track/zscore_trim.py`,
+41 variants + 20 placebo draws; k calibrated so the A-day vote frequency
+matches live's, so it changes WHEN the trim fires, not how often.
+
+| variant | fire rate S/H | expo | Sharpe | S / H | real |
+|---|---|---|---|---|---|
+| **LIVE price rule** | 25.8 / 26.0% | 66.2% | **0.938** | **1.150 / 0.780** | **1.260** |
+| z-live, per-window k | 24.2 / 16.6% | 66.9% | 0.898 | 1.140 / 0.719 | 1.178 |
+| z-live, k re-calibrated to live exposure | 26.3 / 18.3% | 66.2% | 0.890 | 1.118 / 0.722 | 1.201 |
+| z-live, expanding causal quantile | 26.2 / 40.8% | 60.6% | 0.960 | 1.101 / 0.850 | 1.068 |
+
+0 of 41 beat live in both eras; the one headline above live (0.960) holds
+6pp less capital and live scaled to that exposure gives 0.946 — a dial that
+also loses search and real. Bootstrap z vs live: −0.072 Sharpe, P(≤0) = 0.895.
+Leave-one-regime-out negative in every drop.
+
+*Why, and this is the finding worth keeping.* Where the two rules disagree,
+QQQ's forward 21-session return tells the story:
+
+| A-days | n | mean vol | 21d fwd return | harness P&L, z − live |
+|---|---|---|---|---|
+| both trim | 470 | 14.0% | **−0.31%** | +2.2pp |
+| live trims, z holds | 542 | 23.0% | +1.38% | +7.7pp |
+| z trims, live holds | 318 | **8.9%** | +0.96% | **−28.1pp** |
+
+A z-score fires when vol is *low* by construction — it trims the 9%-vol
+calm grind-ups (2013/2014/2017) where trimming forgoes drift and removes
+almost no variance, and holds through the 23%-vol post-crash melt-ups where
+the vol target has already sized the book at ~0.87 anyway. The only bucket
+with negative forward returns is where both rules agree. The price-gap trim
+works precisely because it is NOT vol-normalized: "extended" in price terms
+is the overheated signal; "extended in sigma terms" is a low-vol signal in
+disguise. Same lesson as the rest of the day — vol scales, vol does not time.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
