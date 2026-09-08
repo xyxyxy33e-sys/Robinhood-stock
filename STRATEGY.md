@@ -2693,6 +2693,62 @@ Correlation between the implied and realized gaps also rises from +0.739 to
 Scripts: `paper-track/volgap_test.py` (SPY-core proxy, first pass and its
 controls), `paper-track/volgap_causal2.py` (causal threshold, final result).
 
+### Per-leg and blended vol targeting (2026-09-08) — NEGATIVE, and it RESOLVES the "inconsistency"
+
+Owner: "test blended vol, or SP vol for SPMO, QQQ vol for TQQQ/QLD." This is
+the direct fix to the thing the vol-gap work flagged — the overlay sizes the
+whole book, SPMO included, by min(1, 0.20 / QQQ's realized vol), so an S&P
+sleeve is sized by Nasdaq vol. Tested in `paper-track/perleg_vol_test.py`.
+
+**Test design is the whole ballgame here.** Mean QQQ vol over the window is
+**24.14%** against SPY's **17.94%**, a ratio of 1.346. So ANY variant feeding
+SPY vol into min(1, T/v) yields a higher multiplier, de-levers less, and holds
+more risk — and would score better for that reason alone. Comparing at a fixed
+T = 0.20 would have been meaningless and would have "confirmed" the idea. Every
+variant therefore has its target constant **T re-calibrated by bisection until
+its average deployed exposure matches live's exactly (66.21% for all)**. Risk
+is constant by construction; only the SHAPE of the signal differs.
+
+| variant | T* | expo | CAGR/Sharpe/MDD | S / H | real weekly |
+|---|---|---|---|---|---|
+| **LIVE — QQQ vol for everything** | 0.200 | 66.21% | 20.82 / **0.934** / −32.0 | **1.151 / 0.770** | **1.260** |
+| per-leg SPY for SPMO, QQQ for TQQQ/QLD | 0.175 | 66.21% | 19.31 / 0.910 / −30.3 | 1.122 / 0.751 | 1.253 |
+| blended vol (weight-weighted) | 0.174 | 66.21% | 19.33 / 0.899 / −30.5 | 1.120 / 0.733 | 1.243 |
+| blend, leverage-aware (3× / 2×) | 0.320 | 66.21% | 18.48 / 0.891 / −31.0 | 1.112 / 0.726 | 1.279 |
+| SPY vol only (control) | 0.152 | 66.21% | 19.40 / 0.880 / −35.9 | 1.107 / 0.709 | 1.225 |
+
+**Every variant is worse than live, in both eras, and the ordering is
+monotone in how much the design leans on S&P vol:** 0.934 (QQQ only) → 0.910
+(per-leg) → 0.899 (blend) → 0.891 (leverage-aware) → 0.880 (SPY only). Block
+bootstrap on the per-leg variant: Sharpe **−0.024, P(≤0) = 0.944–0.955**, and
+return **−1.26pp/yr with P(≤0) = 0.999–1.000**, CI [−2.01, −0.54]pp excluding
+zero on the losing side. It is not a wash — it is reliably worse.
+
+**Why, and this is the useful part: the "inconsistency" is not a defect, it is
+the correct choice.** The book's risk is Nasdaq-dominated. Even in state A at
+50/50, TQQQ is 3× QQQ, so roughly three quarters of portfolio variance comes
+off the QQQ side. QQQ vol is therefore a BETTER proxy for the portfolio's own
+risk than any leg-weighted blend of the two indices. Sizing the SPMO leg by
+the calmer S&P reading keeps that leg fully deployed exactly when the Nasdaq
+side is blowing up — which is when the whole book should be smaller. The
+single-index rule is not sloppiness carried over from an earlier design; it
+happens to be the right risk proxy for this specific mix.
+
+One honest point in the idea's favour, not enough to change the verdict:
+per-leg and blended both give a SHALLOWER max drawdown (−30.3%, −30.5% vs
+−32.0%). If drawdown were the only objective they would be worth another look.
+They cost Sharpe, return and both eras to get it.
+
+Note this does NOT contradict the vol-gap tilt section above. That asks whether
+the RELATIVE WEIGHTS between legs should respond to the vol gap, and finds a
+real signal. This asks whether each leg should be SIZED by its own index's vol,
+and finds that it should not. Different questions; the answers are independent.
+
+Caveat: SPY vol proxies SPMO's vol on both harnesses — SPMO is an S&P momentum
+sleeve and daily SPMO history is not in the repo. A true SPMO vol series would
+sit between SPY's and QQQ's, which if anything weakens the tested variants
+further, since the ordering above is monotone toward QQQ vol.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
