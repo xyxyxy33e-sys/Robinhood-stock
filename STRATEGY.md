@@ -2940,6 +2940,74 @@ Best-of-63, +0.01–0.03 Sharpe, +0.5–0.9pp/yr — inside the execution-lag co
 the project already measured (3.1pp/yr per session). Real, consistent, and too
 small to act on.
 
+### Recovery participation, event by event (2026-09-09) — protection pays, and the vol target is the rule that delays re-entry
+
+Owner's reframing after two days of indicator research: "whether protection
+pays for its subsequent recovery cost across many episodes, rather than just
+improving maximum drawdown." `paper-track/recovery_study.py`; full writeup and
+session-by-session 2008–09 / 2020 paths in `research_notes/recovery_study.*`.
+Episodes defined systematically: every QQQ close ≥15% off its trailing-252
+high, 11 primary (2000–02 −83%, 2004, 2006, 2007–08 −54%, 2010, 2011, 2015–16,
+2018 −23%, 2020 −29%, 2021–22 −36%, 2025 −23%), 18 secondary at 8–15%. Each
+scored peak→trough, trough→QQQ's regain, and compounded end to end on a $200k
+book, at 4/10/20bp. Standing figures reproduced first.
+
+**Did protection pay?** LIVE over the 11 episodes, compounded:
+
+| cost | vs QQQ buy-and-hold | episodes paid | vs base allocations (no overlays) | paid |
+|---|---|---|---|---|
+| 4bp | +$243k | 4/11 | +$214k | 8/11 |
+| 10bp | +$182k | 4/11 | +$191k | 8/11 |
+| 20bp | +$86k | 3/11 | +$157k | 7/11 |
+
+The split by depth is the finding. In the seven **15–25% corrections** the
+design loses to buy-and-hold in 6 of 7 (−$132k summed, ~−10pp each) while
+still beating base allocations in 6 of 7. In the four **>25% bears** it earns
++$376k vs QQQ and +$128k vs base. Real SPMO/TQQQ rows (5 episodes, 2015+)
+show the same shape: +20.9pp vs base (3/5), −19.3pp vs QQQ (1/5). Block
+bootstrap on episode windows only: LIVE vs base +8.2pp/yr, P(≤0) = 0.03 at
+4bp and 0.06 at 20bp. **The recovery miss is real** — recovery halves alone,
+LIVE vs QQQ −9.9pp/yr, P = 0.94, and at 20bp the CI [−29, −4] excludes zero —
+**and the decline halves pay for it.** So the design is what the leverage
+ladder already implied: a risk-preference dial that gives up ~10pp per
+ordinary correction to earn $60–220k per real bear, not a free lunch.
+
+**Which rule delays re-participation** (leave-one-out, 4bp, variant minus LIVE):
+
+| rule removed | Σ peak→trough | Σ trough→recovery | median re-entry delay | Σ $ vs QQQ | recovery-half bootstrap |
+|---|---|---|---|---|---|
+| fast re-entry | +9.6pp | **−74.8pp, worse in 11/11** | 0 | −$89k | LIVE better **+8.7pp/yr [+4.7, +13.1], P = 0.000** |
+| extension trim | −26.4 | +15.7 (2009 +22, 2023 +10, 2003 −16) | 0 | −$56k | −1.3pp/yr, P = 0.58 |
+| max(10,30) → vol30 | −18.5 | +21.6 | 0 | −$16k | −2.1pp/yr [−3.3, −1.1] |
+| **vol target** | **−72.5** | **+130.9** | **+19 sessions (108 in 2008–09)** | −$53k | **−12.4pp/yr [−20.1, −5.1], P = 1.000** |
+
+*The vol target is the rule costing recovery.* It delays re-entry by a median
+19 sessions — 108 in 2008–09, where it held the multiplier at 0.47–0.58
+through March–April 2009 — and costs 12.4pp/yr of recovery-window return with
+a CI excluding zero at every cost level. In 2020 it alone did all the work
+and all the damage: multiplier 0.19 at the trough, still 0.25 on 04-14 when
+the state returned to A, 0.78 by 05-29. The max(10,30) estimator adds a small,
+certain second-order drag (−2.1pp/yr) in the same phase.
+
+*The fast re-entry overlay is the one rule that unambiguously buys recovery*:
++8.7pp/yr, better in 11 of 11 proxy and 4 of 5 real episodes — the strongest
+single-rule result in this file, and stronger than its whole-sample bootstrap
+(P = 0.080) suggested, because its entire contribution is concentrated in the
+turns. *The trim* is a wash on recovery: its 2009/2023 cost is repaid by 2003
+and by the 18 shallow pullbacks.
+
+**Why this does not argue for simplifying.** The VT's decline-phase
+protection (−72.5pp summed) exceeds its recovery cost in compounded dollars at
+4, 10 and 20bp (+$53k / +$66k / +$83k over the 11 episodes); the whole-window
+bootstrap is a wash (+2.1pp/yr, P = 0.29); and dropping it on the full sample
+takes the book to 22.64% / 0.831 / −49.4% with both era Sharpes lower. Any
+attempt to release the VT faster after a trough is a vol-*timing* change —
+the class that failed every test this week. Candidate count 0; nothing added.
+
+At both the 2007-10-31 and 2020-02-19 peaks the trim had 3 votes and LIVE held
+zero risky weight — transient, gone within two weeks, and the right call both
+times. Worth knowing when it happens live.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
