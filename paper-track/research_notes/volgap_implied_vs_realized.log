@@ -1,0 +1,58 @@
+SPY covers 6778/6778 proxy dates; 0 missing
+QQQ-core rows 6575, SPY-core rows 6575
+
+SANITY -- QQQ-core live: 22.12/0.938/-32.8 S 1.150 H 0.780   (standing: 22.12/0.938/-32.8, 1.150/0.780)
+SPY-core live:          20.82/0.934/-32.0 S 1.151 H 0.770
+
+VXN-VIX gap: search-era median +3.90 vol pts, full range -12.8..+41.6
+corr(implied gap, realized QQQ-SPY vol gap) = +0.914
+
+same rows: proxy 5927 2003-02-04..2026-08-26; real weekly 564
+
+--- one-way cost 4 bp ---
+variant                CAGR/Sharpe/MDD          S / H  L1 turn/yr  real Sh
+LIVE                23.98/1.016/ -32.0   1.151/0.901        33.9x    1.260
+implied d=0.20      26.57/1.063/ -36.5   1.271/0.890        42.9x    1.372
+realized d=0.20     26.25/1.058/ -36.1   1.249/0.899        38.3x    1.377
+implied d=0.10      25.34/1.046/ -34.2   1.218/0.901        38.3x    1.325
+realized d=0.10     25.16/1.043/ -32.8   1.207/0.905        36.0x    1.327
+
+--- one-way cost 10 bp ---
+variant                CAGR/Sharpe/MDD          S / H  L1 turn/yr  real Sh
+LIVE                21.48/0.931/ -33.2   1.065/0.817        34.0x    1.205
+implied d=0.20      23.35/0.961/ -37.7   1.170/0.786        43.0x    1.314
+realized d=0.20     23.38/0.966/ -37.6   1.157/0.807        38.3x    1.321
+implied d=0.10      22.49/0.952/ -35.5   1.125/0.806        38.3x    1.268
+realized d=0.10     22.48/0.954/ -34.3   1.118/0.816        36.1x    1.271
+
+--- one-way cost 20 bp ---
+variant                CAGR/Sharpe/MDD          S / H  L1 turn/yr  real Sh
+LIVE                17.42/0.789/ -35.2   0.921/0.676        34.0x    1.114
+implied d=0.20      18.15/0.789/ -39.8   1.002/0.611        43.0x    1.216
+realized d=0.20     18.74/0.812/ -40.1   1.003/0.654        38.3x    1.228
+implied d=0.10      17.88/0.795/ -37.5   0.969/0.648        38.3x    1.174
+realized d=0.10     18.14/0.805/ -36.9   0.968/0.668        36.1x    1.179
+
+PAIRED BLOCK BOOTSTRAP, 2000 resamples (5927 sessions)
+  [4bp] implied d=0.20 vs realized d=0.20: point +0.25pp/yr, +0.005 Sharpe
+      block 20d: logret [-1.60,+2.21]pp P(<=0)=0.385 | Sharpe [-0.069,+0.086] P(<=0)=0.434
+      block 60d: logret [-1.64,+2.07]pp P(<=0)=0.389 | Sharpe [-0.072,+0.085] P(<=0)=0.438
+  [4bp] implied d=0.20 vs LIVE: point +2.07pp/yr, +0.047 Sharpe
+      block 20d: logret [+0.13,+4.06]pp P(<=0)=0.015 | Sharpe [-0.027,+0.125] P(<=0)=0.123
+      block 60d: logret [+0.07,+4.06]pp P(<=0)=0.019 | Sharpe [-0.031,+0.124] P(<=0)=0.117
+  [4bp] realized d=0.20 vs LIVE: point +1.82pp/yr, +0.042 Sharpe
+      block 20d: logret [-0.34,+3.82]pp P(<=0)=0.045 | Sharpe [-0.044,+0.121] P(<=0)=0.168
+      block 60d: logret [-0.45,+4.05]pp P(<=0)=0.052 | Sharpe [-0.050,+0.124] P(<=0)=0.172
+  [20bp] implied d=0.20 vs realized d=0.20: point -0.50pp/yr, -0.023 Sharpe
+      block 20d: logret [-2.39,+1.37]pp P(<=0)=0.709 | Sharpe [-0.100,+0.052] P(<=0)=0.725
+      block 60d: logret [-2.46,+1.44]pp P(<=0)=0.675 | Sharpe [-0.103,+0.056] P(<=0)=0.697
+  [20bp] implied d=0.20 vs LIVE: point +0.63pp/yr, +0.000 Sharpe
+      block 20d: logret [-1.31,+2.53]pp P(<=0)=0.266 | Sharpe [-0.077,+0.074] P(<=0)=0.502
+      block 60d: logret [-1.42,+2.54]pp P(<=0)=0.281 | Sharpe [-0.078,+0.076] P(<=0)=0.503
+  [20bp] realized d=0.20 vs LIVE: point +1.12pp/yr, +0.023 Sharpe
+      block 20d: logret [-1.04,+3.10]pp P(<=0)=0.144 | Sharpe [-0.059,+0.101] P(<=0)=0.302
+      block 60d: logret [-1.17,+3.41]pp P(<=0)=0.152 | Sharpe [-0.067,+0.112] P(<=0)=0.283
+
+A/B sessions 3875: the two gaps agree on 2976 (76.8%), disagree on 899 (23.2%)
+  agree     n= 2976  implied-minus-realized P&L -1.79pp total  (-0.15pp/yr-equivalent)  implied leans core on 39%
+  disagree  n=  899  implied-minus-realized P&L +8.58pp total  (2.40pp/yr-equivalent)  implied leans core on 53%
