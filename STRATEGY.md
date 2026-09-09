@@ -3008,6 +3008,65 @@ At both the 2007-10-31 and 2020-02-19 peaks the trim had 3 votes and LIVE held
 zero risky weight — transient, gone within two weeks, and the right call both
 times. Worth knowing when it happens live.
 
+### Full overlay interaction test, 2³ + vol-target extension (2026-09-09) — overlays are additive; one simpler cell is inside LIVE's noise
+
+Owner-directed: all eight on/off combinations of fast re-entry (F), extension
+trim (T) and the max(10,30) estimator (E), base allocations and execution
+fixed, plus vol target on/off as a 16-cell extension. `paper-track/overlay_interactions.py`;
+writeup in `research_notes/overlay_interactions.md`. 16 pre-specified cells,
+no search. LIVE cell reproduced exactly. (Harness note it surfaced and the
+briefing now carries: on real rows `r['vol']` is already max(10,30) and
+`r['vol30']` is the plain 30d — the first run lost E's real effect to that.)
+
+| cell | CAGR / Sharpe / MDD | S / H | expo | reb/yr | real CAGR / Sharpe / MDD |
+|---|---|---|---|---|---|
+| — — — (base + VT only) | 17.98 / 0.739 / −36.4 | 0.922 / 0.594 | 75.5% | 42 | 26.60 / 1.004 / −31.4 |
+| — T — | 19.84 / 0.856 / −36.0 | 1.077 / 0.684 | 66.0% | 50 | 29.98 / 1.227 / −24.7 |
+| F — — | 19.77 / 0.779 / −34.8 | 0.937 / 0.655 | 77.4% | 47 | 27.99 / 1.030 / −31.4 |
+| **F T —** (plain 30d vol) | **22.15 / 0.912 / −33.3** | **1.100 / 0.769** | 67.7% | **55** | **31.40 / 1.248 / −25.0** |
+| **F T E = LIVE** | **22.12 / 0.938 / −32.8** | **1.150 / 0.780** | 66.2% | **68** | **30.67 / 1.260 / −25.3** |
+| no vol target (F T, V off) | 22.64 / 0.831 / −49.4 | — / 0.657 | | | |
+
+Ordering is unchanged at 10bp and 20bp. Main effects on Sharpe: **T +0.129,
+F +0.046, E +0.024**; every two- and three-way interaction is ≤ 0.008 — an
+order of magnitude below the smallest main effect. **The overlays are
+additive**, each worth slightly *more* in the live context than alone (mild
+complementarity, no duplication): return-difference correlations ≤ 0.05, T
+and E overlap on 133 of 6,575 sessions.
+
+**Marginal removals from LIVE**, paired block bootstrap:
+
+| remove | Δ log-return | Δ Sharpe | Sharpe CI (20d / 60d blocks) | verdict |
+|---|---|---|---|---|
+| **trim (T)** | +1.99pp | **+0.141** | [+0.018, +0.259] / [+0.030, +0.250], P ≤ 0.015 | earns its place, unambiguously; +0.222 real |
+| **fast re-entry (F)** | **+1.82pp** | +0.053 | [−0.006, +0.113] / [−0.008, +0.122], P ≈ 0.045; log-return CI [+0.30, +3.38] P = 0.008 | earns its place as a *return* overlay; largest holdout contributor |
+| **estimator (E)** | −0.02pp | +0.026 | [−0.011, +0.068] / [−0.009, +0.071], P ≈ 0.09 | **does not earn a measurable place** |
+| vol target (V) | −0.42pp | +0.108 | [−0.004, +0.226] / [+0.003, +0.223], P ≈ 0.03 | earns its place; without it MDD −49.4% |
+
+Exposure-matched controls: every overlay's Sharpe gain is timing, not
+de-levering (rescaling the baseline moves Sharpe ≤ +0.011).
+Leave-one-regime-out: F and T positive with every regime dropped and inside
+every regime. **E's entire edge is COVID 2020** (+0.471 inside it, +0.013
+with it dropped) and it is *negative* inside dot-com and 2022. E also adds
+**+13 rebalances/yr** (68 vs 55) — the largest single turnover item — for
+zero CAGR.
+
+**Exactly one cell is statistically indistinguishable from LIVE on the full
+proxy, both eras and real rows: `F T —`, LIVE with the plain 30-day vol
+estimator.** 22.15% / 0.912 / −33.3%, real 31.40% / 1.248 / −25.0%, **19%
+fewer rebalances**, *higher* real CAGR. Its expected cost is ~0.02–0.03 Sharpe
+concentrated in fast crashes — "signal, but not large enough to measure", not
+"no signal".
+
+**Three independent lines now point at the same rule.** The 09-07 block
+bootstrap put the max(10,30) estimator at P = 0.097 on its own; the recovery
+study found it adds a certain −2.1pp/yr drag in recovery windows; this test
+finds it inside noise, COVID-dependent, and the design's biggest churn item.
+It was applied on 09-07 for an argument about de-levering *speed* that the
+overnight/intraday line is now testing directly. This is the one
+simplification candidate with real evidence behind it, for the 2026-12-07
+freeze review. Nothing applied.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**

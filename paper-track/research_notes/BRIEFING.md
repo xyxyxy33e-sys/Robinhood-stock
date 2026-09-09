@@ -28,8 +28,10 @@ That gives you: `rows` (daily proxy rows 2000-07..2026-08 with r['d'], r['state'
 r['agree'], r['eff'] (effective state after the fast overlay), r['gaps']
 ({100:,150:,200:} close/SMA-1), r['vol'] (30d), r['vol10'], r['vol_live']
 (max(10,30) = the LIVE estimator), r['legs'] (5-tuple of leg returns)),
-`rr` (real weekly SPMO-era rows with r['d0'], r['state'], r['agree'], r['vol'],
-r['legs'], plus r['eff'] and r['gaps'] attached), `ds`/`px` (QQQ dates/closes),
+`rr` (real weekly SPMO-era rows with r['d0'], r['state'], r['agree'], r['legs'],
+plus r['eff'] and r['gaps'] attached; NOTE on rr, r['vol'] is ALREADY the live
+max(10,30) estimator and r['vol30'] is the plain 30d -- voltarget_live_backtest.build,
+2026-09-07; the overlay_interactions line lost a run to this), `ds`/`px` (QQQ dates/closes),
 `W` (TARGET_WEIGHTS), `vt` (vol-target function), `evaluate`, `run`, `RF`
 (return_frontier: RF.eval_real(rr, fn), RF.vt), `qd`/`qqq`.
 - evaluate(rows, wfn) -> dict(cagr, sharpe, mdd, risky, s_sharpe, h_sharpe)
