@@ -30,6 +30,7 @@ from long_history_backtest import (load_px, load_tbill_long, make_rate_lookup,
                                    synth_leveraged, total_return_index, cash_index,
                                    START, QQQ_DIV_PA, XLU_DIV_PA)
 from drift_band_test import annual_stats, ONE_WAY_SPREAD
+from state import VOL_ESTIMATOR_MAX_ENABLED as _VOL_MAX
 
 BAND = 0.03
 SEARCH = ('2015-11-01', '2099')
@@ -81,7 +82,10 @@ def build(buf=0.01, micro_buf=0.01):
             # figure recorded in STRATEGY.md before this date stays
             # reproducible. 'vol_live' is the LIVE estimator, max(10d, 30d)
             # -- use it for anything meant to represent the live design.
-            vol_live=(_vol(r30) if _vol(r10) is None or _vol(r30) is None
+            # 2026-09-09: honour state.VOL_ESTIMATOR_MAX_ENABLED so 'vol_live'
+            # IS the live estimator (plain 30d now; max(10,30) if re-enabled).
+            vol_live=(_vol(r30) if (_vol(r10) is None or _vol(r30) is None
+                                    or not _VOL_MAX)
                       else max(_vol(r30), _vol(r10))),
             semivol=_semivol(r30), ewma=None,
             legs=(D['core'][d1] / D['core'][d0] - 1, D['lev3'][d1] / D['lev3'][d0] - 1,

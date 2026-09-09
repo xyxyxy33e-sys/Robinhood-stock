@@ -601,8 +601,24 @@ VOL_LOOKBACK_DAYS = 30      # trading days (= 6.0 calendar weeks)
 # the weekly harness re-decides only weekly, which largely wastes a 10-day
 # reading. It also raises execution sensitivity: an extra session of lag
 # costs this estimator 2.2pp of CAGR against 1.4pp for vol30 alone.
-VOL_FAST_LOOKBACK_DAYS = 10   # trading days; the fast leg of the max
-VOL_ESTIMATOR_MAX_ENABLED = True
+# 2026-09-09 REVERT (owner decision; the 09-07 change freeze was lifted for
+# this one change). The max(10,30) estimator was applied 2026-09-07 on a
+# de-levering-speed argument. Three independent studies on 09-08/09 measured it:
+#   - overlay_interactions: +0.026 Sharpe with a CI spanning zero, its entire
+#     edge inside COVID 2020, negative inside dot-com and 2022, +13
+#     rebalances/yr (68 vs 55) for zero CAGR; LIVE with the plain 30d is the
+#     ONE cell statistically indistinguishable from LIVE on the full proxy,
+#     both eras and real rows (22.15/0.912/-33.3, real 31.40/1.248/-25.0).
+#   - recovery_study: a certain -2.1pp/yr of recovery-window return, CI
+#     [-3.3,-1.1], from holding the multiplier down longer after troughs.
+#   - overnight_intraday: its real benefit is narrow -- the deepest cut (0.5)
+#     already in place on 37 vs 31 of the 66 worst-1% gaps, "never" 8 vs 18.
+# Net: a defined trade -- a deeper cut on ~1 in 10 first-gaps of a new episode
+# against more churn and slower recovery -- resolved by the owner for the
+# simpler estimator. The code path is kept and tested so it can be re-enabled
+# by flag; realized_vol_live() returns the plain 30d when disabled.
+VOL_FAST_LOOKBACK_DAYS = 10   # trading days; the fast leg of the max (disabled)
+VOL_ESTIMATOR_MAX_ENABLED = False   # REVERTED 2026-09-09 (owner): see note above
 VOL_TARGET_CAP = 1.0        # never exceed the un-scaled weights; do NOT raise
 TRADING_DAYS_PER_YEAR = 252
 

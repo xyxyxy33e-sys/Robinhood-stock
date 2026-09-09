@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-06)
+## Current design at a glance (2026-09-09)
 
 **What the account holds, by effective state** — see the tables under
 "Target weights"; effective state = macro 50/200 state, except that macro
@@ -29,16 +29,19 @@ C row when the fast read is A/B/C.
 of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
 200d} are true and scale the A row's risky legs by 1 − ⅓ × votes
 (×⅔ / ×⅓ / ×0 — three votes is 100% cash). Then the four risky legs are scaled by
-`min(1, 20% / max(10d, 30d) realized QQQ vol)` with the remainder in BOXX. Rebalance on any change of effective
+`min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX (the max(10d, 30d)
+estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
 state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
 
-**Standing figures** (design of 2026-09-07 final: A 50/50, trim step ⅓,
-vol estimator max(10d, 30d)). 26-year QQQ-core proxy 2000–2026: **22.1%
-CAGR / Sharpe 0.94 / max drawdown −32.8%** (QQQ buy-and-hold 8.7% / 0.45 /
-−80%). Real instruments, weekly, Nov 2015–Aug 2026: **30.7% / 1.26 /
-−25.3%** (QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%); real
-daily with the drift band **29.7% / 1.20 / −29.5%**, ~69 rebalances/yr.
-Search-era Sharpe 1.150, holdout (2000–2015) 0.780 and 17.1%/yr. A
+**Standing figures** (design of 2026-09-09: A 50/50, trim step ⅓, plain
+30-day vol estimator). 26-year QQQ-core proxy 2000–2026: **22.15% CAGR /
+Sharpe 0.912 / max drawdown −33.3%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
+Real instruments, weekly, Nov 2015–Aug 2026: **31.4% / 1.248 / −25.0%**
+(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe
+1.100, holdout (2000–2015) 0.769; ~55 rebalances/yr. (Under the max(10,30)
+estimator live 09-07..09-09 these read 22.12 / 0.938 / −32.8, real 30.67 /
+1.260 / −25.3, S 1.150 H 0.780, ~68 rebalances/yr — every difference inside
+bootstrap noise; see "Volatility estimator reverted".) A
 2022-type year is about −19% real / −27% proxy; a COVID-shaped event about
 −25% to −33%; a −5% QQQ day is about −10%. **Execution assumption: these
 figures assume fills at the signal-session close. One session of lag costs
@@ -66,7 +69,15 @@ table still reading A = 50/50 and the overlay chain still reading 0.25 per
 vote, two days after the code moved to 40/60 and ⅓. Do not hand-edit them;
 regenerate.
 
-## Change freeze (2026-09-07 — READ THIS BEFORE PROPOSING ANY DESIGN CHANGE)
+## Change freeze (2026-09-07) — LIFTED 2026-09-09 by owner decision for one change; its discipline still binds
+
+> **Status 2026-09-09.** The owner lifted the freeze after nine independent
+> research lines on 09-08/09 (see the sections dated 2026-09-08/09 near the
+> end of this file) and applied exactly one change: the max(10d, 30d) vol
+> estimator was reverted to the plain 30-day reading. Nothing else changed.
+> The text below is kept as written because its reasoning is the standard
+> any future change has to meet: both-era improvement, exposure/beta-matched
+> controls, a block bootstrap, and an owner decision — not a better backtest.
 
 **No design changes until 2026-12-07, or until the strategy actually fails.**
 Owner-approved. This binds future sessions, including whichever model reads
@@ -2165,7 +2176,7 @@ max(5,30) 31.45 / 1.208 / −32.5 at 81 rebalances/yr; **max(10,30) 31.94 /
 CAGR, not a corner; 5 buys 12 more rebalances a year for a worse drawdown.
 Still unapplied.
 
-### Volatility estimator max(10d, 30d) — APPLIED 2026-09-07 (owner decision)
+### Volatility estimator max(10d, 30d) — APPLIED 2026-09-07 (owner decision) — REVERTED 2026-09-09, see "Volatility estimator reverted"
 
 `VOL_FAST_LOOKBACK_DAYS = 10`, `VOL_ESTIMATOR_MAX_ENABLED = True`,
 `realized_vol_live()` in `state.py`; live triggers call it instead of
@@ -3226,6 +3237,51 @@ quarters (state F alone accounts for more than all of it), and it is
 *negative* in 2010–19 (−4.6pp/yr) — positive in every decade that contained
 a bear. That is the same "pays in bears, costs in corrections" profile the
 recovery study measured event by event.
+
+### Volatility estimator reverted to plain 30d — APPLIED 2026-09-09 (owner decision; freeze lifted for this change)
+
+`VOL_ESTIMATOR_MAX_ENABLED = False` in `state.py`; `realized_vol_live()` now
+returns the plain 30-day realized vol. The max(10,30) code path is kept and
+`consistency_check.py` asserts it still behaves correctly when re-enabled,
+so this is a flag flip, not a deletion. `improvement_search.build()` now
+honours the flag, so `vol_live` in every harness IS the live estimator.
+Both live Routines and this file updated; standing figures regenerated
+through the harness and reproduce the interaction test's `F T —` cell
+exactly.
+
+**Why.** Three independent studies on 09-08/09 measured the max(10,30)
+estimator from different angles and agreed:
+- *Overlay interactions:* +0.026 Sharpe with a bootstrap CI spanning zero
+  at both block lengths; its **entire edge is COVID 2020** (+0.471 inside,
+  +0.013 with it dropped) and it is negative inside dot-com and 2022; it adds
+  **+13 rebalances/yr** (68 vs 55) for zero CAGR. `F T —` (LIVE with the
+  plain 30d) was the one cell statistically indistinguishable from LIVE on
+  the full proxy, both eras and real rows.
+- *Recovery study:* a certain **−2.1pp/yr of recovery-window return**, CI
+  [−3.3, −1.1], from holding the multiplier down longer after troughs.
+- *Overnight/intraday:* its real benefit is narrow — the deepest cut (0.5)
+  already in place on **37 vs 31 of the 66 worst-1% gaps**, "never" 8 vs 18,
+  and those gaps cluster in the same COVID / 2015–16 windows.
+So the decision was a defined trade — a deeper cut on roughly one first-gap
+of a new episode in ten, against more churn and slower recovery — and the
+owner took the simpler side.
+
+| | 26y proxy | S / H | rebalances/yr | real weekly |
+|---|---|---|---|---|
+| max(10,30), live 09-07..09-09 | 22.12 / 0.938 / −32.8 | 1.150 / 0.780 | ~68 | 30.67 / 1.260 / −25.3 |
+| **plain 30d, live from 09-09** | **22.15 / 0.912 / −33.3** | **1.100 / 0.769** | **~55** | **31.40 / 1.248 / −25.0** |
+
+Effect on holdings: none today — 30-day vol 19.75%, multiplier 1.0 under
+either estimator, A row 50/50, no orders. The two estimators only diverge
+when the 10-day reading runs above the 30-day, i.e. in the first days of a
+new volatility episode.
+
+**Ranking.** This was the only change with evidence behind it. The VXN–VIX
+gap tilt remains recorded, not applied (return-positive, Sharpe inside noise,
+holdout worse, edge gone at 20bp). The nine studies otherwise argued for
+leaving the design alone and ranking execution discipline above any
+indicator: the design's timing value falls 10.6 → 8.0 → 6.6pp/yr at 0 → 1 → 2
+sessions of delay.
 
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 

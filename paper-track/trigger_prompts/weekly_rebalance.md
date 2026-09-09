@@ -19,18 +19,17 @@ so by Friday the portfolio is often already within band — in that case trade
 nothing and still produce the weekly report. The weekly report is unconditional;
 the weekly TRADE is not.
 
-## CHANGE FREEZE until 2026-12-07
+## CHANGE DISCIPLINE (freeze of 2026-09-07 LIFTED 2026-09-09 by owner decision)
 
-The live design is FROZEN by owner decision (2026-09-07). Do not change
-weights, overlays or parameters, and do not "apply" a research result,
-however good the backtest looks. Between 09-05 and 09-07 the design changed
-five times in the first three weeks of live trading, and when finally tested
-against a persistence-respecting null only ONE of those changes cleared 5%.
-Measurement, bug fixes, doc/code consistency fixes and RECORDED-but-unapplied
-research are all still fine. The freeze ends on the date, or on a genuine
-failure (a guard tripping, a failed fill, a drawdown tier breaching, or live
-behaviour diverging from the backtest) -- NOT on a better backtest.
-See "Change freeze" in STRATEGY.md.
+The 09-07 freeze was lifted by the owner on 2026-09-09 for ONE change, after
+nine independent research lines on 09-08/09: the max(10,30) vol estimator was
+REVERTED to the plain 30-day reading (see "Volatility estimator reverted" in
+STRATEGY.md). Nothing else changed. The discipline the freeze encoded still
+binds: do not change weights, overlays or parameters on the strength of a
+better backtest. A change needs both-era improvement, exposure/beta-matched
+controls, a block bootstrap, and an owner decision -- the nine studies of
+09-08/09 are the standard. Measurement, bug fixes, doc/code consistency
+fixes and RECORDED-but-unapplied research are always fine.
 
 ## 0. Execution convention — what the signal is computed on
 
@@ -45,8 +44,8 @@ approximation is deliberate -- do NOT "fix" it by switching to the prior
 completed close, which would add a full session of lag. Added 2026-09-07
 after an outside review flagged the ambiguity; measured on real instruments,
 one EXTRA session of lag costs about 1.4pp of CAGR (31.9% -> 30.5%) and
-0.04 of Sharpe -- and about 2.2pp under the max(10,30) estimator now live,
-which reacts faster and is therefore MORE sensitive to execution delay. The
+0.04 of Sharpe (about 2.2pp under the max(10,30) estimator that was live
+09-07..09-09, which reacted faster and was more lag-sensitive). The
 same lag is also the ENTIRE explanation for an outside replay's -39% to -40%
 proxy drawdown against our -34.7% (see the limitations note in section 7).
 So the five-minute gap is far smaller than that but is not zero, and
@@ -81,13 +80,15 @@ reimplementation:
     2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still passed through because
     the signature needs it, but it changes no weight and is not a regime change.
   - `realized_vol_live(dates, px, as_of=<today>)` → **the live volatility
-    estimate: max(10-day, 30-day) annualized realized vol** (changed
-    2026-09-07; was the plain 30-day figure). Taking the max means the fast
-    window can only RAISE the estimate, so it can only ever de-lever faster,
-    never lever up faster. Returns None on the same insufficient-history
-    condition the 30-day estimator did, so the "None → multiplier 1.0"
-    fallback is unchanged. Report BOTH legs and which one binds. Do not call
-    `realized_vol()` directly for live weights.
+    estimate: the plain 30-day annualized realized vol** (REVERTED to this
+    2026-09-09 by owner decision; between 09-07 and 09-09 it was
+    max(10-day, 30-day), which three studies then found inside noise,
+    COVID-dependent and +13 rebalances/yr -- `VOL_ESTIMATOR_MAX_ENABLED` is
+    now False and the function returns the 30-day figure). Still call THIS
+    function, never `realized_vol()` directly, so a future flag change flows
+    through. Returns None on insufficient history → multiplier 1.0. Report
+    the 30-day reading; you may also report the 10-day for information, but
+    it moves no weight.
   - `compute_fast_states(dates, px)[<today>]` → today's FAST (20/100) reading
     of the same six-state machine. Added 2026-09-06: the fast re-entry
     overlay. It is NOT a state of its own -- it only decides whether a macro
@@ -189,9 +190,8 @@ Known behaviour, not a bug: the extension vote count changes about 18x/year
 and roughly 44% of those changes reverse within three sessions, so some
 rebalances are round trips. A hysteresis band was tested 2026-09-07 and
 REJECTED (it helps the SPMO era and costs holdout Sharpe). Do not add one.
-Likewise the max(10,30) estimator trades more often than the 30-day one did
-(~69 vs ~55 rebalances/yr, turnover essentially unchanged); that is the
-applied design, not drift to be damped.
+(The max(10,30) estimator live 09-07..09-09 traded ~69x/yr against ~55 for
+the 30-day one; that extra churn was part of why it was reverted.)
 
 When it does fire:
 
@@ -372,7 +372,7 @@ market in it; the strategy's true max drawdown is about **-33%** on the
 2000-2026 stress test (design of 2026-09-07 final: A=50/50 core/TQQQ, B=75/25,
 D=100% QLD, F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
 trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
-100/150/200-day SMAs), micro off, vol target 20% on max(10d,30d) realized vol;
+100/150/200-day SMAs), micro off, vol target 20% on plain 30d realized vol (max(10d,30d) was live only 09-07..09-09);
 it was -34.7% during the one day the A row sat at 40/60 on 09-06, -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol
 targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
@@ -394,7 +394,7 @@ Evidence discipline when commenting on the overlays: a circular BLOCK
 bootstrap (2026-09-07) downgraded two claims that earlier day-shuffled tests
 overstated. The graded extension trim survives (Sharpe 95% CI [+0.025,
 +0.266], P(<=0) = 0.007); the fast re-entry overlay (P = 0.080) and the
-max(10,30) volatility estimator (P = 0.097) do NOT clear 5% on their own.
+max(10,30) volatility estimator (P = 0.097; reverted 09-09) do NOT clear 5% on their own.
 Do not quote "p = 0.00" for any of them. Leave-one-major-regime-out keeps
 every sign in every drop, including dropping the whole SPMO fitting window.
 

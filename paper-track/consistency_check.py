@@ -384,7 +384,9 @@ def check_vol_estimator():
     from state import (realized_vol, realized_vol_live, VOL_LOOKBACK_DAYS,
                        VOL_FAST_LOOKBACK_DAYS, VOL_ESTIMATOR_MAX_ENABLED,
                        vol_target_multiplier)
-    assert VOL_ESTIMATOR_MAX_ENABLED and VOL_FAST_LOOKBACK_DAYS == 10 and VOL_LOOKBACK_DAYS == 30
+    import state as _S
+    assert VOL_ESTIMATOR_MAX_ENABLED is False, "2026-09-09: the max(10,30) leg is DISABLED by owner decision; flip this assertion deliberately, not by accident"
+    assert VOL_FAST_LOOKBACK_DAYS == 10 and VOL_LOOKBACK_DAYS == 30
     # a calm series with one violent recent stretch: fast must dominate
     dates = [f"d{i:03d}" for i in range(80)]
     px = {}
@@ -396,8 +398,15 @@ def check_vol_estimator():
     fast = realized_vol(dates, px, lookback=10)
     live = realized_vol_live(dates, px)
     assert fast > slow, "test series should have a hotter fast window"
-    assert live == max(slow, fast) == fast
-    assert vol_target_multiplier(live) <= vol_target_multiplier(slow), "max estimator must not lever UP"
+    assert live == slow, "flag OFF: realized_vol_live must be the plain 30d even when the 10d is hotter"
+    # the max path must still work when re-enabled by flag (kept, not dead code)
+    _S.VOL_ESTIMATOR_MAX_ENABLED = True
+    try:
+        on = realized_vol_live(dates, px)
+        assert on == max(slow, fast) == fast
+        assert vol_target_multiplier(on) <= vol_target_multiplier(slow), "max estimator must not lever UP"
+    finally:
+        _S.VOL_ESTIMATOR_MAX_ENABLED = False
     # calm throughout: fast below slow -> live must equal slow, never the lower fast
     # volatile through i=69 then calm: the 30d window (50..79) straddles both,
     # the 10d window (70..79) is calm, so fast < slow.
@@ -409,14 +418,14 @@ def check_vol_estimator():
         px2[d] = v
     s2 = realized_vol(dates2, px2, lookback=30)
     f2 = realized_vol(dates2, px2, lookback=10)
-    assert f2 < s2 and realized_vol_live(dates2, px2) == s2, "must fall back to the SLOW reading, not the min"
+    assert f2 < s2 and realized_vol_live(dates2, px2) == s2, "must be the SLOW reading"
     # insufficient history -> None, same as the 30d estimator
     short = [f"s{i:02d}" for i in range(12)]
     spx = {d: 100.0 + i for i, d in enumerate(short)}
     assert realized_vol(short, spx, lookback=30) is None
     assert realized_vol_live(short, spx) is None, "None-handling must match the 30d estimator"
     assert vol_target_multiplier(None) == 1.0
-    print("OK: vol estimator max(10d, 30d) -- only raises vol, never levers up, None-safe")
+    print("OK: vol estimator -- plain 30d live (max(10,30) leg disabled 2026-09-09), max path still correct if re-enabled, None-safe")
 
 
 check_vol_estimator()
