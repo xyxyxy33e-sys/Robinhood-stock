@@ -234,3 +234,12 @@ Cross-checks: opens AND closes match `qqq_long_history.csv` to the cent on 6,784
 6,784 days; all four columns agree with an independent EODHD pull within $0.005 on
 the 251-day overlap; the 2000-03-20 2:1 split is consistently adjusted; no
 high/low violations. This is the first full-history OHLC series in the repo.
+
+## tqqq_ohlc.csv, qld_ohlc.csv, spmo_ohlc.csv, xlu_ohlc.csv (added 2026-09-09, research line `overnight_intraday`)
+
+Daily open/high/low/close for the four live instruments, split-adjusted, Robinhood
+`get_equity_historicals` day bars, 2015-10 .. 2026-09-04. Cross-checked against the
+kairos daily files: 0 open/close mismatches above one cent; 0 high/low violations.
+Used to split each real-era leg's return into overnight (close→open) and intraday
+(open→close) parts. Proxy split validated on the overlap: corr(3×QQQ gap, TQQQ gap)
+0.997, slope 0.99.

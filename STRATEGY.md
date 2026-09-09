@@ -3067,6 +3067,89 @@ overnight/intraday line is now testing directly. This is the one
 simplification candidate with real evidence behind it, for the 2026-12-07
 freeze review. Nothing applied.
 
+### Overnight vs intraday risk (2026-09-09) — protection arrives before the move; nothing argues for changing execution timing
+
+Owner's question: are losses concentrated in overnight gaps or trading hours,
+and does reducing exposure protect the period where they occur, or only sell
+after it? `paper-track/overnight_intraday.py`; writeup in
+`research_notes/overnight_intraday.md`. Real-era OHLC for all four
+instruments added under `data/` (provenance in `data/README.md`). Live
+figures reproduced on proxy, real weekly AND real daily before anything else.
+
+**Where the losses are.** Over 2000–2026 QQQ's overnight share is ~29% of
+variance, of downside semi-variance and of the worst-1% tail — but it is
+regime-dependent in a way that matters: **long bears are intraday bears, short
+shocks are overnight.** Dot-com's overnight share of the 1% tail is 23%,
+GFC's 18%; COVID's is **78%**, 2015–16's over 100% (the gaps were the whole
+event). The SPMO era runs materially more overnight than the 26-year
+average (37% of variance, **48% of the 1% tail**). The strategy's own split
+mirrors QQQ's (30% overnight, 37% on real instruments).
+
+**Exposure into the worst gaps** (beta held into the event; "avoided" = the
+loss LIVE did not take relative to that allocation):
+
+| allocation | into worst-1% gaps | into worst-5% gaps | into worst-1% intraday |
+|---|---|---|---|
+| macro row only | 0.60 (LIVE avoided +0.95pp) | 0.89 (+0.55pp) | 0.23 (+0.36pp) |
+| LIVE, vol target off | 0.47 (+0.52pp) | 0.88 (+0.49pp) | 0.33 (+0.99pp) |
+| LIVE, trim off | 0.39 (+0.32pp) | 0.73 (+0.23pp) | 0.15 |
+| LIVE, plain 30d estimator | 0.34 (+0.15pp) | 0.65 (+0.09pp) | 0.17 (+0.11pp) |
+| **LIVE** | **0.29 → 0.27 next session** | **0.61 → 0.59** | **0.15 → 0.10** |
+
+The vol target is the gap protector, the trim second; the fast overlay adds
+beta into gaps, which is its job. **The book holds less than half the macro
+row's beta into the worst gaps and does not sell after them** — beta change
+into→after the worst gaps is −0.02 against an unconditional daily |change| of
+0.08. Damage that follows a vol-target cut is intraday-shaped, not overnight.
+This is protection, not delayed selling.
+
+**Reaction lag, measured.** On the 20 worst gaps the live estimator is below
+0.9 *before* the event in 18 (median 14 sessions ahead), below 0.7 in 14,
+below 0.5 in 10 with 2 never. On the 20 worst intraday sessions: 20/20/18.
+On the full worst-1% set (66 gaps), live is in place at 0.9/0.7/0.5 on
+60/53/**37**, the plain 30d on 59/47/**31** with **18 "never"** at the deepest
+cut vs live's 8. **This is where the max(10,30) estimator earns what it earns:
+the deepest cut, in place, on the first gap of a new episode** — 2015-08-24
+(0.74 in), 2016-06-24 and 2020-02-24 (1.00 in) are the misses that remain.
+It is a classifier/estimator property, not an execution one.
+
+**Execution-convention counterfactual** (decide at close, fill at the next
+open, so the book never holds new weights through the gap):
+
+| convention | proxy CAGR / Sharpe / MDD | S / H | real daily |
+|---|---|---|---|
+| **LIVE, fill at close** | 22.12 / 0.938 / −32.8 | 1.150 / 0.780 | 29.69 / 1.202 / −29.5 |
+| fill at next open | 21.17 / 0.902 / −39.3 | 1.201 / 0.682 | 30.17 / 1.223 / −24.9 |
+| one full session lag | 19.52 / 0.851 / −36.5 | 1.116 / 0.654 | 27.91 / 1.147 / −28.3 |
+
+The difference is entirely overnight (−0.77pp/yr; intraday +0.02) and
+**not systematic**: bootstrap P(≤0) = 0.79, sign reversed by era (holdout
+−2.2pp/yr, SPMO era +1.2, real daily +0.4) and decided by about a dozen
+sessions — 2015-08-24 alone is −16pp (a D→E flip at Friday's close before a
+−7.98% gap), Brexit +7.3pp the other way. The one measurable harm is a **full
+session of signal lag: −2.6pp proxy, −1.8pp real, at every cost level** —
+the same figure the 09-07 execution-lag work found, now confirmed from the
+overnight side. **Nothing argues for changing execution timing.**
+
+Overnight-aware variants: 5 candidates + 4 sign-flips, exposure-matched.
+Upweighting overnight variance loses monotonically. The sign-flip —
+*downweighting* it — gains +0.01 Sharpe on both eras and both real harnesses
+(P 0.03–0.05 at 60d blocks): small, the mirror of the hypothesis, consistent
+with range_vol's finding that close-to-close is already the right estimator
+in the bite region. Recorded, not proposed.
+
+**On the estimator question the last three studies converged on.** The
+interaction test found max(10,30) inside noise and COVID-dependent; the
+recovery study found it costs −2.1pp/yr in recovery windows; this study finds
+its benefit is real but narrow — **6 more of the 66 worst gaps with the
+deepest cut already in place, 10 fewer "never"** — and, because those gaps
+cluster in COVID and 2015–16, that is the same COVID dependence seen from the
+other side. So the December decision is a defined trade, not a free
+simplification: keep it and pay +13 rebalances/yr and ~2pp/yr of slower
+recovery for a deeper cut on roughly one first-gap-of-episode in ten; or
+revert to the plain 30d, which is statistically indistinguishable on every
+harness, and accept a shallower cut on those few sessions. Nothing applied.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
