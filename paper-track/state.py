@@ -734,7 +734,17 @@ def vol_target_multiplier(vol, target=VOL_TARGET_PA, cap=VOL_TARGET_CAP):
 # /0.669/-41.6% (band 20%) vs 9.56%/0.517/-69.9% -- though both CAGRs are
 # lower than the weekly backtests report, because weekly backtests reset to
 # target every week and so quietly assume free rebalancing.
-REBALANCE_DRIFT_BAND = 0.03
+# 2026-09-09 (owner, execution item 3): 3% -> 5%. drift_band_test.py re-run
+# under the reverted 30d estimator: 5% is performance-neutral (full 18.02/
+# 0.740/-36.3 vs 17.98/0.739/-36.4 at 3%; OOS 12.72/0.594 vs 12.74/0.595 at 2%;
+# search 25.97/0.923 vs 25.85/0.921) at 33 vs 42 rebalances/yr on the base
+# design; full live design 22.18/0.913/-33.6 (S 1.103 H 0.768) at 47 vs
+# 22.15/0.912/-33.3 (S 1.100 H 0.769) at 55 rebalances/yr, L1 turnover
+# 31.6x vs 31.8x. Fewer trades = fewer chances for a same-session trade to become a
+# next-session one, which the 09-09 studies priced at ~2.5pp/yr per slipped
+# session -- far more than the band itself moves. Regime changes and the
+# zero-leg sweep bypass the band as before.
+REBALANCE_DRIFT_BAND = 0.05
 
 # A leg whose TARGET is exactly zero but which is still HELD above this weight
 # fires a rebalance on its own, regardless of total L1 drift. Added 2026-09-04.

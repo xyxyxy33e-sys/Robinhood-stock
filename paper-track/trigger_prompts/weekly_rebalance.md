@@ -1,5 +1,5 @@
-# PROPOSED replacement prompt — Weekly Rebalance (Fri 15:55 ET)
-# Trigger: trig_01BasZybRAmmumVcNERAnKX7   cron: 55 19 * * 5
+# PROPOSED replacement prompt — Weekly Rebalance (Fri 15:50 ET)
+# Trigger: trig_01BasZybRAmmumVcNERAnKX7   cron: 50 19 * * 5  (15:50 ET since 2026-09-09)
 # STATUS: APPLIED to the live trigger 2026-09-01; re-applied 2026-09-02 (weights
 # reweighted, micro overlay disabled). This file is the
 # source of record — edit here, then push via update_trigger, so the repo and
@@ -8,8 +8,8 @@
 
 Weekly rebalance for the Robinhood Agentic account (576391551) — SPMO core +
 TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with volatility targeting
-on top. (The micro overlay was DISABLED 2026-09-02 -- see below.) Runs Friday at 15:55 ET, five minutes before the
-close. `STRATEGY.md` in the repo is the single source of truth for what the
+on top. (The micro overlay was DISABLED 2026-09-02 -- see below.) Runs Friday at 15:50 ET, ten minutes before the
+close (moved from 15:55 on 2026-09-09 -- see section 0b). `STRATEGY.md` in the repo is the single source of truth for what the
 strategy is and why; this prompt is only the when-and-how. If the two ever
 disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
 
@@ -33,12 +33,12 @@ fixes and RECORDED-but-unapplied research are always fine.
 
 ## 0. Execution convention — what the signal is computed on
 
-This trigger fires at 15:55 ET and trades immediately, using the SAME
+This trigger fires at 15:50 ET (15:55 until 2026-09-09) and trades immediately, using the SAME
 session's prices for both the signal and the fills. The backtest convention
 is "decide on the close of session d0, hold the d0 -> d1 return", i.e. the
-trade happens at d0's close. The 15:55 snapshot is a five-minute-early PROXY
+trade happens at d0's close. The 15:5x snapshot is a few-minutes-early PROXY
 for that close: the last daily bar returned by `get_equity_historicals` is
-not final at 15:55, so the SMA, state, gaps and realized-vol readings are all
+not final at 15:5x, so the SMA, state, gaps and realized-vol readings are all
 computed on a nearly-complete bar. That is the intended alignment, and the
 approximation is deliberate -- do NOT "fix" it by switching to the prior
 completed close, which would add a full session of lag. Added 2026-09-07
@@ -51,8 +51,8 @@ proxy drawdown against our -34.7% (see the limitations note in section 7).
 So the five-minute gap is far smaller than that but is not zero, and
 execution discipline is worth more than most design changes. Two
 consequences to respect:
-  - Report readings as "15:55 snapshot", never as "the close".
-  - If a run happens outside 15:50-16:00 ET, say so in the report: the
+  - Report readings as "15:5x snapshot", never as "the close".
+  - If a run happens outside 15:45-16:00 ET, say so in the report: the
     further from the close, the worse the proxy.
 
 ## 0a. Market-holiday guard
@@ -64,6 +64,40 @@ because the run checked. Cheapest reliable check: pull the QQQ quote and
 compare `previous_close_date` and the last daily bar's date against today.
 If today is a market holiday, report "market closed, no action" and STOP —
 do not compute a reading, do not trade, do not edit the artifact.
+
+## 0b. Timing, pre-staging and the missed-run fallback (2026-09-09)
+
+**Fire time is now 15:50 ET (was 15:55).** The extra five minutes are for
+computing, not waiting: the style-attribution study measured the design's
+timing value at 10.6 / 8.0 / 6.6 pp/yr for 0 / 1 / 2 sessions of execution
+delay, so the single most valuable thing this run can do is FINISH before the
+close. Sequence, and do not reorder it:
+  1. 15:50-15:54: holiday guard, pull data, compute the reading, run BOTH
+     guards, build the held weights, call `needs_rebalance`. Nothing else.
+  2. If it fires: place the orders IMMEDIATELY -- target 15:54-15:57, never
+     after 15:59. Report readings as the "15:5x snapshot"; the bar is not
+     final and that is the intended proxy (section 0).
+  3. Only after fills are confirmed (or no trade): fill-quality recording,
+     NAV row, drawdown watch, notifications, artifact, commit. All of that
+     can run after 16:00 without cost; an order cannot.
+Do not spend the window on commentary, research, or reading STRATEGY.md.
+
+**Fill-quality recording now takes `session_lag`.** A same-session fill is
+`session_lag=0` (the normal case). If the fill happened the session AFTER the
+signal (the fallback below, or any delayed run), pass `session_lag=1`.
+`summarize()` counts only lag-0 fills toward the 25bp alarm and the 4bp cost
+comparison -- on a lagged fill the number is mostly the overnight gap, not
+execution (overnight_intraday.md) -- and reports lagged fills separately.
+
+**If THIS run cannot complete by 16:00** (tools down, data missing, guard
+tripped for a data reason, anything): do NOT wait for the next scheduled run.
+Say so plainly and stop; the 16:10 ET watchdog Routine will pick it up. The
+fallback it applies, measured in overnight_intraday.md: execute the CLOSE's
+signal at the next opportunity -- extended-hours whole-share limit orders if
+the reading is available by 16:10, otherwise the next open. That costs about
+-0.8 pp/yr and is not statistically distinguishable from zero; letting the
+SIGNAL slip a whole session instead costs -2.6 pp/yr proxy / -1.8 real at
+every cost level. Lose the overnight, never the signal.
 
 ## 1. Compute this week's reading
 
@@ -175,8 +209,8 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
     the EFFECTIVE state (`effective_state(macro, fast)`) plus the extension
     trim vote count (`extension_votes(...)`), so the fast re-entry overlay
     switching or the trim changing by a step counts (2026-09-06).
-  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.03),
-    i.e. roughly "1.5 percentage points of the portfolio is in the wrong leg".
+  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.05; raised from 0.03 on 2026-09-09 -- performance-neutral, ~14% fewer trades: ~47/yr vs ~55),
+    i.e. roughly "2.5 percentage points of the portfolio is in the wrong leg".
   - **a leg whose target is EXACTLY 0% but is still held above 0.10%
     (`ZERO_LEG_EPS`) → rebalance**, whatever the total drift. Added
     2026-09-04 — when vol drops below target the cash target becomes exactly
@@ -205,7 +239,7 @@ When it does fire:
     buy side exceeds available buying power — a leg being liquidated to zero
     is what funds the buys.
   - Marketable limit orders: at/through the bid for sells, the ask for buys.
-    Do not chase more than 0.3% through the touch. At 15:55 ET regular-hours
+    Do not chase more than 0.3% through the touch. At 15:5x ET regular-hours
     rules apply, so fractional/dollar-based orders are fine. If anything slips
     to extended hours it must be a WHOLE-SHARE limit order with
     `market_hours='extended_hours'` — fractional and dollar-based orders are
@@ -223,8 +257,8 @@ When it does fire:
     completed rebalance means a fill failed — investigate, do not ignore.
   - **Record execution quality for EVERY filled leg** (added 2026-09-07).
     After fills, call `paper-track/fill_quality.py`'s
-    `record_fill(date, symbol, side, quantity, fill_price, ref_price)` once
-    per leg, where `ref_price` is the OFFICIAL CLOSE of the signal session
+    `record_fill(date, symbol, side, quantity, fill_price, ref_price,
+    session_lag=0)` once per leg (session_lag=1 for a next-session fill), where `ref_price` is the OFFICIAL CLOSE of the signal session
     (pass `ref_kind` if you had to use anything else). Then report
     `summarize()`'s notional-weighted slippage in bps against the **4bp
     one-way cost model the backtests assume**. This gates nothing and must
@@ -234,7 +268,7 @@ When it does fire:
     checked it. Flag any single leg worse than 25bp; persistent
     notional-weighted slippage worse than 4bp means the live design is not
     the backtested one and is worth more attention than any parameter.
-    IMPORTANT when interpreting a flag: on a same-session 15:55 run the
+    IMPORTANT when interpreting a flag: on a same-session 15:5x run the
     reference IS effectively the fill session, so a large number is genuine
     execution slippage. On any run where the signal session and the fill
     session differ, most of the number is the overnight GAP, not broker
@@ -383,7 +417,7 @@ it by <=0.5pp), it is EXECUTION LAG. One extra session between signal and fill
 took the A=40/60 design from -34.7% to -39.5%, two sessions to -40.3%, and one
 session also costs 3.1pp of CAGR. So -33% is the figure for trading AT the
 signal close, which is what this trigger does; -40% is the figure if execution
-routinely slips a day (measured at A=40/60; A=50/50 is ~2pp better throughout). Neither is a loss ceiling. This is why the 15:55
+routinely slips a day (measured at A=40/60; A=50/50 is ~2pp better throughout). Neither is a loss ceiling. This is why the 15:5x
 convention in section 0 matters operationally, not just pedantically.
 Also carry:
 the 2026-09-06 reweight is the SECOND deliberate step up the return frontier,

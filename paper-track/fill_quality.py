@@ -20,8 +20,15 @@ import csv
 import os
 
 LOG_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'fill_quality.csv')
+# 2026-09-09: 'session_lag' = sessions between the signal session and the
+# fill (0 = same-session 15:5x run, the normal case; 1 = filled the next
+# session, e.g. the watchdog/next-open fallback). The 25bp alarm and the
+# 4bp cost comparison count ONLY lag-0 fills: on a lagged fill most of the
+# number is the overnight gap, not broker execution (overnight_intraday.md),
+# and letting those trip the alarm would cry wolf on exactly the days the
+# fallback rule is used. Lagged fills are still recorded and reported apart.
 FIELDS = ('date', 'symbol', 'side', 'quantity', 'fill_price', 'ref_price',
-          'ref_kind', 'slippage_bps', 'notional', 'note')
+          'ref_kind', 'slippage_bps', 'notional', 'note', 'session_lag')
 
 # A single fill worse than this is worth calling out in the report. Not a
 # gate -- the trade has already happened by the time this is computed.
@@ -43,7 +50,8 @@ def slippage_bps(side, fill_price, ref_price):
 
 
 def record_fill(date, symbol, side, quantity, fill_price, ref_price,
-                ref_kind='signal_session_close', note='', path=LOG_PATH):
+                ref_kind='signal_session_close', note='', path=LOG_PATH,
+                session_lag=0):
     """Append one filled leg. `ref_price` is the price the backtest assumes
     we traded at -- normally the official close of the session the signal was
     computed on. `ref_kind` records which reference was used, so a run that
@@ -53,7 +61,8 @@ def record_fill(date, symbol, side, quantity, fill_price, ref_price,
     row = dict(date=date, symbol=symbol, side=side.lower(), quantity=quantity,
                fill_price=fill_price, ref_price=ref_price, ref_kind=ref_kind,
                slippage_bps=round(bps, 2),
-               notional=round(abs(quantity) * fill_price, 2), note=note)
+               notional=round(abs(quantity) * fill_price, 2), note=note,
+               session_lag=int(session_lag))
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     exists = os.path.exists(path)
     with open(path, 'a', newline='') as f:
@@ -75,9 +84,20 @@ def summarize(rows=None, path=LOG_PATH):
     """Notional-weighted slippage, which is the number that matters: a bad
     fill on a $30k leg is not the same event as a bad fill on a $500 stub."""
     rows = load_log(path) if rows is None else rows
+    allrows = rows
+    # legacy rows (before 2026-09-09) have no session_lag column: the one
+    # batch on 2026-09-08 was a Tuesday-open fill of a Friday signal, lag 1.
+    def lag(r):
+        v = r.get('session_lag')
+        if v in (None, ''):
+            return 1 if r.get('date') == '2026-09-08' else 0
+        return int(float(v))
+    rows = [r for r in allrows if lag(r) == 0]
+    lagged = [r for r in allrows if lag(r) != 0]
     if not rows:
         return dict(n=0, notional=0.0, weighted_bps=None, simple_bps=None,
-                    worst=None, flagged=[])
+                    worst=None, flagged=[], n_lagged=len(lagged),
+                    lagged_weighted_bps=_wbps(lagged))
     notional = sum(float(r['notional']) for r in rows)
     wb = (sum(float(r['slippage_bps']) * float(r['notional']) for r in rows) / notional
           if notional > 0 else None)
@@ -86,7 +106,14 @@ def summarize(rows=None, path=LOG_PATH):
     flagged = [r for r in rows if float(r['slippage_bps']) > SLIPPAGE_FLAG_BPS]
     return dict(n=len(rows), notional=round(notional, 2),
                 weighted_bps=round(wb, 2) if wb is not None else None,
-                simple_bps=round(sb, 2), worst=worst, flagged=flagged)
+                simple_bps=round(sb, 2), worst=worst, flagged=flagged,
+                n_lagged=len(lagged), lagged_weighted_bps=_wbps(lagged))
+
+
+def _wbps(rows):
+    n = sum(float(r['notional']) for r in rows)
+    return (round(sum(float(r['slippage_bps']) * float(r['notional']) for r in rows) / n, 2)
+            if n > 0 else None)
 
 
 def cost_estimate_pa(rows=None, path=LOG_PATH, years=None):

@@ -40,7 +40,10 @@ COSTS = (0.0004, 0.0010, 0.0020)
 for r in rr:
     r['vol_live'] = max(realized_vol(qd, qqq, as_of=r['d0'], lookback=10),
                         realized_vol(qd, qqq, as_of=r['d0'], lookback=30))
-    assert abs(r['vol_live'] - r['vol']) < 1e-12 and 'vol30' in r   # rr['vol'] IS the live estimator
+    # rr['vol'] is whatever state.realized_vol_live returns: max(10,30) when the
+    # study ran (09-08), plain 30d since the 2026-09-09 revert. The cells use
+    # r['vol_live'] (E on) / r['vol30'] (E off) explicitly, so either is fine.
+    assert 'vol30' in r and (abs(r['vol_live'] - r['vol']) < 1e-12 or abs(r['vol30'] - r['vol']) < 1e-12)
 
 
 def set_cost(bp):

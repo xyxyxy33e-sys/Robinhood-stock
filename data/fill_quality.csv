@@ -1,4 +1,4 @@
-date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,note
-2026-09-08,BOXX,sell,4.318843,118.1401,118.13,signal_session_close,-0.85,510.23,one-time Tue open rebalance; $100k deposit deployed
-2026-09-08,TQQQ,buy,992,71.8375,72.37,signal_session_close,-73.58,71262.8,one-time Tue open rebalance; $100k deposit deployed
-2026-09-08,SPMO,buy,193,150.6259,149.72,signal_session_close,60.51,29070.8,one-time Tue open rebalance; $100k deposit deployed
+date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,note,session_lag
+2026-09-08,BOXX,sell,4.318843,118.1401,118.13,signal_session_close,-0.85,510.23,one-time Tue open rebalance; $100k deposit deployed,1
+2026-09-08,TQQQ,buy,992,71.8375,72.37,signal_session_close,-73.58,71262.8,one-time Tue open rebalance; $100k deposit deployed,1
+2026-09-08,SPMO,buy,193,150.6259,149.72,signal_session_close,60.51,29070.8,one-time Tue open rebalance; $100k deposit deployed,1

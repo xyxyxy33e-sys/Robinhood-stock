@@ -32,7 +32,7 @@ from long_history_backtest import (load_px, load_tbill_long, make_rate_lookup,
 from drift_band_test import annual_stats, ONE_WAY_SPREAD
 from state import VOL_ESTIMATOR_MAX_ENABLED as _VOL_MAX
 
-BAND = 0.03
+from state import REBALANCE_DRIFT_BAND as BAND   # 2026-09-09: harness band == live band (was a hard-coded 0.03)
 SEARCH = ('2015-11-01', '2099')
 HOLDOUT = (START, '2015-10-31')
 

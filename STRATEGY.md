@@ -31,14 +31,15 @@ of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
 (×⅔ / ×⅓ / ×0 — three votes is 100% cash). Then the four risky legs are scaled by
 `min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX (the max(10d, 30d)
 estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
-state, on L1 drift > 3%, or on a zero-target leg still held above 0.10%.
+state, on L1 drift > 5% (3% until 2026-09-09), or on a zero-target leg still held above 0.10%.
 
 **Standing figures** (design of 2026-09-09: A 50/50, trim step ⅓, plain
-30-day vol estimator). 26-year QQQ-core proxy 2000–2026: **22.15% CAGR /
-Sharpe 0.912 / max drawdown −33.3%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
+30-day vol estimator, 5% drift band). 26-year QQQ-core proxy 2000–2026: **22.18% CAGR /
+Sharpe 0.913 / max drawdown −33.6%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
 Real instruments, weekly, Nov 2015–Aug 2026: **31.4% / 1.248 / −25.0%**
 (QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe
-1.100, holdout (2000–2015) 0.769; ~55 rebalances/yr. (Under the max(10,30)
+1.103, holdout (2000–2015) 0.768; ~47 rebalances/yr at the 5% band (~55 at
+3%). (Under the max(10,30)
 estimator live 09-07..09-09 these read 22.12 / 0.938 / −32.8, real 30.67 /
 1.260 / −25.3, S 1.150 H 0.780, ~68 rebalances/yr — every difference inside
 bootstrap noise; see "Volatility estimator reverted".) A
@@ -52,6 +53,8 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-09 | drift band 3% → 5%; Routines 15:55 → 15:50 ET; 16:10 watchdog + missed-run fallback; `session_lag` in fill log | "Execution improvements" |
+| 2026-09-09 | vol estimator max(10,30) → plain 30d | nine studies 09-08/09; "Volatility estimator reverted" |
 | 2026-09-06 | trim step 0.25 → ⅓ (A ×⅔/⅓/0); A 50/50 → 40/60 | step: both eras, controls, p=0.00; 40/60: owner decision; "Leverage under the trim" |
 | 2026-09-06 | graded extension trim: A ×0.75/0.5/0.25 as QQQ clears 10/12/15% above its 100/150/200d | both eras, controls, p=0.00, real +2.7pp; "Extension trim" |
 | 2026-09-06 | 20/100 fast re-entry overlay on B/C/F | both eras, controls, p=0.01; "Fast re-entry overlay" |
@@ -111,10 +114,88 @@ says something better exists" is NOT a reason — that was true every day this
 week and is exactly the condition the freeze exists to interrupt.
 
 **Standing candidates, deliberately NOT applied** (revisit after the freeze,
-with live data in hand): the 5% drift band (documented as performance-neutral
-at lower turnover, and more attractive now that the faster estimator runs
-~69 rebalances/yr); a floor on the extension trim's bottom rung (tested
+with live data in hand): ~~the 5% drift band~~ (APPLIED 2026-09-09 under
+"Execution improvements" — re-tested on the full design, neutral, ~14%
+fewer trades); a floor on the extension trim's bottom rung (tested
 negative 09-07); extension-threshold hysteresis (tested negative 09-07).
+
+## Execution improvements (2026-09-09, owner: "apply all 5")
+
+The nine studies of 09-08/09 ranked execution discipline above any
+indicator: the design's timing value is 10.6 / 8.0 / 6.6 pp/yr at 0 / 1 / 2
+sessions of delay (style attribution), a next-open fill costs −0.77 pp/yr
+(P 0.79, inside noise) while a full-session SIGNAL lag costs −2.6 pp/yr
+proxy / −1.8 real (overnight/intraday). The owner asked how to improve
+execution; five items were proposed and applied together. None changes a
+weight or an overlay; one (the band) changes a parameter and was tested to
+the freeze's standard first.
+
+1. **Missed-run watchdog + fallback.** New Routine
+   `trig_01Mm7fLoSeTacPcgrNAvVbmm` ("Execution Watchdog"), Mon–Fri 16:10 ET
+   (`10 20 * * 1-5`), self-bound to this session. It verifies the 15:50 run
+   completed (NAV row, orders if the band fired, commit); if not, it
+   recomputes the reading on the OFFICIAL close and executes that signal
+   at the next opportunity — extended-hours WHOLE-SHARE limit orders if the
+   reading is available, otherwise the next open — recording the fills with
+   `session_lag=1`, and sends one push notification. Rule of thumb written
+   into both prompts (section 0b): *lose the overnight, never the signal.*
+   The fallback is the measured −0.8 pp/yr path; a skipped session is the
+   −2.6 pp/yr path.
+2. **Pre-staging.** Both trading Routines moved from 15:55 to **15:50 ET**
+   (daily `50 19 * * 1-4`, weekly `50 19 * * 5`) and the prompts now fix
+   the order of work: compute 15:50–15:54, place orders 15:54–15:57 and
+   never after 15:59, everything else (fill record, NAV row, notifications,
+   artifact, commit) after the close. Item 5 below measures what the
+   earlier read costs.
+3. **Drift band 3% → 5%** (`REBALANCE_DRIFT_BAND = 0.05`). The standing
+   candidate since 09-01, re-tested on the full live design through the
+   harness (band is the only difference; same rows, 4bp one-way):
+
+   | band | 26y proxy | S / H | rebalances/yr | L1 turnover/yr |
+   |---|---|---|---|---|
+   | 3% (was) | 22.15 / 0.912 / −33.3 | 1.100 / 0.769 | 54.8 | 31.8x |
+   | **5% (live)** | **22.18 / 0.913 / −33.6** | **1.103 / 0.768** | **47.1** | 31.6x |
+
+   `drift_band_test` on the base design (no overlays): 18.02 / 0.740 / −36.3
+   and 33 rebalances/yr at 5% vs 17.98 / 0.739 / −36.4 and 42 at 3%.
+   Performance-neutral; 14% fewer rebalances on the full design (22% on the
+   base — the overlays fire on regime changes the band cannot gate), so
+   fewer fills to get wrong. Turnover is essentially unchanged: the band
+   removes small trades, not exposure. Real weekly rows are rebalanced
+   weekly and do not use the band, so the real figure (31.40 / 1.248 /
+   −25.0) is unchanged. `improvement_search` now imports the band from
+   `state.py` so the harness and the live gate cannot drift apart;
+   `consistency_check` is parametric in the band (14/14 at 5%). A 5% L1
+   drift is about 2.5 percentage points of the portfolio in the wrong leg.
+4. **Fill-quality tracker: `session_lag`.** `record_fill()` takes
+   `session_lag` (0 = same session as the signal, 1 = the session after);
+   `summarize()` counts only lag-0 fills toward the 25bp per-leg alarm and
+   the 4bp cost comparison, and reports lagged fills separately
+   (`n_lagged`, `lagged_weighted_bps`). On a lagged fill the number is
+   mostly the overnight gap, not execution, and the 2026-09-08 deposit
+   deployment (three legs, −34.6bp, i.e. price improvement) was exactly
+   that: recorded now as lag 1. The CSV gained the column; legacy rows
+   are lag 1.
+5. **The last five minutes, measured.** 47 sessions of 5-minute QQQ bars,
+   2026-07-01 to 2026-09-08:
+
+   | | mean abs | sd | max |
+   |---|---|---|---|
+   | 15:50 → official close | 13.8 bp | 19.0 | 63.8 bp |
+   | 15:55 → official close | 8.2 bp | 12.6 | — |
+   | last 5-min bar vs official close | 1.1 bp | | |
+
+   Reading the strategy at the 15:50 price instead of the official close
+   changed the macro state on 0/47 sessions, the effective state 0/47, the
+   trim vote count 1/47, and the vol multiplier by 0.0014 on average
+   (max 0.0103). Moving the fire time earlier therefore changes the
+   DECISION essentially never; the price gap is sign-agnostic (mean +3bp)
+   and is not a cost. Worth re-running once a quarter as the fill log fills.
+
+**What did not change.** Weights, overlays, estimator, cost model, the
+15:5x same-session convention. The standing figures move from
+22.15 / 0.912 / −33.3 (S 1.100, H 0.769) to 22.18 / 0.913 / −33.6
+(S 1.103, H 0.768) purely from the band; treat them as the same design.
 
 ## Execution quality — measured, not assumed (2026-09-07)
 
@@ -407,9 +488,10 @@ daily difference would rebalance ~250x/year. Live rule
 (`needs_rebalance(target, held, regime_changed)` in `state.py`):
 
 - **regime change → always rebalance**, whatever the drift. Never gated.
-- **otherwise rebalance only when L1 drift > `REBALANCE_DRIFT_BAND` (0.03)**,
+- **otherwise rebalance only when L1 drift > `REBALANCE_DRIFT_BAND` (0.05;
+  0.03 until 2026-09-09 — see "Execution improvements")**,
   where drift = Σ|target − held| over the 5 legs. Because the legs sum to 1.0,
-  a 3% L1 drift ≈ *1.5 percentage points of the portfolio in the wrong leg*.
+  a 5% L1 drift ≈ *2.5 percentage points of the portfolio in the wrong leg*.
 
 **The old per-leg "$100 or 0.3%" trade threshold is REMOVED** (2026-09-01,
 user decision). When the band fires, every leg goes to target regardless of
@@ -639,11 +721,15 @@ would defeat the purpose by making the signal-to-noise ratio worse.
 
 ## Cadence
 
-- **Monday–Friday, 15:55 ET** — every session computes the macro state, the
+- **Monday–Friday, 15:50 ET** (15:55 until 2026-09-09) — every session computes the macro state, the
   20/100 fast read, realized vol and the live weights, then calls
   `needs_rebalance(target, held, regime_changed)`: rebalance on a change of
-  EFFECTIVE state, on L1 drift > 3%, or on a zero-target leg still held
-  above 0.10%; otherwise no trade. ~42 rebalances/year expected.
+  EFFECTIVE state, on L1 drift > 5%, or on a zero-target leg still held
+  above 0.10%; otherwise no trade. ~47 rebalances/year expected.
+- **Monday–Friday, 16:10 ET** — the Execution Watchdog
+  (`trig_01Mm7fLoSeTacPcgrNAvVbmm`) verifies the 15:50 run completed and,
+  if it did not, executes the close's signal at the next opportunity
+  ("lose the overnight, never the signal"). It never re-decides.
 - **Friday** additionally produces the weekly report (state, fast read, vol
   and multiplier, weights, fills, realized P&L with the wash-sale split,
   drawdown from high) whether or not it traded.
