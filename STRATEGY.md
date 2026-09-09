@@ -3150,6 +3150,83 @@ recovery for a deeper cut on roughly one first-gap-of-episode in ten; or
 revert to the plain 30d, which is statistically indistinguishable on every
 harness, and accept a shallower cut on those few sessions. Nothing applied.
 
+### Style / exposure attribution (2026-09-09) — the edge is the timing of exposure, and nothing else
+
+Owner's question: does the strategy outperform after accounting for changing
+Nasdaq exposure, momentum exposure, leverage and cash — timing skill, or
+riding a style? `paper-track/style_attribution.py`; writeup in
+`research_notes/style_attribution.md`. Fama–French daily momentum and 3
+factors added under `data/` (provenance in `data/README.md`). Standing
+figures reproduced; the harness's `run()` reproduced to 1e-15 by the
+weight-recording copy used here. Candidate count 0 — this line measures.
+
+**Static attribution.** Regressing LIVE's daily excess return on Nasdaq,
+S&P and momentum (Newey–West): alpha **+13.4pp/yr [+6.6, +20.2]** on the
+26-year proxy, +11.9 search, +12.9 holdout, +13.8 real. Momentum loading
+β 0.29, worth under 1pp/yr. Sanity anchors: QQQ has alpha 0.00 / beta 1.000
+on the Nasdaq factor in every era. So the alpha is real — but "alpha" here
+is what a *static* model cannot see, and the strategy's exposure is not
+static by design.
+
+**The test that matters: hand the strategy's own exposure path to a passive
+holder, one day late.** Realized exposure e_t from the harness weights
+(core 1×, TQQQ 3×, QLD 2×, XLU ~0.5×), mean 1.245, range [0, 2.03]. Passive
+P_path holds e_{t−1} in QQQ and the rest in cash — no information beyond
+yesterday's exposure. That passive holder captures **20.1 of LIVE's 21.1pp/yr
+excess return and 0.90 of its 0.94 Sharpe.** The residual is +0.95pp/yr
+(Sharpe 0.16, P ≈ 0.2), and it is an exact identity: +2.5pp of same-day
+execution value (acting at the signal close rather than the next) − 1.3pp
+costs − 0.5pp leverage decay + 0.2pp XLU. **There is no selection residual.
+Everything the design earns is the timing of exposure.**
+
+| era | ē | (b) timing vs constant-ē holder | log-return CI (60d blocks) | P | ΔSharpe P |
+|---|---|---|---|---|---|
+| full | 1.245 | **+8.0pp/yr** | [+2.6, +18.4] | **0.004** | **0.001** |
+| holdout 2000–2015 | 1.178 | **+10.3** | [+1.5, +25.7] | **0.013** | **0.006** |
+| search 2015-11+ | 1.341 | +3.5 | [−3.8, +13.1] | 0.14 | 0.046 |
+
+Placebo (same exposure values, timing destroyed by year-shuffle or 60d-block
+resample, 1000 draws): actual path beats the placebo distribution at
+**P ≤ 0.004** on the full proxy and holdout, P 0.004–0.010 on Sharpe in the
+search era. Sign-flip (exposure mirrored around ē): full +19.1 → **−7.6**,
+holdout +13.9 → **−19.1**. A real timing signal must lose when flipped; this
+one loses hard.
+
+**Three-way decomposition of the CAGR gap** (annualised log, pp/yr, exact):
+
+| | gap vs QQQ | (a) average leverage | (b) exposure timing | (c) residual | gap vs SPY | index choice |
+|---|---|---|---|---|---|---|
+| **4bp, 26y** | **+11.6** | +0.6 (5%) | **+10.1 (87%)** | +0.9 (8%) | **+11.8** | +0.2 (2%) |
+| 4bp holdout | +13.9 | −0.8 | +12.8 (92%) | +1.9 | +11.6 | −2.3 |
+| 4bp search | +8.3 | +4.1 (49%) | +4.7 (56%) | −0.4 | +12.1 | +3.8 (31%) |
+| 10bp, 26y | +9.7 | +0.6 | +10.1 (104%) | −1.0 | +9.9 | +0.2 |
+
+Over 26 years **average leverage explains almost nothing** — 1.25× the
+Nasdaq held constantly through 2000–02 and 2008 returns 9.35% vs QQQ's
+8.72%. **Nor does "chose the Nasdaq"**: the index choice is worth +3.8pp/yr
+since 2015 and −2.3 before it, net +0.2. In the search era — one bear and a
+long levered bull — the gap splits ~50/50 between leverage and timing, which
+is why the last decade alone cannot distinguish this design from a levered
+Nasdaq holder, and why the holdout matters.
+
+**Which rule produces the timing** (lag-1 (b), pp/yr): base classifier alone
++4.8 (P 0.08, and −0.3 in the search era); + vol target +5.1; + fast
+overlay +6.1; + trim +6.6 (the only rule giving positive search-era timing,
++3.6 vs −0.9 without it); **LIVE +8.0, P 0.005.** Same ordering T > F > E
+the interaction test found on Sharpe, seen from the attribution side.
+
+**Timing value vs execution delay** — the number that ranks execution above
+every research idea of the week: (b) at lag 0 / 1 / 2 / 5 / 10 sessions =
++10.6 / +8.0 / +6.6 / +6.0 / +4.0pp/yr. The first day of delay costs
+2.5pp/yr. The live book, trading at 15:55 on the signal session, is on the
+lag-0/lag-1 boundary; a morning routine would sit on lag-1.
+
+Where the timing lives: overwhelmingly in the worst quintile of market
+quarters (state F alone accounts for more than all of it), and it is
+*negative* in 2010–19 (−4.6pp/yr) — positive in every decade that contained
+a bear. That is the same "pays in bears, costs in corrections" profile the
+recovery study measured event by event.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**

@@ -243,3 +243,13 @@ kairos daily files: 0 open/close mismatches above one cent; 0 high/low violation
 Used to split each real-era leg's return into overnight (close→open) and intraday
 (open→close) parts. Proxy split validated on the overlap: corr(3×QQQ gap, TQQQ gap)
 0.997, slope 0.99.
+
+## ff_momentum_daily.csv, ff_3factors_daily.csv (added 2026-09-09, research line `style_attribution`)
+
+Kenneth French data library, daily momentum factor and daily 3 factors (Mkt-RF,
+SMB, HML, RF), fetched through the proxy from
+mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/ (F-F_Momentum_Factor_daily_CSV.zip,
+F-F_Research_Data_Factors_daily_CSV.zip; "created using the 202607 CRSP database"),
+parsed to decimal daily returns, 1926 .. 2026-07-31. Factors end 2026-07-31, so any
+regression using them must drop rows after that date (same-rows control).
+Alignment on the proxy calendar: corr(QQQ excess, Mkt-RF) +0.87, corr(QQQ excess, MOM) −0.21.
