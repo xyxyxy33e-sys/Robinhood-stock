@@ -3369,6 +3369,61 @@ leaving the design alone and ranking execution discipline above any
 indicator: the design's timing value falls 10.6 → 8.0 → 6.6pp/yr at 0 → 1 → 2
 sessions of delay.
 
+### Breadth and rates as regime inputs — tested 2026-09-10, NOT applied
+
+Prompted by an outside manager's 09-09 downgrade (breadth: 192 NASDAQ yearly
+lows vs 35 highs; rates: ~2/3 hike odds, rising 10y, oil at a May high). Two
+independent lines under `research_notes/BRIEFING.md` (+ addendum), both
+reproducing the standing figures first, trailing-252 causal thresholds, six
+rule families each, exposure-matched live controls, circular block bootstrap,
+sign-flip placebos, candidate counts reported.
+
+**Rates (`rates_signal.py`, `research_notes/rates_signal.md`): clean
+negative.** 9 FRED series (20/60d ΔDGS2, ΔDGS10, ΔDFII10; 10y−2y level and
+change; 60d Δlog WTI) × 2 signs × 6 families = 108 candidates. The manager's
+sign is right (rising-rate rules beat their mirror in all 9 series) but the
+size is negligible: nominal-yield rules +0.004..+0.019 Sharpe at matched
+exposure, P(≤0) 0.22–0.45, every CI through zero; curve-slope rules negative
+in both signs; oil nil. The one larger point estimate (10y TIPS real yield,
++0.046, 2004+ only) collapses to −0.002 (holdout −0.027) under FRED's actual
+one-day publication lag. Mechanism: fast-rising yields precede LOWER forward
+QQQ vol and no worse forward return than the middle quintile. Harness
+cautions recorded: `downturn_review.exposure_control()` benchmarks the
+macro-only design and flattered every candidate by ~+0.15 Sharpe (the script
+carries a bisection over the true live function); tilt variants cannot be
+exposure-matched because the vol-target cap never levers up.
+
+**Breadth (`breadth_signal.py`, `research_notes/breadth_signal.md`): clean
+negative on everything requested.** Proxies: QQEW/QQQ and RSP/SPY relative
+strength (20/60d, vs own 50/200d SMA), a fixed-basket 30-name new-highs minus
+new-lows (survivorship-biased, illustration only), fraction of nine sector
+ETFs above 200d/50d; 45 new `data/<SYMBOL>_daily.csv` with provenance in
+`data/breadth_provenance.md`. 88 requested candidates: every gate/tilt/
+confirmation/replacement is inside noise at matched capital or worse than
+live (best: qqew_60 de-lever 50%, CI [−0.055, +0.204], P 0.12, −0.4pp/yr);
+the sector and highs-lows proxies that match the manager's argument fail
+every control. Today's reading: Nasdaq-100 equal-weight is LEADING (qqew_60
+pct 0.82), so even the surviving rule would be off.
+
+**One post-hoc rule surfaced (1 of 170, scope chosen after the ladder) —
+RECORDED, NOT APPLIED.** "Effective state D and 60-day QQEW/QQQ relative
+strength in its trailing bottom quintile → D row to cash." On the same
+4,800 rows (2007-07+): live 26.09 / 1.006 / −33.6 (S 1.103 H 0.876) →
+31.71 / 1.218 / −28.5 (S 1.332 H 1.065); vs a constant-D capital match
++0.205 / +0.178; bootstrap CI [+0.067, +0.335] P 0.000 at both block
+lengths; LORO all ≥ +0.16; real weekly 37.67 / 1.490 / −22.0 (13 gated
+weeks at −4.3%/wk vs +2.35%/wk on the other 66 D weeks); sign-flip, QQQ
+momentum and vol placebos on the same D rows fail; lag placebo decays
+monotonically; random episode re-placement P 0.003. Against it: post-hoc
+(1/170), 8 of 40 episodes carry 68 of 86pp, window sweep non-monotone (10d/
+20d fail, 60d best of seven), RSP/SPY analogue weak in holdout, holdout is
+2007+ only (dot-com untested), and it is a timing rule in a project where
+~300 timing variants have failed. Classification: plausibly real, evidence
+not sufficient to act. Standing instruction: freeze the rule exactly as
+stated as a PRE-REGISTERED hypothesis, track it forward on the paper track,
+and source a Nasdaq-100 equal-weight history covering 2000–2002 before any
+re-test. Not a change candidate until then.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
