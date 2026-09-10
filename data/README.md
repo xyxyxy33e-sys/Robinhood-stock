@@ -253,3 +253,26 @@ F-F_Research_Data_Factors_daily_CSV.zip; "created using the 202607 CRSP database
 parsed to decimal daily returns, 1926 .. 2026-07-31. Factors end 2026-07-31, so any
 regression using them must drop rows after that date (same-rows control).
 Alignment on the proxy calendar: corr(QQQ excess, Mkt-RF) +0.87, corr(QQQ excess, MOM) −0.21.
+
+## dgs2.csv, dgs10.csv, t10y2y.csv, dfii10.csv, dcoilwtico.csv, dgs3mo.csv (added 2026-09-10, research line `rates_signal`)
+
+Raw FRED downloads, untouched, via the briefing's curl pattern
+(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID>`), fetched 2026-09-10.
+Columns `observation_date,<ID>`. Holidays carry an EMPTY value -- forward-fill, never drop.
+
+| file | FRED id | series | span | rows | blanks |
+|---|---|---|---|---|---|
+| `dgs2.csv` | DGS2 | 2-year Treasury constant maturity yield | 1976-06-01 .. 2026-09-08 | 13,116 | 552 |
+| `dgs10.csv` | DGS10 | 10-year Treasury constant maturity yield | 1962-01-02 .. 2026-09-08 | 16,876 | 720 |
+| `t10y2y.csv` | T10Y2Y | 10y minus 2y spread (pp) | 1976-06-01 .. 2026-09-09 | 13,117 | 552 |
+| `dfii10.csv` | DFII10 | 10-year TIPS real yield | 2003-01-02 .. 2026-09-08 | 6,179 | 254 |
+| `dcoilwtico.csv` | DCOILWTICO | WTI crude spot, $/bbl | 1986-01-02 .. 2026-09-09 | 10,615 | 374 |
+| `dgs3mo.csv` | DGS3MO | 3-month Treasury bill yield | 1981-09-01 .. 2026-09-08 | 11,746 | 492 |
+
+`dgs3mo.csv` is a fresh pull of the same series already at `dgs3mo_full.csv` (that file
+is untouched; this one simply extends the end date to 2026-09-08).
+
+TIMING CAVEAT: FRED dates each value by its observation day (H.15 yields are the ~3:30pm
+New York reads; WTI is the day's spot). They are PUBLISHED the next business morning.
+`rates_signal.py` treats a value as known at that day's close and also reports every
+result with a one-day lag; both are stated in `paper-track/research_notes/rates_signal.md`.
