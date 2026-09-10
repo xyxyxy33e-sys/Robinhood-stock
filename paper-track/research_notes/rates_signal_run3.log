@@ -1,0 +1,142 @@
+  DGS2       1976-06-01 .. 2026-09-08  (13116 rows)
+  DGS10      1962-01-02 .. 2026-09-08  (16876 rows)
+  T10Y2Y     1976-06-01 .. 2026-09-09  (13117 rows)
+  DFII10     2003-01-02 .. 2026-09-08  (6179 rows)
+  DCOILWTICO 1986-01-02 .. 2026-09-09  (10615 rows)
+STANDING LIVE FIGURES (must match ADDENDUM: 22.18% / 0.913 / -33.6%, S 1.103, H 0.768; real 31.40% / 1.248 / -25.0%)
+  26y proxy 22.18% / 0.913 / -33.6%  S 1.103  H 0.768  exposure 0.6772 | real weekly 31.40% / 1.248 / -25.0%  (6575 proxy rows, 564 real rows)
+  alignment (contemporaneous d0->d1 QQQ return vs change): DGS2 +0.230  DGS10 +0.236  DCOILWTICO +0.048
+  predictive (signal pct at d0 vs QQQ d0->d1 return): dgs2_20 -0.022  dgs10_60 -0.020  oil_60 -0.002
+
+SIGNAL COVERAGE AND MECHANISM (forward 20-session QQQ log return, annualized, and forward 20d realized vol, by trailing quintile)
+signal     first row    rows | era        bottom<=0.2       middle     top>=0.8  (fwd ret %/yr | fwd vol %)  n_top
+dgs2_20    2000-07-03   6575 | HOLDOUT   +16.4 | 25.5   -2.5 | 22.8   -2.6 | 19.9   750
+                             | SEARCH    +25.9 | 21.2  +15.8 | 18.3  +13.7 | 19.4   701
+                             | ALL       +20.3 | 23.8   +4.6 | 21.1   +5.3 | 19.6   1451
+dgs2_60    2000-07-03   6575 | HOLDOUT    +1.5 | 27.4   +4.7 | 22.1   -9.5 | 19.9   793
+                             | SEARCH    +38.3 | 20.1  +10.0 | 18.2  +14.4 | 20.1   802
+                             | ALL       +16.5 | 24.4   +6.7 | 20.7   +2.5 | 20.0   1595
+dgs10_20   2000-07-03   6575 | HOLDOUT   +21.5 | 25.5   -4.0 | 22.6   -2.8 | 20.8   788
+                             | SEARCH    +17.6 | 20.7  +18.2 | 18.1  +14.2 | 20.3   615
+                             | ALL       +19.8 | 23.4   +4.8 | 20.8   +4.7 | 20.6   1403
+dgs10_60   2000-07-03   6575 | HOLDOUT   +13.8 | 25.3   -6.4 | 23.1   +6.7 | 19.3   861
+                             | SEARCH    +36.3 | 19.6  +10.1 | 18.3  +15.7 | 20.7   685
+                             | ALL       +22.8 | 23.0   +0.2 | 21.2  +10.7 | 19.9   1546
+slope_lvl  2000-07-03   6575 | HOLDOUT   +19.2 | 15.8  -11.3 | 23.6   -2.6 | 28.5   1283
+                             | SEARCH     +4.5 | 20.5  +16.5 | 16.8  +32.9 | 19.6   883
+                             | ALL       +12.4 | 18.0   -1.4 | 21.2  +11.9 | 24.8   2166
+slope_60   2000-07-03   6575 | HOLDOUT    +0.5 | 23.0   +7.3 | 21.9   -8.7 | 24.0   1150
+                             | SEARCH    +10.1 | 18.7  +13.2 | 19.5  +31.1 | 18.7   692
+                             | ALL        +4.4 | 21.3   +9.9 | 20.9   +6.3 | 22.0   1842
+dfii10_20  2004-01-16   5687 | HOLDOUT   +25.8 | 18.8   +8.3 | 17.4   -2.7 | 18.1   606
+                             | SEARCH    +21.3 | 18.9  +15.8 | 18.3  +17.2 | 21.5   619
+                             | ALL       +23.6 | 18.9  +11.7 | 17.8   +7.4 | 19.8   1225
+dfii10_60  2004-03-12   5649 | HOLDOUT   +21.3 | 18.5  +14.1 | 17.2   -9.1 | 18.6   702
+                             | SEARCH    +28.3 | 19.0  +15.4 | 17.8  +11.5 | 22.3   657
+                             | ALL       +24.8 | 18.7  +14.7 | 17.5   +0.9 | 20.4   1359
+oil_60     2000-07-03   6575 | HOLDOUT    -0.2 | 26.4   -0.4 | 22.4   +7.1 | 19.6   766
+                             | SEARCH    +10.1 | 24.0  +18.0 | 18.0  +22.3 | 17.6   541
+                             | ALL        +3.7 | 25.5   +7.4 | 20.5  +13.4 | 18.8   1307
+
+SWEEP: 9 series x 2 signs x 6 variants = 108 candidates total; this invocation: ['dfii10_20', 'dfii10_60', 'oil_60']
+Columns: candidate Sharpe on full window / search / holdout / real, minus the LIVE baseline on the SAME rows; 'xm' = candidate minus the EXPOSURE-MATCHED live (proxy full-window Sharpe); exp = avg deployed capital; frac = share of rows in the quintile
+
+--- dfii10_20: 5687 proxy rows from 2004-01-16, 564 real rows | LIVE on these rows: 23.52% / 0.932 / -33.6%  S 1.103 H 0.772 exp 0.745 | real 1.248
+variant           frac    exp    CAGR  Sharpe    MDD  dS_full  dS_srch  dS_hold  dS_real      xm  both     T*
+HI delever25      0.22  0.705   23.41   0.964  -31.5   +0.032   +0.066   +0.004   +0.069  +0.027   YES  0.200
+HI delever50      0.22  0.666   23.19   0.986  -30.2   +0.054   +0.123   -0.001   +0.122  +0.048        0.200
+HI vote           0.22  0.706   23.52   0.958  -33.0   +0.025   +0.069   -0.015   +0.099  +0.021        0.200
+HI block          0.22  0.743   23.17   0.923  -33.3   -0.009   +0.007   -0.025   +0.009  -0.010        0.200
+HI tilt25         0.22  0.743   23.99   0.924  -38.6   -0.008   +0.020   -0.040   +0.015  -0.009        4.000
+HI tilt50         0.22  0.691   22.87   0.927  -36.9   -0.005   +0.061   -0.070   +0.044  -0.011        4.000
+LO delever25      0.20  0.708   22.16   0.927  -35.3   -0.005   -0.032   +0.018   -0.044  -0.009        0.200
+LO delever50      0.20  0.671   20.68   0.907  -37.1   -0.025   -0.078   +0.021   -0.104  -0.032        0.200
+LO vote           0.20  0.712   22.09   0.913  -34.4   -0.020   -0.063   +0.021   -0.057  -0.023        0.200
+LO block          0.20  0.738   21.92   0.888  -37.2   -0.044   -0.038   -0.050   -0.070  -0.045        0.200
+LO tilt25         0.20  0.745   22.61   0.895  -36.8   -0.038   -0.075   -0.008   -0.052  -0.038        0.485
+LO tilt50         0.20  0.697   20.63   0.871  -37.2   -0.062   -0.120   -0.013   -0.093  -0.067        4.000
+  [22s]
+
+== dfii10_20: best = HI delever50   Sharpe 0.986 vs exposure-matched live 0.938 (k=0.893) -> +0.048;  dS search +0.123 holdout -0.001 real +0.122  both=no
+   sign-flip placebo (LO delever50): xm -0.032  dS search -0.078 holdout +0.021 real -0.104  -> placebo LOSES (consistent with a real signal)
+   point estimate vs exposure-matched live: +1.51 pp/yr log-return, +0.048 Sharpe
+   block 20d: log-return 95% CI [-0.61, +3.75] pp/yr P(<=0)=0.086   Sharpe 95% CI [-0.045, +0.148] P(<=0)=0.167
+   block 60d: log-return 95% CI [-0.71, +3.83] pp/yr P(<=0)=0.081   Sharpe 95% CI [-0.053, +0.153] P(<=0)=0.159
+   leave-one-regime-out (Sharpe / log-return delta vs exposure-matched live):
+      drop dot-com 2000-2002        (regime outside this series' window)
+      drop GFC 2007-2009            Sharpe +0.061   log-return +1.77 pp/yr
+      drop COVID 2020               Sharpe +0.063   log-return +1.89 pp/yr
+      drop 2022 bear                Sharpe +0.034   log-return +1.26 pp/yr
+      drop whole SPMO era 2015-11+  Sharpe -0.005   log-return +0.49 pp/yr
+   one-day lag: Sharpe 0.959 vs exp-matched live 0.939 -> +0.020;  dS search +0.072 holdout -0.006 real +0.165
+   [30s]
+
+--- dfii10_60: 5649 proxy rows from 2004-03-12, 564 real rows | LIVE on these rows: 24.37% / 0.959 / -33.6%  S 1.103 H 0.821 exp 0.744 | real 1.248
+variant           frac    exp    CAGR  Sharpe    MDD  dS_full  dS_srch  dS_hold  dS_real      xm  both     T*
+HI delever25      0.24  0.700   24.22   0.993  -31.5   +0.034   +0.055   +0.016   +0.035  +0.029   YES  0.200
+HI delever50      0.24  0.656   23.87   1.013  -29.9   +0.054   +0.093   +0.024   +0.051  +0.046   YES  0.200
+HI vote           0.24  0.699   24.51   0.993  -32.8   +0.034   +0.064   +0.004   +0.053  +0.028   YES  0.200
+HI block          0.24  0.739   24.31   0.959  -33.3   +0.000   +0.009   -0.008   +0.002  -0.000        0.200
+HI tilt25         0.24  0.738   25.47   0.971  -38.5   +0.013   +0.021   +0.001   +0.015  +0.012   YES  4.000
+HI tilt50         0.24  0.681   25.14   1.007  -36.6   +0.048   +0.073   +0.022   +0.042  +0.042   YES  4.000
+LO delever25      0.20  0.706   21.99   0.916  -34.0   -0.043   -0.043   -0.044   -0.023  -0.048        0.200
+LO delever50      0.20  0.669   19.49   0.855  -36.0   -0.104   -0.104   -0.104   -0.060  -0.111        0.200
+LO vote           0.20  0.707   21.93   0.906  -34.4   -0.053   -0.065   -0.041   -0.029  -0.057        0.200
+LO block          0.20  0.738   22.70   0.914  -35.1   -0.044   -0.048   -0.042   -0.043  -0.045        0.200
+LO tilt25         0.20  0.744   22.60   0.890  -37.7   -0.069   -0.073   -0.070   -0.043  -0.069        0.520
+LO tilt50         0.20  0.695   19.70   0.833  -37.5   -0.126   -0.124   -0.135   -0.078  -0.132        4.000
+  [50s]
+
+== dfii10_60: best = HI delever50   Sharpe 1.013 vs exposure-matched live 0.967 (k=0.882) -> +0.046;  dS search +0.093 holdout +0.024 real +0.051  both=YES
+   sign-flip placebo (LO delever50): xm -0.111  dS search -0.104 holdout -0.104 real -0.060  -> placebo LOSES (consistent with a real signal)
+   point estimate vs exposure-matched live: +1.63 pp/yr log-return, +0.046 Sharpe
+   block 20d: log-return 95% CI [-0.79, +4.01] pp/yr P(<=0)=0.099   Sharpe 95% CI [-0.062, +0.153] P(<=0)=0.212
+   block 60d: log-return 95% CI [-0.83, +3.84] pp/yr P(<=0)=0.100   Sharpe 95% CI [-0.063, +0.149] P(<=0)=0.220
+   leave-one-regime-out (Sharpe / log-return delta vs exposure-matched live):
+      drop dot-com 2000-2002        (regime outside this series' window)
+      drop GFC 2007-2009            Sharpe +0.035   log-return +1.30 pp/yr
+      drop COVID 2020               Sharpe +0.055   log-return +1.81 pp/yr
+      drop 2022 bear                Sharpe +0.044   log-return +1.67 pp/yr
+      drop whole SPMO era 2015-11+  Sharpe +0.018   log-return +1.16 pp/yr
+   one-day lag: Sharpe 0.972 vs exp-matched live 0.974 -> -0.002;  dS search +0.047 holdout -0.027 real +0.060
+   [58s]
+
+--- oil_60: 6575 proxy rows from 2000-07-03, 564 real rows | LIVE on these rows: 22.18% / 0.913 / -33.6%  S 1.103 H 0.768 exp 0.677 | real 1.248
+variant           frac    exp    CAGR  Sharpe    MDD  dS_full  dS_srch  dS_hold  dS_real      xm  both     T*
+HI delever25      0.20  0.643   21.48   0.917  -33.3   +0.004   -0.028   +0.027   -0.047  -0.001        0.200
+HI delever50      0.20  0.608   20.67   0.910  -35.7   -0.003   -0.065   +0.044   -0.113  -0.010        0.200
+HI vote           0.20  0.641   21.13   0.900  -33.5   -0.012   -0.069   +0.031   -0.046  -0.017        0.200
+HI block          0.20  0.675   21.78   0.904  -33.4   -0.008   -0.011   -0.007   -0.015  -0.009        0.200
+HI tilt25         0.20  0.677   21.59   0.870  -38.2   -0.043   -0.042   -0.044   -0.037  -0.043        0.294
+HI tilt50         0.20  0.657   20.44   0.818  -47.4   -0.095   -0.083   -0.099   -0.086  -0.097        4.000
+LO delever25      0.23  0.641   21.45   0.926  -32.7   +0.014   +0.026   +0.003   -0.001  +0.009   YES  0.200
+LO delever50      0.23  0.605   20.68   0.930  -31.8   +0.017   +0.041   -0.004   -0.016  +0.010        0.200
+LO vote           0.23  0.645   21.30   0.908  -33.6   -0.004   -0.009   -0.002   -0.012  -0.009        0.200
+LO block          0.23  0.672   21.28   0.890  -34.0   -0.023   +0.009   -0.048   -0.002  -0.024        0.200
+LO tilt25         0.23  0.677   21.80   0.888  -42.0   -0.025   +0.017   -0.054   +0.008  -0.025        0.316
+LO tilt50         0.23  0.643   21.40   0.895  -46.1   -0.017   +0.083   -0.079   +0.024  -0.022        4.000
+  [82s]
+
+== oil_60: best = LO delever50   Sharpe 0.930 vs exposure-matched live 0.920 (k=0.892) -> +0.010;  dS search +0.041 holdout -0.004 real -0.016  both=no
+   sign-flip placebo (HI delever50): xm -0.010  dS search -0.065 holdout +0.044 real -0.113  -> placebo LOSES (consistent with a real signal)
+   point estimate vs exposure-matched live: +0.44 pp/yr log-return, +0.010 Sharpe
+   block 20d: log-return 95% CI [-1.69, +2.50] pp/yr P(<=0)=0.341   Sharpe 95% CI [-0.083, +0.105] P(<=0)=0.427
+   block 60d: log-return 95% CI [-1.38, +2.22] pp/yr P(<=0)=0.325   Sharpe 95% CI [-0.072, +0.096] P(<=0)=0.414
+   leave-one-regime-out (Sharpe / log-return delta vs exposure-matched live):
+      drop dot-com 2000-2002        Sharpe +0.018   log-return +0.72 pp/yr
+      drop GFC 2007-2009            Sharpe -0.003   log-return -0.03 pp/yr
+      drop COVID 2020               Sharpe -0.004   log-return +0.24 pp/yr
+      drop 2022 bear                Sharpe -0.002   log-return +0.25 pp/yr
+      drop whole SPMO era 2015-11+  Sharpe -0.011   log-return -0.23 pp/yr
+   one-day lag: Sharpe 0.900 vs exp-matched live 0.920 -> -0.020;  dS search -0.018 holdout -0.011 real -0.025
+   [91s]
+
+WHERE THE SIGNALS STAND NOW (trailing-252 percentile at the last proxy row and at the last FRED date)
+  last proxy row 2026-08-26: dgs2_20 0.35  dgs2_60 0.54  dgs10_20 0.35  dgs10_60 0.69  slope_lvl 0.25  slope_60 0.74  dfii10_20 0.17  dfii10_60 0.75  oil_60 0.14
+  DGS2       2026-09-08 = 4.39   (60 obs earlier 4.05, 20 obs earlier 4.22)
+  DGS10      2026-09-08 = 4.80   (60 obs earlier 4.43, 20 obs earlier 4.70)
+  T10Y2Y     2026-09-09 = 0.40   (60 obs earlier 0.29, 20 obs earlier 0.48)
+  DFII10     2026-09-08 = 2.43   (60 obs earlier 2.14, 20 obs earlier 2.43)
+  DCOILWTICO 2026-09-09 = 97.26   (60 obs earlier 80.65, 20 obs earlier 84.97)
+
+DONE in 91s

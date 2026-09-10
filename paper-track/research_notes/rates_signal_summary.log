@@ -1,0 +1,114 @@
+  DGS2       1976-06-01 .. 2026-09-08  (13116 rows)
+  DGS10      1962-01-02 .. 2026-09-08  (16876 rows)
+  T10Y2Y     1976-06-01 .. 2026-09-09  (13117 rows)
+  DFII10     2003-01-02 .. 2026-09-08  (6179 rows)
+  DCOILWTICO 1986-01-02 .. 2026-09-09  (10615 rows)
+STANDING LIVE FIGURES (must match ADDENDUM: 22.18% / 0.913 / -33.6%, S 1.103, H 0.768; real 31.40% / 1.248 / -25.0%)
+  26y proxy 22.18% / 0.913 / -33.6%  S 1.103  H 0.768  exposure 0.6772 | real weekly 31.40% / 1.248 / -25.0%  (6575 proxy rows, 564 real rows)
+  alignment (contemporaneous d0->d1 QQQ return vs change): DGS2 +0.230  DGS10 +0.236  DCOILWTICO +0.048
+  predictive (signal pct at d0 vs QQQ d0->d1 return): dgs2_20 -0.022  dgs10_60 -0.020  oil_60 -0.002
+
+SIGNAL COVERAGE AND MECHANISM (forward 20-session QQQ log return, annualized, and forward 20d realized vol, by trailing quintile)
+signal     first row    rows | era        bottom<=0.2       middle     top>=0.8  (fwd ret %/yr | fwd vol %)  n_top
+dgs2_20    2000-07-03   6575 | HOLDOUT   +16.4 | 25.5   -2.5 | 22.8   -2.6 | 19.9   750
+                             | SEARCH    +25.9 | 21.2  +15.8 | 18.3  +13.7 | 19.4   701
+                             | ALL       +20.3 | 23.8   +4.6 | 21.1   +5.3 | 19.6   1451
+dgs2_60    2000-07-03   6575 | HOLDOUT    +1.5 | 27.4   +4.7 | 22.1   -9.5 | 19.9   793
+                             | SEARCH    +38.3 | 20.1  +10.0 | 18.2  +14.4 | 20.1   802
+                             | ALL       +16.5 | 24.4   +6.7 | 20.7   +2.5 | 20.0   1595
+dgs10_20   2000-07-03   6575 | HOLDOUT   +21.5 | 25.5   -4.0 | 22.6   -2.8 | 20.8   788
+                             | SEARCH    +17.6 | 20.7  +18.2 | 18.1  +14.2 | 20.3   615
+                             | ALL       +19.8 | 23.4   +4.8 | 20.8   +4.7 | 20.6   1403
+dgs10_60   2000-07-03   6575 | HOLDOUT   +13.8 | 25.3   -6.4 | 23.1   +6.7 | 19.3   861
+                             | SEARCH    +36.3 | 19.6  +10.1 | 18.3  +15.7 | 20.7   685
+                             | ALL       +22.8 | 23.0   +0.2 | 21.2  +10.7 | 19.9   1546
+slope_lvl  2000-07-03   6575 | HOLDOUT   +19.2 | 15.8  -11.3 | 23.6   -2.6 | 28.5   1283
+                             | SEARCH     +4.5 | 20.5  +16.5 | 16.8  +32.9 | 19.6   883
+                             | ALL       +12.4 | 18.0   -1.4 | 21.2  +11.9 | 24.8   2166
+slope_60   2000-07-03   6575 | HOLDOUT    +0.5 | 23.0   +7.3 | 21.9   -8.7 | 24.0   1150
+                             | SEARCH    +10.1 | 18.7  +13.2 | 19.5  +31.1 | 18.7   692
+                             | ALL        +4.4 | 21.3   +9.9 | 20.9   +6.3 | 22.0   1842
+dfii10_20  2004-01-16   5687 | HOLDOUT   +25.8 | 18.8   +8.3 | 17.4   -2.7 | 18.1   606
+                             | SEARCH    +21.3 | 18.9  +15.8 | 18.3  +17.2 | 21.5   619
+                             | ALL       +23.6 | 18.9  +11.7 | 17.8   +7.4 | 19.8   1225
+dfii10_60  2004-03-12   5649 | HOLDOUT   +21.3 | 18.5  +14.1 | 17.2   -9.1 | 18.6   702
+                             | SEARCH    +28.3 | 19.0  +15.4 | 17.8  +11.5 | 22.3   657
+                             | ALL       +24.8 | 18.7  +14.7 | 17.5   +0.9 | 20.4   1359
+oil_60     2000-07-03   6575 | HOLDOUT    -0.2 | 26.4   -0.4 | 22.4   +7.1 | 19.6   766
+                             | SEARCH    +10.1 | 24.0  +18.0 | 18.0  +22.3 | 17.6   541
+                             | ALL        +3.7 | 25.5   +7.4 | 20.5  +13.4 | 18.8   1307
+
+SWEEP: 9 series x 2 signs x 6 variants = 108 candidates total; this invocation: summary of saved results
+Columns: candidate Sharpe on full window / search / holdout / real, minus the LIVE baseline on the SAME rows; 'xm' = candidate minus the EXPOSURE-MATCHED live (proxy full-window Sharpe); exp = avg deployed capital; frac = share of rows in the quintile
+
+SWEEP SUMMARY over 9 series (108 of 108 candidates evaluated)
+  beat live on BOTH eras (raw Sharpe): 12
+  beat live on both eras AND beat exposure-matched live on full window: 12
+  ... AND beat live on real rows: 7
+  full-window Sharpe delta vs exposure-matched live: mean -0.0324, max +0.0476, min -0.1866; exposure control unmatched on 0 candidates
+  HI sign (rates rising fast = risk-off): 11 of 54 pass both-era + exposure control; mean xm -0.0212; mean dS real -0.0012
+  LO sign (rates falling fast = risk-off): 1 of 54 pass both-era + exposure control; mean xm -0.0435; mean dS real -0.0362
+  kind delever25 : mean xm -0.0063, mean dS search -0.0029, holdout +0.0001, real -0.0051
+  kind delever50 : mean xm -0.0251, mean dS search -0.0219, holdout -0.0122, real -0.0297
+  kind vote      : mean xm -0.0131, mean dS search -0.0174, holdout -0.0013, real -0.0021
+  kind block     : mean xm -0.0192, mean dS search -0.0134, holdout -0.0229, real -0.0207
+  kind tilt25    : mean xm -0.0473, mean dS search -0.0293, holdout -0.0597, real -0.0188
+  kind tilt50    : mean xm -0.0832, mean dS search -0.0384, holdout -0.1013, real -0.0358
+
+  every candidate that beats live on both eras (raw), sorted by xm:
+  candidate                     exp  dS_full  dS_srch  dS_hold  dS_real      xm
+  dfii10_60 HI delever50      0.656   +0.054   +0.093   +0.024   +0.051  +0.046
+  dfii10_60 HI tilt50         0.681   +0.048   +0.073   +0.022   +0.042  +0.042
+  dfii10_60 HI delever25      0.700   +0.034   +0.055   +0.016   +0.035  +0.029
+  dfii10_60 HI vote           0.699   +0.034   +0.064   +0.004   +0.053  +0.028
+  dfii10_20 HI delever25      0.705   +0.032   +0.066   +0.004   +0.069  +0.027
+  dgs10_60 HI vote            0.633   +0.025   +0.049   +0.006   +0.025  +0.019
+  dfii10_60 HI tilt25         0.738   +0.013   +0.021   +0.001   +0.015  +0.012
+  oil_60 LO delever25         0.641   +0.014   +0.026   +0.003   -0.001  +0.009
+  dgs10_60 HI delever25       0.638   +0.014   +0.023   +0.010   -0.009  +0.009
+  dgs2_60 HI block            0.675   +0.009   +0.006   +0.010   -0.002  +0.008
+  dgs10_60 HI block           0.676   +0.007   +0.016   +0.000   -0.005  +0.006
+  dgs10_60 HI delever50       0.599   +0.014   +0.025   +0.010   -0.043  +0.005
+
+  top 10 by Sharpe vs exposure-matched live (full window):
+  candidate                     exp  dS_full  dS_srch  dS_hold  dS_real      xm
+  dfii10_20 HI delever50      0.666   +0.054   +0.123   -0.001   +0.122  +0.048
+  dfii10_60 HI delever50      0.656   +0.054   +0.093   +0.024   +0.051  +0.046  both
+  dfii10_60 HI tilt50         0.681   +0.048   +0.073   +0.022   +0.042  +0.042  both
+  dfii10_60 HI delever25      0.700   +0.034   +0.055   +0.016   +0.035  +0.029  both
+  dfii10_60 HI vote           0.699   +0.034   +0.064   +0.004   +0.053  +0.028  both
+  dfii10_20 HI delever25      0.705   +0.032   +0.066   +0.004   +0.069  +0.027  both
+  dfii10_20 HI vote           0.706   +0.025   +0.069   -0.015   +0.099  +0.021
+  dgs10_60 HI vote            0.633   +0.025   +0.049   +0.006   +0.025  +0.019  both
+  dfii10_60 HI tilt25         0.738   +0.013   +0.021   +0.001   +0.015  +0.012  both
+  oil_60 LO delever50         0.605   +0.017   +0.041   -0.004   -0.016  +0.010
+
+  bottom 5 (worst):
+  candidate                     exp  dS_full  dS_srch  dS_hold  dS_real      xm
+  slope_lvl HI tilt50         0.632   -0.181   -0.144   -0.199   -0.118  -0.187
+  dgs10_60 LO tilt50          0.649   -0.135   -0.121   -0.136   -0.104  -0.139
+  dfii10_60 LO tilt50         0.695   -0.126   -0.124   -0.135   -0.078  -0.132
+  slope_lvl HI delever50      0.582   -0.111   -0.114   -0.103   -0.084  -0.121
+  slope_60 LO tilt50          0.656   -0.116   -0.111   -0.115   -0.071  -0.119
+
+  DEEP CONTROLS, best variant per series (vs exposure-matched live; boot = circular block bootstrap Sharpe 95% CI and P(<=0))
+  series    best                 xm   srch   hold   real both |            b20 CI     P |            b60 CI     P |  flip xm |  lag xm            lag S/H/R | LORO min..max
+  dgs2_20   HI delever25     +0.004 +0.023 -0.001 +0.026    n | [-0.037,+0.047] 0.448 | [-0.034,+0.042] 0.437 |   -0.010 |  +0.009  +0.025/+0.007/+0.057 | -0.004..+0.007
+  dgs2_60   HI block         +0.008 +0.006 +0.010 -0.002    Y | [-0.012,+0.029] 0.238 | [-0.011,+0.027] 0.218 |   -0.044 |  +0.011  +0.006/+0.015/-0.002 | -0.002..+0.013
+  dgs10_20  HI delever25     +0.005 +0.031 -0.006 +0.011    n | [-0.035,+0.046] 0.411 | [-0.036,+0.047] 0.416 |   -0.000 |  +0.010  +0.039/-0.003/+0.013 | -0.009..+0.010
+  dgs10_60  HI vote          +0.019 +0.049 +0.006 +0.025    Y | [-0.035,+0.076] 0.258 | [-0.032,+0.070] 0.235 |   -0.046 |  +0.003  +0.017/+0.003/+0.007 | +0.002..+0.025
+  slope_lvl LO delever25     -0.000 +0.056 -0.033 +0.049    n | [-0.052,+0.050] 0.495 | [-0.048,+0.053] 0.491 |   -0.050 |  -0.007  +0.051/-0.041/+0.022 | -0.039..+0.009
+  slope_60  HI block         +0.002 -0.005 +0.008 -0.003    n | [-0.025,+0.028] 0.453 | [-0.024,+0.026] 0.446 |   -0.008 |  -0.005  +0.008/-0.013/-0.009 | -0.004..+0.008
+  dfii10_20 HI delever50     +0.048 +0.123 -0.001 +0.122    n | [-0.045,+0.148] 0.167 | [-0.053,+0.153] 0.159 |   -0.032 |  +0.020  +0.072/-0.006/+0.165 | -0.005..+0.063
+  dfii10_60 HI delever50     +0.046 +0.093 +0.024 +0.051    Y | [-0.062,+0.153] 0.212 | [-0.063,+0.149] 0.220 |   -0.111 |  -0.002  +0.047/-0.027/+0.060 | +0.018..+0.055
+  oil_60    LO delever50     +0.010 +0.041 -0.004 -0.016    n | [-0.083,+0.105] 0.427 | [-0.072,+0.096] 0.414 |   -0.010 |  -0.020  -0.018/-0.011/-0.025 | -0.011..+0.018
+
+WHERE THE SIGNALS STAND NOW (trailing-252 percentile at the last proxy row and at the last FRED date)
+  last proxy row 2026-08-26: dgs2_20 0.35  dgs2_60 0.54  dgs10_20 0.35  dgs10_60 0.69  slope_lvl 0.25  slope_60 0.74  dfii10_20 0.17  dfii10_60 0.75  oil_60 0.14
+  DGS2       2026-09-08 = 4.39   (60 obs earlier 4.05, 20 obs earlier 4.22)
+  DGS10      2026-09-08 = 4.80   (60 obs earlier 4.43, 20 obs earlier 4.70)
+  T10Y2Y     2026-09-09 = 0.40   (60 obs earlier 0.29, 20 obs earlier 0.48)
+  DFII10     2026-09-08 = 2.43   (60 obs earlier 2.14, 20 obs earlier 2.43)
+  DCOILWTICO 2026-09-09 = 97.26   (60 obs earlier 80.65, 20 obs earlier 84.97)
+
+DONE in 1s
