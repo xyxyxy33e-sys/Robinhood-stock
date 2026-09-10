@@ -591,9 +591,10 @@ for tag in ('qqew', 'rsp'):
               f"{ev['s_sharpe']-ce['s_sharpe']:>+14.3f}{ev['h_sharpe']-ce['h_sharpe']:>+7.3f}{re['sharpe']:>10.3f}{on:>5}")
 
 print("\nERA vs INSTRUMENT: the RSP/SPY gates scored on the QQEW rows (2007-07+), so the two equal-weight proxies face the same history.")
-rsq = [r for r in rows if r['bp']['qqew_60'] is not None]; bq = evaluate(rsq, LIVE)
+ERA_KEYS = ('qqew_60', 'rsp_60', 'rsp_20', 'rsp_s200', 'qqew_s200')
+rsq = [r for r in rows if all(r['bp'][k] is not None for k in ERA_KEYS)]; bq = evaluate(rsq, LIVE)
 print(f"  same rows n={len(rsq)}: live {fmt(bq)} S {bq['s_sharpe']:.3f} H {bq['h_sharpe']:.3f}")
-for key in ('qqew_60', 'rsp_60', 'rsp_20', 'rsp_s200', 'qqew_s200'):
+for key in ERA_KEYS:
     fn = gate_fn(key, 1.0, 0.2, ('D',)); ev = evaluate(rsq, fn); q = calib_q(rsq, ev['risky']); ce = evaluate(rsq, const_D(q))
     print(f"  {key:<10} D-gate 100%: {fmt(ev)} S {ev['s_sharpe']:.3f} H {ev['h_sharpe']:.3f}  vs const-D S {ev['s_sharpe']-ce['s_sharpe']:+.3f} H {ev['h_sharpe']-ce['h_sharpe']:+.3f}")
 # overlap of the two gates
@@ -617,13 +618,8 @@ for lag in (5, 21, 63, 252):
 didx = [i for i, r in enumerate(rs) if r['eff'] == 'D']; pattern = [rs[i]['bp']['qqew_60'] < 0.2 for i in didx]
 rng = random.Random(7); shs = []
 for _ in range(300):
-    off = rng.randrange(1, len(didx)); shifted = pattern[-off:] + pattern[:-off]; on = {didx[j] for j, f in enumerate(shifted) if f}
-    def rf(r, on=on, k=[0]):
-        pass
-    onset = on
-    ev = evaluate(rs, (lambda onset: lambda r: vt(scale_risky(trimmed(r['eff'], r['gaps']), 0.0) if r['_i'] in onset else trimmed(r['eff'], r['gaps']), r['vol']))(onset)) if False else None
-    shs.append(onset)
-# evaluate shifts with an index on rows (attach once)
+    off = rng.randrange(1, len(didx)); shifted = pattern[-off:] + pattern[:-off]
+    shs.append({didx[j] for j, f in enumerate(shifted) if f})
 for i, r in enumerate(rs): r['_i'] = i
 vals = []
 for onset in shs:
