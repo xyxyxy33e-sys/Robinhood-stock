@@ -421,4 +421,27 @@ for n in NAMES:
     sS = sum(1 for r, _ in bq if r['d'] >= SEARCH[0]) / max(1, sum(1 for r, _ in ad if r['d'] >= SEARCH[0]))
     sH = sum(1 for r, _ in bq if r['d'] < SEARCH[0]) / max(1, sum(1 for r, _ in ad if r['d'] < SEARCH[0]))
     print(f"  {n:<10}{len(ad):>9}{len(bq):>9}{sS*100:>8.1f}%{sH*100:>8.1f}%{mean([x for _, x in bq])*1e4:>14.1f}bp{mean([x for _, x in rest])*1e4:>14.1f}bp")
+# ------------------------------------------------------------------ 7. robustness of the survivors: de-lever ladder, threshold, scope
+def gate_fn(name, k, thr=0.2, scope=('A', 'D'), vtf=vt):
+    def fn(r):
+        w = trimmed(r['eff'], r['gaps'])
+        if r['eff'] in scope and r['bp'][name] < thr: w = scale_risky(w, 1 - k)
+        return vtf(w, r['vol'])
+    return fn
+SURV = [x for x in RESULTS if both(x[2], x[8]) and x[1] in ('i25', 'i50')]
+SURV_NAMES = sorted(set(x[0] for x in SURV))
+print("\nSURVIVOR ROBUSTNESS (the de-lever gate on every series that passed both eras with i25/i50). Briefing lesson: a win that")
+print("  grows MONOTONICALLY with the de-lever depth while CAGR falls is a risk-preference dial, not a signal. Each cell is the gate")
+print("  vs the LIVE design scaled to the same deployed capital (k-control); bootstrap is 20d blocks, Sharpe CI vs same-rows live.")
+print(f"  {'series':<10}{'depth':>6}{'thr':>5}{'scope':>6}{'CAGR/Sh/MDD':>22}{'S':>7}{'H':>7}{'exp':>7}{'| k-ctrl Sh':>12}{'S':>7}{'H':>7}{'both>ctrl':>10}{'| boot Sh CI 20d':>18}{'P<=0':>6}")
+for n in SURV_NAMES:
+    rs, b = BASE[n]; bl = run(rs, LIVE)[0]
+    grid = [(k, 0.2, ('A', 'D')) for k in (0.25, 0.5, 0.75, 1.0)] + [(0.5, t, ('A', 'D')) for t in (0.1, 0.3)] + \
+           [(0.5, 0.2, ('A',)), (0.5, 0.2, ('A', 'B', 'C', 'D'))]
+    for k, t, sc in grid:
+        fn = gate_fn(n, k, t, sc); ev = evaluate(rs, fn); kk, c = exposure_control_live(rs, ev['risky'])
+        a = run(rs, fn)[0]; _, _, _, s1, s2, ps = boot(a, bl, 20, seed=zlib.crc32(f'{n}|lad|{k}|{t}|{len(sc)}'.encode()))
+        print(f"  {n:<10}{k*100:>5.0f}%{t:>5.1f}{''.join(sc):>6}{fmt(ev):>22}{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{ev['risky']*100:>6.1f}%"
+              f"{c['sharpe']:>12.3f}{c['s_sharpe']:>7.3f}{c['h_sharpe']:>7.3f}{'YES' if both(ev, c) else '-':>10}"
+              f"   [{s1:+.3f}, {s2:+.3f}]{ps:>6.3f}")
 print("\nDone.")
