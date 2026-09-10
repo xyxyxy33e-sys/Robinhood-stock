@@ -48,7 +48,8 @@ CONTROLS: same-rows live, both-era, exposure-matched live (LIVE design scaled
   draws) for the best variant per family, leave-one-regime-out, real weekly
   SPMO rows via RF.eval_real. Candidate count reported.
 """
-import sys, math, csv, bisect, zlib
+import sys, os, math, csv, bisect, zlib
+QUICK = bool(os.environ.get('BREADTH_QUICK'))   # skip the bootstrap sections (5, 7) for a fast look at 8
 sys.path.insert(0, 'paper-track')
 exec(open('paper-track/leverage_under_trim.py').read().split('base=evaluate')[0])
 from state import (extension_scale, extension_votes, EXTENSION_STEP, effective_state)
@@ -380,7 +381,7 @@ REGIMES = [('dot-com 2000-02', '2000-01-01', '2002-12-31'), ('GFC 2007-09', '200
 
 print("\nDEEP CONTROLS on the best variant per proxy FAMILY (selection: largest min(dS, dH) vs same-rows live; a family whose")
 print("  best is negative in an era is reported anyway -- that IS the result).")
-for fam in ('qqew', 'rsp', 'nhnl', 'sec'):
+for fam in (() if QUICK else ('qqew', 'rsp', 'nhnl', 'sec')):
     cands = [x for x in RESULTS if FAMILY[x[0]] == fam]
     best = max(cands, key=lambda x: min(x[2]['s_sharpe'] - x[8]['s_sharpe'], x[2]['h_sharpe'] - x[8]['h_sharpe']))
     n, kind, ev, re, fl, rf, T, Tf, b = best; rs = BASE[n][0]
@@ -434,7 +435,7 @@ print("\nSURVIVOR ROBUSTNESS (the de-lever gate on every series that passed both
 print("  grows MONOTONICALLY with the de-lever depth while CAGR falls is a risk-preference dial, not a signal. Each cell is the gate")
 print("  vs the LIVE design scaled to the same deployed capital (k-control); bootstrap is 20d blocks, Sharpe CI vs same-rows live.")
 print(f"  {'series':<10}{'depth':>6}{'thr':>5}{'scope':>6}{'CAGR/Sh/MDD':>22}{'S':>7}{'H':>7}{'exp':>7}{'| k-ctrl Sh':>12}{'S':>7}{'H':>7}{'both>ctrl':>10}{'| boot Sh CI 20d':>18}{'P<=0':>6}")
-for n in SURV_NAMES:
+for n in ([] if QUICK else SURV_NAMES):
     rs, b = BASE[n]; bl = run(rs, LIVE)[0]
     grid = [(k, 0.2, ('A', 'D')) for k in (0.25, 0.5, 0.75, 1.0)] + [(0.5, t, ('A', 'D')) for t in (0.1, 0.3)] + \
            [(0.5, 0.2, ('A',)), (0.5, 0.2, ('A', 'B', 'C', 'D'))]
@@ -444,4 +445,203 @@ for n in SURV_NAMES:
         print(f"  {n:<10}{k*100:>5.0f}%{t:>5.1f}{''.join(sc):>6}{fmt(ev):>22}{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{ev['risky']*100:>6.1f}%"
               f"{c['sharpe']:>12.3f}{c['s_sharpe']:>7.3f}{c['h_sharpe']:>7.3f}{'YES' if both(ev, c) else '-':>10}"
               f"   [{s1:+.3f}, {s2:+.3f}]{ps:>6.3f}")
+# ------------------------------------------------------------------ 8. is it the D row? D-only gate vs a CONSTANT D de-lever at the same capital
+def const_D(q, vtf=vt):
+    """live design with the D row held at q x QLD (rest cash) ALWAYS -- no breadth."""
+    def fn(r):
+        w = trimmed(r['eff'], r['gaps'])
+        if r['eff'] == 'D': w = scale_risky(w, q)
+        return vtf(w, r['vol'])
+    return fn
+def calib_q(rs, target):
+    lo, hi = 0.0, 1.0
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        if expo(rs, const_D(mid)) < target: lo = mid
+        else: hi = mid
+    return (lo + hi) / 2
+print("\nIS IT THE D ROW?  The A-only gate fails everywhere above, so the surviving gates earn their Sharpe by cutting the D row")
+print("  (100% QLD; price below 50d, above 200d). Control: the D row held at a CONSTANT fraction q of QLD, q bisected so deployed")
+print("  capital equals the D-only gate's. If the constant cut does as well, breadth is only re-discovering that D is a leverage dial.")
+print(f"  {'series':<10}{'rule':<22}{'CAGR/Sh/MDD':>22}{'S':>7}{'H':>7}{'exp':>7}{'| real Sh':>10}{'| vs const-D: dS':>17}{'dH':>7}{'dSh full':>9}{'boot Sh CI 20d':>18}{'P<=0':>6}")
+for n in SURV_NAMES:
+    rs, b = BASE[n]
+    for depth in (0.5, 1.0):
+        fn = gate_fn(n, depth, 0.2, ('D',)); ev = evaluate(rs, fn); re = RF.eval_real(rr, gate_fn(n, depth, 0.2, ('D',), RF.vt))
+        q = calib_q(rs, ev['risky']); cf = const_D(q); ce = evaluate(rs, cf); cre = RF.eval_real(rr, const_D(q, RF.vt))
+        a = run(rs, fn)[0]; bl = run(rs, cf)[0]
+        _, _, _, s1, s2, ps = boot(a, bl, 20, seed=zlib.crc32(f'{n}|D|{depth}'.encode()))
+        print(f"  {n:<10}{f'D-only gate {depth*100:.0f}%':<22}{fmt(ev):>22}{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{ev['risky']*100:>6.1f}%{re['sharpe']:>10.3f}"
+              f"{ev['s_sharpe']-ce['s_sharpe']:>+17.3f}{ev['h_sharpe']-ce['h_sharpe']:>+7.3f}{ev['sharpe']-ce['sharpe']:>+9.3f}   [{s1:+.3f}, {s2:+.3f}]{ps:>6.3f}")
+        print(f"  {'':<10}{f'  const D q={q:.3f}':<22}{fmt(ce):>22}{ce['s_sharpe']:>7.3f}{ce['h_sharpe']:>7.3f}{ce['risky']*100:>6.1f}%{cre['sharpe']:>10.3f}")
+# ------------------------------------------------------------------ 9. the D-only gate, taken seriously: every series, non-breadth placebos, episodes
+# non-breadth gates on the same D rows: QQQ's own 60d log change (price momentum) and 30d realized vol (sign: HIGH vol = weak)
+qlr = [math.log(px[d]) for d in ds]
+series['qqq_60'] = [None] * len(cal)
+for i, d in enumerate(ds):
+    if i >= 60: series['qqq_60'][cix[d]] = qlr[i] - qlr[i - 60]
+series['negvol30'] = [None] * len(cal)
+for r in rows: series['negvol30'][cix[r['d']]] = -r['vol']
+for k in ('qqq_60', 'negvol30'):
+    pct[k] = trailing_pct(series[k]); FAMILY[k] = 'ctrl'
+    for r in rows: r['bp'][k] = pct[k][cix[r['d']]]
+    for r in rr:
+        d = r['d0'] if r['d0'] in cix else cal[bisect.bisect_right(cal, r['d0']) - 1]
+        r['bp'][k] = pct[k][cix[d]]
+ALL9 = NAMES + ['qqq_60', 'negvol30']
+print("\nTHE D-ONLY GATE ON EVERY SERIES (plus two NON-BREADTH placebos on the same rows: QQQ's own 60d momentum percentile and")
+print("  the 30d-vol percentile, sign so that 'bottom quintile' = weak). Rule: effective state D and pct < 0.2 -> D row x(1-depth).")
+print("  Controls per line: same-rows live, constant-D at matched capital (q), LIVE scaled to matched capital (k), sign-flip.")
+print(f"  {'series':<10}{'depth':>6}{'CAGR/Sh/MDD':>22}{'S':>7}{'H':>7}{'exp':>7}{'| dS/dH vs live':>16}{'| vs constD':>12}{'| vs k-live':>12}{'| flip vs constD':>17}{'| real':>8}{'dReal':>7}{'rows on':>8}")
+D9 = {}
+for n in ALL9:
+    rs = [r for r in rows if r['bp'][n] is not None]; b = evaluate(rs, LIVE)
+    for depth in (0.5, 1.0):
+        fn = gate_fn(n, depth, 0.2, ('D',)); ev = evaluate(rs, fn)
+        q = calib_q(rs, ev['risky']); ce = evaluate(rs, const_D(q)); k, ke = exposure_control_live(rs, ev['risky'])
+        ff = lambda r, n=n, depth=depth: (lambda w: vt(w, r['vol']))(scale_risky(trimmed(r['eff'], r['gaps']), 1 - depth) if (r['eff'] == 'D' and r['bp'][n] >= 0.8) else trimmed(r['eff'], r['gaps']))
+        fe = evaluate(rs, ff); qf = calib_q(rs, fe['risky']); cfe = evaluate(rs, const_D(qf))
+        re = RF.eval_real(rr, gate_fn(n, depth, 0.2, ('D',), RF.vt))
+        on = sum(1 for r in rs if r['eff'] == 'D' and r['bp'][n] < 0.2)
+        D9[(n, depth)] = (rs, b, ev, ce, q, re)
+        print(f"  {n:<10}{depth*100:>5.0f}%{fmt(ev):>22}{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{ev['risky']*100:>6.1f}%"
+              f"{ev['s_sharpe']-b['s_sharpe']:>+8.3f}{ev['h_sharpe']-b['h_sharpe']:>+8.3f}"
+              f"{ev['s_sharpe']-ce['s_sharpe']:>+6.3f}{ev['h_sharpe']-ce['h_sharpe']:>+6.3f}"
+              f"{ev['s_sharpe']-ke['s_sharpe']:>+6.3f}{ev['h_sharpe']-ke['h_sharpe']:>+6.3f}"
+              f"{fe['s_sharpe']-cfe['s_sharpe']:>+9.3f}{fe['h_sharpe']-cfe['h_sharpe']:>+8.3f}"
+              f"{re['sharpe']:>8.3f}{re['sharpe']-real_all['sharpe']:>+7.3f}{on:>8}")
+nD = sum(1 for r in rows if r['eff'] == 'D')
+print(f"  (effective-state-D rows in the full proxy: {nD} of {len(rows)} = {nD/len(rows)*100:.1f}%; the gate is OFF everywhere else)")
+
+TOP = [('qqew_60', 1.0), ('qqew_s200', 1.0), ('rsp_20', 1.0), ('qqew_60', 0.5)]
+print("\nDEEP CONTROLS ON THE D-ONLY GATE (bootstrap vs same-rows live AND vs the constant-D control; LORO; thresholds; by-year)")
+for n, depth in TOP:
+    rs, b, ev, ce, q, re = D9[(n, depth)]
+    fn = gate_fn(n, depth, 0.2, ('D',)); a = run(rs, fn)[0]; bl = run(rs, LIVE)[0]; bc = run(rs, const_D(q))[0]
+    la, sa = stats(a); lb, sb = stats(bl); lc, sc = stats(bc)
+    print(f"\n[{n} D-only {depth*100:.0f}%] {fmt(ev)} S {ev['s_sharpe']:.3f} H {ev['h_sharpe']:.3f} | live {fmt(b)} | const-D q={q:.3f} {fmt(ce)} | real {fmt(re)}")
+    print(f"   point vs live {(la-lb)*100:+.2f}pp/yr {sa-sb:+.3f} Sh; vs const-D {(la-lc)*100:+.2f}pp/yr {sa-sc:+.3f} Sh")
+    for lab, ref in (('live', bl), ('const-D', bc)):
+        for blk in (20, 60):
+            l1, l2, pl, s1, s2, ps = boot(a, ref, blk, seed=zlib.crc32(f'{n}|D9|{depth}|{lab}|{blk}'.encode()))
+            print(f"      vs {lab:<8} block {blk:>2}d: log-return CI [{l1*100:+.2f}, {l2*100:+.2f}] P(<=0)={pl:.3f}   Sharpe CI [{s1:+.3f}, {s2:+.3f}] P(<=0)={ps:.3f}")
+    print("   leave-one-regime-out (Sharpe diff vs const-D / vs live):")
+    for rlab, a0, b0 in REGIMES:
+        keep = [i for i, r in enumerate(rs) if not (a0 <= r['d'] <= b0)]
+        if len(keep) == len(rs): print(f"      drop {rlab:<20} (not covered)"); continue
+        _, s1 = stats([a[i] for i in keep]); _, s2 = stats([bc[i] for i in keep]); _, s3 = stats([bl[i] for i in keep])
+        print(f"      drop {rlab:<20} {s1-s2:+.3f} / {s1-s3:+.3f}")
+    print("   threshold sensitivity (pct <): " + "  ".join(
+        f"{t:.2f}: Sh {evaluate(rs, gate_fn(n, depth, t, ('D',)))['sharpe']:.3f} S {evaluate(rs, gate_fn(n, depth, t, ('D',)))['s_sharpe']:.3f} H {evaluate(rs, gate_fn(n, depth, t, ('D',)))['h_sharpe']:.3f}"
+        for t in (0.1, 0.2, 0.3, 0.5)))
+    by = {}
+    for r, x, y in zip(rs, a, bl):
+        yv = by.setdefault(r['d'][:4], [0.0, 0.0, 0]); yv[0] += math.log1p(x); yv[1] += math.log1p(y); yv[2] += 1 if (r['eff'] == 'D' and r['bp'][n] < 0.2) else 0
+    print("   by year (gate minus live, pp; days gate on): " + "  ".join(f"{y}:{(v[0]-v[1])*100:+.1f}({v[2]})" for y, v in sorted(by.items()) if v[2] > 0 or abs(v[0]-v[1]) > 1e-9))
+    # episodes: contiguous runs of gate-on days; live D-row return over the run
+    eps = []; cur = None
+    for r, y in zip(rs, bl):
+        on = r['eff'] == 'D' and r['bp'][n] < 0.2
+        if on:
+            if cur is None: cur = [r['d'], r['d'], 0.0, 0]
+            cur[1] = r['d']; cur[2] += math.log1p(y); cur[3] += 1
+        elif cur is not None: eps.append(cur); cur = None
+    if cur: eps.append(cur)
+    eps.sort(key=lambda e: e[2])
+    print(f"   {len(eps)} gate episodes, {sum(e[3] for e in eps)} days; live return over gated days summed {sum(e[2] for e in eps)*100:+.1f}pp;"
+          f" worst 8: " + "  ".join(f"{e[0]}..{e[1]}({e[3]}d {e[2]*100:+.1f})" for e in eps[:8]))
+    print(f"   best 5: " + "  ".join(f"{e[0]}..{e[1]}({e[3]}d {e[2]*100:+.1f})" for e in eps[-5:]))
+# ------------------------------------------------------------------ 10. breaking the D-gate: per-day stats, windows, era vs instrument, lag/random placebos
+import random
+def tstat(a):
+    m = mean(a); sd_ = (sum((x - m) ** 2 for x in a) / (len(a) - 1)) ** 0.5
+    return m / (sd_ / math.sqrt(len(a)))
+print("\nPER-DAY STATISTICS OF THE D ROW (QLD leg, d0->d1) ON GATED vs OTHER STATE-D DAYS.  The Sharpe could be eight crash days;")
+print("  this is the distribution. t = t-stat of the mean; hit = share of positive days.")
+print(f"  {'series':<10}{'era':<8}{'gated n':>8}{'mean bp':>9}{'median':>8}{'t':>7}{'hit':>6}{'| other n':>10}{'mean bp':>9}{'median':>8}{'hit':>6}{'| diff t':>9}")
+for n in ('qqew_60', 'qqew_s200', 'rsp_20', 'rsp_60', 'sec200', 'qqq_60'):
+    rs = [r for r in rows if r['bp'][n] is not None]
+    for lab, lo, hi in (('full', '0000', '9999'), ('search', SEARCH[0], '9999'), ('holdout', '0000', SEARCH[0])):
+        gd = [r['legs'][2] for r in rs if r['eff'] == 'D' and r['bp'][n] < 0.2 and lo <= r['d'] < hi]
+        od = [r['legs'][2] for r in rs if r['eff'] == 'D' and r['bp'][n] >= 0.2 and lo <= r['d'] < hi]
+        if len(gd) < 5 or len(od) < 5: continue
+        sg = sorted(gd); so = sorted(od)
+        pooled = ((sum((x - mean(gd)) ** 2 for x in gd) + sum((x - mean(od)) ** 2 for x in od)) / (len(gd) + len(od) - 2)) ** 0.5
+        dt = (mean(gd) - mean(od)) / (pooled * math.sqrt(1 / len(gd) + 1 / len(od)))
+        print(f"  {n:<10}{lab:<8}{len(gd):>8}{mean(gd)*1e4:>9.1f}{sg[len(sg)//2]*1e4:>8.1f}{tstat(gd):>7.2f}{sum(1 for x in gd if x > 0)/len(gd):>6.2f}"
+              f"{len(od):>10}{mean(od)*1e4:>9.1f}{so[len(so)//2]*1e4:>8.1f}{sum(1 for x in od if x > 0)/len(od):>6.2f}{dt:>9.2f}")
+
+print("\nWINDOW SENSITIVITY of the equal-weight ratio change, D-only gate 100% (each is one more candidate):")
+print(f"  {'series':<10}{'rows':>6}{'CAGR/Sh/MDD':>22}{'S':>7}{'H':>7}{'| live Sh':>10}{'S':>7}{'H':>7}{'| vs constD S':>14}{'H':>7}{'| real Sh':>10}{'on':>5}")
+NW = 0
+for tag in ('qqew', 'rsp'):
+    for w in (10, 20, 40, 60, 90, 120, 250):
+        key = f'{tag}_{w}'
+        if key not in series:
+            series[key] = diffs(aux[tag], w); pct[key] = trailing_pct(series[key]); FAMILY[key] = tag
+            for r in rows: r['bp'][key] = pct[key][cix[r['d']]]
+            for r in rr:
+                d = r['d0'] if r['d0'] in cix else cal[bisect.bisect_right(cal, r['d0']) - 1]
+                r['bp'][key] = pct[key][cix[d]]
+        NW += 1
+        rs = [r for r in rows if r['bp'][key] is not None]; b = evaluate(rs, LIVE)
+        fn = gate_fn(key, 1.0, 0.2, ('D',)); ev = evaluate(rs, fn); q = calib_q(rs, ev['risky']); ce = evaluate(rs, const_D(q))
+        re = RF.eval_real(rr, gate_fn(key, 1.0, 0.2, ('D',), RF.vt)); on = sum(1 for r in rs if r['eff'] == 'D' and r['bp'][key] < 0.2)
+        print(f"  {key:<10}{len(rs):>6}{fmt(ev):>22}{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{b['sharpe']:>10.3f}{b['s_sharpe']:>7.3f}{b['h_sharpe']:>7.3f}"
+              f"{ev['s_sharpe']-ce['s_sharpe']:>+14.3f}{ev['h_sharpe']-ce['h_sharpe']:>+7.3f}{re['sharpe']:>10.3f}{on:>5}")
+
+print("\nERA vs INSTRUMENT: the RSP/SPY gates scored on the QQEW rows (2007-07+), so the two equal-weight proxies face the same history.")
+rsq = [r for r in rows if r['bp']['qqew_60'] is not None]; bq = evaluate(rsq, LIVE)
+print(f"  same rows n={len(rsq)}: live {fmt(bq)} S {bq['s_sharpe']:.3f} H {bq['h_sharpe']:.3f}")
+for key in ('qqew_60', 'rsp_60', 'rsp_20', 'rsp_s200', 'qqew_s200'):
+    fn = gate_fn(key, 1.0, 0.2, ('D',)); ev = evaluate(rsq, fn); q = calib_q(rsq, ev['risky']); ce = evaluate(rsq, const_D(q))
+    print(f"  {key:<10} D-gate 100%: {fmt(ev)} S {ev['s_sharpe']:.3f} H {ev['h_sharpe']:.3f}  vs const-D S {ev['s_sharpe']-ce['s_sharpe']:+.3f} H {ev['h_sharpe']-ce['h_sharpe']:+.3f}")
+# overlap of the two gates
+both_on = sum(1 for r in rsq if r['eff'] == 'D' and r['bp']['qqew_60'] < 0.2 and r['bp']['rsp_60'] < 0.2)
+q_on = sum(1 for r in rsq if r['eff'] == 'D' and r['bp']['qqew_60'] < 0.2); r_on = sum(1 for r in rsq if r['eff'] == 'D' and r['bp']['rsp_60'] < 0.2)
+print(f"  gated D-days: qqew_60 {q_on}, rsp_60 {r_on}, both {both_on}")
+
+print("\nLAG AND RANDOM-EPISODE PLACEBOS for qqew_60 D-only 100% (same rows). Lag k: use the percentile from k sessions EARLIER")
+print("  (still causal, just stale). Random: the gate's on/off pattern within state-D days is circularly shifted by a random offset,")
+print("  preserving episode lengths; 300 shifts; P = share of shifts whose Sharpe >= the actual gate's.")
+rs = rsq; base_ev = evaluate(rs, gate_fn('qqew_60', 1.0, 0.2, ('D',)))
+pq = pct['qqew_60']
+for lag in (5, 21, 63, 252):
+    def lagfn(r, lag=lag):
+        i = cix[r['d']] - lag; p = pq[i] if i >= 0 else None
+        w = trimmed(r['eff'], r['gaps'])
+        if r['eff'] == 'D' and p is not None and p < 0.2: w = scale_risky(w, 0.0)
+        return vt(w, r['vol'])
+    ev = evaluate(rs, lagfn)
+    print(f"  lag {lag:>3}: {fmt(ev)} S {ev['s_sharpe']:.3f} H {ev['h_sharpe']:.3f}   (actual gate {base_ev['sharpe']:.3f}, live {bq['sharpe']:.3f})")
+didx = [i for i, r in enumerate(rs) if r['eff'] == 'D']; pattern = [rs[i]['bp']['qqew_60'] < 0.2 for i in didx]
+rng = random.Random(7); shs = []
+for _ in range(300):
+    off = rng.randrange(1, len(didx)); shifted = pattern[-off:] + pattern[:-off]; on = {didx[j] for j, f in enumerate(shifted) if f}
+    def rf(r, on=on, k=[0]):
+        pass
+    onset = on
+    ev = evaluate(rs, (lambda onset: lambda r: vt(scale_risky(trimmed(r['eff'], r['gaps']), 0.0) if r['_i'] in onset else trimmed(r['eff'], r['gaps']), r['vol']))(onset)) if False else None
+    shs.append(onset)
+# evaluate shifts with an index on rows (attach once)
+for i, r in enumerate(rs): r['_i'] = i
+vals = []
+for onset in shs:
+    fn = (lambda onset: lambda r: vt(scale_risky(trimmed(r['eff'], r['gaps']), 0.0) if r['_i'] in onset else trimmed(r['eff'], r['gaps']), r['vol']))(onset)
+    vals.append(evaluate(rs, fn)['sharpe'])
+vals.sort()
+print(f"  random-episode Sharpe: median {vals[len(vals)//2]:.3f}, 95th pct {vals[int(0.95*len(vals))]:.3f}, max {vals[-1]:.3f}; actual {base_ev['sharpe']:.3f};"
+      f" P(random >= actual) = {sum(1 for v in vals if v >= base_ev['sharpe'])/len(vals):.3f}")
+
+print("\nREAL WEEKLY ROWS, qqew_60 D-only gate: which weeks are gated and what they cost/saved")
+gw = [(r['d0'], r['legs'][2]) for r in rr if r['eff'] == 'D' and r['bp']['qqew_60'] < 0.2]
+print(f"  {len(gw)} of {len(rr)} weeks gated; QLD leg over those weeks: " + "  ".join(f"{d}:{x*100:+.1f}%" for d, x in gw))
+print(f"  sum {sum(x for _, x in gw)*100:+.1f}%, mean {mean([x for _, x in gw])*100:+.2f}%/wk; other state-D weeks mean "
+      f"{mean([r['legs'][2] for r in rr if r['eff'] == 'D' and r['bp']['qqew_60'] >= 0.2])*100:+.2f}%/wk (n={sum(1 for r in rr if r['eff'] == 'D' and r['bp']['qqew_60'] >= 0.2)})")
+
+last = rows[-1]
+print(f"\nTODAY: last proxy row {last['d']} state {last['state']} eff {last['eff']}; qqew_60 pct {last['bp']['qqew_60']:.2f}, rsp_20 pct {last['bp']['rsp_20']:.2f}."
+      f" On 2026-09-09: qqew_60 pct {pct['qqew_60'][cix['2026-09-09']]:.2f}, qqew_s200 {pct['qqew_s200'][cix['2026-09-09']]:.2f}, rsp_20 {pct['rsp_20'][cix['2026-09-09']]:.2f}, sec200 {pct['sec200'][cix['2026-09-09']]:.2f}.")
+print(f"TOTAL CANDIDATES EXAMINED: {ncand} screen + {8*len(SURV_NAMES)} survivor ladder + {2*len(ALL9)} D-only (incl. 4 non-breadth placebo cells) + {NW} window sweep = "
+      f"{ncand + 8*len(SURV_NAMES) + 2*len(ALL9) + NW}. The D-only scope was chosen AFTER seeing the ladder (post hoc).")
 print("\nDone.")
