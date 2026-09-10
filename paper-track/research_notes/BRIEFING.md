@@ -122,3 +122,25 @@ control above and try to break it. If it fails, say exactly WHERE it fails and
 what would have to be true for it to work. Distinguish "no signal" from
 "signal, but not large enough" from "signal, but it is a risk-preference dial".
 Quote numbers, not adjectives.
+
+## ADDENDUM 2026-09-10 (read this; it supersedes figures above)
+- The freeze was LIFTED 2026-09-09 for one change and its discipline still binds:
+  research only, nothing applied without both-era evidence, exposure/beta-matched
+  controls, a circular block bootstrap (block_bootstrap.boot/stats, 20/60d) and an
+  owner decision. Same file/commit/trade/artifact prohibitions as above.
+- The live estimator is now the PLAIN 30d (VOL_ESTIMATOR_MAX_ENABLED=False).
+  improvement_search.build() honours the flag, so on daily rows r['vol'] ==
+  r['vol_live'] == 30d. On rr, r['vol'] is now the plain 30d too (r['vol30'] identical).
+  The LIVE weight function is: w = W[eff]; extension_scale; vt(w, r['vol']).
+- The drift band is 0.05 (was 0.03); run() reads it from state.REBALANCE_DRIFT_BAND.
+- Standing live figures you must reproduce before trusting anything:
+  26y proxy 22.18% / 0.913 / -33.6%, search Sharpe 1.103, holdout 0.768,
+  ~47 rebalances/yr; real weekly 31.40% / 1.248 / -25.0%.
+- Any external series (FRED, price history) must be CAUSAL: use only values
+  known at the close of session d0. Thresholds must be trailing (e.g. trailing
+  252-day median/percentile built from the daily series and attached by date),
+  never a full-sample constant. Report candidate counts for any sweep.
+- Meta-finding so far: volatility works as a SCALING input and fails as a
+  TIMING signal; ~300 indicator variants have failed. The bar for a new timing
+  input is high: it must beat the LIVE design on search era, holdout era AND
+  real rows with the exposure control, or be reported as a clean negative.
