@@ -15,6 +15,8 @@ Research only.  Nothing is applied.  Harness: the project harness only (leverage
 run, evaluate, RF.eval_real; block_bootstrap.boot/stats).  Run from the repo root:
     python3 paper-track/breadth_dgate_2000.py            (full, ~10 min)
     DGATE_STAGE=1 python3 ...                            (data + validation only)
+    DGATE_ONLY=comp,rut python3 ...                      (Step 3 restricted to named proxies; the note was produced
+                                                          in two such halves to stay inside a 10-minute timeout)
 Code paths for row attachment / trailing percentile / D-gate / constant-D control are copied verbatim from
 paper-track/breadth_signal.py (which cannot be imported without re-running its whole search).
 """

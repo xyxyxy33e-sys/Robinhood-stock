@@ -3424,6 +3424,24 @@ stated as a PRE-REGISTERED hypothesis, track it forward on the paper track,
 and source a Nasdaq-100 equal-weight history covering 2000–2002 before any
 re-test. Not a change candidate until then.
 
+**2000 extension (`breadth_dgate_2000.py`, `research_notes/breadth_dgate_2000.md`,
+2026-09-10): the longer history adds NO positive evidence.** A point-in-time
+equal-weight Nasdaq-100 was rebuilt from the QQQ Trust's audited 1999–2006
+schedules, but only 28–33% of the 2000–2002 members have price history
+(45–52% for 2003–2006) — survivorship-biased, illustrative only.
+Survivorship-free fallbacks (Composite/NDX, Russell 2000/NDX, NYSE/NDX)
+reproduce the 2007+ SEARCH-era gain but not the holdout gain (+0.01..+0.09
+vs +0.178 for QQEW), and on the full 2000+ rows their holdout deltas vs the
+constant-D control are +0.012 / +0.020 / +0.051. Dot-com does not test the
+rule at all: effective state D existed on 6 days in 2000-07..2003-03 and on
+zero days in 2001–2002; no proxy's gate fired on any of them. The 2003–2006
+slice shows no effect (−0.006..0.000). Window sweep is still not smooth (60d
+remains the best of seven); the S&P analogue and the Nasdaq fallbacks are
+equally holdout-weak; only QQEW/QQQ itself shows a holdout gain, on an
+8-year window with 65 gated days. Candidate count behind the rule: 224.
+**Verdict: pre-register only. Do not apply, not at half depth.** Today's
+readings have the rule off (QQEW/QQQ pct 0.82; effective state A).
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**

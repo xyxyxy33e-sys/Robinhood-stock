@@ -33,3 +33,38 @@ Symbols and first date:
   CMCSA. Histories start 1970-2020 (META 2012-05, PANW 2012-07, PLTR
   2020-09, AVGO 2009-08, TSLA 2010-06, TMUS 2007-04, GOOGL 2004-08).
   Yahoo split events were checked for each (listed in the research note).
+
+# Files added 2026-09-10 by research line `breadth_dgate_2000`
+
+Purpose: survivorship-free breadth proxies with full 1999+ coverage, to extend
+the D-row breadth gate test to 2000-07. All columns `d,c`.
+
+- `nasdaqcom_fred.csv`, `nasdaq100_fred.csv`: FRED series NASDAQCOM
+  (1971-02-05..2026-09-09) and NASDAQ100 (1986-01-02..2026-09-09) via
+  `https://fred.stlouisfed.org/graph/fredgraph.csv?id=<SERIES>`. Holiday rows
+  carry an EMPTY value (FRED's "."): consumers must forward-fill, never drop.
+- `RUT_index_daily.csv` (^RUT Russell 2000, 1987-09-10..2026-09-10),
+  `RUA_index_daily.csv` (^RUA Russell 3000, 1987-09-10..), `NYA_index_daily.csv`
+  (^NYA NYSE Composite, 1970-01-02..), `W5000_index_daily.csv` (^W5000 Wilshire
+  5000, 1989-01-03..2026-09-09), `XAX_index_daily.csv` (^XAX NYSE American
+  Composite, 1995-12-27..; fetched, NOT used), `NDX_index_daily.csv` (^NDX,
+  1985-10-01..): Yahoo Finance chart API, same URL pattern as above, browser
+  User-Agent required (the bare request is rate-limited "Too Many Requests"),
+  timestamps converted to New York dates. Index closes, unadjusted (indices
+  carry no splits). Cross-check: Yahoo ^NDX vs FRED NASDAQ100 on 6,962 common
+  dates 1999+ agree except early Yahoo tick noise (max 2.4%, 1999); FRED is the
+  NDX leg used everywhere. Value Line Geometric (^VLG): not on Yahoo ("symbol
+  may be delisted"); stooq.com is behind a JavaScript challenge through the
+  proxy; NOT obtained. FRED Wilshire series (WILL5000PR etc.) and Russell
+  (RU2000PR) return 404 (discontinued).
+- `ndx_survivor_ew_daily.csv` (`d,c,n`; 1999-01-05..2006-12-29): equal-weight,
+  daily-rebalanced chain of the point-in-time Nasdaq-100 members WITH price
+  data, roster by Nasdaq-100 Trust (QQQ) annual prospectus Schedule of
+  Investments as of each Sept-30 1999..2006 (SEC EDGAR CIK 1067839, 485BPOS
+  filings; issuer names mapped to era tickers by hand, 226 names), members
+  fetched from Yahoo (198 tickers probed). `n` = names contributing that day
+  (27-51). Coverage of the point-in-time roster with full-year data: 1999 30%,
+  2000 28%, 2001 30%, 2002 33%, 2003 45%, 2004 47%, 2005 48%, 2006 52% -- the
+  delisted/acquired names (WCOM, SUNW, YHOO, PSFT, JDSU, ...) are gone from
+  Yahoo and reused tickers (ADPT, DELL, MNST, ATHM, ...) were excluded by date.
+  SURVIVORSHIP-BIASED, ILLUSTRATIVE ONLY; never a holdout test.

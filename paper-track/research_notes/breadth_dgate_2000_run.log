@@ -1,0 +1,361 @@
+================================================================================================================
+RESEARCH LINE breadth_dgate_2000 -- the D-row breadth gate extended to 2000-07 with survivorship-free proxies
+================================================================================================================
+
+STANDING FIGURES (must match briefing 22.18/0.913/-33.6, S 1.103 H 0.768; real 31.40/1.248/-25.0):
+  26y proxy 22.18% / 0.913 / -33.6%  S 1.103 H 0.768  exp 67.7% | real weekly 31.40% / 1.248 / -25.0% | rows 6575 2000-07-03..2026-08-26, real rows 564
+  Yahoo ^NDX vs FRED NASDAQ100: 6962 common dates, max abs rel diff 2.443% (FRED used as the NDX leg)
+
+SERIES COVERAGE (60d window; first date with a trailing-252 percentile) and readings on 2026-09-09
+  qqew_60       2007-07-27  n  4810  | 09-09 value +0.0290 pct 0.82  | QQEW/QQQ (the original; 2006-05+)
+  ndxsurv_60    2000-12-06  n  6476  | 09-09 value +0.0290 pct 0.82  | survivor equal-weight NDX 1999-2006 spliced to QQEW (ILLUSTRATIVE, ~30% coverage)
+  comp_60       1999-03-29  n  6905  | 09-09 value +0.0212 pct 0.95  | NASDAQCOM/NASDAQ100 (FRED, composite vs mega-cap)
+  rut_60        1999-03-29  n  6905  | 09-09 value -0.0005 pct 0.35  | Russell 2000 / NDX
+  rua_60        1999-03-29  n  6905  | 09-09 value +0.0328 pct 0.90  | Russell 3000 / NDX
+  nya_60        1999-03-29  n  6905  | 09-09 value +0.0371 pct 0.69  | NYSE Composite / NDX
+  w5k_60        1999-03-29  n  6905  | 09-09 value +0.0316 pct 0.89  | Wilshire 5000 / NDX
+  rsp_60        2004-07-27  n  5566  | 09-09 value -0.0248 pct 0.41  | RSP/SPY (S&P equal-weight; 2003-05+)
+
+ALIGNMENT CHECK (60d series): contemp = corr(QQQ d0->d1, raw log-ratio change d0->d1); pred = corr(pct at d0, QQQ d0->d1)
+  qqew_60      n  4799  contemp -0.235  pred d1 +0.009
+  ndxsurv_60   n  6465  contemp -0.232  pred d1 +0.006
+  comp_60      n  6574  contemp -0.444  pred d1 -0.004
+  rut_60       n  6574  contemp -0.430  pred d1 -0.001
+  rua_60       n  6574  contemp -0.667  pred d1 +0.008
+  nya_60       n  6574  contemp -0.678  pred d1 +0.009
+  w5k_60       n  6574  contemp -0.670  pred d1 +0.007
+  rsp_60       n  5555  contemp -0.007  pred d1 +0.017
+
+================================================================================================================
+STEP 2 -- VALIDATE EACH FALLBACK AGAINST THE REAL QQEW/QQQ SERIES ON THE SAME 2007-07+ ROWS
+================================================================================================================
+rows with qqew_60 percentile: 4800 2007-07-27..2026-08-26; state-D rows among them 727
+
+(a) series agreement with qqew_60 on those rows: corr of the 60d log-ratio changes, corr of the percentiles, bottom-quintile
+    flag agreement (all rows / state-D rows), Jaccard of the flag sets on state-D rows
+  series       corr chg corr pct agree all  agree D Jaccard D  flags D (qqew/this/both)
+  ndxsurv_60      1.000    1.000     1.000    1.000     1.000               124/124/124
+  comp_60         0.415    0.494     0.762    0.781     0.264                124/149/57
+  rut_60          0.581    0.557     0.769    0.788     0.198                124/106/38
+  rua_60          0.569    0.581     0.764    0.792     0.132                 124/73/23
+  nya_60          0.608    0.591     0.753    0.776     0.160                124/101/31
+  w5k_60          0.572    0.589     0.765    0.795     0.144                 124/75/25
+  rsp_60          0.703    0.696     0.804    0.755     0.172                124/128/37
+
+(b) the D-gate re-run on the SAME rows with each proxy (this is the validation that matters). Reference: qqew_60.
+    Columns: CAGR/Sh/MDD, S/H Sharpe, deployed capital, days gate on; Sharpe deltas S/H vs same-rows live, vs the
+    constant-D control at matched capital (q), vs the live design scaled to matched capital (k); real weekly Sharpe.
+
+  depth 100%:   same-rows live 26.09% / 1.006 / -33.6% S 1.103 H 0.876
+  qqew_60 (reference)       31.71% / 1.218 / -28.5%  S 1.332 H 1.065 exp 70.0% on  124 | vs live +0.229/+0.189 | const-D q=0.850 +0.205/+0.178 | k-live k=0.970 +0.225/+0.190 | real 1.490 (+0.242)
+                            boot vs live 20d: Sh CI [+0.070,+0.369] P<=0 0.002 logret P<=0 0.004  boot vs live 60d: Sh CI [+0.077,+0.367] P<=0 0.000 logret P<=0 0.002  boot vs constD 20d: Sh CI [+0.068,+0.338] P<=0 0.002 logret P<=0 0.001  boot vs constD 60d: Sh CI [+0.072,+0.333] P<=0 0.000 logret P<=0 0.000
+  ndxsurv_60                31.71% / 1.218 / -28.5%  S 1.332 H 1.065 exp 70.0% on  124 | vs live +0.229/+0.189 | const-D q=0.850 +0.205/+0.178 | k-live k=0.970 +0.225/+0.190 | real 1.490 (+0.242)
+                            boot vs live 20d: Sh CI [+0.073,+0.368] P<=0 0.000 logret P<=0 0.003  boot vs live 60d: Sh CI [+0.080,+0.363] P<=0 0.001 logret P<=0 0.001  boot vs constD 20d: Sh CI [+0.071,+0.341] P<=0 0.001 logret P<=0 0.000  boot vs constD 60d: Sh CI [+0.070,+0.335] P<=0 0.000 logret P<=0 0.000
+                            vs qqew-gated: Sh diff CI 20d [+0.000,+0.000] P<=0 1.000; 60d [+0.000,+0.000] P<=0 1.000  -> VALIDATES (both-era > live and > const-D, boot vs const-D P<0.05 at 20d and 60d)
+  comp_60                   29.66% / 1.156 / -35.1%  S 1.345 H 0.910 exp 69.3% on  149 | vs live +0.243/+0.033 | const-D q=0.804 +0.212/+0.021 | k-live k=0.961 +0.237/+0.033 | real 1.502 (+0.254)
+                            boot vs live 20d: Sh CI [+0.006,+0.317] P<=0 0.021 logret P<=0 0.059  boot vs live 60d: Sh CI [+0.013,+0.312] P<=0 0.014 logret P<=0 0.051  boot vs constD 20d: Sh CI [-0.000,+0.266] P<=0 0.025 logret P<=0 0.008  boot vs constD 60d: Sh CI [+0.002,+0.270] P<=0 0.024 logret P<=0 0.004
+                            vs qqew-gated: Sh diff CI 20d [-0.191,+0.069] P<=0 0.831; 60d [-0.184,+0.073] P<=0 0.810  -> VALIDATES (both-era > live and > const-D, boot vs const-D P<0.05 at 20d and 60d)
+  rut_60                    29.06% / 1.132 / -30.6%  S 1.292 H 0.920 exp 70.1% on  106 | vs live +0.190/+0.044 | const-D q=0.856 +0.166/+0.034 | k-live k=0.972 +0.186/+0.045 | real 1.514 (+0.266)
+                            boot vs live 20d: Sh CI [-0.004,+0.280] P<=0 0.032 logret P<=0 0.086  boot vs live 60d: Sh CI [-0.001,+0.269] P<=0 0.026 logret P<=0 0.077  boot vs constD 20d: Sh CI [-0.015,+0.247] P<=0 0.046 logret P<=0 0.021  boot vs constD 60d: Sh CI [-0.018,+0.251] P<=0 0.048 logret P<=0 0.025
+                            vs qqew-gated: Sh diff CI 20d [-0.246,+0.077] P<=0 0.854; 60d [-0.238,+0.084] P<=0 0.847  -> VALIDATES (both-era > live and > const-D, boot vs const-D P<0.05 at 20d and 60d)
+  rua_60                    28.83% / 1.114 / -33.3%  S 1.295 H 0.873 exp 70.7% on   73 | vs live +0.193/-0.003 | const-D q=0.902 +0.176/-0.011 | k-live k=0.981 +0.190/-0.002 | real 1.382 (+0.134)
+                            boot vs live 20d: Sh CI [-0.004,+0.233] P<=0 0.030 logret P<=0 0.063  boot vs live 60d: Sh CI [+0.010,+0.226] P<=0 0.014 logret P<=0 0.042  boot vs constD 20d: Sh CI [-0.010,+0.209] P<=0 0.045 logret P<=0 0.022  boot vs constD 60d: Sh CI [-0.002,+0.212] P<=0 0.029 logret P<=0 0.013
+                            vs qqew-gated: Sh diff CI 20d [-0.258,+0.038] P<=0 0.911; 60d [-0.261,+0.044] P<=0 0.911  -> DOES NOT VALIDATE
+  nya_60                    29.36% / 1.141 / -33.3%  S 1.262 H 0.977 exp 70.2% on  101 | vs live +0.160/+0.101 | const-D q=0.869 +0.138/+0.091 | k-live k=0.974 +0.156/+0.101 | real 1.375 (+0.127)
+                            boot vs live 20d: Sh CI [+0.013,+0.277] P<=0 0.012 logret P<=0 0.040  boot vs live 60d: Sh CI [+0.018,+0.275] P<=0 0.010 logret P<=0 0.034  boot vs constD 20d: Sh CI [+0.006,+0.251] P<=0 0.019 logret P<=0 0.009  boot vs constD 60d: Sh CI [+0.007,+0.256] P<=0 0.016 logret P<=0 0.004
+                            vs qqew-gated: Sh diff CI 20d [-0.223,+0.065] P<=0 0.848; 60d [-0.230,+0.053] P<=0 0.860  -> VALIDATES (both-era > live and > const-D, boot vs const-D P<0.05 at 20d and 60d)
+  w5k_60                    28.25% / 1.095 / -33.3%  S 1.272 H 0.861 exp 70.7% on   75 | vs live +0.169/-0.015 | const-D q=0.901 +0.153/-0.023 | k-live k=0.980 +0.167/-0.014 | real 1.365 (+0.117)
+                            boot vs live 20d: Sh CI [-0.020,+0.209] P<=0 0.064 logret P<=0 0.127  boot vs live 60d: Sh CI [-0.014,+0.209] P<=0 0.050 logret P<=0 0.103  boot vs constD 20d: Sh CI [-0.026,+0.196] P<=0 0.082 logret P<=0 0.050  boot vs constD 60d: Sh CI [-0.029,+0.190] P<=0 0.075 logret P<=0 0.051
+                            vs qqew-gated: Sh diff CI 20d [-0.270,+0.025] P<=0 0.939; 60d [-0.276,+0.013] P<=0 0.957  -> DOES NOT VALIDATE
+  rsp_60                    29.14% / 1.139 / -31.1%  S 1.284 H 0.948 exp 69.6% on  128 | vs live +0.181/+0.072 | const-D q=0.821 +0.153/+0.060 | k-live k=0.965 +0.176/+0.073 | real 1.412 (+0.164)
+                            boot vs live 20d: Sh CI [-0.017,+0.308] P<=0 0.048 logret P<=0 0.111  boot vs live 60d: Sh CI [-0.019,+0.312] P<=0 0.041 logret P<=0 0.109  boot vs constD 20d: Sh CI [-0.027,+0.271] P<=0 0.059 logret P<=0 0.032  boot vs constD 60d: Sh CI [-0.022,+0.270] P<=0 0.050 logret P<=0 0.025
+                            vs qqew-gated: Sh diff CI 20d [-0.219,+0.060] P<=0 0.854; 60d [-0.235,+0.067] P<=0 0.868  -> DOES NOT VALIDATE
+
+  depth 50%:   same-rows live 26.09% / 1.006 / -33.6% S 1.103 H 0.876
+  qqew_60 (reference)       29.00% / 1.124 / -30.4%  S 1.231 H 0.980 exp 71.0% on  124 | vs live +0.128/+0.104 | const-D q=0.925 +0.115/+0.097 | k-live k=0.985 +0.126/+0.105 | real 1.379 (+0.131)
+  ndxsurv_60                29.00% / 1.124 / -30.4%  S 1.231 H 0.980 exp 71.0% on  124 | vs live +0.128/+0.104 | const-D q=0.925 +0.115/+0.097 | k-live k=0.985 +0.126/+0.105 | real 1.379 (+0.131)
+  comp_60                   28.02% / 1.094 / -34.3%  S 1.241 H 0.901 exp 70.7% on  149 | vs live +0.139/+0.025 | const-D q=0.902 +0.122/+0.017 | k-live k=0.981 +0.136/+0.026 | real 1.386 (+0.138)
+  rut_60                    27.69% / 1.080 / -31.3%  S 1.212 H 0.905 exp 71.1% on  106 | vs live +0.110/+0.029 | const-D q=0.928 +0.097/+0.023 | k-live k=0.986 +0.108/+0.030 | real 1.393 (+0.145)
+  rua_60                    27.54% / 1.068 / -33.3%  S 1.209 H 0.880 exp 71.4% on   73 | vs live +0.107/+0.004 | const-D q=0.951 +0.097/+0.001 | k-live k=0.990 +0.105/+0.005 | real 1.322 (+0.074)
+  nya_60                    27.82% / 1.084 / -33.3%  S 1.193 H 0.936 exp 71.2% on  101 | vs live +0.091/+0.060 | const-D q=0.935 +0.079/+0.054 | k-live k=0.987 +0.089/+0.061 | real 1.319 (+0.071)
+  w5k_60                    27.25% / 1.058 / -33.3%  S 1.197 H 0.873 exp 71.4% on   75 | vs live +0.095/-0.003 | const-D q=0.951 +0.085/-0.006 | k-live k=0.990 +0.093/-0.002 | real 1.315 (+0.067)
+  rsp_60                    27.76% / 1.086 / -31.6%  S 1.209 H 0.921 exp 70.8% on  128 | vs live +0.107/+0.045 | const-D q=0.911 +0.092/+0.038 | k-live k=0.982 +0.105/+0.046 | real 1.345 (+0.097)
+
+VALIDATED FALLBACKS: ['comp', 'rut', 'nya']   (not validated: ['rua', 'w5k']; ndxsurv passes but is illustrative only; rsp fails)
+
+########## STEP 3 (run A: comp, rut) ##########
+STEP 3 -- THE D-GATE ON THE FULL 2000-07+ PROXY ROWS, EVERY FALLBACK THAT VALIDATES (non-validating ones shown for the record, marked)
+================================================================================================================
+
+[comp_60] NASDAQCOM/NASDAQ100 (FRED, composite vs mega-cap)
+  rows 6575 2000-07-03..2026-08-26; live 22.18% / 0.913 / -33.6% S 1.103 H 0.768 exp 67.7%
+  D-gate 100% cash          24.59% / 1.024 / -35.1%  S 1.345 H 0.785 exp 65.1% on  187 | vs live +0.243/+0.017 | const-D q=0.807 +0.212/+0.012 | k-live k=0.961 +0.237/+0.014 | real 1.502 (+0.254)
+                            boot vs live 20d: Sh CI [-0.003,+0.240] P<=0 0.028 logret P<=0 0.077  boot vs live 60d: Sh CI [+0.004,+0.239] P<=0 0.022 logret P<=0 0.071  boot vs constD 20d: Sh CI [+0.001,+0.208] P<=0 0.024 logret P<=0 0.007  boot vs constD 60d: Sh CI [-0.005,+0.205] P<=0 0.035 logret P<=0 0.011
+  D-gate 50% cash           23.51% / 0.980 / -34.3%  S 1.241 H 0.783 exp 66.4% on  187 | vs live +0.139/+0.015 | const-D q=0.903 +0.122/+0.012 | k-live k=0.981 +0.136/+0.015 | real 1.386 (+0.138)
+                            boot vs live 20d: Sh CI [+0.010,+0.129] P<=0 0.011 logret P<=0 0.057  boot vs live 60d: Sh CI [+0.008,+0.131] P<=0 0.011 logret P<=0 0.068  boot vs constD 20d: Sh CI [+0.007,+0.113] P<=0 0.018 logret P<=0 0.011  boot vs constD 60d: Sh CI [+0.007,+0.118] P<=0 0.014 logret P<=0 0.005
+  leave-one-regime-out, depth 100% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.103 / +0.125   | slice alone (687 d): -0.456 / -0.459 / -0.456  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.126 / +0.146   | slice alone (1633 d): 0.559 / 0.569 / 0.565  gate-live -0.006
+      drop GFC 2007-09                +0.117 / +0.138   | slice alone (756 d): 0.873 / 0.937 / 0.975  gate-live -0.102
+      drop COVID 2020                 +0.072 / +0.081   | slice alone (253 d): 2.601 / 1.466 / 1.265  gate-live +1.335
+      drop 2022 bear                  +0.083 / +0.100   | slice alone (251 d): -1.370 / -1.792 / -1.845  gate-live +0.476
+      drop SPMO era 2015-11+          +0.012 / +0.017   | slice alone (2719 d): 1.344 / 1.132 / 1.102  gate-live +0.243
+  leave-one-regime-out, depth 50% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.063 / +0.076   | slice alone (687 d): -0.456 / -0.458 / -0.456  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.075 / +0.086   | slice alone (1633 d): 0.567 / 0.568 / 0.565  gate-live +0.002
+      drop GFC 2007-09                +0.068 / +0.080   | slice alone (756 d): 0.935 / 0.956 / 0.975  gate-live -0.040
+      drop COVID 2020                 +0.044 / +0.050   | slice alone (253 d): 1.967 / 1.364 / 1.265  gate-live +0.702
+      drop 2022 bear                  +0.052 / +0.061   | slice alone (251 d): -1.650 / -1.818 / -1.845  gate-live +0.195
+      drop SPMO era 2015-11+          +0.012 / +0.015   | slice alone (2719 d): 1.240 / 1.118 / 1.102  gate-live +0.139
+  sign-flip placebo (gate when pct > 0.80 instead):
+  flip 100%                 18.80% / 0.822 / -33.3%  S 0.960 H 0.717 exp 64.3% on  236 | vs live -0.142/-0.051 | const-D q=0.742 -0.183/-0.056 | k-live k=0.949 -0.149/-0.054 | real 1.066 (-0.182)
+  flip 50%                  20.53% / 0.875 / -33.3%  S 1.040 H 0.749 exp 66.0% on  236 | vs live -0.062/-0.019 | const-D q=0.871 -0.084/-0.023 | k-live k=0.974 -0.066/-0.020 | real 1.173 (-0.075)
+  threshold sweep (100% depth; each is a candidate):
+  thr 0.10                  24.76% / 1.019 / -33.6%  S 1.319 H 0.796 exp 65.8% on  136 | vs live +0.216/+0.028 | const-D q=0.860 +0.193/+0.024 | k-live k=0.972 +0.212/+0.027 | real 1.484 (+0.236)
+  thr 0.20                  24.59% / 1.024 / -35.1%  S 1.345 H 0.785 exp 65.1% on  187 | vs live +0.243/+0.017 | const-D q=0.807 +0.212/+0.012 | k-live k=0.961 +0.237/+0.014 | real 1.502 (+0.254)
+  thr 0.30                  26.68% / 1.111 / -28.9%  S 1.457 H 0.854 exp 64.1% on  261 | vs live +0.354/+0.086 | const-D q=0.727 +0.312/+0.081 | k-live k=0.946 +0.347/+0.082 | real 1.499 (+0.251)
+  thr 0.40                  26.06% / 1.102 / -28.2%  S 1.473 H 0.827 exp 62.9% on  344 | vs live +0.370/+0.059 | const-D q=0.638 +0.318/+0.056 | k-live k=0.928 +0.362/+0.055 | real 1.564 (+0.316)
+  thr 0.50                  23.07% / 1.023 / -29.6%  S 1.372 H 0.764 exp 61.4% on  447 | vs live +0.269/-0.004 | const-D q=0.525 +0.211/-0.002 | k-live k=0.906 +0.261/-0.010 | real 1.528 (+0.281)
+  window sweep (100% depth, thr 0.20; each is a candidate; rows restricted to where that window has a percentile):
+  window  10d (n=6575)      20.80% / 0.890 / -33.6%  S 1.147 H 0.693 exp 65.5% on  157 | vs live +0.044/-0.075 | const-D q=0.838 +0.018/-0.079 | k-live k=0.968 +0.039/-0.077 | real 1.276 (+0.028)
+  window  20d (n=6575)      24.64% / 1.019 / -33.6%  S 1.305 H 0.801 exp 65.2% on  182 | vs live +0.203/+0.033 | const-D q=0.809 +0.173/+0.028 | k-live k=0.962 +0.198/+0.031 | real 1.357 (+0.109)
+  window  40d (n=6575)      25.29% / 1.048 / -29.7%  S 1.323 H 0.842 exp 65.2% on  177 | vs live +0.221/+0.074 | const-D q=0.814 +0.192/+0.069 | k-live k=0.963 +0.216/+0.072 | real 1.452 (+0.204)
+  window  60d (n=6575)      24.59% / 1.024 / -35.1%  S 1.345 H 0.785 exp 65.1% on  187 | vs live +0.243/+0.017 | const-D q=0.807 +0.212/+0.012 | k-live k=0.961 +0.237/+0.014 | real 1.502 (+0.254)
+  window  90d (n=6575)      23.92% / 0.996 / -33.1%  S 1.363 H 0.721 exp 65.7% on  150 | vs live +0.260/-0.047 | const-D q=0.847 +0.235/-0.051 | k-live k=0.969 +0.256/-0.048 | real 1.506 (+0.258)
+  window 120d (n=6575)      24.56% / 1.030 / -33.3%  S 1.389 H 0.764 exp 64.7% on  218 | vs live +0.286/-0.004 | const-D q=0.773 +0.251/-0.010 | k-live k=0.955 +0.281/-0.007 | real 1.527 (+0.279)
+  window 250d (n=6575)      22.89% / 0.984 / -33.6%  S 1.248 H 0.781 exp 63.6% on  293 | vs live +0.145/+0.013 | const-D q=0.689 +0.099/+0.009 | k-live k=0.938 +0.137/+0.009 | real 1.365 (+0.117)
+
+[rut_60] Russell 2000 / NDX
+  rows 6575 2000-07-03..2026-08-26; live 22.18% / 0.913 / -33.6% S 1.103 H 0.768 exp 67.7%
+  D-gate 100% cash          24.22% / 1.006 / -30.6%  S 1.292 H 0.792 exp 65.8% on  136 | vs live +0.190/+0.024 | const-D q=0.855 +0.166/+0.020 | k-live k=0.971 +0.186/+0.022 | real 1.514 (+0.266)
+                            boot vs live 20d: Sh CI [-0.009,+0.211] P<=0 0.036 logret P<=0 0.088  boot vs live 60d: Sh CI [-0.004,+0.204] P<=0 0.028 logret P<=0 0.075  boot vs constD 20d: Sh CI [-0.014,+0.194] P<=0 0.051 logret P<=0 0.024  boot vs constD 60d: Sh CI [-0.012,+0.181] P<=0 0.047 logret P<=0 0.022
+  D-gate 50% cash           23.29% / 0.968 / -31.3%  S 1.212 H 0.785 exp 66.8% on  136 | vs live +0.110/+0.017 | const-D q=0.928 +0.097/+0.014 | k-live k=0.985 +0.107/+0.016 | real 1.393 (+0.145)
+                            boot vs live 20d: Sh CI [+0.001,+0.118] P<=0 0.022 logret P<=0 0.071  boot vs live 60d: Sh CI [+0.005,+0.112] P<=0 0.013 logret P<=0 0.067  boot vs constD 20d: Sh CI [-0.000,+0.104] P<=0 0.026 logret P<=0 0.017  boot vs constD 60d: Sh CI [-0.003,+0.108] P<=0 0.030 logret P<=0 0.021
+  leave-one-regime-out, depth 100% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.088 / +0.105   | slice alone (687 d): -0.456 / -0.458 / -0.456  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.107 / +0.122   | slice alone (1633 d): 0.563 / 0.569 / 0.565  gate-live -0.002
+      drop GFC 2007-09                +0.089 / +0.106   | slice alone (756 d): 0.969 / 0.947 / 0.975  gate-live -0.006
+      drop COVID 2020                 +0.055 / +0.063   | slice alone (253 d): 2.601 / 1.413 / 1.265  gate-live +1.335
+      drop 2022 bear                  +0.086 / +0.099   | slice alone (251 d): -1.845 / -1.803 / -1.845  gate-live +0.000
+      drop SPMO era 2015-11+          +0.020 / +0.024   | slice alone (2719 d): 1.292 / 1.125 / 1.102  gate-live +0.190
+  leave-one-regime-out, depth 50% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.053 / +0.063   | slice alone (687 d): -0.456 / -0.457 / -0.456  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.063 / +0.072   | slice alone (1633 d): 0.567 / 0.567 / 0.565  gate-live +0.002
+      drop GFC 2007-09                +0.052 / +0.061   | slice alone (756 d): 0.986 / 0.961 / 0.975  gate-live +0.011
+      drop COVID 2020                 +0.034 / +0.039   | slice alone (253 d): 1.967 / 1.340 / 1.265  gate-live +0.702
+      drop 2022 bear                  +0.052 / +0.059   | slice alone (251 d): -1.845 / -1.825 / -1.845  gate-live +0.000
+      drop SPMO era 2015-11+          +0.014 / +0.017   | slice alone (2719 d): 1.211 / 1.115 / 1.102  gate-live +0.109
+  sign-flip placebo (gate when pct > 0.80 instead):
+  flip 100%                 18.46% / 0.818 / -33.3%  S 0.961 H 0.711 exp 63.6% on  284 | vs live -0.142/-0.057 | const-D q=0.694 -0.187/-0.061 | k-live k=0.939 -0.149/-0.061 | real 1.093 (-0.155)
+  flip 50%                  20.40% / 0.877 / -33.3%  S 1.049 H 0.747 exp 65.7% on  284 | vs live -0.054/-0.021 | const-D q=0.848 -0.079/-0.025 | k-live k=0.970 -0.058/-0.022 | real 1.185 (-0.063)
+  threshold sweep (100% depth; each is a candidate):
+  thr 0.10                  24.32% / 1.001 / -31.1%  S 1.306 H 0.773 exp 66.6% on   78 | vs live +0.203/+0.005 | const-D q=0.917 +0.189/+0.002 | k-live k=0.983 +0.201/+0.004 | real 1.356 (+0.108)
+  thr 0.20                  24.22% / 1.006 / -30.6%  S 1.292 H 0.792 exp 65.8% on  136 | vs live +0.190/+0.024 | const-D q=0.855 +0.166/+0.020 | k-live k=0.971 +0.186/+0.022 | real 1.514 (+0.266)
+  thr 0.30                  25.26% / 1.056 / -30.8%  S 1.457 H 0.763 exp 64.7% on  214 | vs live +0.354/-0.005 | const-D q=0.773 +0.318/-0.011 | k-live k=0.955 +0.348/-0.008 | real 1.563 (+0.315)
+  thr 0.40                  25.23% / 1.069 / -27.4%  S 1.434 H 0.800 exp 63.7% on  284 | vs live +0.331/+0.032 | const-D q=0.699 +0.286/+0.027 | k-live k=0.940 +0.324/+0.028 | real 1.561 (+0.313)
+  thr 0.50                  23.61% / 1.029 / -27.4%  S 1.357 H 0.787 exp 62.2% on  390 | vs live +0.255/+0.019 | const-D q=0.585 +0.200/+0.017 | k-live k=0.918 +0.246/+0.014 | real 1.536 (+0.288)
+  window sweep (100% depth, thr 0.20; each is a candidate; rows restricted to where that window has a percentile):
+  window  10d (n=6575)      21.48% / 0.910 / -33.6%  S 1.238 H 0.659 exp 65.9% on  133 | vs live +0.135/-0.109 | const-D q=0.862 +0.112/-0.113 | k-live k=0.972 +0.131/-0.111 | real 1.278 (+0.031)
+  window  20d (n=6575)      25.02% / 1.027 / -35.7%  S 1.366 H 0.771 exp 66.0% on  123 | vs live +0.264/+0.003 | const-D q=0.871 +0.242/-0.001 | k-live k=0.974 +0.260/+0.001 | real 1.361 (+0.113)
+  window  40d (n=6575)      23.36% / 0.974 / -32.9%  S 1.188 H 0.813 exp 66.1% on  114 | vs live +0.085/+0.045 | const-D q=0.881 +0.065/+0.041 | k-live k=0.976 +0.082/+0.044 | real 1.294 (+0.046)
+  window  60d (n=6575)      24.22% / 1.006 / -30.6%  S 1.292 H 0.792 exp 65.8% on  136 | vs live +0.190/+0.024 | const-D q=0.855 +0.166/+0.020 | k-live k=0.971 +0.186/+0.022 | real 1.514 (+0.266)
+  window  90d (n=6575)      24.29% / 1.014 / -30.2%  S 1.350 H 0.763 exp 65.7% on  143 | vs live +0.247/-0.005 | const-D q=0.847 +0.222/-0.009 | k-live k=0.970 +0.243/-0.006 | real 1.463 (+0.215)
+  window 120d (n=6575)      22.41% / 0.954 / -33.3%  S 1.249 H 0.733 exp 64.8% on  207 | vs live +0.146/-0.035 | const-D q=0.782 +0.112/-0.041 | k-live k=0.957 +0.141/-0.038 | real 1.461 (+0.213)
+  window 250d (n=6575)      21.31% / 0.930 / -33.3%  S 1.168 H 0.749 exp 62.9% on  339 | vs live +0.065/-0.019 | const-D q=0.636 +0.013/-0.022 | k-live k=0.928 +0.057/-0.024 | real 1.314 (+0.066)
+
+================================================================================================================
+DOT-COM D EPISODES (2000-07-01..2003-03-31): every contiguous run of effective state D, with the QLD-leg log-return over
+the run, and for each validated fallback (and the illustrative survivor series) how many of its days the gate is on and the
+QLD-leg return on gated vs ungated days.  A gate that 'works' in dot-com should be on during the negative runs.
+================================================================================================================
+  2 D episodes, 6 D days in the slice. QLD-leg return = sum of log(1+legs[2]).
+  start      end         days  QLD ret |    comp_60 on/ret-on/ret-off     rut_60 on/ret-on/ret-off
+  2000-08-07 2000-08-09     3    -5.6% |    0/3     +0.0%   -5.6%    0/3     +0.0%   -5.6%
+  2000-08-14 2000-08-16     3    +5.7% |    0/3     +0.0%   +5.7%    0/3     +0.0%   +5.7%
+  comp_60      gate on in 0/2 episodes, 0 of 6 D days; QLD-leg summed on gated days +0.0pp, ungated +0.2pp; per-day mean gated +nanbp (t +nan, hit nan) vs ungated +9bp (hit 0.50)
+  rut_60       gate on in 0/2 episodes, 0 of 6 D days; QLD-leg summed on gated days +0.0pp, ungated +0.2pp; per-day mean gated +nanbp (t +nan, hit nan) vs ungated +9bp (hit 0.50)
+
+PER-DAY QLD-LEG STATISTICS on gated vs other state-D days (whole 2000-07+ sample and the 2000-2006 slice):
+  series      slice        gated n  mean bp      t   hit | other n  mean bp   hit | diff t
+  comp_60     full             187    -30.3  -1.23  0.51 |     747     29.8  0.57 | -2.28
+  comp_60     2000-2006         38      7.6   0.21  0.55 |     145     11.9  0.52 | -0.11
+  comp_60     2007+            149    -40.0  -1.36  0.50 |     602     34.2  0.59 | -2.36
+  rut_60      full             136    -33.9  -1.10  0.50 |     798     26.6  0.57 | -1.88
+  rut_60      2000-2006         30      5.4   0.16  0.53 |     153     12.1  0.52 | -0.17
+  rut_60      2007+            106    -45.0  -1.18  0.49 |     645     30.0  0.58 | -1.89
+
+================================================================================================================
+SIDE BY SIDE on the COMMON rows: the S&P analogue (rsp_60) vs the composite fallback (comp_60) vs the original (qqew_60).
+(i) rows where rsp_60 exists (2004-07+): rsp vs comp;  (ii) rows where qqew_60 exists (2007-07+): all three.
+================================================================================================================
+
+  (rsp rows 2004-07+) n=5556: live 25.42% / 0.994 / -33.6% S 1.103 H 0.886
+  rsp_60 100%               27.51% / 1.097 / -31.1%  S 1.284 H 0.913 exp 71.6% on  151 | vs live +0.181/+0.026 | const-D q=0.825 +0.153/+0.007 | k-live k=0.965 +0.177/+0.025 | real 1.412 (+0.164)
+  rsp_60 50%                26.60% / 1.058 / -31.6%  S 1.209 H 0.908 exp 72.9% on  151 | vs live +0.107/+0.022 | const-D q=0.913 +0.092/+0.011 | k-live k=0.982 +0.105/+0.021 | real 1.345 (+0.097)
+  comp_60 100%              28.30% / 1.123 / -35.1%  S 1.345 H 0.905 exp 71.3% on  179 | vs live +0.243/+0.019 | const-D q=0.802 +0.212/-0.003 | k-live k=0.960 +0.237/+0.017 | real 1.502 (+0.254)
+  comp_60 50%               27.00% / 1.071 / -34.3%  S 1.241 H 0.904 exp 72.8% on  179 | vs live +0.139/+0.018 | const-D q=0.901 +0.122/+0.006 | k-live k=0.980 +0.136/+0.017 | real 1.386 (+0.138)
+
+  (qqew rows 2007-07+) n=4800: live 26.09% / 1.006 / -33.6% S 1.103 H 0.876
+  qqew_60 100%              31.71% / 1.218 / -28.5%  S 1.332 H 1.065 exp 70.0% on  124 | vs live +0.229/+0.189 | const-D q=0.850 +0.205/+0.178 | k-live k=0.970 +0.225/+0.190 | real 1.490 (+0.242)
+  qqew_60 50%               29.00% / 1.124 / -30.4%  S 1.231 H 0.980 exp 71.0% on  124 | vs live +0.128/+0.104 | const-D q=0.925 +0.115/+0.097 | k-live k=0.985 +0.126/+0.105 | real 1.379 (+0.131)
+  rsp_60 100%               29.14% / 1.139 / -31.1%  S 1.284 H 0.948 exp 69.6% on  128 | vs live +0.181/+0.072 | const-D q=0.821 +0.153/+0.060 | k-live k=0.965 +0.176/+0.073 | real 1.412 (+0.164)
+  rsp_60 50%                27.76% / 1.086 / -31.6%  S 1.209 H 0.921 exp 70.8% on  128 | vs live +0.107/+0.045 | const-D q=0.911 +0.092/+0.038 | k-live k=0.982 +0.105/+0.046 | real 1.345 (+0.097)
+  comp_60 100%              29.66% / 1.156 / -35.1%  S 1.345 H 0.910 exp 69.3% on  149 | vs live +0.243/+0.033 | const-D q=0.804 +0.212/+0.021 | k-live k=0.961 +0.237/+0.033 | real 1.502 (+0.254)
+  comp_60 50%               28.02% / 1.094 / -34.3%  S 1.241 H 0.901 exp 70.7% on  149 | vs live +0.139/+0.025 | const-D q=0.902 +0.122/+0.017 | k-live k=0.981 +0.136/+0.026 | real 1.386 (+0.138)
+
+================================================================================================================
+SUMMARY -- 26y (2000-07..2026-08) figures, live vs gated-100 vs gated-50, per validated fallback (and the illustrative survivor series)
+================================================================================================================
+  series      rule                 CAGR/Sh/MDD      S      H    exp | vs live S/H | vs constD S/H | vs k-live S/H | boot constD P20/P60| real Sh
+  live                  22.18% / 0.913 / -33.6%  1.103  0.768  67.7%
+  comp_60     gate 100% 24.59% / 1.024 / -35.1%  1.345  0.785  65.1% +0.243 +0.017   +0.212 +0.012   +0.237 +0.014       0.024   0.035     1.502
+  comp_60     gate 50%  23.51% / 0.980 / -34.3%  1.241  0.783  66.4% +0.139 +0.015   +0.122 +0.012   +0.136 +0.015       0.018   0.014     1.386
+  rut_60      gate 100% 24.22% / 1.006 / -30.6%  1.292  0.792  65.8% +0.190 +0.024   +0.166 +0.020   +0.186 +0.022       0.051   0.047     1.514
+  rut_60      gate 50%  23.29% / 0.968 / -31.3%  1.212  0.785  66.8% +0.110 +0.017   +0.097 +0.014   +0.107 +0.016       0.026   0.030     1.393
+
+TOTAL CANDIDATE CELLS EVALUATED THIS LINE (gate variants incl. depth/threshold/window cells, excluding placebos): 54
+Today's readings printed in the SERIES COVERAGE table above; last proxy row 2026-08-26 eff A
+
+########## STEP 3 (run B: nya, ndxsurv) ##########
+STEP 3 -- THE D-GATE ON THE FULL 2000-07+ PROXY ROWS, EVERY FALLBACK THAT VALIDATES (non-validating ones shown for the record, marked)
+================================================================================================================
+
+[nya_60] NYSE Composite / NDX
+  rows 6575 2000-07-03..2026-08-26; live 22.18% / 0.913 / -33.6% S 1.103 H 0.768 exp 67.7%
+  D-gate 100% cash          24.48% / 1.013 / -33.3%  S 1.262 H 0.822 exp 66.4% on  101 | vs live +0.160/+0.054 | const-D q=0.899 +0.143/+0.051 | k-live k=0.980 +0.157/+0.053 | real 1.375 (+0.127)
+                            boot vs live 20d: Sh CI [+0.010,+0.197] P<=0 0.014 logret P<=0 0.044  boot vs live 60d: Sh CI [+0.008,+0.206] P<=0 0.014 logret P<=0 0.042  boot vs constD 20d: Sh CI [+0.005,+0.180] P<=0 0.018 logret P<=0 0.008  boot vs constD 60d: Sh CI [-0.000,+0.188] P<=0 0.025 logret P<=0 0.015
+  D-gate 50% cash           23.40% / 0.970 / -33.3%  S 1.193 H 0.801 exp 67.0% on  101 | vs live +0.091/+0.033 | const-D q=0.950 +0.081/+0.031 | k-live k=0.990 +0.089/+0.032 | real 1.319 (+0.071)
+                            boot vs live 20d: Sh CI [+0.011,+0.109] P<=0 0.005 logret P<=0 0.025  boot vs live 60d: Sh CI [+0.012,+0.113] P<=0 0.006 logret P<=0 0.025  boot vs constD 20d: Sh CI [+0.007,+0.101] P<=0 0.006 logret P<=0 0.006  boot vs constD 60d: Sh CI [+0.009,+0.105] P<=0 0.011 logret P<=0 0.009
+  leave-one-regime-out, depth 100% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.099 / +0.112   | slice alone (687 d): -0.456 / -0.458 / -0.456  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.120 / +0.131   | slice alone (1633 d): 0.565 / 0.568 / 0.565  gate-live +0.000
+      drop GFC 2007-09                +0.109 / +0.122   | slice alone (756 d): 0.896 / 0.955 / 0.975  gate-live -0.079
+      drop COVID 2020                 +0.064 / +0.070   | slice alone (253 d): 2.601 / 1.368 / 1.265  gate-live +1.335
+      drop 2022 bear                  +0.095 / +0.105   | slice alone (251 d): -1.845 / -1.817 / -1.845  gate-live +0.000
+      drop SPMO era 2015-11+          +0.051 / +0.054   | slice alone (2719 d): 1.262 / 1.119 / 1.102  gate-live +0.160
+  leave-one-regime-out, depth 50% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.058 / +0.065   | slice alone (687 d): -0.456 / -0.457 / -0.456  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.070 / +0.076   | slice alone (1633 d): 0.565 / 0.567 / 0.565  gate-live +0.000
+      drop GFC 2007-09                +0.062 / +0.068   | slice alone (756 d): 0.946 / 0.965 / 0.975  gate-live -0.029
+      drop COVID 2020                 +0.037 / +0.041   | slice alone (253 d): 1.967 / 1.318 / 1.265  gate-live +0.702
+      drop 2022 bear                  +0.056 / +0.061   | slice alone (251 d): -1.845 / -1.831 / -1.845  gate-live +0.000
+      drop SPMO era 2015-11+          +0.031 / +0.033   | slice alone (2719 d): 1.193 / 1.111 / 1.102  gate-live +0.091
+  sign-flip placebo (gate when pct > 0.80 instead):
+  flip 100%                 19.31% / 0.852 / -29.5%  S 1.051 H 0.701 exp 63.3% on  302 | vs live -0.051/-0.067 | const-D q=0.671 -0.100/-0.070 | k-live k=0.935 -0.059/-0.071 | real 1.226 (-0.022)
+  flip 50%                  20.85% / 0.896 / -30.6%  S 1.095 H 0.745 exp 65.5% on  302 | vs live -0.008/-0.023 | const-D q=0.835 -0.035/-0.027 | k-live k=0.967 -0.013/-0.025 | real 1.254 (+0.006)
+  threshold sweep (100% depth; each is a candidate):
+  thr 0.10                  24.16% / 0.992 / -33.3%  S 1.229 H 0.812 exp 67.0% on   54 | vs live +0.126/+0.044 | const-D q=0.949 +0.117/+0.043 | k-live k=0.990 +0.125/+0.044 | real 1.364 (+0.116)
+  thr 0.20                  24.48% / 1.013 / -33.3%  S 1.262 H 0.822 exp 66.4% on  101 | vs live +0.160/+0.054 | const-D q=0.899 +0.143/+0.051 | k-live k=0.980 +0.157/+0.053 | real 1.375 (+0.127)
+  thr 0.30                  23.22% / 0.977 / -33.3%  S 1.211 H 0.800 exp 65.9% on  138 | vs live +0.108/+0.032 | const-D q=0.861 +0.085/+0.028 | k-live k=0.972 +0.104/+0.031 | real 1.390 (+0.142)
+  thr 0.40                  22.90% / 0.976 / -30.6%  S 1.285 H 0.741 exp 64.7% on  219 | vs live +0.182/-0.027 | const-D q=0.776 +0.147/-0.033 | k-live k=0.955 +0.177/-0.030 | real 1.370 (+0.122)
+  thr 0.50                  23.18% / 1.003 / -32.5%  S 1.339 H 0.747 exp 63.0% on  344 | vs live +0.237/-0.021 | const-D q=0.642 +0.185/-0.025 | k-live k=0.929 +0.229/-0.026 | real 1.372 (+0.124)
+  window sweep (100% depth, thr 0.20; each is a candidate; rows restricted to where that window has a percentile):
+  window  10d (n=6575)      22.61% / 0.936 / -34.5%  S 1.118 H 0.797 exp 66.9% on   58 | vs live +0.015/+0.029 | const-D q=0.940 +0.005/+0.027 | k-live k=0.988 +0.014/+0.028 | real 1.292 (+0.044)
+  window  20d (n=6575)      23.22% / 0.959 / -33.6%  S 1.176 H 0.793 exp 67.1% on   42 | vs live +0.073/+0.025 | const-D q=0.957 +0.065/+0.023 | k-live k=0.991 +0.072/+0.024 | real 1.249 (+0.001)
+  window  40d (n=6575)      23.53% / 0.969 / -35.1%  S 1.197 H 0.796 exp 67.1% on   47 | vs live +0.095/+0.028 | const-D q=0.955 +0.086/+0.027 | k-live k=0.991 +0.093/+0.028 | real 1.272 (+0.024)
+  window  60d (n=6575)      24.48% / 1.013 / -33.3%  S 1.262 H 0.822 exp 66.4% on  101 | vs live +0.160/+0.054 | const-D q=0.899 +0.143/+0.051 | k-live k=0.980 +0.157/+0.053 | real 1.375 (+0.127)
+  window  90d (n=6575)      22.05% / 0.931 / -35.9%  S 1.109 H 0.796 exp 65.8% on  138 | vs live +0.007/+0.028 | const-D q=0.858 -0.017/+0.024 | k-live k=0.972 +0.003/+0.027 | real 1.312 (+0.065)
+  window 120d (n=6575)      22.01% / 0.934 / -36.0%  S 1.205 H 0.727 exp 65.4% on  165 | vs live +0.102/-0.041 | const-D q=0.829 +0.075/-0.045 | k-live k=0.966 +0.097/-0.042 | real 1.362 (+0.114)
+  window 250d (n=6575)      20.97% / 0.900 / -35.0%  S 1.148 H 0.711 exp 65.2% on  176 | vs live +0.045/-0.057 | const-D q=0.811 +0.015/-0.062 | k-live k=0.962 +0.040/-0.059 | real 1.199 (-0.049)
+
+[ndxsurv_60] survivor equal-weight NDX 1999-2006 spliced to QQEW (ILLUSTRATIVE, ~30% coverage)  [ILLUSTRATIVE, survivorship-biased]
+  rows 6466 2000-12-06..2026-08-26; live 23.38% / 0.950 / -33.6% S 1.103 H 0.830 exp 68.5%
+  D-gate 100% cash          28.45% / 1.149 / -28.5%  S 1.332 H 1.007 exp 66.2% on  167 | vs live +0.229/+0.176 | const-D q=0.836 +0.203/+0.168 | k-live k=0.967 +0.224/+0.175 | real 1.490 (+0.242)
+                            boot vs live 20d: Sh CI [+0.083,+0.335] P<=0 0.001 logret P<=0 0.002  boot vs live 60d: Sh CI [+0.083,+0.342] P<=0 0.000 logret P<=0 0.001  boot vs constD 20d: Sh CI [+0.074,+0.300] P<=0 0.000 logret P<=0 0.000  boot vs constD 60d: Sh CI [+0.070,+0.310] P<=0 0.000 logret P<=0 0.000
+  D-gate 50% cash           26.01% / 1.060 / -30.4%  S 1.231 H 0.927 exp 67.3% on  167 | vs live +0.128/+0.096 | const-D q=0.918 +0.114/+0.092 | k-live k=0.983 +0.126/+0.096 | real 1.379 (+0.131)
+                            boot vs live 20d: Sh CI [+0.050,+0.172] P<=0 0.000 logret P<=0 0.000  boot vs live 60d: Sh CI [+0.046,+0.177] P<=0 0.000 logret P<=0 0.001  boot vs constD 20d: Sh CI [+0.044,+0.163] P<=0 0.000 logret P<=0 0.000  boot vs constD 60d: Sh CI [+0.043,+0.167] P<=0 0.000 logret P<=0 0.000
+  leave-one-regime-out, depth 100% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.196 / +0.216   | slice alone (578 d): -0.162 / -0.162 / -0.162  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.188 / +0.205   | slice alone (1524 d): 0.902 / 0.733 / 0.723  gate-live +0.179
+      drop GFC 2007-09                +0.196 / +0.217   | slice alone (756 d): 1.028 / 0.942 / 0.975  gate-live +0.054
+      drop COVID 2020                 +0.160 / +0.171   | slice alone (253 d): 2.600 / 1.434 / 1.265  gate-live +1.335
+      drop 2022 bear                  +0.173 / +0.189   | slice alone (251 d): -1.370 / -1.796 / -1.845  gate-live +0.476
+      drop SPMO era 2015-11+          +0.168 / +0.176   | slice alone (2719 d): 1.331 / 1.128 / 1.102  gate-live +0.229
+  leave-one-regime-out, depth 50% (Sharpe diff vs const-D / vs live; then the DROPPED slice on its own: gate / const-D / live Sharpe):
+      drop dot-com 2000-07..2003-03   +0.109 / +0.120   | slice alone (578 d): -0.162 / -0.162 / -0.162  gate-live +0.000
+      drop 2000-2006 (pre-QQEW)       +0.104 / +0.114   | slice alone (1524 d): 0.820 / 0.728 / 0.723  gate-live +0.097
+      drop GFC 2007-09                +0.107 / +0.119   | slice alone (756 d): 1.016 / 0.959 / 0.975  gate-live +0.042
+      drop COVID 2020                 +0.088 / +0.094   | slice alone (253 d): 1.968 / 1.350 / 1.265  gate-live +0.702
+      drop 2022 bear                  +0.096 / +0.106   | slice alone (251 d): -1.650 / -1.822 / -1.845  gate-live +0.195
+      drop SPMO era 2015-11+          +0.092 / +0.096   | slice alone (2719 d): 1.230 / 1.116 / 1.102  gate-live +0.128
+  sign-flip placebo (gate when pct > 0.80 instead):
+  flip 100%                 22.40% / 0.936 / -30.0%  S 1.035 H 0.859 exp 66.1% on  164 | vs live -0.067/+0.029 | const-D q=0.825 -0.095/+0.021 | k-live k=0.965 -0.072/+0.027 | real 1.131 (-0.117)
+  flip 50%                  22.97% / 0.950 / -30.8%  S 1.079 H 0.850 exp 67.3% on  164 | vs live -0.023/+0.020 | const-D q=0.913 -0.039/+0.015 | k-live k=0.982 -0.026/+0.019 | real 1.204 (-0.044)
+  threshold sweep (100% depth; each is a candidate):
+  thr 0.10                  26.85% / 1.082 / -29.5%  S 1.249 H 0.951 exp 67.3% on   90 | vs live +0.146/+0.121 | const-D q=0.914 +0.131/+0.116 | k-live k=0.983 +0.144/+0.120 | real 1.347 (+0.099)
+  thr 0.20                  28.45% / 1.149 / -28.5%  S 1.332 H 1.007 exp 66.2% on  167 | vs live +0.229/+0.176 | const-D q=0.836 +0.203/+0.168 | k-live k=0.967 +0.224/+0.175 | real 1.490 (+0.242)
+  thr 0.30                  27.16% / 1.124 / -28.5%  S 1.337 H 0.957 exp 65.0% on  250 | vs live +0.234/+0.127 | const-D q=0.747 +0.195/+0.117 | k-live k=0.950 +0.228/+0.124 | real 1.457 (+0.209)
+  thr 0.40                  25.55% / 1.089 / -28.5%  S 1.307 H 0.919 exp 63.5% on  355 | vs live +0.204/+0.089 | const-D q=0.629 +0.152/+0.079 | k-live k=0.926 +0.196/+0.084 | real 1.440 (+0.192)
+  thr 0.50                  24.47% / 1.074 / -29.7%  S 1.277 H 0.917 exp 61.5% on  483 | vs live +0.175/+0.087 | const-D q=0.485 +0.117/+0.083 | k-live k=0.898 +0.166/+0.081 | real 1.455 (+0.207)
+  window sweep (100% depth, thr 0.20; each is a candidate; rows restricted to where that window has a percentile):
+  window  10d (n=6516)      22.64% / 0.945 / -33.6%  S 1.023 H 0.886 exp 66.0% on  135 | vs live -0.079/+0.070 | const-D q=0.858 -0.103/+0.064 | k-live k=0.972 -0.083/+0.069 | real 1.255 (+0.007)
+  window  20d (n=6506)      21.73% / 0.912 / -33.6%  S 1.048 H 0.805 exp 66.5% on  114 | vs live -0.054/-0.011 | const-D q=0.883 -0.074/-0.017 | k-live k=0.977 -0.058/-0.012 | real 1.255 (+0.007)
+  window  40d (n=6486)      25.79% / 1.049 / -33.3%  S 1.189 H 0.941 exp 66.8% on  112 | vs live +0.086/+0.119 | const-D q=0.890 +0.069/+0.114 | k-live k=0.978 +0.083/+0.118 | real 1.316 (+0.068)
+  window  60d (n=6466)      28.45% / 1.149 / -28.5%  S 1.332 H 1.007 exp 66.2% on  167 | vs live +0.229/+0.176 | const-D q=0.836 +0.203/+0.168 | k-live k=0.967 +0.224/+0.175 | real 1.490 (+0.242)
+  window  90d (n=6436)      23.89% / 1.001 / -33.3%  S 1.107 H 0.917 exp 66.4% on  176 | vs live +0.004/+0.080 | const-D q=0.827 -0.023/+0.072 | k-live k=0.965 -0.001/+0.078 | real 1.273 (+0.025)
+  window 120d (n=6406)      25.32% / 1.052 / -33.3%  S 1.222 H 0.917 exp 66.2% on  199 | vs live +0.120/+0.073 | const-D q=0.794 +0.087/+0.063 | k-live k=0.959 +0.114/+0.070 | real 1.302 (+0.054)
+  window 250d (n=6276)      25.61% / 1.078 / -30.1%  S 1.270 H 0.923 exp 64.8% on  359 | vs live +0.167/+0.052 | const-D q=0.615 +0.115/+0.039 | k-live k=0.923 +0.159/+0.048 | real 1.418 (+0.170)
+
+================================================================================================================
+DOT-COM D EPISODES (2000-07-01..2003-03-31): every contiguous run of effective state D, with the QLD-leg log-return over
+the run, and for each validated fallback (and the illustrative survivor series) how many of its days the gate is on and the
+QLD-leg return on gated vs ungated days.  A gate that 'works' in dot-com should be on during the negative runs.
+================================================================================================================
+  2 D episodes, 6 D days in the slice. QLD-leg return = sum of log(1+legs[2]).
+  start      end         days  QLD ret |     nya_60 on/ret-on/ret-off ndxsurv_60 on/ret-on/ret-off
+  2000-08-07 2000-08-09     3    -5.6% |    0/3     +0.0%   -5.6%    0/3     +0.0%   -5.6%
+  2000-08-14 2000-08-16     3    +5.7% |    0/3     +0.0%   +5.7%    0/3     +0.0%   +5.7%
+  nya_60       gate on in 0/2 episodes, 0 of 6 D days; QLD-leg summed on gated days +0.0pp, ungated +0.2pp; per-day mean gated +nanbp (t +nan, hit nan) vs ungated +9bp (hit 0.50)
+  ndxsurv_60   gate on in 0/2 episodes, 0 of 6 D days; QLD-leg summed on gated days +0.0pp, ungated +0.2pp; per-day mean gated +nanbp (t +nan, hit nan) vs ungated +9bp (hit 0.50)
+
+PER-DAY QLD-LEG STATISTICS on gated vs other state-D days (whole 2000-07+ sample and the 2000-2006 slice):
+  series      slice        gated n  mean bp      t   hit | other n  mean bp   hit | diff t
+  nya_60      full             101    -56.3  -1.36  0.48 |     833     26.8  0.57 | -1.96
+  nya_60      2007+            101    -56.3  -1.36  0.48 |     650     31.2  0.59 | -2.05
+  ndxsurv_60  full             167    -64.5  -2.28  0.47 |     761     35.9  0.58 | -3.37
+  ndxsurv_60  2000-2006         43    -47.0  -1.38  0.42 |     134     29.6  0.56 | -2.00
+  ndxsurv_60  2007+            124    -70.5  -1.94  0.48 |     627     37.2  0.59 | -2.85
+
+================================================================================================================
+SIDE BY SIDE on the COMMON rows: the S&P analogue (rsp_60) vs the composite fallback (comp_60) vs the original (qqew_60).
+(i) rows where rsp_60 exists (2004-07+): rsp vs comp;  (ii) rows where qqew_60 exists (2007-07+): all three.
+================================================================================================================
+
+  (rsp rows 2004-07+) n=5556: live 25.42% / 0.994 / -33.6% S 1.103 H 0.886
+  rsp_60 100%               27.51% / 1.097 / -31.1%  S 1.284 H 0.913 exp 71.6% on  151 | vs live +0.181/+0.026 | const-D q=0.825 +0.153/+0.007 | k-live k=0.965 +0.177/+0.025 | real 1.412 (+0.164)
+  rsp_60 50%                26.60% / 1.058 / -31.6%  S 1.209 H 0.908 exp 72.9% on  151 | vs live +0.107/+0.022 | const-D q=0.913 +0.092/+0.011 | k-live k=0.982 +0.105/+0.021 | real 1.345 (+0.097)
+  comp_60 100%              28.30% / 1.123 / -35.1%  S 1.345 H 0.905 exp 71.3% on  179 | vs live +0.243/+0.019 | const-D q=0.802 +0.212/-0.003 | k-live k=0.960 +0.237/+0.017 | real 1.502 (+0.254)
+  comp_60 50%               27.00% / 1.071 / -34.3%  S 1.241 H 0.904 exp 72.8% on  179 | vs live +0.139/+0.018 | const-D q=0.901 +0.122/+0.006 | k-live k=0.980 +0.136/+0.017 | real 1.386 (+0.138)
+
+  (qqew rows 2007-07+) n=4800: live 26.09% / 1.006 / -33.6% S 1.103 H 0.876
+  qqew_60 100%              31.71% / 1.218 / -28.5%  S 1.332 H 1.065 exp 70.0% on  124 | vs live +0.229/+0.189 | const-D q=0.850 +0.205/+0.178 | k-live k=0.970 +0.225/+0.190 | real 1.490 (+0.242)
+  qqew_60 50%               29.00% / 1.124 / -30.4%  S 1.231 H 0.980 exp 71.0% on  124 | vs live +0.128/+0.104 | const-D q=0.925 +0.115/+0.097 | k-live k=0.985 +0.126/+0.105 | real 1.379 (+0.131)
+  rsp_60 100%               29.14% / 1.139 / -31.1%  S 1.284 H 0.948 exp 69.6% on  128 | vs live +0.181/+0.072 | const-D q=0.821 +0.153/+0.060 | k-live k=0.965 +0.176/+0.073 | real 1.412 (+0.164)
+  rsp_60 50%                27.76% / 1.086 / -31.6%  S 1.209 H 0.921 exp 70.8% on  128 | vs live +0.107/+0.045 | const-D q=0.911 +0.092/+0.038 | k-live k=0.982 +0.105/+0.046 | real 1.345 (+0.097)
+  comp_60 100%              29.66% / 1.156 / -35.1%  S 1.345 H 0.910 exp 69.3% on  149 | vs live +0.243/+0.033 | const-D q=0.804 +0.212/+0.021 | k-live k=0.961 +0.237/+0.033 | real 1.502 (+0.254)
+  comp_60 50%               28.02% / 1.094 / -34.3%  S 1.241 H 0.901 exp 70.7% on  149 | vs live +0.139/+0.025 | const-D q=0.902 +0.122/+0.017 | k-live k=0.981 +0.136/+0.026 | real 1.386 (+0.138)
+
+================================================================================================================
+SUMMARY -- 26y (2000-07..2026-08) figures, live vs gated-100 vs gated-50, per validated fallback (and the illustrative survivor series)
+================================================================================================================
+  series      rule                 CAGR/Sh/MDD      S      H    exp | vs live S/H | vs constD S/H | vs k-live S/H | boot constD P20/P60| real Sh
+  live                  22.18% / 0.913 / -33.6%  1.103  0.768  67.7%
+  nya_60      gate 100% 24.48% / 1.013 / -33.3%  1.262  0.822  66.4% +0.160 +0.054   +0.143 +0.051   +0.157 +0.053       0.018   0.025     1.375
+  nya_60      gate 50%  23.40% / 0.970 / -33.3%  1.193  0.801  67.0% +0.091 +0.033   +0.081 +0.031   +0.089 +0.032       0.006   0.011     1.319
+  ndxsurv_60  gate 100% 28.45% / 1.149 / -28.5%  1.332  1.007  66.2% +0.229 +0.176   +0.203 +0.168   +0.224 +0.175       0.000   0.000     1.490
+  ndxsurv_60  gate 50%  26.01% / 1.060 / -30.4%  1.231  0.927  67.3% +0.128 +0.096   +0.114 +0.092   +0.126 +0.096       0.000   0.000     1.379
+
+TOTAL CANDIDATE CELLS EVALUATED THIS LINE (gate variants incl. depth/threshold/window cells, excluding placebos): 54
+Today's readings printed in the SERIES COVERAGE table above; last proxy row 2026-08-26 eff A
+
+########## STEP 1 coverage table ##########
+roster (Sep-30)  members ticker on Yahoo full-year data coverage   not covered (first 15 tickers)
+1999-09-30            98              48             29      30%   ADCT ADPT ALTR ANDW APCC APOL ATHM ATML BBBY BGEN BMC BMET CATP CEFT CEXP
+2000-09-30            98              45             27      28%   ADCT ADLAC ADPT ALTR AMCC APCC APOL ATHM ATML BBBY BGEN BMC BMET BVSN CEFT
+2001-09-30            91              43             27      30%   ABGX ADCT ALTR AMCC ARBA ATHM ATML BBBY BEAS BGEN BMET BRCM BVSN CEFT CHIR
+2002-09-30            97              46             32      33%   ABGX ADCT ADRX ALTR AMCC APOL ATML BBBY BEAS BGEN BMET BRCD BRCM CDWC CEFT
+2003-09-30            98              55             44      45%   ADCT ALTR APCC APOL BBBY BEAS BGEN BMET BRCD BRCM CDWC CEPH CHIR CMVT CPWR
+2004-09-30            98              56             46      47%   ALTR APCC APOL ATYT BBBY BEAS BMET BRCM CDWC CEPH CHIR CMVT CPWR CTXS DELL
+2005-09-30            98              56             47      48%   ALTR APCC APOL ATYT BBBY BEAS BMET BRCM CDWC CELG CHIR CMVT CTXS DELL DISH
+2006-09-30            98              59             51      52%   ALTR AMLN APCC APOL ATVI ATYT BBBY BEAS BMET BRCM CDWC CELG CKFR CMVT CTXS
+found-but-history-starts-after-2003 (reused ticker / relisting, NOT counted): ADCT(2020) ADPT(2019) ATHM(2013) BBBY(2026) CHIR(2018) CHTR(2010) CNET(2009) CNTO(2013) CNXT(2014) CPWR(2006) DELL(2016) EA(2026) EXPE(2005) EYE(2017) GBLX(2003) GENZ(2008) GOOGL(2004) INKT(2021) ITWO(2024) LBTYA(2004) MEDI(2022) Q(2025) S(2021) SNDK(2025) SPLS(2026) SPOT(2018) USAI(2017) VRTS(2009)
