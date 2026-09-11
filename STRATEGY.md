@@ -3442,6 +3442,37 @@ equally holdout-weak; only QQEW/QQQ itself shows a holdout gain, on an
 **Verdict: pre-register only. Do not apply, not at half depth.** Today's
 readings have the rule off (QQEW/QQQ pct 0.82; effective state A).
 
+**Anatomy (`dgate_anatomy.py`, `research_notes/dgate_anatomy.md`, 2026-09-11)
+— raised from "pre-register" to CANDIDATE (forward test with a mechanical
+decision; still NOT applied, not at half depth).** What the gate is: 40
+gated runs / 124 days inside 23 of 71 D episodes on the 2007+ rows; the
+entire +83pp gain is the D→E breakdowns (22 runs, +97pp) against −12pp on
+the D→A recoveries; 7 of the 8 largest runs end 1–2 sessions before the
+200d break. Top 8 runs = 81% of the gain; 14 of 40 lose. Mechanism: on all
+727 D days, bottom-quintile breadth → P(next state E/F) 0.54 vs 0.05–0.27
+in the middle buckets, forward-20d QQQ −1.9% vs +2.3..+4.9%, forward vol
+29.7% vs 15.6–18.2%; episode-level permutation P 0.003–0.007. On A days
+the same bucket is inert (next-day +6bp), so the D-vs-A asymmetry is 99%
+forward-return difference, 1% exposure (live beta 1.59 vs 1.64). Not
+distance-to-200d (breadth separates the QLD leg inside both gap halves;
+gap200 placebo gates fail the holdout). Robustness: lag 1 +0.170/+0.148 vs
+const-D (S/H), lag 2 +0.148/+0.041 — the holdout runs are 1–3 days long,
+so it needs same- or next-day execution; 20bp cost still +0.175/+0.152;
+episode-block bootstrap (71 episodes) CI [+0.080, +0.321] P<0.001; 2 of 33
+rolling 3-yr windows negative; a continuous ramp clip((pct−0.2)/0.3) keeps
+the whole edge (S 1.337 H 1.073) and fades monotonically as it flattens;
+four mechanism-consistent redefinitions (20+60d, 120d, vs 200d SMA,
+cap−EW z-score) all positive both eras. Honest holdout: 10 gated episodes,
+the gain rests on four single breakdown days (2015-08-20, 2008-01-02,
+2011-08-02, 2010-06-28 = +32pp of +32); vs const-D CI [+0.026, +0.362]
+P 0.009, but vs LIVE the log-return CI touches zero ([−0.60, +8.79],
+P 0.050). Pre-registration spec is in the note: exact rule, `trailing_pct`,
+per-D-day log fields, decision after 8 gated runs or 48 months (primary:
+gated-minus-ungated next-day QLD leg negative at P<0.05 under a circular-
+shift null; secondary ≥5 of 8 runs negative), early-fail conditions, no
+parameter changes. Candidate count behind the rule: 240. Today: pct 0.87,
+state A, rule off.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
