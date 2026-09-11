@@ -68,3 +68,21 @@ the D-row breadth gate test to 2000-07. All columns `d,c`.
   delisted/acquired names (WCOM, SUNW, YHOO, PSFT, JDSU, ...) are gone from
   Yahoo and reused tickers (ADPT, DELL, MNST, ATHM, ...) were excluded by date.
   SURVIVORSHIP-BIASED, ILLUSTRATIVE ONLY; never a holdout test.
+
+# File added 2026-09-11 by research line `qqew_dma_overlay`
+
+- `QQEW_daily_ext.csv` (`d,c`, 2006-05-02..2026-09-10, 5,122 rows): a copy of
+  `QQEW_daily.csv` (unchanged, 2006-05-02..2026-09-09) with ONE row appended,
+  2026-09-10 close 156.6521. The Yahoo chart API answered "Too Many Requests"
+  on every attempt this session (query1/query2, browser User-Agent, through the
+  proxy), so the extension row comes from the Robinhood MCP tools:
+  `get_equity_historicals` (QQEW+QQQ, interval day, adjustment_type split,
+  2026-08-24..2026-09-10) cross-checked with `get_equity_quotes` (official
+  settled close, source `sip-list-exchange-close`, interpolated=false).
+  Cross-check of the overlap: the Robinhood QQEW closes match `QQEW_daily.csv`
+  to the cent on all 12 common sessions 2026-08-24..2026-09-09, and the
+  Robinhood QQQ closes match `qqq_long_history.csv` on 2026-09-03/04 (717.67,
+  718.96). QQQ closes for 2026-09-08/09/10 (718.36, 716.31, 708.69) were used
+  in the note ONLY for the provisional "today's reading" of the QQEW/QQQ ratio
+  and are not stored as a data file (no QQQ file was edited). The 2026-09-11
+  session was open when fetched; no 09-11 bar is included.

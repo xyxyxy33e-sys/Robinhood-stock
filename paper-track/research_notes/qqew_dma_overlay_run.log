@@ -1,0 +1,267 @@
+======================================================================================================================
+RESEARCH LINE qqew_dma_overlay -- the live DMA classifier computed on QQEW and on QQEW/QQQ, overlaid on the harness
+======================================================================================================================
+
+STANDING FIGURES (must match briefing 22.18/0.913/-33.6, S 1.103 H 0.768; real 31.40/1.248/-25.0):
+  26y proxy 22.18% / 0.913 / -33.6%  S 1.103 H 0.768  exp 67.7% | real weekly 31.40% / 1.248 / -25.0% | rows 6575 2000-07-03..2026-08-26, real rows 564
+  Yahoo ^NDX vs FRED NASDAQ100: 6962 common dates, max abs rel diff 2.443% (FRED used as the NDX leg)
+
+SERIES COVERAGE (60d window; first date with a trailing-252 percentile) and readings on 2026-09-09
+  qqew_60       2007-07-27  n  4810  | 09-09 value +0.0290 pct 0.82  | QQEW/QQQ (the original; 2006-05+)
+  ndxsurv_60    2000-12-06  n  6476  | 09-09 value +0.0290 pct 0.82  | survivor equal-weight NDX 1999-2006 spliced to QQEW (ILLUSTRATIVE, ~30% coverage)
+  comp_60       1999-03-29  n  6905  | 09-09 value +0.0212 pct 0.95  | NASDAQCOM/NASDAQ100 (FRED, composite vs mega-cap)
+  rut_60        1999-03-29  n  6905  | 09-09 value -0.0005 pct 0.35  | Russell 2000 / NDX
+  rua_60        1999-03-29  n  6905  | 09-09 value +0.0328 pct 0.90  | Russell 3000 / NDX
+  nya_60        1999-03-29  n  6905  | 09-09 value +0.0371 pct 0.69  | NYSE Composite / NDX
+  w5k_60        1999-03-29  n  6905  | 09-09 value +0.0316 pct 0.89  | Wilshire 5000 / NDX
+  rsp_60        2004-07-27  n  5566  | 09-09 value -0.0248 pct 0.41  | RSP/SPY (S&P equal-weight; 2003-05+)
+
+ALIGNMENT CHECK (60d series): contemp = corr(QQQ d0->d1, raw log-ratio change d0->d1); pred = corr(pct at d0, QQQ d0->d1)
+  qqew_60      n  4799  contemp -0.235  pred d1 +0.009
+  ndxsurv_60   n  6465  contemp -0.232  pred d1 +0.006
+  comp_60      n  6574  contemp -0.444  pred d1 -0.004
+  rut_60       n  6574  contemp -0.430  pred d1 -0.001
+  rua_60       n  6574  contemp -0.667  pred d1 +0.008
+  nya_60       n  6574  contemp -0.678  pred d1 +0.009
+  w5k_60       n  6574  contemp -0.670  pred d1 +0.007
+  rsp_60       n  5555  contemp -0.007  pred d1 +0.017
+
+(reused breadth_dgate_2000.py sections 0-3 verbatim: 192 lines)  [   1s]
+  live rebalances/yr on the full proxy: 47.1
+
+QQEW series: data/QQEW_daily_ext.csv 2006-05-02..2026-09-10 (5122 sessions); classifier valid from 2007-02-15; ratio sessions 5121 to 2026-09-10
+  harness sessions with no QQEW print: 0 []; QQEW sessions not in the harness calendar: 1 ['2011-01-03']
+
+REFERENCE on the 4800 QQEW rows 2007-07-27..2026-08-26: live 26.09% / 1.006 / -33.6% S 1.103 H 0.876 exp 72.1%   (note: 26.09/1.006/-33.6 S 1.103 H 0.876)
+  rows where the QQEW read is a forward-filled stale print: 0
+
+----------------------------------------------------------------------------------------------------------------------
+1a. STATE OCCUPANCY (% of days), same 4,800 rows; macro = 50/200 six-state, eff = after the 20/100 fast overlay
+  series                era             A       B       C       D       E       F   A+B(risk-on)  D  E+F
+  QQQ macro             full        58.4%    5.9%    5.1%   15.1%    5.7%    9.7%    64.3%    15.1%  15.5%
+  QQQ macro             search      62.3%    4.9%    5.0%   14.0%    5.5%    8.1%    67.3%    14.0%  13.6%
+  QQQ macro             holdout     53.1%    7.2%    5.2%   16.6%    6.0%   11.8%    60.4%    16.6%  17.8%
+  QQQ eff               full        64.4%    1.5%    5.7%   15.1%    5.7%    7.5%    65.9%    15.1%  13.2%
+  QQQ eff               search      68.0%    0.7%    5.7%   14.0%    5.5%    6.1%    68.6%    14.0%  11.6%
+  QQQ eff               holdout     59.8%    2.6%    5.7%   16.6%    6.0%    9.3%    62.4%    16.6%  15.3%
+  QQEW macro            full        54.0%    5.5%    7.0%   15.6%    4.9%   13.0%    59.5%    15.6%  17.9%
+  QQEW macro            search      57.3%    5.7%    5.7%   15.1%    4.9%   11.2%    63.0%    15.1%  16.1%
+  QQEW macro            holdout     49.6%    5.3%    8.6%   16.2%    4.9%   15.4%    54.9%    16.2%  20.3%
+  QQEW eff              full        61.5%    0.8%    7.6%   15.6%    4.9%    9.6%    62.3%    15.6%  14.5%
+  QQEW eff              search      64.6%    0.5%    6.6%   15.1%    4.9%    8.3%    65.1%    15.1%  13.2%
+  QQEW eff              holdout     57.4%    1.3%    8.8%   16.2%    4.9%   11.4%    58.7%    16.2%  16.3%
+  ratio macro           full        20.0%    4.5%   18.8%    8.3%    2.9%   45.6%    24.5%     8.3%  48.4%
+  ratio macro           search      14.6%    5.5%   19.1%    8.5%    2.0%   50.3%    20.1%     8.5%  52.3%
+  ratio macro           holdout     27.2%    3.2%   18.3%    8.0%    4.0%   39.4%    30.4%     8.0%  43.3%
+  ratio eff             full        29.4%    0.9%   20.3%    8.3%    2.9%   38.3%    30.3%     8.3%  41.1%
+  ratio eff             search      24.3%    1.4%   24.5%    8.5%    2.0%   39.2%    25.7%     8.5%  41.3%
+  ratio eff             holdout     36.1%    0.2%   14.7%    8.0%    4.0%   37.0%    36.3%     8.0%  41.0%
+  fast (20/100) state occupancy, full rows:
+  QQQ fast              full        52.4%    3.7%    8.2%   17.8%    5.5%   12.4%
+  QQEW fast             full        49.3%    4.6%    8.9%   16.8%    6.4%   14.1%
+  ratio fast            full        24.6%    2.8%   19.1%    6.9%    1.9%   44.7%
+  extension-trim votes on effective-A days (QQQ's gaps vs QQEW's own gaps vs the ratio's gaps):
+    QQQ    eff-A days  3092: votes 0/1/2/3 = 2294/230/277/291  mean scale 0.821
+    QQEW   eff-A days  2951: votes 0/1/2/3 = 2399/186/191/175  mean scale 0.877
+    ratio  eff-A days  1412: votes 0/1/2/3 = 1412/0/0/0  mean scale 1.000
+
+1b. AGREEMENT MATRIX, MACRO states: rows = QQQ, cols = QQEW, cell = % of the 4800 days (row sums in the last column)
+               A       B       C       D       E       F     row%
+  QQQ A    51.0%    1.7%    0.9%    4.4%    0.1%    0.3%   58.4%
+  QQQ B     1.4%    2.7%    1.7%    0.0%    0.0%    0.1%    5.9%
+  QQQ C     0.0%    0.8%    3.9%    0.0%    0.0%    0.4%    5.1%
+  QQQ D     1.4%    0.0%    0.0%   11.0%    2.2%    0.5%   15.1%
+  QQQ E     0.1%    0.2%    0.0%    0.2%    2.5%    2.8%    5.7%
+  QQQ F     0.1%    0.1%    0.5%    0.0%    0.1%    9.0%    9.7%
+  col%       54.0%    5.5%    7.0%   15.6%    4.9%   13.0%
+  agreement 80.1% (chance 36.1%, Cohen kappa 0.688);  conditional P(QQEW state | QQQ state):
+    QQQ A (n 2801): A 87.4%  B 3.0%  C 1.6%  D 7.5%  E 0.1%  F 0.5%
+    QQQ B (n  284): A 23.9%  B 45.8%  C 28.2%  D 0.4%  E 0.0%  F 1.8%
+    QQQ C (n  246): A 0.8%  B 16.3%  C 75.2%  D 0.0%  E 0.0%  F 7.7%
+    QQQ D (n  727): A 9.1%  B 0.0%  C 0.0%  D 72.8%  E 14.9%  F 3.3%
+    QQQ E (n  275): A 1.5%  B 3.3%  C 0.4%  D 3.3%  E 43.6%  F 48.0%
+    QQQ F (n  467): A 0.9%  B 0.6%  C 5.1%  D 0.0%  E 0.9%  F 92.5%
+
+1b. AGREEMENT MATRIX, EFFECTIVE states: rows = QQQ, cols = QQEW, cell = % of the 4800 days (row sums in the last column)
+               A       B       C       D       E       F     row%
+  QQQ A    58.1%    0.4%    1.4%    4.4%    0.1%    0.1%   64.4%
+  QQQ B     0.7%    0.3%    0.4%    0.0%    0.0%    0.0%    1.5%
+  QQQ C     0.9%    0.1%    4.5%    0.0%    0.0%    0.2%    5.7%
+  QQQ D     1.4%    0.0%    0.2%   11.0%    2.2%    0.3%   15.1%
+  QQQ E     0.3%    0.0%    0.4%    0.2%    2.5%    2.4%    5.7%
+  QQQ F     0.1%    0.0%    0.7%    0.0%    0.1%    6.6%    7.5%
+  col%       61.5%    0.8%    7.6%   15.6%    4.9%    9.6%
+  agreement 83.1% (chance 43.4%, Cohen kappa 0.701);  conditional P(QQEW state | QQQ state):
+    QQQ A (n 3092): A 90.2%  B 0.5%  C 2.2%  D 6.8%  E 0.1%  F 0.2%
+    QQQ B (n   73): A 47.9%  B 21.9%  C 26.0%  D 1.4%  E 0.0%  F 2.7%
+    QQQ C (n  275): A 15.3%  B 2.5%  C 78.9%  D 0.0%  E 0.0%  F 3.3%
+    QQQ D (n  727): A 9.1%  B 0.0%  C 1.1%  D 72.8%  E 14.9%  F 2.2%
+    QQQ E (n  275): A 5.1%  B 0.0%  C 6.9%  D 3.3%  E 43.6%  F 41.1%
+    QQQ F (n  358): A 1.1%  B 0.0%  C 9.2%  D 0.0%  E 1.1%  F 88.5%
+
+1c. IS QQEW'S READ WORSE OR BETTER THAN QQQ'S? (rank A<B<C<D<E<F; 'worse' = QQEW rank higher)
+  basis     era           n   worse    same  better  mean(rankQQEW-rankQQQ)  worse by >=2  | on QQQ-eff-A days: worse | on QQQ-eff-D days: worse  E/F
+  macro     full       4800   15.1%   80.1%    4.9%  +0.179                    6.7%        |  13.5%                |  18.2%   18.2%
+  macro     search     2719   14.0%   81.1%    4.9%  +0.185                    7.2%        |  12.4%                |  19.9%   19.9%
+  macro     holdout    2081   16.4%   78.7%    4.9%  +0.171                    6.0%        |  15.2%                |  16.2%   16.2%
+  eff       full       4800   11.9%   83.1%    5.0%  +0.119                    6.5%        |   9.8%                |  17.1%   17.1%
+  eff       search     2719   11.7%   83.6%    4.7%  +0.134                    6.8%        |   9.8%                |  18.3%   18.3%
+  eff       holdout    2081   12.1%   82.4%    5.5%  +0.099                    6.2%        |   9.7%                |  15.7%   15.7%
+
+1d. TRANSITION TIMING, MACRO states: for each QQQ state change, the nearest QQEW change (within +-60 sessions) in the same direction; 'strict' = same destination state, 'loose' = any destination.  lag < 0 = QQEW moved EARLIER (lead).
+  QQQ changes 225, QQEW changes 245 on 4800 rows (11.8 vs 12.9 per year)
+  strict downgrades  n  112 matched  104 (92.9%)  QQEW earlier  44.2%  same day  35.6%  later  20.2% | lag sessions: Q1  -4.0 median  +0.0 Q3  +0.0 mean  -3.6
+      search          n   59 matched   55 (93.2%)  QQEW earlier  38.2%  same day  41.8%  later  20.0% | lag sessions: Q1  -3.0 median  +0.0 Q3  +0.0 mean  -3.3
+      holdout         n   53 matched   49 (92.5%)  QQEW earlier  51.0%  same day  28.6%  later  20.4% | lag sessions: Q1  -5.0 median  -1.0 Q3  +0.0 mean  -3.8
+  strict upgrades    n  113 matched   99 (87.6%)  QQEW earlier  30.3%  same day  29.3%  later  40.4% | lag sessions: Q1  -1.0 median  +0.0 Q3  +3.5 mean  +2.4
+      search          n   61 matched   51 (83.6%)  QQEW earlier  23.5%  same day  31.4%  later  45.1% | lag sessions: Q1  +0.0 median  +0.0 Q3  +3.0 mean  +2.5
+      holdout         n   52 matched   48 (92.3%)  QQEW earlier  37.5%  same day  27.1%  later  35.4% | lag sessions: Q1  -1.2 median  +0.0 Q3  +4.5 mean  +2.3
+  loose  downgrades  n  112 matched  112 (100.0%)  QQEW earlier  36.6%  same day  40.2%  later  23.2% | lag sessions: Q1  -2.0 median  +0.0 Q3  +0.0 mean  -1.5
+      search          n   59 matched   59 (100.0%)  QQEW earlier  35.6%  same day  44.1%  later  20.3% | lag sessions: Q1  -2.0 median  +0.0 Q3  +0.0 mean  -2.2
+      holdout         n   53 matched   53 (100.0%)  QQEW earlier  37.7%  same day  35.8%  later  26.4% | lag sessions: Q1  -2.0 median  +0.0 Q3  +1.0 mean  -0.9
+  loose  upgrades    n  113 matched  113 (100.0%)  QQEW earlier  27.4%  same day  31.9%  later  40.7% | lag sessions: Q1  -1.0 median  +0.0 Q3  +3.0 mean  +2.0
+      search          n   61 matched   61 (100.0%)  QQEW earlier  21.3%  same day  32.8%  later  45.9% | lag sessions: Q1  +0.0 median  +0.0 Q3  +4.0 mean  +2.5
+      holdout         n   52 matched   52 (100.0%)  QQEW earlier  34.6%  same day  30.8%  later  34.6% | lag sessions: Q1  -1.0 median  +0.0 Q3  +2.0 mean  +1.4
+  by transition type (strict), most frequent first:
+    A>D    n   60 matched   56 (93.3%)  QQEW earlier  37.5%  same day  41.1%  later  21.4% | lag sessions: Q1  -3.0 median  +0.0 Q3  +0.0 mean  -2.2
+    D>A    n   52 matched   51 (98.1%)  QQEW earlier  15.7%  same day  31.4%  later  52.9% | lag sessions: Q1  +0.0 median  +1.0 Q3  +3.5 mean  +5.4
+    F>C    n   21 matched   20 (95.2%)  QQEW earlier  30.0%  same day  45.0%  later  25.0% | lag sessions: Q1  -1.0 median  +0.0 Q3  +0.2 mean  +2.5
+    D>E    n   19 matched   17 (89.5%)  QQEW earlier  64.7%  same day  29.4%  later   5.9% | lag sessions: Q1  -3.0 median  -2.0 Q3  +0.0 mean  -3.5
+    C>B    n   15 matched   15 (100.0%)  QQEW earlier  60.0%  same day  13.3%  later  26.7% | lag sessions: Q1 -11.5 median  -2.0 Q3  +2.5 mean  -6.5
+    C>F    n   12 matched   12 (100.0%)  QQEW earlier   8.3%  same day  58.3%  later  33.3% | lag sessions: Q1  +0.0 median  +0.0 Q3  +2.0 mean  -1.1
+    E>F    n   11 matched   11 (100.0%)  QQEW earlier  72.7%  same day   9.1%  later  18.2% | lag sessions: Q1 -14.0 median -11.0 Q3  -1.0 mean  -8.3
+    E>D    n   11 matched    1 (9.1%)  QQEW earlier   0.0%  same day 100.0%  later   0.0% | lag sessions: Q1  +0.0 median  +0.0 Q3  +0.0 mean  +0.0
+    B>A    n   10 matched   10 (100.0%)  QQEW earlier  50.0%  same day  10.0%  later  40.0% | lag sessions: Q1  -3.5 median  -0.5 Q3  +9.8 mean  +4.7
+    B>C    n    6 matched    5 (83.3%)  QQEW earlier  60.0%  same day  20.0%  later  20.0% | lag sessions: Q1 -13.0 median  -2.0 Q3  +0.0 mean -14.4
+  REVERSE (QQEW change -> nearest QQQ change, strict) downgrades  n  123 matched  103 (83.7%)  QQQ earlier  19.4%  same day  35.9%  later  44.7% | lag sessions: Q1  +0.0 median  +0.0 Q3  +4.5 mean  +4.5
+  REVERSE (QQEW change -> nearest QQQ change, strict) upgrades    n  122 matched  101 (82.8%)  QQQ earlier  37.6%  same day  28.7%  later  33.7% | lag sessions: Q1  -3.0 median  +0.0 Q3  +1.0 mean  +0.2
+  cross-corr of daily rank changes corr(dQQQ_t, dQQEW_{t+k}) (k>0: QQEW moves AFTER QQQ): -20:-0.004  -10:-0.017  -5:-0.007  -3:+0.012  -2:+0.022  -1:+0.048  +0:+0.388  +1:+0.081  +2:+0.053  +3:+0.012  +5:-0.014  +10:-0.005  +20:-0.015
+
+1d. TRANSITION TIMING, EFFECTIVE states: for each QQQ state change, the nearest QQEW change (within +-60 sessions) in the same direction; 'strict' = same destination state, 'loose' = any destination.  lag < 0 = QQEW moved EARLIER (lead).
+  QQQ changes 235, QQEW changes 269 on 4800 rows (12.3 vs 14.1 per year)
+  strict downgrades  n  121 matched  108 (89.3%)  QQEW earlier  38.0%  same day  41.7%  later  20.4% | lag sessions: Q1  -3.0 median  +0.0 Q3  +0.0 mean  -2.2
+      search          n   64 matched   59 (92.2%)  QQEW earlier  35.6%  same day  44.1%  later  20.3% | lag sessions: Q1  -3.0 median  +0.0 Q3  +0.0 mean  -2.5
+      holdout         n   57 matched   49 (86.0%)  QQEW earlier  40.8%  same day  38.8%  later  20.4% | lag sessions: Q1  -3.0 median  +0.0 Q3  +0.0 mean  -1.9
+  strict upgrades    n  114 matched   97 (85.1%)  QQEW earlier  25.8%  same day  40.2%  later  34.0% | lag sessions: Q1  -1.0 median  +0.0 Q3  +2.0 mean  +0.8
+      search          n   60 matched   51 (85.0%)  QQEW earlier  25.5%  same day  35.3%  later  39.2% | lag sessions: Q1  -0.5 median  +0.0 Q3  +2.5 mean  +0.9
+      holdout         n   54 matched   46 (85.2%)  QQEW earlier  26.1%  same day  45.7%  later  28.3% | lag sessions: Q1  -0.8 median  +0.0 Q3  +1.0 mean  +0.7
+  loose  downgrades  n  121 matched  121 (100.0%)  QQEW earlier  31.4%  same day  47.1%  later  21.5% | lag sessions: Q1  -1.0 median  +0.0 Q3  +0.0 mean  -1.0
+      search          n   64 matched   64 (100.0%)  QQEW earlier  35.9%  same day  46.9%  later  17.2% | lag sessions: Q1  -2.0 median  +0.0 Q3  +0.0 mean  -1.5
+      holdout         n   57 matched   57 (100.0%)  QQEW earlier  26.3%  same day  47.4%  later  26.3% | lag sessions: Q1  -1.0 median  +0.0 Q3  +1.0 mean  -0.5
+  loose  upgrades    n  114 matched  114 (100.0%)  QQEW earlier  27.2%  same day  41.2%  later  31.6% | lag sessions: Q1  -1.0 median  +0.0 Q3  +1.0 mean  +1.0
+      search          n   60 matched   60 (100.0%)  QQEW earlier  25.0%  same day  36.7%  later  38.3% | lag sessions: Q1  -0.2 median  +0.0 Q3  +3.0 mean  +1.7
+      holdout         n   54 matched   54 (100.0%)  QQEW earlier  29.6%  same day  46.3%  later  24.1% | lag sessions: Q1  -1.0 median  +0.0 Q3  +0.0 mean  +0.2
+  by transition type (strict), most frequent first:
+    A>D    n   60 matched   56 (93.3%)  QQEW earlier  37.5%  same day  41.1%  later  21.4% | lag sessions: Q1  -3.0 median  +0.0 Q3  +0.0 mean  -2.2
+    D>A    n   52 matched   51 (98.1%)  QQEW earlier  15.7%  same day  35.3%  later  49.0% | lag sessions: Q1  +0.0 median  +0.0 Q3  +3.0 mean  +3.7
+    F>C    n   23 matched   23 (100.0%)  QQEW earlier  34.8%  same day  52.2%  later  13.0% | lag sessions: Q1  -1.0 median  +0.0 Q3  +0.0 mean  -0.7
+    D>E    n   19 matched   17 (89.5%)  QQEW earlier  64.7%  same day  29.4%  later   5.9% | lag sessions: Q1  -3.0 median  -2.0 Q3  +0.0 mean  -3.5
+    C>F    n   17 matched   17 (100.0%)  QQEW earlier   0.0%  same day  76.5%  later  23.5% | lag sessions: Q1  +0.0 median  +0.0 Q3  +0.0 mean  +2.8
+    C>A    n   12 matched   12 (100.0%)  QQEW earlier  41.7%  same day  41.7%  later  16.7% | lag sessions: Q1  -5.2 median  +0.0 Q3  +0.0 mean  -4.7
+    E>D    n   11 matched    1 (9.1%)  QQEW earlier   0.0%  same day 100.0%  later   0.0% | lag sessions: Q1  +0.0 median  +0.0 Q3  +0.0 mean  +0.0
+    E>F    n    8 matched    8 (100.0%)  QQEW earlier  62.5%  same day  12.5%  later  25.0% | lag sessions: Q1 -11.5 median  -4.0 Q3  +0.5 mean  -5.8
+    A>B    n    7 matched    2 (28.6%)  QQEW earlier   0.0%  same day  50.0%  later  50.0% | lag sessions: Q1  +0.5 median  +1.0 Q3  +1.5 mean  +1.0
+    B>C    n    5 matched    5 (100.0%)  QQEW earlier  60.0%  same day  20.0%  later  20.0% | lag sessions: Q1  -6.0 median  -1.0 Q3  +0.0 mean -12.6
+  REVERSE (QQEW change -> nearest QQQ change, strict) downgrades  n  137 matched  115 (83.9%)  QQQ earlier  19.1%  same day  39.1%  later  41.7% | lag sessions: Q1  +0.0 median  +0.0 Q3  +4.5 mean  +3.8
+  REVERSE (QQEW change -> nearest QQQ change, strict) upgrades    n  132 matched  111 (84.1%)  QQQ earlier  33.3%  same day  35.1%  later  31.5% | lag sessions: Q1  -2.0 median  +0.0 Q3  +1.0 mean  +1.2
+  cross-corr of daily rank changes corr(dQQQ_t, dQQEW_{t+k}) (k>0: QQEW moves AFTER QQQ): -20:-0.020  -10:-0.024  -5:+0.015  -3:+0.017  -2:-0.001  -1:+0.078  +0:+0.424  +1:+0.056  +2:+0.047  +3:-0.002  +5:-0.009  +10:-0.012  +20:-0.031
+
+----------------------------------------------------------------------------------------------------------------------
+2. EVENT STUDY: mean forward return after each event (signal known at the d0 close; return from that close), circular-shift placebo P-values (2000 shifts of the flag vector; P<= = share of shifts with a mean <= actual, P>= the reverse).
+
+2a. TRANSITION-DAY events (effective states): the day the state changed
+  flag                          n | QQQ  5d%  P<= P>= QQQ 10d%  P<= P>= QQQ 20d%  P<= P>= QQQ 60d%  P<= P>= | live  5d%  P<= P>= live 10d%  P<= P>= live 20d%  P<= P>= live 60d%  P<= P>=
+  QQEW down, QQQ holds         80 |   +0.52 0.712 0.288    +0.80 0.614 0.387    +1.57 0.647 0.352    +4.39 0.612 0.388 |   +0.92 0.828 0.172    +1.04 0.469 0.531    +2.47 0.614 0.386    +7.96 0.754 0.246
+  QQEW up, QQQ holds           84 |   +0.35 0.535 0.465    +0.45 0.308 0.692    +0.95 0.280 0.720    +3.58 0.364 0.636 |   +0.47 0.458 0.542    +0.82 0.336 0.664    +2.06 0.464 0.536    +6.54 0.485 0.514
+  both down                    57 |   +0.18 0.361 0.638    -0.31 0.048 0.952    +0.81 0.256 0.745    +5.19 0.830 0.170 |   +0.33 0.339 0.661    +0.27 0.145 0.855    +0.68 0.089 0.910    +5.80 0.344 0.655
+  both up                      47 |   +0.60 0.753 0.247    +1.83 0.976 0.025    +3.13 0.983 0.018    +6.58 0.978 0.022 |   +0.72 0.641 0.359    +2.44 0.971 0.029    +4.16 0.972 0.028   +11.22 0.997 0.003
+  QQQ down alone               63 |   -0.37 0.024 0.977    -0.03 0.095 0.905    +1.65 0.689 0.311    +2.71 0.177 0.823 |   -0.04 0.102 0.898    -0.23 0.026 0.974    +1.83 0.323 0.677    +6.31 0.459 0.541
+  QQQ up alone                 67 |   +0.44 0.631 0.368    +0.33 0.261 0.740    +0.81 0.223 0.777    +2.13 0.075 0.924 |   +0.89 0.788 0.211    +0.88 0.378 0.622    +1.61 0.282 0.718    +4.18 0.090 0.910
+  opposite                      1 |       -     -     -        -     -     -        -     -     -        -     -     - |       -     -     -        -     -     -        -     -     -        -     -     -
+
+2b. PERSISTENT divergence (every day, effective ranks): narrow = QQEW worse (div>=1), agree, broad = QQEW better (div<=-1)
+  flag                          n | QQQ  5d%  P<= P>= QQQ 10d%  P<= P>= QQQ 20d%  P<= P>= QQQ 60d%  P<= P>= | live  5d%  P<= P>= live 10d%  P<= P>= live 20d%  P<= P>= live 60d%  P<= P>=
+  narrow (div>=1)             570 |   +0.08 0.131 0.870    +0.11 0.087 0.913    +0.62 0.139 0.861    +3.40 0.357 0.642 |   +0.31 0.219 0.781    +0.41 0.117 0.882    +1.34 0.182 0.818    +6.63 0.503 0.497
+  agree (div=0)              3989 |   +0.35 0.795 0.205    +0.69 0.782 0.217    +1.33 0.600 0.401    +3.79 0.346 0.654 |   +0.58 0.850 0.150    +1.15 0.853 0.147    +2.21 0.638 0.361    +6.23 0.277 0.724
+  broad (div<=-1)             241 |   +0.40 0.576 0.424    +1.09 0.807 0.193    +2.38 0.896 0.104    +6.74 0.923 0.076 |   +0.20 0.220 0.780    +1.05 0.492 0.508    +3.04 0.774 0.226    +9.75 0.858 0.142
+  narrow, QQQ eff A           302 |   +0.09 0.214 0.785    +0.15 0.155 0.845    +0.56 0.147 0.853    +1.97 0.090 0.909 |   +0.06 0.115 0.885    +0.04 0.059 0.941    +0.98 0.135 0.865    +4.34 0.137 0.863
+  agree, QQQ eff A           2790 |   +0.31 0.401 0.600    +0.58 0.291 0.709    +1.07 0.172 0.828    +3.47 0.231 0.769 |   +0.58 0.712 0.288    +1.11 0.609 0.391    +2.00 0.333 0.667    +5.87 0.235 0.765
+  narrow, QQQ eff D           124 |   +0.34 0.501 0.499    +0.03 0.234 0.766    +0.42 0.273 0.728    +6.82 0.801 0.199 |   +0.77 0.638 0.362    +0.42 0.281 0.719    +0.57 0.210 0.789   +10.61 0.830 0.171
+  agree, QQQ eff D            529 |   +0.71 0.950 0.051    +1.46 0.968 0.032    +2.78 0.969 0.031    +5.51 0.853 0.147 |   +1.18 0.977 0.024    +2.44 0.986 0.014    +4.64 0.990 0.011    +9.79 0.950 0.051
+  broad, QQQ eff D             74 |   -0.00 0.257 0.743    +0.35 0.346 0.653    +2.11 0.706 0.294    +5.44 0.689 0.311 |   -0.18 0.152 0.848    +0.39 0.276 0.725    +3.04 0.695 0.305    +7.43 0.587 0.413
+  pct<0.20 (pre-reg), QQQ eff D  124 |   -1.32 0.004 0.996    -2.05 0.009 0.992    -1.91 0.036 0.964    -1.31 0.058 0.942 |   -2.14 0.003 0.997    -3.17 0.004 0.996    -3.99 0.007 0.993    -2.32 0.037 0.963
+
+2c. by era, the two headline flags
+  flag                          n | QQQ  5d%  P<= P>= QQQ 10d%  P<= P>= QQQ 20d%  P<= P>= QQQ 60d%  P<= P>= | live  5d%  P<= P>= live 10d%  P<= P>= live 20d%  P<= P>= live 60d%  P<= P>=
+  narrow, D, search            70 |   -0.16 0.205 0.794    -0.30 0.180 0.820    -0.41 0.166 0.835   +10.03 0.947 0.053 |   -0.20 0.181 0.819    -0.38 0.174 0.826    -1.21 0.112 0.888   +14.25 0.917 0.083
+  narrow, D, holdout           54 |   +1.00 0.862 0.139    +0.47 0.433 0.567    +1.49 0.547 0.453    +2.65 0.351 0.649 |   +2.03 0.961 0.040    +1.44 0.607 0.393    +2.89 0.624 0.376    +5.88 0.436 0.564
+  QQEW down/QQQ holds, S       40 |   +0.45 0.598 0.402    +0.97 0.675 0.325    +2.09 0.796 0.204    +5.61 0.815 0.185 |   +0.49 0.456 0.544    +1.39 0.631 0.369    +2.72 0.638 0.361    +8.79 0.810 0.190
+  QQEW down/QQQ holds, H       40 |   +0.58 0.724 0.277    +0.63 0.473 0.527    +1.05 0.370 0.629    +3.20 0.334 0.666 |   +1.34 0.918 0.082    +0.70 0.316 0.684    +2.21 0.489 0.510    +7.14 0.530 0.469
+  [  14s] descriptive stage done
+
+----------------------------------------------------------------------------------------------------------------------
+3. OVERLAYS through the harness on the 4800 rows.  Columns: candidate | same-rows live | dS/dH vs live | exposure | k-live control (downturn_review.exposure_control, TRUE live fn, k) and dS/dH vs it | flip placebo dS/dH vs live | real weekly Sharpe (live 1.248) | rebalances/yr (live on these rows below) | both-era vs control
+  same-rows live 26.09% / 1.006 / -33.6% S 1.103 H 0.876 exp 72.1% rebal/yr 48.4 | real 31.40% / 1.248 / -25.0%
+  REFERENCE pre-registered pct<0.20 D-gate (not a candidate): 31.71% / 1.218 / -28.5% S 1.332 H 1.065 exp 70.0% | vs live +0.229/+0.189 | k-live k=0.970 S 1.107 H 0.875 -> +0.225/+0.190 | real 1.490 | rebal/yr 49.6
+
+  candidate                              CAGR/Sh/MDD      S     H    exp | vs live  S/H     | k-live k   S     H   -> dS/dH      | flip dS/dH     | real   dReal | reb/yr | both>ctrl | on days
+  a  conf worse-of            24.85% / 1.006 / -35.6%  1.169 0.782  69.6% | +0.066/-0.094 | 0.966 1.108 0.875 -> +0.061/-0.093 | +0.030/+0.037 | 1.173 -0.075 |  51.1 |         - |   570
+  a  conf D/E/F side          25.94% / 1.032 / -34.1%  1.204 0.799  69.6% | +0.101/-0.078 | 0.966 1.108 0.875 -> +0.096/-0.077 | +0.006/+0.003 | 1.206 -0.042 |  50.5 |         - |   467
+  b  QQEW-only + QQEW gaps    24.58% / 0.959 / -41.6%  1.112 0.741  74.4% | +0.010/-0.135 | 1.032 1.099 0.876 -> +0.013/-0.135 |     (none)    | 1.109 -0.139 |  49.9 |         - |  1351
+  b  QQEW-only + QQQ gaps     26.35% / 1.040 / -37.4%  1.199 0.823  70.6% | +0.097/-0.053 | 0.980 1.105 0.875 -> +0.094/-0.052 |     (none)    | 1.165 -0.083 |  52.7 |         - |   811
+  c.i  narrow = extra vote    24.72% / 0.986 / -32.8%  1.059 0.888  70.2% | -0.044/+0.012 | 0.973 1.106 0.875 -> -0.047/+0.013 | +0.000/+0.000 | 1.255 +0.007 |  49.8 |         - |   301
+  c.ii narrow D-gate 100%     25.46% / 1.018 / -35.6%  1.174 0.806  69.7% | +0.071/-0.070 | 0.966 1.108 0.875 -> +0.066/-0.069 | +0.014/-0.015 | 1.244 -0.004 |  48.9 |         - |   124
+  c.ii narrow D-gate 50%      25.88% / 1.022 / -32.8%  1.148 0.853  70.9% | +0.046/-0.024 | 0.983 1.105 0.875 -> +0.044/-0.023 | +0.012/-0.005 | 1.258 +0.010 |  49.1 |         - |   124
+  c.iii narrow blocks fast    25.59% / 0.993 / -33.8%  1.092 0.860  72.1% | -0.011/-0.016 | 0.999 1.103 0.876 -> -0.011/-0.016 | -0.003/-0.009 | 1.228 -0.020 |  48.6 |         - |    44
+  c.iv narrow de-lever 25%    25.13% / 1.008 / -31.1%  1.102 0.880  70.1% | -0.000/+0.004 | 0.972 1.106 0.875 -> -0.004/+0.005 | +0.007/-0.002 | 1.263 +0.016 |  50.7 |         - |   425
+  c.iv narrow de-lever 50%    24.04% / 0.997 / -29.8%  1.089 0.872  68.1% | -0.014/-0.004 | 0.944 1.110 0.876 -> -0.021/-0.004 | +0.012/-0.005 | 1.266 +0.018 |  50.5 |         - |   425
+  d  QQEW gaps replace        24.52% / 0.934 / -34.6%  1.034 0.796  75.9% | -0.068/-0.080 | 1.054 1.097 0.878 -> -0.063/-0.082 |     (none)    | 1.190 -0.058 |  45.4 |         - |   555
+  d  QQEW gaps sum            25.66% / 1.004 / -33.6%  1.112 0.858  69.5% | +0.009/-0.018 | 0.964 1.107 0.875 -> +0.005/-0.017 |     (none)    | 1.266 +0.018 |  48.1 |         - |   363
+  d  QQEW gaps max            25.83% / 1.004 / -33.6%  1.105 0.869  71.0% | +0.002/-0.007 | 0.985 1.105 0.875 -> +0.000/-0.006 |     (none)    | 1.258 +0.010 |  48.7 |         - |   146
+  e  ratio D/E/F gates A 25%  23.58% / 0.987 / -32.0%  1.092 0.848  65.0% | -0.011/-0.028 | 0.901 1.111 0.876 -> -0.019/-0.028 | -0.043/-0.031 | 1.270 +0.022 |  49.4 |         - |  1542
+  e  ratio D/E/F gates A 50%  20.98% / 0.946 / -30.6%  1.058 0.804  57.8% | -0.045/-0.072 | 0.801 1.122 0.876 -> -0.065/-0.072 | -0.106/-0.080 | 1.265 +0.017 |  48.8 |         - |  1542
+  e  ratio D/E/F = extra vote 22.87% / 0.984 / -31.5%  1.094 0.840  61.8% | -0.009/-0.036 | 0.856 1.114 0.877 -> -0.021/-0.037 | -0.062/-0.044 | 1.292 +0.044 |  48.0 |         - |  1542
+  c.ii narrow AND pct<0.2     28.11% / 1.080 / -35.6%  1.187 0.936  71.5% | +0.084/+0.060 | 0.992 1.104 0.875 -> +0.083/+0.061 | +0.006/+0.000 | 1.306 +0.058 |  48.8 |       YES |    33
+  c.ii narrow OR pct<0.2      29.01% / 1.158 / -34.5%  1.325 0.935  68.2% | +0.222/+0.059 | 0.945 1.110 0.876 -> +0.215/+0.058 | +0.242/+0.176 | 1.433 +0.185 |  49.5 |       YES |   215
+  CANDIDATE COUNT this line: 18 (sign-flip placebos and the pre-registered reference gate not counted); cumulative with the three earlier lines: 258
+  both-era passes vs the k-live control: 2 -> ['c.ii narrow AND pct<0.2', 'c.ii narrow OR pct<0.2']
+  both-era passes vs same-rows live only: ['c.ii narrow AND pct<0.2', 'c.ii narrow OR pct<0.2']
+    c.ii narrow AND pct<0.2: LORO (Sharpe diff vs same-rows live, window removed): GFC 2007-09 +0.098; COVID 2020 +0.069; 2022 bear +0.071; SPMO era 2015-11+ +0.060 flip both-era vs live: False
+    c.ii narrow OR pct<0.2: LORO (Sharpe diff vs same-rows live, window removed): GFC 2007-09 +0.163; COVID 2020 +0.111; 2022 bear +0.140; SPMO era 2015-11+ +0.059 flip both-era vs live: True
+
+----------------------------------------------------------------------------------------------------------------------
+4. OVERLAP on effective-D days: the pre-registered flag (pct<0.20) vs the divergence flag (QQEW eff rank > QQQ eff rank)
+  D days 727;  cell: n, mean next-day QLD leg (bp), mean next-day QQQ (bp), share of days whose eff is E/F within 5 sessions
+    pct<0.2=True  narrow=True  n   33  QLD d1   -90.1bp  QQQ d1   -44.5bp  E/F within 5:  48.5%
+    pct<0.2=True  narrow=False n   91  QLD d1   -63.4bp  QQQ d1   -31.3bp  E/F within 5:  20.9%
+    pct<0.2=False narrow=True  n   91  QLD d1   +48.0bp  QQQ d1   +24.4bp  E/F within 5:  16.5%
+    pct<0.2=False narrow=False n  512  QLD d1   +35.2bp  QQQ d1   +17.9bp  E/F within 5:   3.9%
+  Jaccard(pct flag, narrow flag) on D days = 0.153;  QQEW eff state on narrow D days: E 108, F 16
+  QQEW eff state on ALL D days: A 66, B 0, C 8, D 529, E 108, F 16
+
+  TODAY'S READING (last 12 QQEW sessions; ratio and the QQQ columns use the repo QQQ file to 2026-09-04 and Robinhood settled closes after, provisional; harness last row 2026-08-26 eff A; QQQ-file classifier vs harness rows: 0 mismatches on 6575 rows)
+  date         QQEW macro  fast  eff  gap100  gap150  gap200 |  ratio macro  eff |  QQQ macro  fast  eff   gap50  gap200  div
+  2026-08-25            A     A    A   +8.9%  +13.2%  +13.7% |            A    A |          A     A    A   -0.3%   +8.7%  +0
+  2026-08-26            A     A    A   +8.7%  +13.1%  +13.7% |            A    A |          A     A    A   -0.1%   +8.7%  +0
+  2026-08-27            A     A    A  +10.1%  +14.7%  +15.3% |            A    A |          A     A    A   +1.3%  +10.1%  +0
+  2026-08-28            A     A    A   +9.1%  +13.9%  +14.5% |            A    A |          A     A    A   +0.6%   +9.3%  +0
+  2026-08-31            A     A    A   +8.6%  +13.5%  +14.1% |            A    A |          A     A    A   +0.7%   +9.3%  +0
+  2026-09-01            A     D    A   +6.3%  +11.2%  +11.9% |            A    A |          A     D    A   -0.5%   +7.9%  +0
+  2026-09-02            A     D    A   +5.9%  +10.9%  +11.6% |            A    A |          A     D    A   -0.2%   +8.0%  +0
+  2026-09-03            A     D    A   +6.2%  +11.4%  +12.1% |            A    A |          A     D    A   +0.9%   +9.2%  +0
+  2026-09-04            A     D    A   +5.2%  +10.5%  +11.2% |            A    A |          A     D    A   +1.1%   +9.3%  +0
+  2026-09-08            A     D    A   +3.6%   +8.8%   +9.6% |            D    D |          A     D    A   +1.0%   +9.1%  +0
+  2026-09-09            A     D    A   +2.9%   +8.2%   +8.9% |            D    D |          A     D    A   +0.7%   +8.7%  +0
+  2026-09-10            D     D    D   +1.7%   +6.9%   +7.7% |            D    D |          A     D    A   -0.3%   +7.5%  +3
+  [  40s] overlay stage done
+
+----------------------------------------------------------------------------------------------------------------------
+5. BLOCK BOOTSTRAP (2000 draws, 20d and 60d circular blocks) vs same-rows live, for the both-era passes vs control and the head-to-head D-gates; plus the two D-gates against each other
+  c.ii narrow AND pct<0.2      point vs live +1.59pp/yr +0.075 Sh | 20d: logret CI [-0.60,+3.84] P<=0 0.079 Sharpe CI [-0.011,+0.164] P<=0 0.048 | 60d: logret CI [-0.53,+3.67] P<=0 0.062 Sharpe CI [-0.007,+0.156] P<=0 0.037 | vs pct-gate: point -0.137 Sh, 20d Sharpe CI [-0.264,-0.029] P<=0 0.995
+  c.ii narrow OR pct<0.2       point vs live +2.29pp/yr +0.153 Sh | 20d: logret CI [-2.03,+7.06] P<=0 0.148 Sharpe CI [-0.018,+0.343] P<=0 0.038 | 60d: logret CI [-2.48,+7.31] P<=0 0.181 Sharpe CI [-0.041,+0.359] P<=0 0.061 | vs pct-gate: point -0.060 Sh, 20d Sharpe CI [-0.166,+0.033] P<=0 0.876
+  c.ii narrow D-gate 100%      point vs live -0.50pp/yr +0.012 Sh | 20d: logret CI [-3.94,+2.82] P<=0 0.603 Sharpe CI [-0.123,+0.146] P<=0 0.443 | 60d: logret CI [-4.84,+3.36] P<=0 0.613 Sharpe CI [-0.152,+0.161] P<=0 0.462 | vs pct-gate: point -0.200 Sh, 20d Sharpe CI [-0.358,-0.049] P<=0 0.997
+  a  conf worse-of             point vs live -0.99pp/yr +0.001 Sh | 20d: logret CI [-4.44,+2.65] P<=0 0.718 Sharpe CI [-0.132,+0.143] P<=0 0.508 | 60d: logret CI [-5.15,+2.91] P<=0 0.670 Sharpe CI [-0.154,+0.152] P<=0 0.492 | vs pct-gate: point -0.211 Sh, 20d Sharpe CI [-0.371,-0.058] P<=0 0.998
+  ref_pct                      point vs live +4.36pp/yr +0.212 Sh | 20d: logret CI [+0.95,+8.43] P<=0 0.004 Sharpe CI [+0.067,+0.372] P<=0 0.000 | 60d: logret CI [+1.09,+8.00] P<=0 0.003 Sharpe CI [+0.072,+0.361] P<=0 0.002 |
+  [  90s] bootstrap stage done
+
+DONE [  90s]

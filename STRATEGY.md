@@ -3508,6 +3508,31 @@ that knows when only knows it once the loss is small. Today's hypothetical
 first D day (breadth pct 0.90, gap200 +8.8%): P(breakdown) 0.03
 [0.004, 0.13] vs bucket base rate 0.30. Candidate count unchanged at 240.
 
+**QQEW DMA overlay (`qqew_dma_overlay.py`,
+`research_notes/qqew_dma_overlay.md`, 2026-09-11): the live classifier run
+on the equal-weight ETF itself — clean negative on every overlay; the
+descriptive picture is the deliverable.** state.py's six-state machine,
+fast read and extension gaps computed on QQEW and on the QQEW/QQQ ratio,
+2006-05+ (reproduces all 6,575 harness states on QQQ, 0 mismatches). QQEW
+ECHOES the index: effective-state agreement 83.1% (κ 0.70), QQEW worse on
+11.9% of days, better on 5.0%; downgrades come earlier on 38% of the 121
+events (median 0, mean −2.2 sessions; D→E earlier 65%, median −2),
+upgrades later on 34% (D→A later ~50%, mean +4..+5); cross-correlation of
+rank changes 0.42 at lag 0 and ≤0.08 at every other lag. Event study:
+"QQEW downgrades while QQQ holds" (80 events) carries no forward
+information (20d QQQ +1.57%, P 0.65), against the pre-registered pct<0.20
+flag on D days (−1.91%, P 0.036; live −3.99%, P 0.007). Overlay ladder
+(18 candidates, cumulative 258): confirmation (worse-of / downgrade-only),
+QQEW-only classifier, divergence as vote / D-gate / block / de-lever, QQEW
+gaps as trim inputs, ratio-state gates — 0 of 16 stand-alone variants pass
+both eras; the divergence D-gate is −0.200 Sharpe [−0.358, −0.049] against
+the percentile gate on identical rows, and the two flags overlap on only
+33 of 124 D days (Jaccard 0.15): a LEVEL condition (equal-weight already
+below its average) is not the DRIFT condition (equal-weight falling behind
+over 60 days), and only the drift marks the pre-break days. Today: QQEW
+flipped to D on 09-10 while QQQ holds A — the uninformative event type;
+pct 0.82, gate off. No change.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
