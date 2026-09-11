@@ -197,7 +197,25 @@ def vt6(w, vol, target=VOL_TARGET_PA):
 
 
 def live():
-    return lambda r: vt(live_base(r, micro=False), r['vol'])
+    """The TRUE live design as a weight function: effective state (fast
+    overlay), graded extension trim, vol target. 2026-09-11 FIX: this used to
+    be vt(W[r['state']], vol) -- the MACRO-ONLY design with neither overlay --
+    so exposure_control() benchmarked every candidate (placebos included)
+    against a baseline ~0.15 Sharpe below live and flattered all of them
+    (found by the rates_signal line, 2026-09-10). Rows must carry 'eff' and
+    'gaps' (leverage_under_trim / breadth_signal attach them); a row without
+    them raises instead of silently reverting to the old baseline."""
+    from state import extension_scale
+    def fn(r):
+        if 'eff' not in r or 'gaps' not in r:
+            raise KeyError("downturn_review.live(): rows need 'eff' and 'gaps' (attach the fast overlay and extension gaps first)")
+        w = live_base(r, micro=False)
+        w = TARGET_WEIGHTS[r['eff']]
+        f = extension_scale(r['eff'], r['gaps'])
+        if f < 1:
+            w = tuple(a * f for a in w[:4]) + (1 - f * sum(w[:4]),)
+        return vt(w, r['vol'])
+    return fn
 
 
 def exposure_control(rows, target_exp, tol=0.002, kmax=8.0):

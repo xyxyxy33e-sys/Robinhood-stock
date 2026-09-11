@@ -466,3 +466,42 @@ def check_fill_quality():
 
 
 check_fill_quality()
+
+
+def check_breadth_tracker():
+    """The breadth forward test is measurement only: the percentile function is
+    the research one, the gate flag follows GATE_PCT, the log round-trips, and
+    nothing here can change a weight (no import of the weight functions)."""
+    import tempfile, os
+    from breadth_tracker import (trailing_pct, breadth_reading, bucket_base_rate, record_d_day,
+                                 fill_next_returns, summarize, GATE_PCT, LOOKBACK, WINDOW)
+    assert (GATE_PCT, LOOKBACK, WINDOW) == (0.20, 60, 252), "frozen for the forward test"
+    v = list(range(300))
+    p = trailing_pct(v, 252)
+    assert p[250] is None and p[251] is not None and abs(p[299] - (251.5 / 252)) < 1e-12
+    assert trailing_pct([1.0, None, 2.0] * 200, 3) == [None] * 600, "a None must reset the window"
+    n = 400; dates = [f'{i:04d}' for i in range(n)]
+    qqq = {d: 100.0 * (1.0005 ** i) for i, d in enumerate(dates)}
+    qqew = {d: 100.0 * (1.0005 ** i) * (0.999 ** max(0, i - (n - 60))) for i, d in enumerate(dates)}
+    r = breadth_reading(dates, qqew, qqq)
+    assert r['pct'] is not None and r['pct'] < GATE_PCT and r['gate'] is True
+    r0 = breadth_reading(dates[:100], qqew, qqq)
+    assert r0['pct'] is None and r0['gate'] is False, "insufficient history must read None/False"
+    assert bucket_base_rate(0.1) == 0.54 and bucket_base_rate(0.5) == 0.05 and bucket_base_rate(1.0) == 0.30
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, 'log.csv')
+        assert record_d_day('2030-01-02', 'D', r['x60'], r['pct'], r['gate'], path=path) is True
+        assert record_d_day('2030-01-02', 'D', r['x60'], r['pct'], r['gate'], path=path) is False, "idempotent"
+        try:
+            record_d_day('2030-01-03', 'A', 0.0, 0.5, False, path=path)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("record_d_day accepted a non-D day")
+        fill_next_returns('2030-01-02', -0.02, -0.01, path=path)
+        sm = summarize(path)
+        assert sm['n_d_days'] == 1 and sm['n_gated_runs'] == 1 and sm['runs_negative'] == 1 and sm['decision_due'] is False
+    print("OK: breadth tracker -- research percentile, gate flag, log round-trip, measurement only")
+
+
+check_breadth_tracker()

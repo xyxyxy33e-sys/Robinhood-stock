@@ -726,6 +726,10 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   `needs_rebalance(target, held, regime_changed)`: rebalance on a change of
   EFFECTIVE state, on L1 drift > 5%, or on a zero-target leg still held
   above 0.10%; otherwise no trade. ~47 rebalances/year expected.
+- **Every session, after the close** — the breadth forward test logs the
+  QQEW/QQQ relative-strength percentile and, on effective-state-D days, a row
+  in `data/dgate_forward_log.csv` (`breadth_tracker.py`; measurement only,
+  changes no weight).
 - **Monday–Friday, 16:10 ET** — the Execution Watchdog
   (`trig_01Mm7fLoSeTacPcgrNAvVbmm`) verifies the 15:50 run completed and,
   if it did not, executes the close's signal at the next opportunity
@@ -3466,7 +3470,15 @@ cap−EW z-score) all positive both eras. Honest holdout: 10 gated episodes,
 the gain rests on four single breakdown days (2015-08-20, 2008-01-02,
 2011-08-02, 2010-06-28 = +32pp of +32); vs const-D CI [+0.026, +0.362]
 P 0.009, but vs LIVE the log-return CI touches zero ([−0.60, +8.79],
-P 0.050). Pre-registration spec is in the note: exact rule, `trailing_pct`,
+P 0.050). **Forward test EMBEDDED 2026-09-11 as measurement:**
+`paper-track/breadth_tracker.py` (the study's own `trailing_pct`; reproduces
+the research reading for 2026-09-04, pct 0.867, from both Yahoo and Robinhood
+data) is called by both Routines after all trading and reporting steps; every
+session reports the percentile, every effective-state-D day is logged to
+`data/dgate_forward_log.csv` with the next session's QLD/QQQ return, and a D-
+day report entry carries one informational line (bucket, historical breakdown
+rate, distance to the 200d). No weight changes; the decision is the owner's,
+by the pre-registered rule. Pre-registration spec is in the note: exact rule, `trailing_pct`,
 per-D-day log fields, decision after 8 gated runs or 48 months (primary:
 gated-minus-ungated next-day QLD leg negative at P<0.05 under a circular-
 shift null; secondary ≥5 of 8 runs negative), early-fail conditions, no

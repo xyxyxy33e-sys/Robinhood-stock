@@ -408,5 +408,30 @@ loop — call `improvement_search.run()` (or the harness that owns the figure).
 A hand-rolled loop silently rebalances costlessly every day and produces
 numbers that look right and are not.
 
+## 8. Breadth forward test — MEASUREMENT ONLY, after step 3 (added 2026-09-11)
+
+A pre-registered candidate rule is under forward test: "effective state D AND
+the 60-day QQEW/QQQ relative-strength reading in its trailing-252 bottom
+quintile (pct < 0.20) -> D row to cash". It is NOT applied and changes no
+weight; the owner decides after 8 gated runs or 48 months by the rule in
+`research_notes/dgate_anatomy.md` section 6. Your only job is to LOG it,
+after every trading and reporting step and never inside 15:50-16:00:
+  - Pull QQEW and QQQ daily closes (`get_equity_historicals`, 18 months,
+    split-adjusted; QQEW is the equal-weight Nasdaq-100 ETF) and call
+    `paper-track/breadth_tracker.py`'s
+    `breadth_reading(dates, qqew, qqq, as_of=<today>)` -> x60, pct, gate.
+    Use the OFFICIAL closes if the run is after 16:00, else the 15:5x
+    snapshot and say so. pct None = insufficient history; report it, no row.
+  - EVERY session, one line: "breadth pct 0.84, gate off".
+  - On a session whose EFFECTIVE state is D: `record_d_day(date, 'D', x60,
+    pct, gate)`; on the NEXT session `fill_next_returns(<that date>,
+    qld_next, qqq_next)` with official close-to-close returns. In any report
+    entry for a D day add ONE informational line: the breadth bucket, its
+    historical breakdown rate `bucket_base_rate(pct)` (P(next state E/F);
+    unconditional D-episode base rate 0.16) and the distance to the 200d.
+    No commentary, no weight change, no notification.
+  - `summarize()` is the running tally. Do not change GATE_PCT, LOOKBACK or
+    WINDOW; do not act on the gate. Commit the log row with the NAV row.
+
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.
