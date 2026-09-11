@@ -3533,6 +3533,23 @@ over 60 days), and only the drift marks the pre-break days. Today: QQEW
 flipped to D on 09-10 while QQQ holds A — the uninformative event type;
 pct 0.82, gate off. No change.
 
+**QQEW volatility as a vol-target supplement (`qqew_vol_supplement.py`,
+`research_notes/qqew_vol_supplement.md`, 2026-09-11): clean negative.**
+Target, cap and lookback unchanged; only the estimator input varied. Equal-
+weight vol is a 0.975-correlated copy of QQQ vol that reads LOWER in every
+mega-cap-led stress (2018 Q4, 2020, 2022), so max/blend/replacement de-lever
+less exactly when live should: −0.01..−0.04 Sharpe, bootstrap CIs at or
+below zero on both eras and real rows. Dispersion (vol of the QQEW−QQQ
+return) rises WITH the worst gaps, not before them (spread percentile
+0.41→0.37 going in); adding it is a leverage dial (Sharpe flat ±0.02, fails
+the exposure control) with a recovery cost of −4.7..−9.4pp/yr because
+dispersion stays high for months after troughs. The spread-percentile boost
+is beaten by its own sign-flipped placebo. The one both-era pass, max(10d
+QQEW, 30d QQQ), is the reverted max(10,30) in different clothing: return
+correlation 0.998, COVID-only (+0.357 alone, +0.004 dropped), +10
+rebalances/yr, −2.7pp/yr in recoveries. Nine candidates, zero survivors;
+the single-index 30d QQQ estimator stands. Cumulative candidates: 267.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**

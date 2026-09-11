@@ -1,0 +1,198 @@
+======================================================================================================================
+RESEARCH LINE qqew_vol_supplement -- equal-weight Nasdaq vol / dispersion as a SECOND INPUT to the live vol-target estimator
+======================================================================================================================
+
+STANDING FIGURES (must match briefing 22.18/0.913/-33.6, S 1.103 H 0.768; real 31.40/1.248/-25.0):
+  26y proxy 22.18% / 0.913 / -33.6%  S 1.103 H 0.768  exp 67.7% | real weekly 31.40% / 1.248 / -25.0% | rows 6575 2000-07-03..2026-08-26, real rows 564
+  Yahoo ^NDX vs FRED NASDAQ100: 6962 common dates, max abs rel diff 2.443% (FRED used as the NDX leg)
+
+SERIES COVERAGE (60d window; first date with a trailing-252 percentile) and readings on 2026-09-09
+  qqew_60       2007-07-27  n  4810  | 09-09 value +0.0290 pct 0.82  | QQEW/QQQ (the original; 2006-05+)
+  ndxsurv_60    2000-12-06  n  6476  | 09-09 value +0.0290 pct 0.82  | survivor equal-weight NDX 1999-2006 spliced to QQEW (ILLUSTRATIVE, ~30% coverage)
+  comp_60       1999-03-29  n  6905  | 09-09 value +0.0212 pct 0.95  | NASDAQCOM/NASDAQ100 (FRED, composite vs mega-cap)
+  rut_60        1999-03-29  n  6905  | 09-09 value -0.0005 pct 0.35  | Russell 2000 / NDX
+  rua_60        1999-03-29  n  6905  | 09-09 value +0.0328 pct 0.90  | Russell 3000 / NDX
+  nya_60        1999-03-29  n  6905  | 09-09 value +0.0371 pct 0.69  | NYSE Composite / NDX
+  w5k_60        1999-03-29  n  6905  | 09-09 value +0.0316 pct 0.89  | Wilshire 5000 / NDX
+  rsp_60        2004-07-27  n  5566  | 09-09 value -0.0248 pct 0.41  | RSP/SPY (S&P equal-weight; 2003-05+)
+
+ALIGNMENT CHECK (60d series): contemp = corr(QQQ d0->d1, raw log-ratio change d0->d1); pred = corr(pct at d0, QQQ d0->d1)
+  qqew_60      n  4799  contemp -0.235  pred d1 +0.009
+  ndxsurv_60   n  6465  contemp -0.232  pred d1 +0.006
+  comp_60      n  6574  contemp -0.444  pred d1 -0.004
+  rut_60       n  6574  contemp -0.430  pred d1 -0.001
+  rua_60       n  6574  contemp -0.667  pred d1 +0.008
+  nya_60       n  6574  contemp -0.678  pred d1 +0.009
+  w5k_60       n  6574  contemp -0.670  pred d1 +0.007
+  rsp_60       n  5555  contemp -0.007  pred d1 +0.017
+
+(reused breadth_dgate_2000.py sections 0-3 verbatim: 192 lines)  [   1s]
+  live on the full 26y proxy: 47.1 rebalances/yr, L1 turnover 31.63x/yr, drift band 0.05
+
+REFERENCE on the 4800 QQEW rows 2007-07-27..2026-08-26: live 26.09% / 1.006 / -33.6% S 1.103 H 0.876 exp 72.09%  reb/yr 48.4  L1 turnover 33.04x/yr   (note: 26.09/1.006/-33.6 S 1.103 H 0.876)
+
+VOL SERIES  QQEW data/QQEW_daily_ext.csv 2006-05-02..2026-09-10 (5122 sessions); ratio sessions 5118  [   1s]
+  computed v_e, v_e10, v_r, v_q  [   2s]
+  r['vol'] == realized_vol(30d) on daily rows (max diff 0.0e+00) and real rows (0.0e+00); all series present on all 4800 rows; stale QQEW prints 0
+
+DESCRIPTIVE on the 4800 rows
+  mean v_q 19.84%  v_e 19.32%  v_r 6.88%  | median v_q 17.12% v_e 16.33%
+  corr(v_e, v_q) +0.9752   corr(log v_e, log v_q) +0.9638   corr(v_r, v_q) +0.690   corr(spread, v_q) -0.143
+  v_e > v_q on  42.2% of days; v_e > 1.05 v_q on  25.8%; v_e > 1.10 v_q on  14.1%
+  spread v_e-v_q: mean -0.52pp  p5 -4.59  p25 -1.93  p50 -0.40  p75 +0.84  p95 +3.00 | ratio v_e/v_q: p5 0.808 p50 0.978 p95 1.174
+  v_r / v_q: mean 0.372   (v_r is the vol of the equal-weight-minus-cap-weight daily return)
+  regime                         n     v_q     v_e     v_r   spread  v_e>v_q  spr_p>.8
+  GFC 2007-2009                614   28.4%   29.5%   11.9%   +1.08p    63.7%     28.0%
+  COVID 2020                   253   30.6%   28.6%    8.8%   -2.00p    32.8%     19.0%
+  2022 bear                    251   31.8%   29.8%    6.7%   -1.95p     3.2%     21.1%
+  whole SPMO era 2015-11+     2719   19.8%   18.5%    6.6%   -1.37p    26.6%     23.1%
+  calm 2013-2014               504   12.8%   13.0%    4.5%   +0.15p    62.3%     11.9%
+  2018 Q4                       63   27.4%   22.9%    7.7%   -4.56p     0.0%      0.0%
+  live multiplier < 1 on  35.9% of days; v_e > 20% on  35.8%; v_e > 20% while v_q <= 20% on 157 days; v_q > 20% while v_e <= 20% on 163 days
+
+WORST-1% OVERNIGHT GAPS: 66 on the full proxy (mean -3.64%), 42 inside the QQEW window (mean -3.80%)
+  event-time profile (session offsets relative to d0 = the close before the gap; unconditional mean of a percentile = 0.50):
+  offset                      -20    -10     -5     -3     -1      0      1      3      5     10     20
+  spread pct                 0.41   0.40   0.33   0.34   0.39   0.37   0.36   0.32   0.33   0.39   0.50
+  ratio pct                  0.43   0.46   0.42   0.43   0.48   0.47   0.47   0.45   0.47   0.51   0.57
+  v_r pct                    0.67   0.68   0.75   0.75   0.75   0.76   0.78   0.79   0.79   0.80   0.73
+  v_q level %               22.33  26.53  30.10  31.62  33.24  34.41  36.09  38.71  40.87  43.33  45.28
+  v_e level %               21.10  25.12  28.27  29.75  31.56  32.62  34.37  36.64  39.01  41.80  44.07
+  v_r level %                7.86   8.26   8.96   9.20   9.58   9.79  10.07  10.31  10.65  11.45  12.26
+  spread level pp           -1.23  -1.41  -1.83  -1.87  -1.68  -1.80  -1.72  -2.07  -1.86  -1.53  -1.21
+  spread pct > 0.8 at d0-1: 9/42, at d0: 8, at d0+5: 7  | v_e > v_q at d0: 12/42 | unconditional P(spread pct > 0.8) =  20.9%
+  lead/lag corr of daily CHANGES, corr(dv_e[t], dv_q[t+k]) for k = -3..+3 (positive k = v_e leads):
+    k=-3 +0.126  k=-2 +0.154  k=-1 +0.139  k=+0 +0.911  k=+1 +0.129  k=+2 +0.156  k=+3 +0.134
+
+VARIANTS on the 4800 QQEW rows (estimator argument only; target 20%, cap 1.0, lookback 30d, drift band 0.05 unchanged)  [   2s]
+  variant                                CAGR/Sharpe/MDD      S      H      dS      dH    exp  reb/yr  L1/yr        real CAGR/Sh/MDD  dReal |d|>.05  lower higher  k-live   dS_k   dH_k
+  LIVE v_q (30d QQQ)              26.09% / 1.006 / -33.6%  1.103  0.876  +0.000  +0.000  72.1%    48.4  33.04 31.40% / 1.248 / -25.0% +0.000       0      0      0   1.000 +0.000 +0.000
+  (1) max(v_q, v_e)               25.43% / 0.991 / -33.8%  1.089  0.860  -0.014  -0.016  71.5%    49.2  32.66 30.89% / 1.236 / -25.0% -0.012     395    395      0   0.992 -0.015 -0.015
+  (2) 0.75 v_q + 0.25 v_e         25.94% / 0.998 / -33.9%  1.089  0.875  -0.013  -0.001  72.3%    47.8  33.02 31.40% / 1.240 / -25.5% -0.008      56     26     30   1.002 -0.013 -0.001
+  (2) 0.50 v_q + 0.50 v_e         25.84% / 0.992 / -34.7%  1.083  0.867  -0.019  -0.009  72.4%    47.1  33.03 31.44% / 1.232 / -26.0% -0.016     409    108    301   1.005 -0.019 -0.009
+  (3) v_e alone [REPLACEMENT]     25.57% / 0.979 / -35.4%  1.067  0.858  -0.036  -0.018  72.7%    46.3  33.07 31.51% / 1.216 / -27.5% -0.032    1059    395    664   1.009 -0.035 -0.018
+  (4) v_q + 0.5 v_r               24.79% / 1.009 / -33.9%  1.106  0.879  +0.004  +0.003  68.9%    52.7  31.45 29.73% / 1.256 / -22.3% +0.008    2032   2032      0   0.955 -0.002 +0.003
+  (4) v_q + 1.0 v_r               23.23% / 1.013 / -33.5%  1.118  0.873  +0.016  -0.003  64.8%    58.1  29.52 28.03% / 1.280 / -20.7% +0.032    2926   2926      0   0.898 +0.007 -0.003
+  (5) v_q(1+0.5 max(0,sp-.8))     25.83% / 1.000 / -33.8%  1.095  0.873  -0.008  -0.003  71.9%    48.6  32.93 31.03% / 1.239 / -25.1% -0.009     139    139      0   0.997 -0.009 -0.003
+  (5) v_q(1+1.0 max(0,sp-.8))     25.57% / 0.994 / -34.0%  1.086  0.871  -0.017  -0.005  71.6%    50.1  32.94 30.60% / 1.227 / -25.2% -0.021     353    353      0   0.993 -0.018 -0.004
+  (6) max(v_e10, v_q)             25.81% / 1.025 / -33.1%  1.131  0.882  +0.028  +0.006  70.6%    58.6  33.30 30.84% / 1.253 / -24.3% +0.005     742    742      0   0.980 +0.025 +0.007
+  placebo min(v_q, v_e)           26.25% / 0.993 / -35.4%  1.081  0.873  -0.021  -0.003  73.2%    45.6  33.45 32.02% / 1.228 / -27.5% -0.020     664      0    664   1.016 -0.019 -0.003
+  placebo v_q - 0.5 v_r           26.76% / 0.995 / -35.1%  1.097  0.858  -0.005  -0.019  74.4%    45.7  34.27 32.78% / 1.245 / -28.2% -0.003    1463      0   1463   1.032 -0.002 -0.019
+  placebo v_q - 1.0 v_r           27.02% / 0.980 / -36.7%  1.085  0.840  -0.018  -0.036  76.1%    43.2  35.19 33.48% / 1.235 / -29.5% -0.013    1581      0   1581   1.056 -0.012 -0.038
+  placebo v_q(1+1.0 max(0,.2-sp)) 26.26% / 1.022 / -33.4%  1.132  0.876  +0.029  -0.000  71.4%    51.3  33.12 31.65% / 1.274 / -23.2% +0.026     456    456      0   0.990 +0.028 +0.001
+  extra v_q(1+max(0,ratio_p-.8))  25.62% / 0.994 / -34.0%  1.092  0.864  -0.011  -0.012  71.7%    50.1  32.96 30.80% / 1.232 / -25.3% -0.016     284    284      0   0.995 -0.012 -0.012
+  (dS/dH = vs live; |d|>.05 = days the variant multiplier differs from live by > 0.05, lower = variant holds LESS; k-live = exposure-matched live control k*LIVE with dS_k/dH_k the variant minus that control.  Live: 48.4 reb/yr, L1 33.04x/yr, real 31.40% / 1.248 / -25.0%)
+  CANDIDATE COUNT: 9 (of which 1 is a replacement, reference only); placebos 5 not counted.
+  both-era passes vs live: ['(4) v_q + 0.5 v_r', '(6) max(v_e10, v_q)']
+  both-era passes vs the exposure-matched control: ['(6) max(v_e10, v_q)']
+
+MULTIPLIER DIFFERENCE DAYS (|variant mult - live mult| > 0.05): count by year and the longest runs
+  year   (1) max(v_q, v (2) 0.75 v_q + (2) 0.50 v_q + (3) v_e alone  (4) v_q + 0.5  (4) v_q + 1.0  (5) v_q(1+0.5  (5) v_q(1+1.0  (6) max(v_e10,
+  2007        0/0            0/0            0/29           0/43          86/0          109/0            0/0            0/0           21/0      
+  2008       18/0            0/0            1/1           18/46         247/0          253/0           18/0           42/0           77/0      
+  2009      139/0           26/0           70/0          139/0          191/0          229/0           19/0           79/0          107/0      
+  2010       35/0            0/0            0/0           35/0          121/0          144/0            3/0            7/0           47/0      
+  2011       69/0            0/0            6/0           69/0           93/0          160/0           30/0           51/0           62/0      
+  2012       37/0            0/0            8/0           37/0           65/0          139/0            1/0            2/0           36/0      
+  2013        0/0            0/0            0/0            0/0            1/0           30/0            0/0            0/0           15/0      
+  2014        0/0            0/0            0/0            0/0           23/0           53/0            3/0           14/0           25/0      
+  2015        0/0            0/0            0/1            0/32          62/0          123/0            0/0            0/0           13/0      
+  2016       37/0            0/0            6/0           37/13          82/0           98/0           17/0           54/0           33/0      
+  2017        0/0            0/0            0/0            0/0            0/0            1/0            0/0            0/0            0/0      
+  2018        0/0            0/0            0/67           0/117        124/0          142/0            0/0            0/0           41/0      
+  2019        0/0            0/0            0/2            0/38          71/0          116/0            0/0            0/0           30/0      
+  2020       26/0            0/6           15/87          26/95         166/0          181/0           31/0           39/0           54/0      
+  2021        0/0            0/0            0/3            0/11          87/0          145/0            0/0            0/0           41/0      
+  2022        0/0            0/0            0/10           0/101        173/0          251/0           15/0           35/0           56/0      
+  2023        0/0            0/0            0/1            0/53         121/0          236/0            2/0           27/0           11/0      
+  2024        0/0            0/6            0/39           0/39          83/0          178/0            0/0            0/0            9/0      
+  2025        0/0            0/5            0/30           0/38         113/0          185/0            0/0            1/0           24/0      
+  2026       34/0            0/13           2/31          34/38         123/0          153/0            0/0            2/0           40/0      
+  (lower/higher: days the variant holds less / more than live)
+  (1) max(v_q, v_e)                 31 runs, mean |diff| on those days 0.089; longest: 2011-09-23..2012-01-12 (77d, -0.07); 2009-04-21..2009-08-03 (73d, -0.14); 2016-06-28..2016-08-05 (28d, -0.10); 2020-05-27..2020-06-30 (25d, -0.10); 2012-06-21..2012-07-24 (23d, -0.08)
+  (2) 0.75 v_q + 0.25 v_e           10 runs, mean |diff| on those days 0.060; longest: 2009-05-05..2009-05-22 (14d, -0.07); 2026-07-27..2026-08-12 (13d, +0.06); 2009-06-03..2009-06-12 (8d, -0.05); 2024-07-31..2024-08-07 (6d, +0.06); 2020-08-11..2020-08-14 (4d, +0.06)
+  (2) 0.50 v_q + 0.50 v_e           40 runs, mean |diff| on those days 0.074; longest: 2020-09-03..2020-12-15 (72d, +0.07); 2018-10-16..2019-01-03 (54d, +0.06); 2009-04-22..2009-06-24 (45d, -0.09); 2024-07-31..2024-09-24 (39d, +0.09); 2026-07-15..2026-08-26 (31d, +0.11)
+  (3) v_e alone [REPLACEMENT]       65 runs, mean |diff| on those days 0.099; longest: 2018-10-16..2019-02-14 (83d, +0.11); 2011-09-23..2012-01-12 (77d, -0.07); 2009-04-21..2009-08-03 (73d, -0.14); 2020-09-03..2020-12-15 (72d, +0.16); 2018-02-08..2018-05-11 (65d, +0.09)
+  (4) v_q + 0.5 v_r                 77 runs, mean |diff| on those days 0.105; longest: 2007-10-31..2008-10-14 (241d, -0.12); 2008-10-29..2009-08-27 (209d, -0.12); 2020-05-11..2020-12-16 (154d, -0.12); 2026-03-26..2026-08-26 (106d, -0.16); 2018-10-12..2019-02-15 (86d, -0.08)
+  (4) v_q + 1.0 v_r                 53 runs, mean |diff| on those days 0.169; longest: 2007-07-27..2009-09-28 (548d, -0.20); 2021-11-30..2023-08-31 (441d, -0.14); 2020-04-24..2020-12-21 (168d, -0.20); 2011-06-21..2012-01-27 (153d, -0.13); 2026-02-03..2026-08-26 (142d, -0.27)
+  (5) v_q(1+0.5 max(0,sp-.8))       27 runs, mean |diff| on those days 0.064; longest: 2020-05-15..2020-06-29 (31d, -0.07); 2011-09-21..2011-11-01 (30d, -0.06); 2009-04-29..2009-05-22 (18d, -0.06); 2016-03-07..2016-03-18 (10d, -0.08); 2008-02-20..2008-02-29 (8d, -0.07)
+  (5) v_q(1+1.0 max(0,sp-.8))       40 runs, mean |diff| on those days 0.092; longest: 2011-09-21..2011-11-14 (39d, -0.10); 2020-05-12..2020-07-02 (37d, -0.12); 2016-06-27..2016-08-05 (29d, -0.10); 2016-02-16..2016-03-21 (25d, -0.10); 2009-01-12..2009-02-12 (23d, -0.08)
+  (6) max(v_e10, v_q)              122 runs, mean |diff| on those days 0.137; longest: 2008-09-15..2008-10-24 (30d, -0.10); 2020-02-24..2020-03-27 (25d, -0.11); 2011-07-27..2011-08-23 (20d, -0.15); 2019-08-05..2019-08-27 (17d, -0.21); 2008-06-06..2008-06-27 (16d, -0.20)
+
+BLOCK BOOTSTRAP vs live (2000 draws, circular paired blocks 20/60d) -- every candidate and the placebos  [  20s]
+  (1) max(v_q, v_e)                20d: logret -0.52pp/yr CI [-0.93,-0.18] P<=0 0.999; Sharpe CI [-0.027,-0.002] P<=0 0.990 | 60d: logret -0.52pp/yr CI [-0.97,-0.15] P<=0 0.999; Sharpe CI [-0.028,-0.002] P<=0 0.988
+  (2) 0.75 v_q + 0.25 v_e          20d: logret -0.12pp/yr CI [-0.30,+0.07] P<=0 0.889; Sharpe CI [-0.015,-0.000] P<=0 0.980 | 60d: logret -0.12pp/yr CI [-0.32,+0.08] P<=0 0.888; Sharpe CI [-0.015,-0.000] P<=0 0.981
+  (2) 0.50 v_q + 0.50 v_e          20d: logret -0.19pp/yr CI [-0.55,+0.18] P<=0 0.841; Sharpe CI [-0.027,-0.000] P<=0 0.980 | 60d: logret -0.19pp/yr CI [-0.62,+0.17] P<=0 0.837; Sharpe CI [-0.028,-0.001] P<=0 0.982
+  (3) v_e alone [REPLACEMENT]      20d: logret -0.41pp/yr CI [-1.15,+0.28] P<=0 0.860; Sharpe CI [-0.053,-0.002] P<=0 0.985 | 60d: logret -0.41pp/yr CI [-1.17,+0.36] P<=0 0.845; Sharpe CI [-0.052,-0.000] P<=0 0.977
+  (4) v_q + 0.5 v_r                20d: logret -1.03pp/yr CI [-2.18,+0.12] P<=0 0.964; Sharpe CI [-0.031,+0.039] P<=0 0.423 | 60d: logret -1.03pp/yr CI [-2.26,+0.13] P<=0 0.958; Sharpe CI [-0.033,+0.040] P<=0 0.435
+  (4) v_q + 1.0 v_r                20d: logret -2.29pp/yr CI [-4.22,-0.15] P<=0 0.980; Sharpe CI [-0.051,+0.070] P<=0 0.396 | 60d: logret -2.29pp/yr CI [-4.48,-0.19] P<=0 0.982; Sharpe CI [-0.057,+0.073] P<=0 0.405
+  (5) v_q(1+0.5 max(0,sp-.8))      20d: logret -0.21pp/yr CI [-0.39,-0.05] P<=0 0.995; Sharpe CI [-0.012,-0.000] P<=0 0.979 | 60d: logret -0.21pp/yr CI [-0.42,-0.04] P<=0 0.993; Sharpe CI [-0.013,+0.000] P<=0 0.971
+  (5) v_q(1+1.0 max(0,sp-.8))      20d: logret -0.41pp/yr CI [-0.78,-0.10] P<=0 0.995; Sharpe CI [-0.024,+0.000] P<=0 0.974 | 60d: logret -0.41pp/yr CI [-0.84,-0.05] P<=0 0.989; Sharpe CI [-0.026,+0.001] P<=0 0.956
+  (6) max(v_e10, v_q)              20d: logret -0.22pp/yr CI [-1.29,+0.89] P<=0 0.674; Sharpe CI [-0.022,+0.061] P<=0 0.206 | 60d: logret -0.22pp/yr CI [-1.25,+0.97] P<=0 0.663; Sharpe CI [-0.022,+0.065] P<=0 0.211
+  placebo min(v_q, v_e)            20d: logret +0.13pp/yr CI [-0.47,+0.72] P<=0 0.336; Sharpe CI [-0.034,+0.009] P<=0 0.856 | 60d: logret +0.13pp/yr CI [-0.50,+0.74] P<=0 0.345; Sharpe CI [-0.033,+0.008] P<=0 0.891
+  placebo v_q - 0.5 v_r            20d: logret +0.53pp/yr CI [-0.35,+1.40] P<=0 0.133; Sharpe CI [-0.038,+0.016] P<=0 0.763 | 60d: logret +0.53pp/yr CI [-0.37,+1.44] P<=0 0.134; Sharpe CI [-0.037,+0.017] P<=0 0.769
+  placebo v_q - 1.0 v_r            20d: logret +0.74pp/yr CI [-0.91,+2.34] P<=0 0.193; Sharpe CI [-0.079,+0.024] P<=0 0.848 | 60d: logret +0.74pp/yr CI [-0.89,+2.63] P<=0 0.215; Sharpe CI [-0.076,+0.027] P<=0 0.828
+  placebo v_q(1+1.0 max(0,.2-sp))  20d: logret +0.14pp/yr CI [-0.32,+0.70] P<=0 0.298; Sharpe CI [-0.003,+0.038] P<=0 0.053 | 60d: logret +0.14pp/yr CI [-0.30,+0.63] P<=0 0.276; Sharpe CI [-0.002,+0.037] P<=0 0.045
+  extra v_q(1+max(0,ratio_p-.8))   20d: logret -0.37pp/yr CI [-0.65,-0.12] P<=0 1.000; Sharpe CI [-0.021,-0.002] P<=0 0.992 | 60d: logret -0.37pp/yr CI [-0.69,-0.09] P<=0 0.999; Sharpe CI [-0.022,-0.001] P<=0 0.986
+
+LEAVE-ONE-REGIME-OUT (Sharpe, variant minus live): regime ALONE / sample with the regime DROPPED  [ 120s]
+  variant                                dot-com 2000-2002           GFC 2007-2009              COVID 2020               2022 bear    whole SPMO era 2015-
+                                         alone     dropped       alone     dropped       alone     dropped       alone     dropped       alone     dropped
+  (1) max(v_q, v_e)                          -           -      -0.058      -0.009      -0.060      -0.012      +0.000      -0.014      -0.014      -0.016
+  (2) 0.75 v_q + 0.25 v_e                    -           -      -0.019      -0.006      -0.013      -0.008      -0.011      -0.006      -0.013      -0.001
+  (2) 0.50 v_q + 0.50 v_e                    -           -      -0.044      -0.010      -0.021      -0.014      -0.007      -0.011      -0.019      -0.009
+  (3) v_e alone [REPLACEMENT]                -           -      -0.074      -0.021      -0.067      -0.026      -0.021      -0.021      -0.036      -0.018
+  (4) v_q + 0.5 v_r                          -           -      +0.055      -0.002      -0.028      +0.006      +0.069      -0.003      +0.005      +0.003
+  (4) v_q + 1.0 v_r                          -           -      +0.075      +0.002      -0.030      +0.010      +0.101      -0.003      +0.016      -0.003
+  (5) v_q(1+0.5 max(0,sp-.8))                -           -      -0.011      -0.005      -0.054      -0.003      -0.004      -0.007      -0.008      -0.003
+  (5) v_q(1+1.0 max(0,sp-.8))                -           -      -0.012      -0.011      -0.099      -0.007      +0.024      -0.014      -0.017      -0.005
+  (6) max(v_e10, v_q)                        -           -      -0.038      +0.026      +0.357      +0.004      -0.016      +0.023      +0.028      +0.006
+  placebo min(v_q, v_e)                      -           -      -0.016      -0.012      -0.005      -0.014      -0.022      -0.007      -0.021      -0.003
+  extra v_q(1+max(0,ratio_p-.8))             -           -      -0.036      -0.008      -0.057      -0.009      +0.009      -0.013      -0.011      -0.012
+  (no rows in dot-com on the QQEW window; GFC = 2007-07-27..2009-12-31 here)
+
+RECOVERY WINDOWS (recovery_study episode definition; primary set depth <= -15%; recovery half = [trough, window end)): 8 episodes inside the QQEW rows  [ 120s]
+  2007-10 T 2008-11-20 -> 2010-04-23 (next-peak, depth -54%), 2010-04 T 2010-07-02 -> 2010-10-13 (F, depth -16%), 2011-07 T 2011-08-19 -> 2012-01-19 (F, depth -16%), 2015-12 T 2016-02-09 -> 2016-07-29 (F, depth -16%), 2018-08 T 2018-12-24 -> 2019-04-17 (F, depth -23%), 2020-02 T 2020-03-16 -> 2020-06-05 (F, depth -29%), 2021-11 T 2022-12-28 -> 2023-12-15 (F, depth -36%), 2025-02 T 2025-04-08 -> 2025-06-24 (F, depth -23%)
+  1080 sessions in recovery halves (22% of rows). Annualised log-return and Sharpe, variant minus live, with 20/60d block bootstrap:
+  variant                           dlogret/yr  dSharpe  exp var exp live   20d CI / P<=0            60d CI / P<=0        per-episode dlogret (pp, trough->end)
+  (1) max(v_q, v_e)                      -1.62   -0.016    54.8%    56.4%   [-3.0,-0.4] 0.998        [-3.0,-0.5] 0.999        -4.4 -0.5 +0.2 -1.5 +0.0 -0.9 +0.0 +0.0
+  (2) 0.75 v_q + 0.25 v_e                -0.17   +0.002    56.2%    56.4%   [-0.6,+0.2] 0.794        [-0.6,+0.2] 0.777        -1.1 -0.1 +0.2 -0.1 +0.2 -0.2 +0.1 +0.2
+  (2) 0.50 v_q + 0.50 v_e                -0.36   +0.001    56.0%    56.4%   [-1.2,+0.4] 0.821        [-1.3,+0.4] 0.790        -2.3 -0.2 +0.3 -0.5 +0.4 -0.3 +0.6 +0.5
+  (3) v_e alone [REPLACEMENT]            -1.04   -0.016    55.5%    56.4%   [-2.5,+0.3] 0.925        [-2.7,+0.5] 0.919        -4.1 -0.5 +0.2 -1.5 +0.8 -1.5 +1.1 +1.0
+  (4) v_q + 0.5 v_r                      -4.74   -0.077    52.3%    56.4%   [-6.7,-2.7] 1.000        [-6.8,-2.8] 1.000        -8.3 -1.0 +0.3 -1.6 -0.6 -2.9 -5.3 -1.0
+  (4) v_q + 1.0 v_r                      -9.38   -0.119    47.5%    56.4%   [-13.1,-5.9] 1.000       [-13.2,-5.9] 1.000       -14.8 -2.1 -0.1 -3.9 -1.3 -4.6 -11.3 -2.2
+  (5) v_q(1+0.5 max(0,sp-.8))            -0.74   -0.008    55.7%    56.4%   [-1.3,-0.3] 1.000        [-1.4,-0.2] 1.000        -1.0 -0.1 -0.0 -0.6 +0.0 -1.0 -0.3 -0.1
+  (5) v_q(1+1.0 max(0,sp-.8))            -1.54   -0.019    54.8%    56.4%   [-2.7,-0.6] 0.999        [-2.7,-0.5] 0.998        -1.5 -0.1 -0.1 -1.9 +0.0 -1.9 -0.9 -0.1
+  (6) max(v_e10, v_q)                    -2.71   -0.071    55.0%    56.4%   [-4.4,-1.2] 1.000        [-4.4,-1.3] 1.000        -5.8 -0.5 -0.2 -2.3 -0.1 -1.0 -1.5 -0.3
+  placebo min(v_q, v_e)                  +0.62   +0.003    57.1%    56.4%   [+0.0,+1.3] 0.018        [-0.0,+1.3] 0.029        +0.3 +0.0 +0.0 +0.0 +0.8 -0.5 +1.1 +1.0
+  placebo v_q - 0.5 v_r                  +2.51   -0.022    59.7%    56.4%   [+0.5,+4.7] 0.007        [+0.5,+5.2] 0.004        +3.7 +0.5 -0.6 +0.6 +0.8 +2.4 +2.3 +1.1
+  placebo v_q - 1.0 v_r                  +3.98   -0.096    62.7%    56.4%   [-0.3,+8.8] 0.035        [-0.9,+9.8] 0.058        +8.0 +0.9 -2.3 +0.9 +1.0 +4.5 +2.7 +1.3
+  placebo v_q(1+1.0 max(0,.2-sp))        -0.54   -0.011    56.0%    56.4%   [-1.4,-0.0] 0.991        [-1.4,-0.0] 0.992        -2.0 +0.0 +0.0 +0.0 -0.1 -0.3 +0.0 +0.0
+  extra v_q(1+max(0,ratio_p-.8))         -1.44   -0.030    55.2%    56.4%   [-2.3,-0.6] 1.000        [-2.5,-0.5] 1.000        -2.4 +0.0 -0.4 -1.5 -0.0 -0.8 -0.6 -0.5
+  (recovery_study measured the reverted max(10,30) QQQ estimator at -2.1pp/yr [-3.3,-1.1] on the same construction over the full proxy)
+
+SIGNATURE CHECK: the reverted max(10d QQQ, 30d QQQ) on the same rows: 26.21% / 1.045 / -33.0% S 1.152 H 0.904 exp 70.3% reb/yr 59.4 L1 33.43  (live 48.4 / 33.04)
+  GFC 2007-2009              dSharpe vs live: max(10,30) QQQ +0.053   max(10d QQEW, 30d QQQ) -0.038
+  COVID 2020                 dSharpe vs live: max(10,30) QQQ +0.436   max(10d QQEW, 30d QQQ) +0.357
+  2022 bear                  dSharpe vs live: max(10,30) QQQ -0.036   max(10d QQEW, 30d QQQ) -0.016
+  whole SPMO era 2015-11+    dSharpe vs live: max(10,30) QQQ +0.050   max(10d QQEW, 30d QQQ) +0.028
+  multipliers of the two fast variants within 0.05 of each other on  85.9% of days; corr of daily returns 0.99814
+
+SUMMARY  [ 144s]
+  live on the QQEW rows: 26.09% / 1.006 / -33.6% S 1.103 H 0.876 exp 72.1% reb/yr 48.4 L1 33.04 real 31.40% / 1.248 / -25.0%
+  variant                          both-era vs live  vs k-live   real   dCAGR  dSharpe   dMDD  dReb/yr  dL1/yr   dExp
+  (1) max(v_q, v_e)                            fail       fail      -   -0.66   -0.014   -0.2     +0.8   -0.38  -0.54
+  (2) 0.75 v_q + 0.25 v_e                      fail       fail      -   -0.15   -0.008   -0.3     -0.6   -0.03  +0.16
+  (2) 0.50 v_q + 0.50 v_e                      fail       fail      -   -0.24   -0.014   -1.1     -1.3   -0.02  +0.34
+  (3) v_e alone [REPLACEMENT]                  fail       fail      -   -0.52   -0.027   -1.8     -2.2   +0.03  +0.61
+  (4) v_q + 0.5 v_r                            PASS       fail      +   -1.30   +0.003   -0.3     +4.3   -1.59  -3.18
+  (4) v_q + 1.0 v_r                            fail       fail      +   -2.86   +0.007   +0.1     +9.7   -3.52  -7.33
+  (5) v_q(1+0.5 max(0,sp-.8))                  fail       fail      -   -0.26   -0.006   -0.2     +0.2   -0.12  -0.23
+  (5) v_q(1+1.0 max(0,sp-.8))                  fail       fail      -   -0.52   -0.011   -0.4     +1.7   -0.10  -0.47
+  (6) max(v_e10, v_q)                          PASS       PASS      +   -0.28   +0.019   +0.5    +10.2   +0.26  -1.46
+  placebo min(v_q, v_e)                        fail       fail      -   +0.16   -0.012   -1.8     -2.8   +0.41  +1.16
+  placebo v_q - 0.5 v_r                        fail       fail      -   +0.67   -0.011   -1.5     -2.7   +1.22  +2.27
+  placebo v_q - 1.0 v_r                        fail       fail      -   +0.93   -0.026   -3.1     -5.2   +2.14  +3.99
+  placebo v_q(1+1.0 max(0,.2-sp))              fail       PASS      +   +0.17   +0.016   +0.2     +2.9   +0.08  -0.70
+  extra v_q(1+max(0,ratio_p-.8))               fail       fail      -   -0.47   -0.011   -0.4     +1.7   -0.09  -0.35
+  candidates 9; done [ 144s]
