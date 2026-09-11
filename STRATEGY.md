@@ -3473,6 +3473,29 @@ shift null; secondary ≥5 of 8 runs negative), early-fail conditions, no
 parameter changes. Candidate count behind the rule: 240. Today: pct 0.87,
 state A, rule off.
 
+**Transition model (`dstate_transition_model.py`,
+`research_notes/dstate_transition_model.md`, 2026-09-11): the probability
+question answered; no rule.** Label = does a D episode break down (E/F) or
+recover (A); 727 D days / 71 episodes / 19 breakdowns on the 2007+ rows,
+934 / 88 / 25 on the 2000+ rows with the composite proxy; episode-grouped
+10-fold CV, out-of-fold only. The all-feature logistic beats the bucket
+table as a probability (log-loss 0.462 vs 0.506, AUC 0.79 vs 0.67; time-
+ordered forward split preserves the ordering) but the ENTIRE gain is
+distance to the 200d — near-tautological for a label defined by reaching
+the 200d; without gap200/gap50 the model equals the bucket table, and the
+other nine features (vol, vol pct, vol ratio, 20d return, fast state,
+days-in-episode, gap50, DGS2 change) flip sign in 15–45% of episode-
+bootstrap refits. As a POLICY it is dominated by the one-feature gate:
+cash-when-P>p* gives +0.185/+0.004 .. +0.041/+0.110 (S/H vs const-D)
+against the gate's +0.205/+0.178; the bucket table's own out-of-fold P at
+p*=0.4 reproduces the gate exactly; intersecting or unioning model and
+gate moves it inside the gate's bootstrap interval; on the 2000+ sample
+every model policy has a negative holdout. The model predicts WHICH
+episodes break; the gate's money is THE DAY they break, and the feature
+that knows when only knows it once the loss is small. Today's hypothetical
+first D day (breadth pct 0.90, gap200 +8.8%): P(breakdown) 0.03
+[0.004, 0.13] vs bucket base rate 0.30. Candidate count unchanged at 240.
+
 ## Funding policy (owner, 2026-09-07) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
