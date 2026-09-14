@@ -276,3 +276,5 @@ TIMING CAVEAT: FRED dates each value by its observation day (H.15 yields are the
 New York reads; WTI is the day's spot). They are PUBLISHED the next business morning.
 `rates_signal.py` treats a value as known at that day's close and also reports every
 result with a one-day lag; both are stated in `paper-track/research_notes/rates_signal.md`.
+
+- `raincheck_etfs_daily.csv` — split-adjusted daily closes for QTOP, QNXT, QQLV, QQXL, QQQ, QLD, TBIL, MGK, XLG from 2024-10-01 (Robinhood `get_equity_historicals`, interval day, pulled 2026-09-14) for the Raincheck NASDAQ-30 analysis; the four Raincheck slices start 2024-10-21 / 2024-12-02 / 2025-08-11.
