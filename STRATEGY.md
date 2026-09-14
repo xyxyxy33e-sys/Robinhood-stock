@@ -1746,7 +1746,15 @@ more.
   0.693-0.699 from 10% to 40% TQQQ while CAGR and MaxDD climb together. **A
   risk dial, not an edge**, same family as the vol target. Left on.
 - **Hysteresis.** 1% is the best of 0.5/1/2/3/5%; 2-3% are much worse (2011
-  is not fixable this way).
+  is not fixable this way). **Re-run 2026-09-14 on the FULL live design
+  (overlays, plain 30d, 5% band), including NO band:** macro/fast buffer
+  0%/0% 20.88 / 0.871 / −37.2 (S 1.159 H 0.651, 58 reb/yr, 22.5 state
+  changes/yr); 0%/1% 21.68 / 0.897 / −33.8 (H 0.697); 0.5%/1% 21.32 / 0.886
+  (H 0.712); **1%/1% (live) 22.18 / 0.913 / −33.6 (S 1.103 H 0.768, 47
+  reb/yr, 11.7 state changes/yr)**; 2%/1% 20.92 / 0.869 / −36.1 (H 0.702);
+  1%/0% 21.45 / 0.888 / −35.9 (H 0.726). No band doubles the state changes,
+  lifts search-era Sharpe by +0.06 and costs the holdout −0.12: the classic
+  overfit shape. 1% stands; a wider band is worse in both directions.
 - **Downside semi-vol, EWMA vol, mean(10d,30d), min(30d,60d):** all worse.
 - **Exempting B or C from vol targeting:** MaxDD -52% to -54%. Very bad.
 - **A: more TQQQ** raises CAGR (14.3% at 70/30) with flat Sharpe and worse
