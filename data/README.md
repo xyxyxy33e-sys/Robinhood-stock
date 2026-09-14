@@ -278,3 +278,5 @@ New York reads; WTI is the day's spot). They are PUBLISHED the next business mor
 result with a one-day lag; both are stated in `paper-track/research_notes/rates_signal.md`.
 
 - `raincheck_etfs_daily.csv` — split-adjusted daily closes for QTOP, QNXT, QQLV, QQXL, QQQ, QLD, TBIL, MGK, XLG from 2024-10-01 (Robinhood `get_equity_historicals`, interval day, pulled 2026-09-14) for the Raincheck NASDAQ-30 analysis; the four Raincheck slices start 2024-10-21 / 2024-12-02 / 2025-08-11.
+- `mgk_daily.csv` — d,o,c split-adjusted daily open/close for MGK (Vanguard Mega Cap Growth) 2007-12-21..2026-09-11, Robinhood `get_equity_historicals` interval day, adjustment split, pulled 2026-09-14 in two calls (2007-12..2019-12, 2020-01..2026-09); 14 bars flagged `interpolated` by the API were dropped. Price only (no dividends; ~0.5%/yr assumed where a total return is needed). For paper-track/raincheck_nasdaq30.py.
+- `xlg_daily.csv` — same as above for XLG (Invesco S&P 500 Top 50) 2005-05-10..2026-09-11; 88 interpolated bars dropped (mostly 2005-2007 zero-volume days). Price only (~1.0%/yr dividend assumed).
