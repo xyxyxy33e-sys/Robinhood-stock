@@ -1,7 +1,9 @@
 # PROPOSED replacement prompt — Daily Regime Check (Mon–Thu 15:50 ET)
 # Trigger: trig_01GGL83Q7cR8zDB9yPqnKurE   cron: 50 19 * * 1-4  (15:50 ET since 2026-09-09)
 # STATUS: APPLIED to the live trigger 2026-09-01; re-applied 2026-09-02 (weights
-# reweighted, micro overlay disabled). This file is the
+# reweighted, micro overlay disabled); re-applied 2026-09-16 (section 7 stale
+# $5,000-per-event reference fixed to match section 5a's funding_policy.py
+# figure). This file is the
 # source of record — edit here, then push via update_trigger, so the repo and
 # the live prompt never drift apart. list_triggers does NOT return prompt text,
 # so this file is the only readable copy.
