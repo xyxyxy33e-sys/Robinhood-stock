@@ -2,8 +2,9 @@
 # Trigger: trig_01GGL83Q7cR8zDB9yPqnKurE   cron: 50 19 * * 1-4  (15:50 ET since 2026-09-09)
 # STATUS: APPLIED to the live trigger 2026-09-01; re-applied 2026-09-02 (weights
 # reweighted, micro overlay disabled); re-applied 2026-09-16 (section 7 stale
-# $5,000-per-event reference fixed to match section 5a's funding_policy.py
-# figure). This file is the
+# $5,000-per-event reference fixed; section 5 push notifications now state the
+# deposit dollar amount directly instead of deferring it to the report). This
+# file is the
 # source of record — edit here, then push via update_trigger, so the repo and
 # the live prompt never drift apart. list_triggers does NOT return prompt text,
 # so this file is the only readable copy.
@@ -293,6 +294,16 @@ for these three, and nothing else:
      when the shift is driven by the fast re-entry overlay alone, which is a
      deliberate exception to the rule that overlay switches are not push
      events: the owner funds on this signal, so they need to see it.
+
+**For events 2 and 3, the push notification text itself must state the
+suggested deposit amount** (added 2026-09-16) — compute it with
+`paper-track/funding_policy.py`'s `tier_funding_amount(account_value, tier)`
+or `turn_funding_amount(account_value)` (see section 5a) and put it in the
+notification body, e.g. "QQQ crossed -10% drawdown tier from the 252-day
+high; suggested deposit $5,940." Do not send a bare tier/turn alert and defer
+the dollar figure to the weekly report — the owner acts on the push
+notification directly and should not have to open the report to know how
+much to send.
 
 REMOVED 2026-09-07: the old event (3), "any single day at -2% or worse in the
 strategy's own daily return". It fired ~10x/year as an explicit low-conviction
