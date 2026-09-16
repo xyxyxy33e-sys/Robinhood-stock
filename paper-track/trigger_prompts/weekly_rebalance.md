@@ -408,7 +408,8 @@ the notional-weighted slippage from the fill-quality tracker.
 If a FUNDING TRIGGER fired this week — a newly crossed 5% drawdown tier, or
 the effective state shifting from D/E/F into A/B/C — put it at the TOP of the
 entry: which trigger, the tier or the prior/new state, the account value, and
-the standing $5,000-per-event policy. Also list any funding triggers that fired
+the computed dollar figure from `funding_policy.py` (not a flat number — see
+section 5a). Also list any funding triggers that fired
 earlier in the week on a Mon-Thu run, so the weekly entry is a complete record
 of the week's funding events even when the Friday run itself trades nothing.
 

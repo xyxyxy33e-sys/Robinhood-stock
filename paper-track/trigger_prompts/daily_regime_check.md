@@ -385,9 +385,10 @@ drawdown tier can cross while the portfolio is comfortably within the drift
 band, and the shift into A/B/C is a regime change that will normally trade
 anyway — but do not rely on that. If either funding trigger fired, append an
 entry even if nothing was bought or sold, and put the trigger at the TOP of
-it: which trigger, the tier or the prior/new state, the account value, and the
-standing $5,000-per-event policy. (Added 2026-09-07 — before this, a tier
-crossing on a quiet day would have been silently dropped.)
+it: which trigger, the tier or the prior/new state, the account value, and
+the computed dollar figure from `funding_policy.py` (not a flat number — see
+section 5a). (Added 2026-09-07 — before this, a tier crossing on a quiet day
+would have been silently dropped.)
 
 On a rebalance: append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
