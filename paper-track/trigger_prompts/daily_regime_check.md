@@ -303,23 +303,35 @@ ONE notification, and say it is a funding trigger.
 
 ## 5a. Funding triggers — what to tell the owner
 
-The owner funds the account episodically, not monthly, on **$5,000 per event**
-at exactly two signals (2026-09-07):
+The owner funds the account episodically, not monthly, at exactly two
+signals (2026-09-07; amount formula ADOPTED 2026-09-16, replacing the flat
+$5,000/event — see `research_notes/funding_pct_backtest.md`):
 
-  - **each newly crossed 5% drawdown tier** (~5.2x/yr historically), and
+  - **each newly crossed drawdown tier** (-5/-10/-15/-20% from the rolling
+    252-day high, ~5.2x/yr historically), and
   - **each shift of the effective state from D/E/F into A/B/C** (~4.1x/yr).
 
-Together about 9 events/year, roughly $45k/year, worst historical quarter
-$30k. When either fires, say so explicitly and name which one, the tier or
-the prior/new state, and the account value. Do NOT compute or suggest a
-different amount, do not net the two against each other, and do not invent
-additional funding signals — funding on a -3% day, on any state change, or on
-entry into F were all tested 2026-09-07 and rejected (entering F is the worst
-of them: the strategy is 100% BOXX there, so new money would land in cash).
-This is a REPORTING duty only. Never move money, and never treat a funding
-trigger as a reason to deviate from the computed target weights.
+**The dollar amount is 2% of the CURRENT account value, escalated by tier
+depth** (1x / 1.5x / 2x / 2.5x at -5/-10/-15/-20%; the turn is 1x, a
+confirmation signal, not severity-scaled). ALWAYS compute it with
+`paper-track/funding_policy.py`'s `tier_funding_amount(account_value, tier)`
+or `turn_funding_amount(account_value)` — never hand-add it in prose, the
+same rule as any other figure combining two numbers. `schedule_table
+(account_value)` gives all five at once for a report line. At the account's
+current value the four tiers plus the turn are five DIFFERENT dollar
+figures, not one -- do not repeat a single number for all of them.
 
-The $5,000 figure is the standing policy, not a cap on what the owner may
+When either signal fires, say so explicitly: which one, the tier or the
+prior/new state, the account value, and the computed dollar figure. Do NOT
+hand-compute a different amount, do not net the two against each other, and
+do not invent additional funding signals — funding on a -3% day, on any
+state change, or on entry into F were all tested 2026-09-07 and rejected
+(entering F is the worst of them: the strategy is 100% BOXX there, so new
+money would land in cash). This is a REPORTING duty only. Never move money,
+and never treat a funding trigger as a reason to deviate from the computed
+target weights.
+
+The computed figure is the standing policy, not a cap on what the owner may
 choose to send. If a deposit larger than the policy amount arrives, deploy it
 to target under section 2a — do not hold the excess back to match the policy.
 

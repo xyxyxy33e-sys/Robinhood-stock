@@ -3558,10 +3558,15 @@ correlation 0.998, COVID-only (+0.357 alone, +0.004 dropped), +10
 rebalances/yr, −2.7pp/yr in recoveries. Nine candidates, zero survivors;
 the single-index 30d QQQ estimator stands. Cumulative candidates: 267.
 
-## Funding policy (owner, 2026-09-07) — reporting duty only
+## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
-The owner funds the account EPISODICALLY, not monthly: **$5,000 per event**
-on exactly two triggers.
+The owner funds the account EPISODICALLY, not monthly, on exactly two
+triggers (unchanged since 2026-09-07). The AMOUNT changed 2026-09-16: a flat
+$5,000/event was replaced with **2% of current account value, escalated by
+drawdown-tier depth** (`paper-track/funding_policy.py`), because a fixed
+dollar figure quietly shrinks as a share of a compounding account (it was
+~5% of the ~$100k account when set on 09-07; ~2.5% of the ~$198k account by
+09-16) and did not scale with how severe a drawdown actually was.
 
   1. **Each newly crossed 5% drawdown tier** (−5 / −10 / −15 / −20 / −25%
      from the rolling 252-day high). ~5.2x/yr; historically 28 / 15 / 8 / 4 /
@@ -3573,6 +3578,29 @@ Together ~9 events/yr, ~$45k/yr, worst historical quarter $30k. Both are now
 push events in the triggers, and the single-day "−2% or worse" alert was
 REMOVED to make room (it fired ~10x/yr and was explicitly low-conviction).
 The triggers only REPORT these; they never move money.
+
+**2026-09-16 amount formula.** `tier_funding_amount(account_value, tier)` /
+`turn_funding_amount(account_value)`: 2% of account value at the moment of
+the event, times a mild escalation multiplier by tier (1x / 1.5x / 2x / 2.5x
+at -5/-10/-15/-20%; the turn is always 1x, since it is a confirmation
+signal, not a severity one). At today's ~$198k that is $3,960 / $5,940 /
+$7,920 / $9,900 by tier, $3,960 for the turn — replacing the single flat
+$5,000 the daily/weekly prompts used to quote for every one of these.
+
+Backtested in `funding_pct_backtest.py` /
+`research_notes/funding_pct_backtest.md` on both the real 11-year window and
+the 26-year proxy: the IRR-vs-per-dollar-multiple tradeoff is smooth and
+monotonic on both histories — there is **no interior optimum**, so escalating
+shape (mild beat steep/linear: ≤1pp more IRR for 2-3x the dollar ask at the
+deepest tier) was the one choice the data supported; the base rate (2% vs.
+the shortlisted 1.5%) was a genuine owner preference the backtest could not
+resolve further, the same "idle cash beats a lump sum, loses to a fully-
+invested lump" tradeoff the original 09-07 analysis found. Caveats carried
+over: single 11-year real-instrument history with one real bear (2022); the
+26-year proxy is QQQ-core, structurally blind to SPMO specifics, used only
+to confirm the monotonic shape holds outside the SPMO-fitted window; very
+long-horizon dollar totals at high percentages are compounding artifacts,
+not projections.
 
 **Why these two and not the alternatives** (all measured 2026-09-07,
 `scratchpad dipfund.py` / `statefund.py`, $5k/event, 2015-11 → 2026-08):

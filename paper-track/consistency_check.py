@@ -505,3 +505,39 @@ def check_breadth_tracker():
 
 
 check_breadth_tracker()
+
+
+def check_funding_policy():
+    """Funding amounts are computed in code, never hand-added in prose (the
+    project's standing rule). Frozen constants: 2% base, mild escalation
+    1/1.5/2/2.5x at the four DD_THRESHOLDS tiers, turn at the flat base."""
+    from funding_policy import (BASE_PCT, TIER_MULT, TURN_MULT, tier_funding_amount,
+                                turn_funding_amount, schedule_table)
+    from drawdown_tracker import DD_THRESHOLDS
+    assert BASE_PCT == 0.02
+    assert TIER_MULT == {0.05: 1.0, 0.10: 1.5, 0.15: 2.0, 0.20: 2.5}
+    assert TURN_MULT == 1.0
+    assert set(TIER_MULT) == set(DD_THRESHOLDS), "funding tiers must match the drawdown tiers exactly"
+    assert tier_funding_amount(198_000, 0.05) == 3960
+    assert tier_funding_amount(198_000, 0.20) == 9900
+    assert turn_funding_amount(198_000) == 3960
+    assert tier_funding_amount(100_000, 0.05) == turn_funding_amount(100_000) == 2000, "tier 1 == turn at the same account value (both 1x base)"
+    sched = schedule_table(500_000)
+    assert sched[0.20] == 25_000 and sched['turn'] == 10_000
+    for bad in (0.0, -100):
+        try:
+            tier_funding_amount(bad, 0.05)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"tier_funding_amount accepted account_value={bad!r}")
+    try:
+        tier_funding_amount(198_000, 0.25)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("tier_funding_amount accepted an unknown tier")
+    print("OK: funding policy -- 2% base, mild escalation, tiers match DD_THRESHOLDS, rejects bad input")
+
+
+check_funding_policy()
