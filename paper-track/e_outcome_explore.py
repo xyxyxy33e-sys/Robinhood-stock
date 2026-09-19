@@ -26,6 +26,11 @@ Multiplicity: Bonferroni threshold; label permutation (2000 shuffles) of the max
 Multivariate: leave-one-episode-out logistic regression (ridge-stabilised Newton) for the best single feature and
 for the best two features from different families.
 
+PART II (owner follow-up, same day): the same question INSIDE the episodes, for the survivors at E sessions k = 3, 5, 10:
+survivorship and the conditional base rate P(BREAK | still in E at k), the feature set as levels at k and changes since
+entry, Mann-Whitney/AUC per feature with a per-k permutation of the max, LOO logistic, forward QQQ returns from k (to exit
+and next 20 sessions) by group and their Spearman correlation with the best feature, and one-line paths per episode.
+
 Pure Python (no numpy/scipy in this environment). Research only; nothing in the repo is modified.
 
 Run from the repo root:
@@ -710,7 +715,199 @@ def main():
         if k >= 8: break
 
     log(f"\n{'='*118}\n7. WHAT THIS DOES AND DOES NOT IMPLY -- see the note. No rule is proposed; n = {len(EPS)} ({nb} breaks) is the binding constraint.\n{'='*118}")
-    _log_f.close()
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# PART II (owner follow-up, 2026-09-19): inside the episodes, at E sessions k = 3, 5, 10
+# ----------------------------------------------------------------------------------------------------------------
+CHECKPOINTS = (3, 5, 10)
+
+def spearman(x, y):
+    """Spearman rho with a t-approximation two-sided p. Pairs with None dropped."""
+    pairs = [(a, b) for a, b in zip(x, y) if a is not None and b is not None]
+    n = len(pairs)
+    if n < 4: return None, None, n
+    def ranks(v):
+        order = sorted(range(len(v)), key=lambda i: v[i]); r = [0.0] * len(v); i = 0
+        while i < len(v):
+            j = i
+            while j + 1 < len(v) and v[order[j + 1]] == v[order[i]]: j += 1
+            for t in range(i, j + 1): r[order[t]] = (i + j) / 2 + 1
+            i = j + 1
+        return r
+    rx, ry = ranks([a for a, b in pairs]), ranks([b for a, b in pairs])
+    rho = pearson(rx, ry)
+    if rho is None: return None, None, n
+    if abs(rho) >= 1: return rho, 0.0, n
+    t = rho * math.sqrt((n - 2) / (1 - rho * rho))
+    return rho, t_sf2(t, n - 2), n
+
+def k_features(k):
+    """Feature columns for survivors at session k (index i0+k-1): levels at k and changes entry->k. Returns
+    (list of (family, name, [value per survivor])), survivors list."""
+    surv = [e for e in EPS if e['n'] >= k]
+    cols = []
+    def add(fam, name, fn):
+        cols.append((fam, name, [fn(e) for e in surv]))
+    def lvl(fn): return lambda e: fn(e['i0'] + k - 1)
+    def chg(fn):
+        def g(e):
+            a, b = fn(e['i0'] + k - 1), fn(e['i0']); return None if a is None or b is None else a - b
+        return g
+    LV = [('vol_implied', 'VIX', f_vix, True), ('vol_implied', 'VIX_pct252', f_vix_pct, True),
+          ('vol_implied', 'VXN', f_vxn, True), ('vol_implied', 'VXN_minus_VIX', f_vxn_minus_vix, True),
+          ('rates', 'DGS2', f_2y, True), ('rates', 'DGS10', lambda i: dgs10.asof(dates[i]), True),
+          ('rates', 'DGS3MO', lambda i: dgs3m.asof(dates[i]), True), ('rates', 'slope_10y2y', f_10y2y, True),
+          ('breadth', 'QQEW_pct', f_br_pct, True), ('breadth', 'QQEW_x60', f_br_x60, True),
+          ('breadth', 'RSP_pct', f_rsp_pct, True), ('breadth', 'RSP_x60', f_rsp_x60, True),
+          ('price', 'below50_pct', f_below50, False), ('price', 'below200_pct', f_below200, False),
+          ('spread', 'spread50_200_pct', f_spread, True), ('price', 'dd_from_252hi', f_dd252, False),
+          ('realised_vol', 'rvol30', f_vol30, True), ('realised_vol', 'volratio_10_30', f_volratio, False)]
+    for fam, name, fn, do_chg in LV:
+        add(fam, name + f'@k{k}', lvl(fn))
+        if do_chg: add(fam, name + f'@chg0-{k}', chg(fn))
+    add('path', f'QQQ_ret_entry_to_k{k}', lambda e: (px[e['i0'] + k - 1] / px[e['i0']] - 1) * 100)
+    add('path', f'QQQ_ret_pre_entry_to_k{k}', lambda e: (px[e['i0'] + k - 1] / px[e['i0'] - 1] - 1) * 100)
+    def rel(e):
+        d0, d1 = dates[e['i0']], dates[e['i0'] + k - 1]
+        if d0 not in spy or d1 not in spy: return None
+        return ((px[e['i0'] + k - 1] / px[e['i0']]) / (spy[d1] / spy[d0]) - 1) * 100
+    add('relative', f'QQQ_SPY_rel_entry_to_k{k}', rel)
+    add('path', f'up_sessions_first_{k}', lambda e: float(sum(1 for j in range(e['i0'], e['i0'] + k) if px[j] > px[j - 1])))
+    return cols, surv
+
+def part2():
+    log(f"\n\n{'#'*118}\nPART II: INSIDE THE EPISODES -- survivors at E sessions k = {CHECKPOINTS}. DESCRIPTIVE ONLY, no rule proposed.\n{'#'*118}")
+    summary = []
+    for k in CHECKPOINTS:
+        cols, surv = k_features(k)
+        lab = [1 if e['label'] == 'BREAK' else 0 for e in surv]
+        nb, nr = sum(lab), len(lab) - sum(lab)
+        eb = sum(1 for e in EPS if e['n'] < k and e['label'] == 'BREAK'); er = sum(1 for e in EPS if e['n'] < k and e['label'] == 'REVERSAL')
+        rs = [e for e in surv if e['start'] >= REAL_ERA_START]; rb = sum(1 for e in rs if e['label'] == 'BREAK')
+        log(f"\n{'='*118}\nII.{k}  SESSION k = {k}\n{'='*118}")
+        log(f"  1. SURVIVORSHIP: still in E at session {k}: {len(surv)} episodes = {nb} BREAK + {nr} REVERSAL; already ended before session {k}: "
+            f"{eb} BREAK + {er} REVERSAL. Base rate P(BREAK | in E at session {k}) = {nb}/{len(surv)} = {nb/len(surv):.2f} "
+            f"(unconditional 16/32 = 0.50). Real era: {len(rs)} survivors, {rb} BREAK -> {rb/len(rs) if rs else float('nan'):.2f}.")
+        log(f"     Conditioning on survival raises the base rate because REVERSALs are short (median 6.5 sessions vs 16.5): the")
+        log(f"     survivors are a selected set, and any 'signal' at k must be read against {nb/len(surv):.2f}, not 0.50.")
+        mde = 1.96 * math.sqrt((nb + nr + 1) / (12 * nb * nr)) if nb and nr else None
+        log(f"     Minimum detectable |AUC-0.5| for one pre-specified feature at nB={nb}, nR={nr}: about {mde:.2f}.")
+        # 2. feature table
+        rows = []
+        for fam, name, vals in cols:
+            xb = [v for v, l in zip(vals, lab) if l and v is not None]; yr = [v for v, l in zip(vals, lab) if not l and v is not None]
+            if len(xb) < 2 or len(yr) < 2: continue
+            t, pt = welch(xb, yr); auc, pu = mann_whitney(xb, yr)
+            rows.append((fam, name, len(xb), len(yr), statistics.mean(xb), statistics.median(xb), statistics.mean(yr), statistics.median(yr), t, pt, pu, auc))
+        rows.sort(key=lambda r: -abs(r[11] - 0.5))
+        log(f"  2. FEATURES at session {k}: {len(rows)} columns (levels @k{k} and changes @chg0-{k}); Bonferroni p < {0.05/len(rows):.5f}")
+        log(f"  {'feature':<34} {'fam':<13} nB nR  {'meanB':>8} {'medB':>8} {'meanR':>8} {'medR':>8} {'diff':>8} {'p_t':>6} {'p_MW':>6} {'AUC':>6}")
+        for r in rows:
+            fam, name, nbx, nry, mb, mdb, mr, mdr, t, pt, pu, auc = r
+            log(f"  {name:<34} {fam:<13} {nbx:2d} {nry:2d}  {fmt(mb,8,3)} {fmt(mdb,8,3)} {fmt(mr,8,3)} {fmt(mdr,8,3)} {fmt(mb-mr,8,3)} {fmt(pt,6,3)} {fmt(pu,6,3)} {fmt(auc,6,3)}")
+        n05 = sum(1 for r in rows if r[10] < 0.05); nbf = sum(1 for r in rows if r[10] < 0.05 / len(rows))
+        log(f"  p_MW<0.05: {n05}/{len(rows)}; Bonferroni survivors: {nbf}; |AUC-0.5|>0.20: {sum(1 for r in rows if abs(r[11]-0.5)>0.2)}")
+        # permutation among survivors
+        real_max_row = rows[0]; real_max = abs(real_max_row[11] - 0.5)
+        maxes = []
+        for _ in range(N_PERM):
+            perm = lab[:]; random.shuffle(perm); m = 0.0
+            for fam, name, vals in cols:
+                xb = [v for v, l in zip(vals, perm) if l and v is not None]; yr = [v for v, l in zip(vals, perm) if not l and v is not None]
+                if len(xb) < 2 or len(yr) < 2: continue
+                a = abs(auc_only(xb, yr) - 0.5)
+                if a > m: m = a
+            maxes.append(m)
+        maxes.sort(); q = lambda p_: maxes[min(len(maxes) - 1, int(p_ * len(maxes)))]
+        p_perm = sum(1 for m in maxes if m >= real_max) / len(maxes)
+        # permutation excluding the pure price-path columns
+        nonpath = [(f_, n_, v_) for f_, n_, v_ in cols if f_ not in ('path', 'price', 'spread')]
+        np_rows = [r for r in rows if r[0] not in ('path', 'price', 'spread')]
+        np_max_row = np_rows[0]; np_max = abs(np_max_row[11] - 0.5); maxes2 = []
+        for _ in range(N_PERM):
+            perm = lab[:]; random.shuffle(perm); m = 0.0
+            for fam, name, vals in nonpath:
+                xb = [v for v, l in zip(vals, perm) if l and v is not None]; yr = [v for v, l in zip(vals, perm) if not l and v is not None]
+                if len(xb) < 2 or len(yr) < 2: continue
+                a = abs(auc_only(xb, yr) - 0.5)
+                if a > m: m = a
+            maxes2.append(m)
+        maxes2.sort(); q2 = lambda p_: maxes2[min(len(maxes2) - 1, int(p_ * len(maxes2)))]
+        p_perm2 = sum(1 for m in maxes2 if m >= np_max) / len(maxes2)
+        log(f"  PERMUTATION ({N_PERM} shuffles of the {len(lab)} survivor labels), all {len(rows)} columns: real max |AUC-0.5| {real_max:.3f} ({real_max_row[1]}, AUC {real_max_row[11]:.3f}); "
+            f"null median {q(0.5):.3f} 95th {q(0.95):.3f} 99th {q(0.99):.3f}; p = {p_perm:.3f}")
+        log(f"  PERMUTATION, NON-PRICE columns only (implied vol, rates, breadth, realised vol, relative; {len(np_rows)} columns): real max {np_max:.3f} "
+            f"({np_max_row[1]}, AUC {np_max_row[11]:.3f}, nB={np_max_row[2]} nR={np_max_row[3]}); null median {q2(0.5):.3f} 95th {q2(0.95):.3f}; p = {p_perm2:.3f}")
+        # LOO logistic
+        fm = {name: vals for fam, name, vals in cols}
+        full = [r for r in rows if r[2] + r[3] == len(surv)]
+        best = full[0]; second = None
+        for r in full[1:]:
+            if r[0] == best[0]: continue
+            c = pearson(fm[best[1]], fm[r[1]])
+            if c is not None and abs(c) < 0.6: second = r; break
+        ins1, w1 = insample_auc([fm[best[1]]], lab); loo1, n1 = loo_auc([fm[best[1]]], lab)
+        log(f"  LOO LOGISTIC: best single (full coverage) {best[1]} (AUC {best[11]:.3f}): in-sample {ins1:.3f} LOO {loo1:.3f} (n={n1})")
+        loo2 = None
+        if second:
+            ins2, w2 = insample_auc([fm[best[1]], fm[second[1]]], lab); loo2, n2 = loo_auc([fm[best[1]], fm[second[1]]], lab)
+            log(f"                pair {best[1]} + {second[1]} (AUC {second[11]:.3f}, corr {pearson(fm[best[1]], fm[second[1]]):.2f}): in-sample {ins2:.3f} LOO {loo2:.3f} (n={n2})")
+        npb = [r for r in np_rows if r[2] + r[3] == len(surv)]
+        loo3 = None
+        if npb:
+            ins3, w3 = insample_auc([fm[npb[0][1]]], lab); loo3, n3 = loo_auc([fm[npb[0][1]]], lab)
+            log(f"                best NON-PRICE single with full coverage {npb[0][1]} (AUC {npb[0][11]:.3f}): in-sample {ins3:.3f} LOO {loo3:.3f} (n={n3})")
+        # 3. forward returns
+        fwd_exit = [(px[e['i1']] / px[e['i0'] + k - 1] - 1) * 100 for e in surv]
+        fwd20 = [(px[e['i0'] + k - 1 + 20] / px[e['i0'] + k - 1] - 1) * 100 if e['i0'] + k - 1 + 20 < N else None for e in surv]
+        log(f"  3. FORWARD QQQ RETURN from session {k} (survivors):")
+        for nm, arr in (('to episode exit', fwd_exit), ('next 20 sessions (regardless of exit)', fwd20)):
+            for gname, gl in (('BREAK', 1), ('REVERSAL', 0), ('ALL', None)):
+                v = [x for x, l in zip(arr, lab) if x is not None and (gl is None or l == gl)]
+                log(f"     {nm:<38} {gname:<8} n={len(v):2d} mean {statistics.mean(v):6.2f}% median {statistics.median(v):6.2f}% "
+                    f"min {min(v):6.1f}% max {max(v):6.1f}%  positive {sum(1 for x in v if x > 0)}/{len(v)}")
+        rho_e, p_e, n_e = spearman(fm[best[1]], fwd_exit); rho_20, p_20, n_20 = spearman(fm[best[1]], fwd20)
+        log(f"     Spearman of {best[1]} with forward return: to exit rho {rho_e:+.3f} (p {p_e:.3f}, n={n_e}); next-20 rho {rho_20:+.3f} (p {p_20:.3f}, n={n_20})")
+        rho_np = None
+        if npb:
+            rho_np, p_np, n_np = spearman(fm[npb[0][1]], fwd20); rho_npe, p_npe, _ = spearman(fm[npb[0][1]], fwd_exit)
+            log(f"     Spearman of {npb[0][1]} with forward return: to exit rho {rho_npe:+.3f} (p {p_npe:.3f}); next-20 rho {rho_np:+.3f} (p {p_np:.3f}, n={n_np})")
+        # also the path feature vs next-20 (is 'down so far' informative about what comes next?)
+        rho_p, p_p, n_p = spearman(fm[f'QQQ_ret_entry_to_k{k}'], fwd20)
+        log(f"     Spearman of QQQ_ret_entry_to_k{k} with next-20 return: rho {rho_p:+.3f} (p {p_p:.3f}, n={n_p}); with return to exit: "
+            f"rho {spearman(fm[f'QQQ_ret_entry_to_k{k}'], fwd_exit)[0]:+.3f} (p {spearman(fm[f'QQQ_ret_entry_to_k{k}'], fwd_exit)[1]:.3f})")
+        summary.append((k, nb, nr, nb / len(surv), best[1], best[11], best[10], p_perm, loo1, rho_e, p_e, rho_20, p_20,
+                        np_max_row[1], np_max_row[11], p_perm2, loo3))
+    # 4. compact table
+    log(f"\n{'='*118}\nII.4  COMPACT TABLE ACROSS k\n{'='*118}")
+    log(f"  {'k':>2} {'nB':>3} {'nR':>3} {'P(B)':>5}  {'best feature':<30} {'AUC':>5} {'p_MW':>6} {'perm p':>6} {'LOO':>5} {'rho_exit':>8} {'p':>5} {'rho_20':>7} {'p':>5}  | best non-price {'':<12} {'AUC':>5} {'perm p':>6} {'LOO':>5}")
+    for k, nb, nr, br, bn, ba, bp, pp, loo, re_, pe, r20, p20, npn, npa, npp, loo3 in summary:
+        log(f"  {k:>2} {nb:>3} {nr:>3} {br:5.2f}  {bn:<30} {ba:5.3f} {bp:6.3f} {pp:6.3f} {loo:5.3f} {re_:+8.3f} {pe:5.3f} {r20:+7.3f} {p20:5.3f}  | {npn:<27} {npa:5.3f} {npp:6.3f} {fmt(loo3,5,3)}")
+    # 5. narrative paths
+    log(f"\n{'='*118}\nII.5  PATHS: QQQ return from entry close, VIX change, QQEW breadth-pct change and RSP breadth-pct change at sessions 3/5/10 ('--' = episode already over)\n{'='*118}")
+    def cell(e, k):
+        if e['n'] < k: return f"{'ended':>28}"
+        ik = e['i0'] + k - 1
+        r = (px[ik] / px[e['i0']] - 1) * 100
+        dv = f_vix(ik) - f_vix(e['i0']) if f_vix(ik) is not None and f_vix(e['i0']) is not None else None
+        db = None if f_br_pct(ik) is None or f_br_pct(e['i0']) is None else f_br_pct(ik) - f_br_pct(e['i0'])
+        dr = None if f_rsp_pct(ik) is None or f_rsp_pct(e['i0']) is None else f_rsp_pct(ik) - f_rsp_pct(e['i0'])
+        return f"{r:+5.1f}% V{fmt(dv,5,1)} B{fmt(db,5,2)} R{fmt(dr,5,2)}"
+    log(f"  {'episode':<22} {'n':>3} label     {'session 3':^28} | {'session 5':^28} | {'session 10':^28}")
+    log("  BREAK episodes:")
+    for e in EPS:
+        if e['label'] == 'BREAK': log(f"  {e['start']}..{e['end']} {e['n']:3d} {e['label']:<8}  {cell(e,3)} | {cell(e,5)} | {cell(e,10)}")
+    log("  REVERSAL episodes that survived to session 10:")
+    for e in EPS:
+        if e['label'] == 'REVERSAL' and e['n'] >= 10: log(f"  {e['start']}..{e['end']} {e['n']:3d} {e['label']:<8}  {cell(e,3)} | {cell(e,5)} | {cell(e,10)}")
+    log("  REVERSAL episodes that ended before session 10 (for the base-rate point):")
+    for e in EPS:
+        if e['label'] == 'REVERSAL' and e['n'] < 10: log(f"  {e['start']}..{e['end']} {e['n']:3d} {e['label']:<8}  {cell(e,3)} | {cell(e,5)} | {cell(e,10)}")
+    log(f"\n{'='*118}\nII.6  No rule proposed. See the note, part II.\n{'='*118}")
+
 
 if __name__ == '__main__':
     main()
+    part2()
+    _log_f.close()

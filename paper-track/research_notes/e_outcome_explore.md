@@ -347,3 +347,244 @@ down sessions to cross. What the data say:
   (proxy full / search / holdout, real daily, exposure-matched controls,
   whole-grid permutation) on both eras before it is even a candidate, and at
   this n the battery is not powered to pass it.
+
+---
+
+# Part II — inside the episodes: survivors at E sessions 3, 5 and 10 (owner follow-up, same day)
+
+Same script (`part2()` in `paper-track/e_outcome_explore.py`), same log
+(appended). Same rules: descriptive, no rule proposed, nothing applied. At
+each checkpoint k the sample is the episodes still in E at session k; every
+feature is measured at session k as (a) its level and (b) its change since
+the E entry session, plus the explicit price path (QQQ return entry→k, up
+sessions in the first k). Labels are permuted among the survivors only.
+
+## II.1 Survivorship and the conditional base rate
+
+| k | still in E: BREAK / REVERSAL | already ended: BREAK / REVERSAL | P(BREAK \| in E at k) | real era survivors (BREAK) | MDE \|AUC−0.5\| |
+|---|---|---|---|---|---|
+| 3 | 15 / 12 (27) | 1 / 4 | **0.56** | 9 (4) → 0.44 | 0.22 |
+| 5 | 15 / 9 (24) | 1 / 7 | **0.62** | 8 (4) → 0.50 | 0.24 |
+| 10 | 11 / 6 (17) | 5 / 10 | **0.65** | 8 (4) → 0.50 | 0.30 |
+
+Conditioning on survival changes the base rate mechanically: REVERSALs are
+short (median 6.5 sessions vs 16.5), so by session 10 ten of the sixteen
+REVERSALs are already gone and the unconditional 0.50 has become 0.65. Any
+"signal" at k has to be read against that conditional rate, and the MDE
+column says what one pre-specified feature could even detect at 5%: an AUC
+of about 0.72 at k=3, 0.74 at k=5, 0.80 at k=10.
+
+## II.2 Feature tables at each checkpoint
+
+36 columns per k (18 base quantities as level @k and, where sensible, change
+@chg0-k, plus the path columns). Bonferroni threshold p < 0.00139 at every k;
+**no column clears it at any k.** Top rows by |AUC−0.5| (full tables in the
+log):
+
+**k = 3 (15 B / 12 R).** p_MW < 0.05: 3/36; |AUC−0.5| > 0.20: 4.
+
+| feature | nB/nR | BREAK mean / median | REVERSAL mean / median | p_MW | AUC |
+|---|---|---|---|---|---|
+| `below200_pct@k3` | 15/12 | −3.99 / −3.38 | −1.42 / −1.90 | 0.005 | 0.183 |
+| `QQQ_ret_entry_to_k3` | 15/12 | −1.45 / −0.82 | +0.43 / +0.63 | 0.017 | 0.228 |
+| `up_sessions_first_3` | 15/12 | 0.73 / 1 | 1.33 / 1 | 0.023 | 0.267 |
+| `dd_from_252hi@k3` | 15/11 | −14.2 / −12.5 | −12.2 / −8.6 | 0.058 | 0.279 |
+| `below50_pct@k3` | 15/12 | −6.27 / −6.33 | −4.23 / −3.19 | 0.079 | 0.300 |
+| `VXN@chg0-3` | 14/11 | +1.81 / +0.25 | −0.84 / −0.46 | 0.106 | 0.692 |
+| `VIX@chg0-3` | 15/12 | +1.66 / +0.25 | −0.48 / −0.79 | 0.097 | 0.689 |
+
+Everything else (VIX/VXN *levels*, VIX percentile, all rates levels and
+changes, QQEW and RSP breadth levels and changes, realised vol, vol ratio,
+spread and its change, QQQ/SPY relative) is at AUC 0.41–0.59 with p > 0.12.
+The only non-price columns that lean are the VIX and VXN *changes since
+entry* (implied vol rising over the first three E sessions in the eventual
+BREAKs, median +0.25 vs −0.5 to −0.8 points) at p 0.10.
+
+**k = 5 (15 B / 9 R).** p_MW < 0.05: 3/36; |AUC−0.5| > 0.20: 5.
+
+| feature | nB/nR | BREAK mean / median | REVERSAL mean / median | p_MW | AUC |
+|---|---|---|---|---|---|
+| `below200_pct@k5` | 15/9 | −4.31 / −3.88 | −2.28 / −1.88 | 0.022 | 0.215 |
+| `RSP_pct@chg0-5` | 12/6 | −0.007 / −0.012 | +0.108 / +0.083 | 0.075 | 0.236 |
+| `below50_pct@k5` | 15/9 | −6.30 / −6.00 | −4.83 / −2.80 | 0.040 | 0.244 |
+| `QQQ_ret_pre_entry_to_k5` | 15/9 | −3.96 / −3.80 | −2.06 / −1.13 | 0.053 | 0.259 |
+| `up_sessions_first_5` | 15/9 | 1.53 / 2 | 2.11 / 2 | 0.032 | 0.270 |
+| `QQQ_ret_entry_to_k5` | 15/9 | −1.77 / −1.85 | −0.19 / +0.23 | 0.114 | 0.304 |
+| `DGS3MO@chg0-5` | 15/9 | −0.002 / +0.01 | −0.034 / −0.01 | 0.151 | 0.678 |
+
+The VIX/VXN-change lean from k=3 is gone by k=5 (`VIX@chg0-5` AUC 0.519,
+p 0.88; `VXN@chg0-5` 0.491). The RSP/SPY breadth change (equal-weight S&P
+improving relative to SPY in the REVERSALs) is on 12 vs 6 episodes.
+
+**k = 10 (11 B / 6 R).** p_MW < 0.05: 1/36; |AUC−0.5| > 0.20: 3.
+
+| feature | nB/nR | BREAK mean / median | REVERSAL mean / median | p_MW | AUC |
+|---|---|---|---|---|---|
+| `dd_from_252hi@k10` | 11/6 | −13.4 / −10.3 | −10.5 / −8.4 | 0.044 | 0.197 |
+| `QQEW_x60@chg0-10` | 8/5 | +0.017 / +0.016 | +0.001 / −0.017 | 0.188 | 0.725 |
+| `VXN_minus_VIX@chg0-10` | 11/6 | +0.72 / +0.32 | −0.48 / −0.77 | 0.159 | 0.712 |
+| `QQQ_ret_pre_entry_to_k10` | 11/6 | −3.12 / −3.39 | −2.00 / −0.83 | 0.191 | 0.303 |
+| `below200_pct@k10` | 11/6 | −3.38 / −3.08 | −2.25 / −1.09 | 0.482 | 0.394 |
+
+By session 10 even the depth below the 200d has stopped separating (AUC
+0.394, p 0.48), and `QQQ_ret_entry_to_k10` is AUC 0.439 (p 0.69): the
+survivors that will reverse have fallen about as much as the ones that will
+break. VIX level at k=10 is AUC 0.500, p 1.000.
+
+## II.3 Permutation and LOO at each checkpoint
+
+2000 shuffles of the survivor labels, max |AUC−0.5| over the columns.
+
+| k | set | real max | feature | null median | null 95th | perm p |
+|---|---|---|---|---|---|---|
+| 3 | all 36 | 0.317 | `below200_pct@k3` | 0.261 | 0.372 | **0.182** |
+| 3 | 28 non-price (implied vol, rates, breadth, realised vol, relative) | 0.192 | `VXN@chg0-3` | 0.256 | 0.363 | **0.909** |
+| 5 | all 36 | 0.285 | `below200_pct@k5` | 0.282 | 0.396 | **0.493** |
+| 5 | 28 non-price | 0.264 | `RSP_pct@chg0-5` | 0.278 | 0.393 | **0.590** |
+| 10 | all 36 | 0.303 | `dd_from_252hi@k10` | 0.333 | 0.444 | **0.693** |
+| 10 | 28 non-price | 0.225 | `QQEW_x60@chg0-10` | 0.326 | 0.439 | **0.961** |
+
+Nothing clears permutation at any k, not even the price path once the
+sample is restricted to survivors (the part-I result for `below200_pct@avg3`
+owed part of its strength to the 5 short episodes, 4 of them REVERSALs).
+Among non-price columns the real max sits *below* the null median at every k.
+
+LOO logistic (ridge 0.5):
+
+| k | model | in-sample AUC | LOO AUC |
+|---|---|---|---|
+| 3 | `below200_pct@k3` | 0.817 | 0.756 |
+| 3 | + `DGS10@chg0-3` (corr 0.14) | 0.839 | 0.761 |
+| 3 | best non-price `VIX@chg0-3` | 0.689 | 0.500 |
+| 5 | `below200_pct@k5` | 0.785 | 0.696 |
+| 5 | + `up_sessions_first_5` (corr 0.44) | 0.800 | 0.704 |
+| 5 | best non-price `DGS3MO@chg0-5` | 0.678 | 0.407 |
+| 10 | `dd_from_252hi@k10` | 0.803 | **0.152** |
+| 10 | + `VXN_minus_VIX@chg0-10` (corr −0.12) | 0.712 | 0.485 |
+| 10 | best non-price `VXN_minus_VIX@chg0-10` | 0.712 | 0.621 |
+
+The depth-below-200d feature holds up out of fold at k=3 and k=5 (0.76,
+0.70) and collapses at k=10 (0.15, the pooled-LOO pathology on 17 episodes).
+Every non-price feature is at or below coin-flip out of fold except
+`VXN_minus_VIX@chg0-10` at 0.62 on 11/6 — which is inside its own MDE of 0.30.
+
+## II.4 The economically relevant quantity: forward QQQ return from session k
+
+| k | group | n | to episode exit: mean / median (positive) | next 20 sessions regardless of exit: mean / median (positive) |
+|---|---|---|---|---|
+| 3 | BREAK | 15 | −0.87% / −1.84% (6/15) | −2.94% / −2.69% (4/15) |
+| 3 | REVERSAL | 12 | +1.06% / +0.41% (7/12) | +5.28% / +4.76% (11/12) |
+| 3 | ALL | 27 | −0.01% / 0.00% (13/27) | +0.71% / +2.66% (15/27) |
+| 5 | BREAK | 15 | −0.56% / −1.59% (6/15) | −1.60% / −2.57% (4/15) |
+| 5 | REVERSAL | 9 | +1.77% / +0.79% (5/9) | +8.41% / +7.70% (9/9) |
+| 5 | ALL | 24 | +0.31% / −0.18% (11/24) | +2.15% / +2.04% (13/24) |
+| 10 | BREAK | 11 | −1.52% / −0.49% (3/11) | −2.18% / −3.07% (5/11) |
+| 10 | REVERSAL | 6 | +1.83% / +0.52% (4/6) | +7.03% / +6.70% (5/6) |
+| 10 | ALL | 17 | −0.34% / −0.13% (7/17) | +1.07% / +0.65% (10/17) |
+
+The *label* is worth a lot in hindsight (next-20 spread of 8–10 pp between
+groups at every k). The question is whether the best feature at k predicts
+that forward return, not just the label:
+
+| k | feature | Spearman with return to exit (p) | Spearman with next-20 return (p) |
+|---|---|---|---|
+| 3 | `below200_pct@k3` | −0.330 (0.093) | **+0.021 (0.918)** |
+| 3 | `VIX@chg0-3` | +0.055 (0.784) | −0.102 (0.613) |
+| 3 | `QQQ_ret_entry_to_k3` | −0.268 (0.176) | +0.081 (0.689) |
+| 5 | `below200_pct@k5` | −0.324 (0.122) | **+0.049 (0.821)** |
+| 5 | `DGS3MO@chg0-5` | −0.165 (0.442) | −0.136 (0.526) |
+| 5 | `QQQ_ret_entry_to_k5` | −0.250 (0.238) | −0.002 (0.994) |
+| 10 | `dd_from_252hi@k10` | −0.164 (0.529) | +0.162 (0.535) |
+| 10 | `VXN_minus_VIX@chg0-10` | −0.498 (0.042) | −0.294 (0.252) |
+| 10 | `QQQ_ret_entry_to_k10` | −0.424 (0.090) | −0.174 (0.504) |
+
+Reading: the depth-below-200d features correlate *negatively* with the
+return to exit (deeper → the episode ends lower, i.e. in F) but have **zero**
+correlation with the next 20 sessions' return (rho +0.02, +0.05). They
+predict the label because the label is partly determined by how far price
+has already fallen; they do not predict what QQQ does next. The one
+nominally significant forward correlation, `VXN_minus_VIX@chg0-10` with the
+return to exit (rho −0.50, p 0.042, n=17), is one of ~40 correlations
+reported here and does not carry to the next-20 return (p 0.25).
+
+## II.5 Compact table across k
+
+```
+   k  nB  nR  P(B)  best feature                     AUC   p_MW perm p   LOO rho_exit     p  rho_20     p  | best non-price                AUC perm p   LOO
+   3  15  12  0.56  below200_pct@k3                0.183  0.005  0.182 0.756   -0.330 0.093  +0.021 0.918  | VXN@chg0-3                  0.692  0.909 0.500
+   5  15   9  0.62  below200_pct@k5                0.215  0.022  0.493 0.696   -0.324 0.122  +0.049 0.821  | RSP_pct@chg0-5              0.236  0.590 0.407
+  10  11   6  0.65  dd_from_252hi@k10              0.197  0.044  0.693 0.152   -0.164 0.529  +0.162 0.535  | QQEW_x60@chg0-10            0.725  0.961 0.621
+```
+
+## II.6 Paths, for eyeballing
+
+QQQ return from the entry close, VIX change (points), QQEW breadth-percentile
+change (B) and RSP breadth-percentile change (R) since entry, at sessions
+3 / 5 / 10.
+
+```
+  episode                  n label              session 3           |          session 5           |          session 10
+  BREAK episodes:
+  2000-09-11..2000-09-21   9 BREAK      +1.1% V -0.1 B   -- R   -- |  -1.6% V  0.1 B   -- R   -- |                        ended
+  2003-01-24..2003-02-11  13 BREAK      -0.2% V  0.4 B   -- R   -- |  -1.1% V -0.2 B   -- R   -- |  -2.5% V  1.8 B   -- R   --
+  2004-07-13..2004-07-20   6 BREAK      -1.4% V  0.2 B   -- R   -- |  -2.7% V  0.7 B   -- R   -- |                        ended
+  2005-03-22..2005-04-25  24 BREAK      +0.4% V -0.8 B   -- R 0.41 |  -0.2% V  0.2 B   -- R 0.04 |  +1.2% V -0.6 B   -- R 0.60
+  2006-05-12..2006-06-13  22 BREAK      -0.8% V -0.8 B   -- R-0.04 |  -2.8% V  2.8 B   -- R 0.02 |  -2.1% V  1.3 B   -- R-0.10
+  2008-01-07..2008-01-31  18 BREAK      -0.5% V  0.3 B-0.06 R-0.07 |  -2.3% V -0.1 B-0.05 R-0.04 |  -5.9% V  3.4 B 0.14 R 0.08
+  2008-06-25..2008-07-07   8 BREAK      -4.0% V  2.3 B-0.04 R 0.00 |  -3.7% V  2.5 B-0.06 R-0.13 |                        ended
+  2010-06-29..2010-07-20  15 BREAK      -1.8% V -1.3 B 0.31 R 0.02 |  -1.8% V -4.5 B 0.15 R-0.01 |  +4.5% V -9.6 B 0.35 R 0.05
+  2011-08-04..2011-08-16   9 BREAK      -6.6% V 16.3 B 0.00 R 0.00 |  -6.1% V 11.3 B 0.00 R 0.01 |                        ended
+  2012-11-07..2012-12-12  25 BREAK      -1.2% V -0.5 B 0.00 R 0.01 |  -1.9% V -2.4 B-0.01 R-0.03 |  -0.6% V -4.0 B-0.01 R-0.02
+  2015-08-21..2015-09-29  27 BREAK      -4.2% V  8.0 B-0.06 R-0.07 |  +3.2% V -1.9 B-0.25 R-0.14 |  +1.0% V -2.4 B-0.13 R-0.02
+  2016-01-07..2016-02-03  19 BREAK      -0.5% V -0.7 B-0.16 R-0.06 |  -2.8% V  0.2 B-0.10 R-0.03 |  -3.8% V  1.7 B 0.15 R 0.20
+  2016-06-24..2016-06-27   2 BREAK                            ended |                        ended |                        ended
+  2018-11-12..2018-11-30  14 BREAK      -0.7% V  0.8 B-0.00 R-0.03 |  +0.7% V -2.3 B 0.00 R 0.04 |  -2.1% V -1.6 B 0.00 R 0.49
+  2022-01-20..2022-02-28  27 BREAK      -2.3% V  4.3 B 0.49 R 0.21 |  -4.7% V  6.4 B 0.36 R 0.21 |  +1.9% V -3.5 B 0.33 R 0.07
+  2025-03-10..2025-04-11  25 BREAK      +0.9% V -3.6 B 0.00 R-0.02 |  +1.5% V -6.1 B 0.01 R-0.01 |  +1.7% V -8.6 B-0.00 R 0.02
+  REVERSAL episodes that survived to session 10:
+  2004-05-10..2004-05-24  11 REVERSAL   +1.7% V -1.6 B   -- R   -- |  +0.2% V -1.3 B   -- R   -- |  +1.0% V -1.3 B   -- R   --
+  2011-12-14..2011-12-30  12 REVERSAL   -0.1% V -1.8 B 0.21 R 0.11 |  +1.9% V -2.8 B 0.15 R 0.10 |  +1.3% V -2.5 B 0.23 R 0.59
+  2016-05-09..2016-05-23  11 REVERSAL   +0.5% V  0.1 B-0.16 R-0.06 |  -0.4% V  0.5 B-0.21 R-0.11 |  +0.6% V  0.6 B-0.24 R-0.12
+  2018-10-24..2018-11-06  10 REVERSAL   +0.8% V -1.1 B 0.23 R 0.04 |  +0.4% V -1.9 B 0.85 R 0.35 |  +3.0% V -5.3 B 0.96 R 0.79
+  2020-03-11..2020-04-09  22 REVERSAL   -1.5% V  3.9 B 0.00 R 0.00 |  -6.7% V 22.0 B 0.00 R 0.00 |  -5.9% V  7.8 B 0.02 R 0.01
+  2026-03-20..2026-04-07  12 REVERSAL   +0.3% V  0.2 B-0.10 R 0.03 |  -1.4% V  0.7 B-0.00 R 0.06 |  +0.5% V -2.9 B-0.28 R-0.05
+```
+
+Eyeball: at session 10 five of the eleven surviving BREAKs are *up* from the
+entry close (2005, 2010, 2015, 2022, 2025, by +1.0 to +4.5%) with VIX down
+0.6–9.6 points — indistinguishable from the surviving REVERSALs (2004, 2011-12,
+2016-05, 2018-10, 2026-03, up +0.5 to +3.0%, VIX −5.3 to +0.6). The BREAKs that
+were clearly down at session 10 (2008-01 −5.9%, 2016-01 −3.8%, 2003 −2.5%)
+sit next to the 2020-03 REVERSAL at −5.9% with VIX +7.8. Breadth changes
+run both ways in both groups (2010 and 2022 BREAKs with QQEW pct +0.33/+0.35;
+2016-05 and 2026-03 REVERSALs with −0.24/−0.28). There is no visible common
+shape.
+
+## II.7 What this does and does not imply
+
+- **No rule is proposed**, and nothing here is a candidate. This is a
+  description of 27, 24 and 17 episodes.
+- **The two paths do not diverge in anything other than price itself, and
+  price stops diverging by session 10.** At sessions 3 and 5 the eventual
+  BREAKs are 2 pp deeper below the 200d and had fewer up sessions; that is
+  the outcome accumulating (Spearman with the return to exit −0.33/−0.32),
+  and it has zero correlation with the next 20 sessions' QQQ return
+  (+0.02/+0.05). At session 10 the surviving REVERSALs have fallen as far as
+  the surviving BREAKs (AUC 0.39–0.44 for depth and path, p > 0.48).
+- **Implied vol, rates, breadth, realised vol and QQQ/SPY relative strength
+  show nothing at any checkpoint.** Non-price permutation p = 0.91 / 0.59 /
+  0.96; every non-price LOO AUC is 0.41–0.62 against MDEs of 0.22–0.30. The
+  early lean in VIX/VXN change (k=3, p 0.10) is gone by k=5.
+- **The base rate does the work.** P(BREAK | still in E) rises from 0.50 to
+  0.56, 0.62 and 0.65 purely because REVERSALs are short. Any future look at
+  "E has lasted k sessions" has to start from that conditional rate, and
+  from the fact that the forward 20-session QQQ return for *all* survivors
+  is still positive on average at every k (+0.7%, +2.2%, +1.1%).
+- **Power.** With 15/12, 15/9 and 11/6 survivors the minimum detectable
+  |AUC−0.5| for a single pre-specified feature is 0.22, 0.24 and 0.30, and
+  the null max over 36 columns has a 95th percentile of 0.37, 0.40 and 0.44.
+  Nothing short of a near-deterministic separation could have shown up here,
+  and nothing did. Anything anyone still wanted to test from this would need
+  the full pre-registered battery (proxy full / search / holdout, real daily,
+  exposure-matched controls, whole-grid permutation) on both eras, and at
+  these n the battery is not powered to pass it.

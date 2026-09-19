@@ -254,3 +254,246 @@ Coverage: VIX 1990-01-02..2026-09-07; VXN 2001-02-02..; DGS2 1976-06-01..; DGS10
 ======================================================================================================================
 7. WHAT THIS DOES AND DOES NOT IMPLY -- see the note. No rule is proposed; n = 32 (16 breaks) is the binding constraint.
 ======================================================================================================================
+
+
+######################################################################################################################
+PART II: INSIDE THE EPISODES -- survivors at E sessions k = (3, 5, 10). DESCRIPTIVE ONLY, no rule proposed.
+######################################################################################################################
+
+======================================================================================================================
+II.3  SESSION k = 3
+======================================================================================================================
+  1. SURVIVORSHIP: still in E at session 3: 27 episodes = 15 BREAK + 12 REVERSAL; already ended before session 3: 1 BREAK + 4 REVERSAL. Base rate P(BREAK | in E at session 3) = 15/27 = 0.56 (unconditional 16/32 = 0.50). Real era: 9 survivors, 4 BREAK -> 0.44.
+     Conditioning on survival raises the base rate because REVERSALs are short (median 6.5 sessions vs 16.5): the
+     survivors are a selected set, and any 'signal' at k must be read against 0.56, not 0.50.
+     Minimum detectable |AUC-0.5| for one pre-specified feature at nB=15, nR=12: about 0.22.
+  2. FEATURES at session 3: 36 columns (levels @k3 and changes @chg0-3); Bonferroni p < 0.00139
+  feature                            fam           nB nR     meanB     medB    meanR     medR     diff    p_t   p_MW    AUC
+  below200_pct@k3                    price         15 12    -3.991   -3.380   -1.424   -1.904   -2.566  0.003  0.005  0.183
+  QQQ_ret_entry_to_k3                path          15 12    -1.451   -0.821    0.431    0.626   -1.882  0.013  0.017  0.228
+  up_sessions_first_3                path          15 12     0.733    1.000    1.333    1.000   -0.600  0.021  0.023  0.267
+  dd_from_252hi@k3                   price         15 11   -14.214  -12.547  -12.177   -8.629   -2.037  0.533  0.058  0.279
+  below50_pct@k3                     price         15 12    -6.265   -6.332   -4.233   -3.188   -2.032  0.111  0.079  0.300
+  QQQ_ret_pre_entry_to_k3            path          15 12    -3.633   -3.024   -1.500   -1.309   -2.132  0.040  0.088  0.306
+  VXN@chg0-3                         vol_implied   14 11     1.808    0.245   -0.836   -0.460    2.644  0.043  0.106  0.692
+  VIX@chg0-3                         vol_implied   15 12     1.661    0.250   -0.477   -0.785    2.137  0.137  0.097  0.689
+  RSP_pct@chg0-3                     breadth       12  8     0.030   -0.010    0.039    0.034   -0.009  0.849  0.189  0.323
+  DGS10@chg0-3                       rates         15 12    -0.025   -0.030    0.010    0.010   -0.035  0.147  0.124  0.325
+  rvol30@chg0-3                      realised_vol  15 12     0.634    0.162    0.923   -0.231   -0.289  0.818  0.143  0.667
+  VIX_pct252@chg0-3                  vol_implied   15 12    -0.001    0.000   -0.055   -0.028    0.054  0.145  0.170  0.656
+  VXN_minus_VIX@chg0-3               vol_implied   14 11     0.023    0.070   -0.343   -0.230    0.366  0.459  0.352  0.610
+  DGS2@k3                            rates         15 12     2.350    2.640    1.898    1.125    0.452  0.523  0.407  0.594
+  RSP_x60@k3                         breadth       13 10    -0.004    0.003    0.001    0.008   -0.005  0.646  0.457  0.408
+  VIX_pct252@k3                      vol_implied   15 12     0.714    0.851    0.623    0.619    0.091  0.456  0.421  0.592
+  slope_10y2y@chg0-3                 rates         15 12    -0.011    0.000    0.008    0.010   -0.019  0.291  0.420  0.408
+  VXN_minus_VIX@k3                   vol_implied   14 11     3.779    3.855    3.084    1.790    0.696  0.681  0.511  0.578
+  slope_10y2y@k3                     rates         15 12     1.130    1.230    1.347    1.305   -0.217  0.548  0.495  0.422
+  DGS3MO@k3                          rates         15 12     1.913    1.350    1.374    0.640    0.539  0.478  0.495  0.578
+  QQEW_x60@chg0-3                    breadth       10  8     0.001   -0.002    0.002    0.001   -0.000  0.950  0.657  0.438
+  DGS2@chg0-3                        rates         15 12    -0.015    0.000    0.002    0.005   -0.016  0.424  0.624  0.444
+  DGS3MO@chg0-3                      rates         15 12    -0.006    0.010   -0.012   -0.010    0.006  0.714  0.642  0.553
+  DGS10@k3                           rates         15 12     3.480    3.820    3.245    3.140    0.235  0.673  0.661  0.550
+  QQEW_pct@k3                        breadth       10  8     0.495    0.359    0.506    0.464   -0.011  0.952  0.722  0.550
+  QQEW_pct@chg0-3                    breadth       10  8     0.047   -0.002    0.044    0.002    0.003  0.969  0.722  0.450
+  QQEW_x60@k3                        breadth       10  8    -0.016   -0.014   -0.011   -0.003   -0.004  0.759  0.722  0.450
+  RSP_pct@k3                         breadth       12  8     0.405    0.379    0.458    0.391   -0.052  0.750  0.728  0.453
+  RSP_x60@chg0-3                     breadth       13 10     0.001   -0.001    0.001    0.001   -0.000  0.986  0.710  0.454
+  spread50_200_pct@chg0-3            spread        15 12    -0.263   -0.303   -0.207   -0.324   -0.056  0.551  0.845  0.478
+  rvol30@k3                          realised_vol  15 12    23.107   23.230   25.696   23.335   -2.589  0.530  0.884  0.483
+  VXN@k3                             vol_implied   14 11    29.218   28.275   29.039   27.620    0.179  0.964  0.913  0.513
+  spread50_200_pct@k3                spread        15 12     2.546    2.692    3.080    2.511   -0.534  0.595  0.922  0.489
+  volratio_10_30@k3                  realised_vol  15 12     1.022    1.063    1.049    1.005   -0.027  0.765  0.922  0.489
+  VIX@k3                             vol_implied   15 12    24.964   24.120   25.505   22.355   -0.541  0.899  0.922  0.511
+  QQQ_SPY_rel_entry_to_k3            relative      15 12     0.246    0.062    0.129    0.182    0.117  0.672  0.961  0.494
+  p_MW<0.05: 3/36; Bonferroni survivors: 0; |AUC-0.5|>0.20: 4
+  PERMUTATION (2000 shuffles of the 27 survivor labels), all 36 columns: real max |AUC-0.5| 0.317 (below200_pct@k3, AUC 0.183); null median 0.261 95th 0.372 99th 0.414; p = 0.182
+  PERMUTATION, NON-PRICE columns only (implied vol, rates, breadth, realised vol, relative; 28 columns): real max 0.192 (VXN@chg0-3, AUC 0.692, nB=14 nR=11); null median 0.256 95th 0.363; p = 0.909
+  LOO LOGISTIC: best single (full coverage) below200_pct@k3 (AUC 0.183): in-sample 0.817 LOO 0.756 (n=27)
+                pair below200_pct@k3 + DGS10@chg0-3 (AUC 0.325, corr 0.14): in-sample 0.839 LOO 0.761 (n=27)
+                best NON-PRICE single with full coverage VIX@chg0-3 (AUC 0.689): in-sample 0.689 LOO 0.500 (n=27)
+  3. FORWARD QQQ RETURN from session 3 (survivors):
+     to episode exit                        BREAK    n=15 mean  -0.87% median  -1.84% min   -6.5% max    6.5%  positive 6/15
+     to episode exit                        REVERSAL n=12 mean   1.06% median   0.41% min   -1.1% max    4.4%  positive 7/12
+     to episode exit                        ALL      n=27 mean  -0.01% median   0.00% min   -6.5% max    6.5%  positive 13/27
+     next 20 sessions (regardless of exit)  BREAK    n=15 mean  -2.94% median  -2.69% min  -17.9% max    7.6%  positive 4/15
+     next 20 sessions (regardless of exit)  REVERSAL n=12 mean   5.28% median   4.76% min   -2.3% max   12.2%  positive 11/12
+     next 20 sessions (regardless of exit)  ALL      n=27 mean   0.71% median   2.66% min  -17.9% max   12.2%  positive 15/27
+     Spearman of below200_pct@k3 with forward return: to exit rho -0.330 (p 0.093, n=27); next-20 rho +0.021 (p 0.918, n=27)
+     Spearman of VIX@chg0-3 with forward return: to exit rho +0.055 (p 0.784); next-20 rho -0.102 (p 0.613, n=27)
+     Spearman of QQQ_ret_entry_to_k3 with next-20 return: rho +0.081 (p 0.689, n=27); with return to exit: rho -0.268 (p 0.176)
+
+======================================================================================================================
+II.5  SESSION k = 5
+======================================================================================================================
+  1. SURVIVORSHIP: still in E at session 5: 24 episodes = 15 BREAK + 9 REVERSAL; already ended before session 5: 1 BREAK + 7 REVERSAL. Base rate P(BREAK | in E at session 5) = 15/24 = 0.62 (unconditional 16/32 = 0.50). Real era: 8 survivors, 4 BREAK -> 0.50.
+     Conditioning on survival raises the base rate because REVERSALs are short (median 6.5 sessions vs 16.5): the
+     survivors are a selected set, and any 'signal' at k must be read against 0.62, not 0.50.
+     Minimum detectable |AUC-0.5| for one pre-specified feature at nB=15, nR=9: about 0.24.
+  2. FEATURES at session 5: 36 columns (levels @k5 and changes @chg0-5); Bonferroni p < 0.00139
+  feature                            fam           nB nR     meanB     medB    meanR     medR     diff    p_t   p_MW    AUC
+  below200_pct@k5                    price         15  9    -4.311   -3.875   -2.280   -1.875   -2.031  0.083  0.022  0.215
+  RSP_pct@chg0-5                     breadth       12  6    -0.007   -0.012    0.108    0.083   -0.114  0.156  0.075  0.236
+  below50_pct@k5                     price         15  9    -6.303   -5.999   -4.831   -2.802   -1.472  0.404  0.040  0.244
+  QQQ_ret_pre_entry_to_k5            path          15  9    -3.957   -3.802   -2.061   -1.130   -1.896  0.202  0.053  0.259
+  up_sessions_first_5                path          15  9     1.533    2.000    2.111    2.000   -0.578  0.017  0.032  0.270
+  QQQ_ret_entry_to_k5                path          15  9    -1.765   -1.854   -0.187    0.228   -1.578  0.223  0.114  0.304
+  DGS3MO@chg0-5                      rates         15  9    -0.002    0.010   -0.034   -0.010    0.032  0.317  0.151  0.678
+  dd_from_252hi@k5                   price         15  8   -14.467  -11.514  -13.975   -9.850   -0.493  0.908  0.220  0.342
+  RSP_x60@chg0-5                     breadth       13  7    -0.000   -0.002    0.002    0.005   -0.003  0.576  0.285  0.352
+  DGS10@chg0-5                       rates         15  9    -0.043   -0.040    0.006   -0.010   -0.048  0.235  0.244  0.356
+  VXN_minus_VIX@chg0-5               vol_implied   14  8     0.441    0.150    0.068   -0.505    0.374  0.563  0.275  0.643
+  spread50_200_pct@chg0-5            spread        15  9    -0.567   -0.647   -0.314   -0.581   -0.252  0.220  0.270  0.363
+  rvol30@chg0-5                      realised_vol  15  9     0.998    0.110    3.377    0.584   -2.379  0.459  0.421  0.400
+  VIX_pct252@chg0-5                  vol_implied   15  9    -0.008   -0.004   -0.044   -0.032    0.036  0.443  0.456  0.593
+  VIX_pct252@k5                      vol_implied   15  9     0.708    0.815    0.632    0.589    0.075  0.565  0.492  0.585
+  RSP_pct@k5                         breadth       12  6     0.369    0.236    0.511    0.452   -0.142  0.429  0.574  0.417
+  slope_10y2y@chg0-5                 rates         15  9    -0.011   -0.030    0.016    0.010   -0.026  0.502  0.511  0.419
+  RSP_x60@k5                         breadth       13  7    -0.005   -0.004   -0.002   -0.002   -0.003  0.830  0.606  0.429
+  QQQ_SPY_rel_entry_to_k5            relative      15  9     0.033    0.054    0.284    0.094   -0.250  0.596  0.571  0.430
+  DGS3MO@k5                          rates         15  9     1.917    1.350    1.662    0.990    0.255  0.773  0.612  0.563
+  spread50_200_pct@k5                spread        15  9     2.243    2.319    2.916    2.385   -0.674  0.553  0.612  0.437
+  VXN@k5                             vol_implied   14  8    28.325   27.785   32.778   29.450   -4.453  0.508  0.633  0.438
+  VXN_minus_VIX@k5                   vol_implied   14  8     4.198    3.760    3.516    2.240    0.682  0.738  0.633  0.562
+  QQEW_pct@chg0-5                    breadth       10  6     0.007   -0.004    0.126   -0.002   -0.119  0.486  0.704  0.442
+  DGS2@chg0-5                        rates         15  9    -0.032   -0.020   -0.010   -0.020   -0.022  0.438  0.720  0.456
+  DGS2@k5                            rates         15  9     2.333    2.560    2.102    1.470    0.230  0.781  0.720  0.544
+  QQEW_pct@k5                        breadth       10  6     0.456    0.331    0.569    0.667   -0.114  0.567  0.786  0.458
+  DGS10@k5                           rates         15  9     3.463    3.820    3.283    3.120    0.179  0.780  0.743  0.541
+  QQEW_x60@k5                        breadth       10  6    -0.017   -0.020   -0.015   -0.007   -0.002  0.927  0.828  0.467
+  QQEW_x60@chg0-5                    breadth       10  6     0.000   -0.001    0.001   -0.002   -0.001  0.889  0.828  0.533
+  rvol30@k5                          realised_vol  15  9    23.471   23.772   28.851   23.796   -5.380  0.405  0.788  0.467
+  VIX@k5                             vol_implied   15  9    23.753   23.650   28.231   23.220   -4.478  0.507  0.835  0.474
+  volratio_10_30@k5                  realised_vol  15  9     1.057    1.025    1.054    1.057    0.003  0.981  0.835  0.526
+  VIX@chg0-5                         vol_implied   15  9     0.450    0.120    1.719   -0.850   -1.269  0.660  0.881  0.519
+  slope_10y2y@k5                     rates         15  9     1.130    1.230    1.181    0.950   -0.051  0.899  0.929  0.489
+  VXN@chg0-5                         vol_implied   14  8     0.915    0.150    2.108    0.450   -1.193  0.695  0.946  0.491
+  p_MW<0.05: 3/36; Bonferroni survivors: 0; |AUC-0.5|>0.20: 5
+  PERMUTATION (2000 shuffles of the 24 survivor labels), all 36 columns: real max |AUC-0.5| 0.285 (below200_pct@k5, AUC 0.215); null median 0.282 95th 0.396 99th 0.450; p = 0.493
+  PERMUTATION, NON-PRICE columns only (implied vol, rates, breadth, realised vol, relative; 28 columns): real max 0.264 (RSP_pct@chg0-5, AUC 0.236, nB=12 nR=6); null median 0.278 95th 0.393; p = 0.590
+  LOO LOGISTIC: best single (full coverage) below200_pct@k5 (AUC 0.215): in-sample 0.785 LOO 0.696 (n=24)
+                pair below200_pct@k5 + up_sessions_first_5 (AUC 0.270, corr 0.44): in-sample 0.800 LOO 0.704 (n=24)
+                best NON-PRICE single with full coverage DGS3MO@chg0-5 (AUC 0.678): in-sample 0.678 LOO 0.407 (n=24)
+  3. FORWARD QQQ RETURN from session 5 (survivors):
+     to episode exit                        BREAK    n=15 mean  -0.56% median  -1.59% min   -5.8% max    6.2%  positive 6/15
+     to episode exit                        REVERSAL n= 9 mean   1.77% median   0.79% min   -1.1% max   10.3%  positive 5/9
+     to episode exit                        ALL      n=24 mean   0.31% median  -0.18% min   -5.8% max   10.3%  positive 11/24
+     next 20 sessions (regardless of exit)  BREAK    n=15 mean  -1.60% median  -2.57% min  -11.0% max    9.1%  positive 4/15
+     next 20 sessions (regardless of exit)  REVERSAL n= 9 mean   8.41% median   7.70% min    1.7% max   15.7%  positive 9/9
+     next 20 sessions (regardless of exit)  ALL      n=24 mean   2.15% median   2.04% min  -11.0% max   15.7%  positive 13/24
+     Spearman of below200_pct@k5 with forward return: to exit rho -0.324 (p 0.122, n=24); next-20 rho +0.049 (p 0.821, n=24)
+     Spearman of DGS3MO@chg0-5 with forward return: to exit rho -0.165 (p 0.442); next-20 rho -0.136 (p 0.526, n=24)
+     Spearman of QQQ_ret_entry_to_k5 with next-20 return: rho -0.002 (p 0.994, n=24); with return to exit: rho -0.250 (p 0.238)
+
+======================================================================================================================
+II.10  SESSION k = 10
+======================================================================================================================
+  1. SURVIVORSHIP: still in E at session 10: 17 episodes = 11 BREAK + 6 REVERSAL; already ended before session 10: 5 BREAK + 10 REVERSAL. Base rate P(BREAK | in E at session 10) = 11/17 = 0.65 (unconditional 16/32 = 0.50). Real era: 8 survivors, 4 BREAK -> 0.50.
+     Conditioning on survival raises the base rate because REVERSALs are short (median 6.5 sessions vs 16.5): the
+     survivors are a selected set, and any 'signal' at k must be read against 0.65, not 0.50.
+     Minimum detectable |AUC-0.5| for one pre-specified feature at nB=11, nR=6: about 0.30.
+  2. FEATURES at session 10: 36 columns (levels @k10 and changes @chg0-10); Bonferroni p < 0.00139
+  feature                            fam           nB nR     meanB     medB    meanR     medR     diff    p_t   p_MW    AUC
+  dd_from_252hi@k10                  price         11  6   -13.397  -10.273  -10.482   -8.412   -2.916  0.419  0.044  0.197
+  QQEW_x60@chg0-10                   breadth        8  5     0.017    0.016    0.001   -0.017    0.016  0.352  0.188  0.725
+  VXN_minus_VIX@chg0-10              vol_implied   11  6     0.715    0.320   -0.482   -0.770    1.197  0.123  0.159  0.712
+  QQQ_ret_pre_entry_to_k10           path          11  6    -3.116   -3.387   -1.996   -0.830   -1.120  0.561  0.191  0.303
+  below50_pct@k10                    price         11  6    -5.168   -4.889   -4.379   -2.415   -0.789  0.722  0.269  0.333
+  VXN_minus_VIX@k10                  vol_implied   11  6     4.385    3.640    2.057    2.185    2.328  0.265  0.269  0.667
+  DGS10@chg0-10                      rates         11  6    -0.039   -0.050    0.017    0.015   -0.056  0.263  0.314  0.348
+  QQEW_x60@k10                       breadth        8  5     0.007   -0.004   -0.024   -0.004    0.032  0.172  0.380  0.650
+  up_sessions_first_10               path          11  6     4.364    4.000    4.833    5.000   -0.470  0.233  0.335  0.364
+  DGS3MO@k10                         rates         11  6     1.736    1.170    1.238    0.680    0.498  0.552  0.421  0.621
+  spread50_200_pct@chg0-10           spread        11  6    -1.631   -1.809   -1.176   -1.319   -0.455  0.463  0.421  0.379
+  below200_pct@k10                   price         11  6    -3.380   -3.079   -2.247   -1.091   -1.133  0.447  0.482  0.394
+  DGS2@chg0-10                       rates         11  6    -0.044    0.000    0.012    0.010   -0.055  0.384  0.513  0.402
+  QQQ_SPY_rel_entry_to_k10           relative      11  6     0.256   -0.198    0.744   -0.254   -0.488  0.687  0.546  0.591
+  RSP_x60@chg0-10                    breadth       10  6     0.006    0.005    0.000   -0.001    0.005  0.585  0.588  0.583
+  rvol30@chg0-10                     realised_vol  11  6     1.130    0.565    5.795    1.269   -4.665  0.406  0.615  0.424
+  QQEW_pct@k10                       breadth        8  5     0.621    0.558    0.485    0.665    0.136  0.574  0.714  0.562
+  volratio_10_30@k10                 realised_vol  11  6     1.106    1.115    1.100    1.198    0.007  0.964  0.688  0.439
+  QQQ_ret_entry_to_k10               path          11  6    -0.599   -0.577    0.063    0.780   -0.663  0.676  0.688  0.439
+  VXN@chg0-10                        vol_implied   11  6    -1.282   -1.030   -1.087   -2.350   -0.195  0.923  0.688  0.561
+  DGS10@k10                          rates         11  6     3.208    3.150    2.818    2.575    0.390  0.603  0.688  0.561
+  spread50_200_pct@k10               spread        11  6     1.945    1.738    2.447    1.213   -0.502  0.686  0.688  0.561
+  RSP_pct@k10                        breadth       10  5     0.517    0.466    0.669    0.823   -0.152  0.467  0.713  0.440
+  QQEW_pct@chg0-10                   breadth        8  5     0.105    0.071    0.137    0.016   -0.033  0.895  0.770  0.550
+  RSP_x60@k10                        breadth       10  6     0.003    0.004   -0.005    0.008    0.008  0.694  0.745  0.450
+  DGS2@k10                           rates         11  6     2.109    1.680    1.812    1.745    0.297  0.707  0.763  0.545
+  DGS3MO@chg0-10                     rates         11  6    -0.037    0.000   -0.067   -0.020    0.029  0.729  0.762  0.545
+  RSP_pct@chg0-10                    breadth       10  5     0.137    0.060    0.244    0.008   -0.106  0.615  0.806  0.540
+  slope_10y2y@k10                    rates         11  6     1.099    1.180    1.007    0.740    0.092  0.816  0.841  0.530
+  VIX@chg0-10                        vol_implied   11  6    -1.997   -1.550   -0.605   -1.900   -1.392  0.550  0.920  0.485
+  VIX_pct252@chg0-10                 vol_implied   11  6    -0.108   -0.075   -0.071   -0.063   -0.037  0.591  0.920  0.485
+  VXN@k10                            vol_implied   11  6    26.377   26.020   29.167   25.535   -2.789  0.668  0.920  0.515
+  slope_10y2y@chg0-10                rates         11  6     0.005   -0.020    0.005   -0.005   -0.000  0.992  0.919  0.485
+  rvol30@k10                         realised_vol  11  6    23.320   24.908   30.275   22.462   -6.955  0.487  0.920  0.515
+  VIX_pct252@k10                     vol_implied   11  6     0.733    0.804    0.710    0.726    0.023  0.855  0.960  0.508
+  VIX@k10                            vol_implied   11  6    21.993   22.090   27.110   21.715   -5.117  0.510  1.000  0.500
+  p_MW<0.05: 1/36; Bonferroni survivors: 0; |AUC-0.5|>0.20: 3
+  PERMUTATION (2000 shuffles of the 17 survivor labels), all 36 columns: real max |AUC-0.5| 0.303 (dd_from_252hi@k10, AUC 0.197); null median 0.333 95th 0.444 99th 0.500; p = 0.693
+  PERMUTATION, NON-PRICE columns only (implied vol, rates, breadth, realised vol, relative; 28 columns): real max 0.225 (QQEW_x60@chg0-10, AUC 0.725, nB=8 nR=5); null median 0.326 95th 0.439; p = 0.961
+  LOO LOGISTIC: best single (full coverage) dd_from_252hi@k10 (AUC 0.197): in-sample 0.803 LOO 0.152 (n=17)
+                pair dd_from_252hi@k10 + VXN_minus_VIX@chg0-10 (AUC 0.712, corr -0.12): in-sample 0.712 LOO 0.485 (n=17)
+                best NON-PRICE single with full coverage VXN_minus_VIX@chg0-10 (AUC 0.712): in-sample 0.712 LOO 0.621 (n=17)
+  3. FORWARD QQQ RETURN from session 10 (survivors):
+     to episode exit                        BREAK    n=11 mean  -1.52% median  -0.49% min   -5.9% max    4.0%  positive 3/11
+     to episode exit                        REVERSAL n= 6 mean   1.83% median   0.52% min   -0.1% max    9.4%  positive 4/6
+     to episode exit                        ALL      n=17 mean  -0.34% median  -0.13% min   -5.9% max    9.4%  positive 7/17
+     next 20 sessions (regardless of exit)  BREAK    n=11 mean  -2.18% median  -3.07% min   -9.9% max    3.9%  positive 5/11
+     next 20 sessions (regardless of exit)  REVERSAL n= 6 mean   7.03% median   6.70% min   -2.0% max   15.2%  positive 5/6
+     next 20 sessions (regardless of exit)  ALL      n=17 mean   1.07% median   0.65% min   -9.9% max   15.2%  positive 10/17
+     Spearman of dd_from_252hi@k10 with forward return: to exit rho -0.164 (p 0.529, n=17); next-20 rho +0.162 (p 0.535, n=17)
+     Spearman of VXN_minus_VIX@chg0-10 with forward return: to exit rho -0.498 (p 0.042); next-20 rho -0.294 (p 0.252, n=17)
+     Spearman of QQQ_ret_entry_to_k10 with next-20 return: rho -0.174 (p 0.504, n=17); with return to exit: rho -0.424 (p 0.090)
+
+======================================================================================================================
+II.4  COMPACT TABLE ACROSS k
+======================================================================================================================
+   k  nB  nR  P(B)  best feature                     AUC   p_MW perm p   LOO rho_exit     p  rho_20     p  | best non-price                AUC perm p   LOO
+   3  15  12  0.56  below200_pct@k3                0.183  0.005  0.182 0.756   -0.330 0.093  +0.021 0.918  | VXN@chg0-3                  0.692  0.909 0.500
+   5  15   9  0.62  below200_pct@k5                0.215  0.022  0.493 0.696   -0.324 0.122  +0.049 0.821  | RSP_pct@chg0-5              0.236  0.590 0.407
+  10  11   6  0.65  dd_from_252hi@k10              0.197  0.044  0.693 0.152   -0.164 0.529  +0.162 0.535  | QQEW_x60@chg0-10            0.725  0.961 0.621
+
+======================================================================================================================
+II.5  PATHS: QQQ return from entry close, VIX change, QQEW breadth-pct change and RSP breadth-pct change at sessions 3/5/10 ('--' = episode already over)
+======================================================================================================================
+  episode                  n label              session 3           |          session 5           |          session 10         
+  BREAK episodes:
+  2000-09-11..2000-09-21   9 BREAK      +1.1% V -0.1 B   -- R   -- |  -1.6% V  0.1 B   -- R   -- |                        ended
+  2003-01-24..2003-02-11  13 BREAK      -0.2% V  0.4 B   -- R   -- |  -1.1% V -0.2 B   -- R   -- |  -2.5% V  1.8 B   -- R   --
+  2004-07-13..2004-07-20   6 BREAK      -1.4% V  0.2 B   -- R   -- |  -2.7% V  0.7 B   -- R   -- |                        ended
+  2005-03-22..2005-04-25  24 BREAK      +0.4% V -0.8 B   -- R 0.41 |  -0.2% V  0.2 B   -- R 0.04 |  +1.2% V -0.6 B   -- R 0.60
+  2006-05-12..2006-06-13  22 BREAK      -0.8% V -0.8 B   -- R-0.04 |  -2.8% V  2.8 B   -- R 0.02 |  -2.1% V  1.3 B   -- R-0.10
+  2008-01-07..2008-01-31  18 BREAK      -0.5% V  0.3 B-0.06 R-0.07 |  -2.3% V -0.1 B-0.05 R-0.04 |  -5.9% V  3.4 B 0.14 R 0.08
+  2008-06-25..2008-07-07   8 BREAK      -4.0% V  2.3 B-0.04 R 0.00 |  -3.7% V  2.5 B-0.06 R-0.13 |                        ended
+  2010-06-29..2010-07-20  15 BREAK      -1.8% V -1.3 B 0.31 R 0.02 |  -1.8% V -4.5 B 0.15 R-0.01 |  +4.5% V -9.6 B 0.35 R 0.05
+  2011-08-04..2011-08-16   9 BREAK      -6.6% V 16.3 B 0.00 R 0.00 |  -6.1% V 11.3 B 0.00 R 0.01 |                        ended
+  2012-11-07..2012-12-12  25 BREAK      -1.2% V -0.5 B 0.00 R 0.01 |  -1.9% V -2.4 B-0.01 R-0.03 |  -0.6% V -4.0 B-0.01 R-0.02
+  2015-08-21..2015-09-29  27 BREAK      -4.2% V  8.0 B-0.06 R-0.07 |  +3.2% V -1.9 B-0.25 R-0.14 |  +1.0% V -2.4 B-0.13 R-0.02
+  2016-01-07..2016-02-03  19 BREAK      -0.5% V -0.7 B-0.16 R-0.06 |  -2.8% V  0.2 B-0.10 R-0.03 |  -3.8% V  1.7 B 0.15 R 0.20
+  2016-06-24..2016-06-27   2 BREAK                            ended |                        ended |                        ended
+  2018-11-12..2018-11-30  14 BREAK      -0.7% V  0.8 B-0.00 R-0.03 |  +0.7% V -2.3 B 0.00 R 0.04 |  -2.1% V -1.6 B 0.00 R 0.49
+  2022-01-20..2022-02-28  27 BREAK      -2.3% V  4.3 B 0.49 R 0.21 |  -4.7% V  6.4 B 0.36 R 0.21 |  +1.9% V -3.5 B 0.33 R 0.07
+  2025-03-10..2025-04-11  25 BREAK      +0.9% V -3.6 B 0.00 R-0.02 |  +1.5% V -6.1 B 0.01 R-0.01 |  +1.7% V -8.6 B-0.00 R 0.02
+  REVERSAL episodes that survived to session 10:
+  2004-05-10..2004-05-24  11 REVERSAL   +1.7% V -1.6 B   -- R   -- |  +0.2% V -1.3 B   -- R   -- |  +1.0% V -1.3 B   -- R   --
+  2011-12-14..2011-12-30  12 REVERSAL   -0.1% V -1.8 B 0.21 R 0.11 |  +1.9% V -2.8 B 0.15 R 0.10 |  +1.3% V -2.5 B 0.23 R 0.59
+  2016-05-09..2016-05-23  11 REVERSAL   +0.5% V  0.1 B-0.16 R-0.06 |  -0.4% V  0.5 B-0.21 R-0.11 |  +0.6% V  0.6 B-0.24 R-0.12
+  2018-10-24..2018-11-06  10 REVERSAL   +0.8% V -1.1 B 0.23 R 0.04 |  +0.4% V -1.9 B 0.85 R 0.35 |  +3.0% V -5.3 B 0.96 R 0.79
+  2020-03-11..2020-04-09  22 REVERSAL   -1.5% V  3.9 B 0.00 R 0.00 |  -6.7% V 22.0 B 0.00 R 0.00 |  -5.9% V  7.8 B 0.02 R 0.01
+  2026-03-20..2026-04-07  12 REVERSAL   +0.3% V  0.2 B-0.10 R 0.03 |  -1.4% V  0.7 B-0.00 R 0.06 |  +0.5% V -2.9 B-0.28 R-0.05
+  REVERSAL episodes that ended before session 10 (for the base-rate point):
+  2000-07-28..2000-08-04   6 REVERSAL   +1.6% V -0.3 B   -- R   -- |  +4.1% V -0.9 B   -- R   -- |                        ended
+  2000-08-10..2000-08-11   2 REVERSAL                         ended |                        ended |                        ended
+  2003-02-28..2003-03-12   9 REVERSAL   -2.6% V  2.2 B   -- R   -- |  -2.7% V  1.7 B   -- R   -- |                        ended
+  2004-04-30..2004-05-04   3 REVERSAL   +1.9% V -0.6 B   -- R   -- |                        ended |                        ended
+  2010-06-07..2010-06-10   4 REVERSAL   -1.0% V -2.8 B 0.19 R 0.09 |                        ended |                        ended
+  2011-06-17..2011-06-27   7 REVERSAL   +2.7% V -3.0 B-0.03 R 0.12 |  +2.9% V -2.6 B-0.03 R 0.24 |                        ended
+  2016-06-17..2016-06-22   4 REVERSAL   +0.9% V -0.9 B 0.00 R-0.01 |                        ended |                        ended
+  2018-10-11..2018-10-11   1 REVERSAL                         ended |                        ended |                        ended
+  2019-06-03..2019-06-04   2 REVERSAL                         ended |                        ended |                        ended
+  2020-03-09..2020-03-09   1 REVERSAL                         ended |                        ended |                        ended
+
+======================================================================================================================
+II.6  No rule proposed. See the note, part II.
+======================================================================================================================
