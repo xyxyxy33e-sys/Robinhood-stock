@@ -3648,6 +3648,56 @@ not a cliff, (iii) the same sign on SPY or a stated Nasdaq-specific
 reason, (iv) whole-grid p < 0.05 and a log-return CI excluding zero,
 (v) real-instrument CAGR that does not fall — and the owner's decision.
 
+### State D pairs and a tree of special cases — tested 2026-09-19, NOT applied
+
+Owner asked whether two of the five D-day rules from the outside study
+(breadth QQEW/QQQ 60d bottom quintile; QQQ SMA20 ≥ SMA60; QQQ ≥ SMA100;
+QQQ < 2% above SMA200; 10d/30d vol ratio > 1.5) could be combined, and then
+whether D could be a tree — D1 default 100% QLD, D2a/D2b/… named special
+cases that go to cash. Pre-registered before any result: 41 candidates
+(5 singles, 10 pairs × AND/OR, all 16 unions of 3–5 rules), action on a
+flagged D day = cash, 21 constant-D exposure controls, one permutation over
+the whole grid. Script `paper-track/d_pair_test.py`, write-up
+`paper-track/research_notes/d_pair_test.md`. Harnesses imported from
+`d_substate_fresh.py` (standing 22.18%/0.913/−33.6% and real daily
+29.66%/1.145/−32.9% asserted). Zero-rate Sharpe throughout.
+
+**Overlap.** Breadth shares almost no days with the other four (Jaccard
+0.10–0.12). SMA20≥SMA60 and px≥SMA100 are one signal twice (Jaccard 0.47).
+Vol-ratio (34 days) sits inside the others. But in money terms every rule's
+gain is the same two episodes, Oct-2018 and Feb/Mar-2020, and all five leave
+the same next floor (breadth and vol-ratio both −24.7% on 2025-02-18→04-07;
+gap200 −24.6% on 2020-02-21→03-20). The near-identical max drawdowns in the
+outside table are one dodged episode and one shared floor, not five
+independent risk controls.
+
+**Pairs.** Only two combinations containing breadth beat breadth in both
+proxy eras, by +0.005–0.007 Sharpe (noise). Best pair by full Sharpe,
+breadth OR gap200<2% (proxy 25.74%/1.077/−28.5%; real 37.75%/1.484/−19.4%):
++0.078 search, **−0.045 holdout**, bootstrap vs breadth P(≤0) 0.43 proxy /
+0.11 real, drop-SPMO-era −0.045, 20 bp −0.016, SPY +0.070/−0.003. Every AND
+pair is below its better member. Whole-grid permutation of "combination
+beats its best member in both eras": null 95th +0.043, best real +0.024,
+**p = 0.186**. Grid gains that are significant (p 0.004) are breadth itself,
+already pre-registered.
+
+**Tree.** Best union breadth|gap200|volratio: S +0.086 / **H −0.026** vs
+breadth alone; real 37.77%/1.495/−19.4%. Per-case marginal accounting:
+breadth is the only case that earns its place (85 unique days, QLD −32 bp/day
+search, −28 bp holdout; dropping it costs Sharpe in both eras). gap200<2% is
+a search-era case (unique days −40 bp in 2015+, **+21 bp in 2007–15**;
+dropping it raises holdout +0.031). Vol-ratio is a duplicate (16 unique
+days, ±0.02). SMA20≥SMA60 and px≥SMA100 are harmful as exit cases: their
+unique days are the healthy-pullback days, QLD **+177 / +63 bp/day** (t 3.8 /
+2.4); dropping each raises search Sharpe +0.190 / +0.134. Full 5-case tree
+−0.126 / −0.070 vs breadth. Post-hoc per-case sizing (cash vs half) rescues
+nothing (best holdout 0.867 < breadth 0.872).
+
+**D stays 100% QLD; the breadth gate stays under its pre-registered forward
+test unchanged.** No pair or tree adds to the single breadth rule on its own
+terms. Cumulative candidates: 267 + 890 + 41 (+21 controls, 8 post-hoc
+sizing variants reported outside the permutation).
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
