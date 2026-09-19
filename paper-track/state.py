@@ -315,10 +315,23 @@ TARGET_WEIGHTS = {
     'B': (0.75, 0.25, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.25, 0.75, ...) -- the one EDGE found, see block above
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
     'D': (0.00, 0.00, 1.00, 0.00, 0.00),   # 2026-09-06: was (0,0,0.85,0,0.15) -- frontier step 2; 2026-09-02: was (0,0,0.70,0,0.30)
-    'E': (0.00, 0.00, 0.00, 0.50, 0.50),
+    'E': (0.00, 0.00, 0.00, 0.00, 1.00),   # 2026-09-19 (owner decision): was (0,0,0,0.50,0.50) -- XLU leg dropped from E; see the block below
     'F': (0.00, 0.00, 0.00, 0.00, 1.00),
 }
 
+# 2026-09-19, STATE E -> 100% CASH (owner decision after the E pair/union
+# study, STRATEGY.md "State E -> 100% cash"). The E study's constant-E ladder
+# showed the whole feasible range of E rows (all cash .. all XLU .. all SPMO)
+# spans 0.013 of 26y Sharpe, i.e. the choice is inside noise; among the
+# rows, 100% cash has the shallowest max drawdown on BOTH harnesses (real
+# daily 37.30% / 1.475 / -18.6% vs 37.75% / 1.484 / -19.4% for 50% XLU; proxy
+# 25.46% / 1.071 / -27.0% vs 25.74% / 1.077 / -28.5%, holdout 0.825 vs 0.828)
+# and removes an instrument. Half-SPMO (+0.002 real Sharpe, -20.6% DD,
+# holdout 0.818) and half-QQQ (+0.006, -21.1%) were the alternatives and were
+# declined for the deeper tail. NOT an edge: a simplification with a neutral
+# to slightly better tail, recorded as such. The XLU column stays in the
+# weight tuple (weight 0) so every harness, log and guard keeps its shape;
+# DEFENSIVE_INSTRUMENT is retained for the same reason.
 # Instrument for each column of TARGET_WEIGHTS, in order.
 TARGET_WEIGHT_LEGS = ('core', 'tqqq', 'qld', 'xlu', 'cash')
 

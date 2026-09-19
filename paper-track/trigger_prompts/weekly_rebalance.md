@@ -6,13 +6,14 @@
 # deposit dollar amount directly instead of deferring it to the report);
 # re-applied 2026-09-19 (STATE-D GATE applied by owner override: breadth OR
 # gap200 -> cash on D days; breadth reading moved into step 1; weight call
-# takes breadth_pct). This file is the
+# takes breadth_pct); re-applied 2026-09-19 (E row 50% XLU / 50% BOXX ->
+# 100% BOXX by owner decision). This file is the
 # source of record — edit here, then push via update_trigger, so the repo and
 # the live prompt never drift apart. list_triggers does NOT return prompt text,
 # so this file is the only readable copy.
 
 Weekly rebalance for the Robinhood Agentic account (576391551) — SPMO core +
-TQQQ/QLD satellite + XLU defensive + BOXX cash gate, with volatility targeting
+TQQQ/QLD satellite + BOXX cash gate (XLU dropped from state E 2026-09-19), with volatility targeting
 on top. (The micro overlay was DISABLED 2026-09-02 -- see below.) Runs Friday at 15:50 ET, ten minutes before the
 close (moved from 15:55 on 2026-09-09 -- see section 0b). `STRATEGY.md` in the repo is the single source of truth for what the
 strategy is and why; this prompt is only the when-and-how. If the two ever
@@ -41,6 +42,11 @@ gate (breadth OR gap200 -> cash on D days) on SPMO-era evidence alone; it
 fails the holdout and the bootstrap-vs-breadth bar and is recorded as an
 owner decision, not a research result (STRATEGY.md "State D gate"). That
 override does not loosen the standard for anything else.
+
+Also 2026-09-19 (owner decision, after the E pair/union study): state E's row
+went from 50% XLU / 50% BOXX to **100% BOXX**. Not an edge -- every feasible E
+row is within 0.013 Sharpe of every other -- but the shallowest tail on both
+harnesses and one instrument fewer (STRATEGY.md "State E -> 100% cash").
 
 ## 0. Execution convention — what the signal is computed on
 
@@ -282,7 +288,10 @@ When it does fire:
   - The cash leg is held as **BOXX**, never as idle buying power. If the
     account is holding uninvested cash that the target says should be in BOXX,
     buy BOXX with it.
-  - XLU is fractional-tradable in regular hours only.
+  - XLU is no longer a target leg (state E went to 100% BOXX on 2026-09-19).
+    If any XLU is still held, sell it when the band fires -- its target is 0%
+    and the zero-leg sweep will fire on anything above 0.10%. It is
+    fractional-tradable in regular hours only.
   - If any residual **IAU** is found, sell it — gold was removed from the
     design 2026-09-01 and any remaining position is dust to be cleared.
   - After filling, re-verify holdings against target and report the resulting
@@ -463,13 +472,13 @@ of the week's funding events even when the Friday run itself trades nothing.
 
 Carry the standing limitations into any commentary, without re-litigating
 them: every parameter is fit on the ~11-year SPMO window with one real bear
-market in it; the strategy's true max drawdown is about **-28.5%** on the
+market in it; the strategy's true max drawdown is about **-27%** on the
 2000-2026 stress test under the 2026-09-19 design (A=50/50 core/TQQQ, B=75/25,
 D=100% QLD gated to cash when breadth pct < 0.20 OR QQQ < 2% above its 200d,
-F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
+E=100% cash (was 50% XLU until 2026-09-19), F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
 trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
 100/150/200-day SMAs), micro off, vol target 20% on plain 30d realized vol);
-it was -33.6% before the D gate (09-09..09-19) and the gate's own holdout-era
+it was -28.5% with 50% XLU in E (09-19, earlier the same day), -33.6% before the D gate (09-09..09-19) and the gate's own holdout-era
 Sharpe is BELOW the breadth-only rule's (owner override, see STRATEGY.md);
 it was -34.7% during the one day the A row sat at 40/60 on 09-06, -32% under the
 2026-09-02 design, -42% before that reweight and -65 to -70% before vol

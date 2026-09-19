@@ -87,6 +87,12 @@ if not os.path.exists(_boxx):
 import backtest_overlay_etf as BOE
 import voltarget_live_backtest as VL
 import monthly_returns as MR
+# 2026-09-19: this research harness is PINNED to the pre-2026-09-19 live design.
+# state.py's E row went to 100% cash later that day; the standing figures below
+# were produced with E = 50% XLU / 50% cash, so restore that row IN PLACE (the
+# dict object is shared by every module that imported TARGET_WEIGHTS).
+import state as _ST
+_ST.TARGET_WEIGHTS['E'] = (0.0, 0.0, 0.0, 0.50, 0.50)
 BOE.ROBINHOOD_REPO = _TMP
 VL.REPO = _TMP
 MR.REPO = _ETF

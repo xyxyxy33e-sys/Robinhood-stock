@@ -5,9 +5,9 @@ and byyear.json to the scratchpad path below; splice them into the artifact's
 script block in place of the existing constants.
 
 NEW = the live design as of 2026-09-19 (A=50/50, D=100% QLD gated to cash
-by breadth pct < 0.20 OR 200d gap < 2%, 20/100 fast re-entry overlay on
-B/C/F, graded extension trim on A, plain 30d vol). OLD = the 2026-09-09
-design (identical minus the state-D gate) -- the prior comparison baseline,
+by breadth pct < 0.20 OR 200d gap < 2%, E=100% cash, 20/100 fast re-entry
+overlay on B/C/F, graded extension trim on A, plain 30d vol). OLD = the
+2026-09-09 design (E = 50% XLU / 50% cash, no state-D gate) -- the prior comparison baseline,
 kept as the "before" column so the gate's effect is visible on its own.
 
 Data shim (2026-09-19): voltarget_live_backtest hard-codes a path that does
@@ -61,17 +61,19 @@ for r in rows:
     k=d0_to_key[r['d0']]; nk=keys[keys.index(k)+1]; end_date[r['d0']]=wkq[nk]
 def vt(w,v):
     m=1.0 if not v else min(1.0,VOL_TARGET_PA/v); risky=sum(w[:4]); return tuple(x*m for x in w[:4])+(1-risky*m,)
-def old_w(r):
-    # the 2026-09-09 design: everything below except the state-D gate
+OLD_W=dict(TARGET_WEIGHTS); OLD_W['E']=(0.0,0.0,0.0,0.50,0.50)   # the 2026-09-09 design: E still 50% XLU, no D gate
+def _row(r, W):
     st=effective_state(r['state'], fast[r['d0']])
-    w=TARGET_WEIGHTS[st]; f=extension_scale(st, gaps[r['d0']])
+    w=W[st]; f=extension_scale(st, gaps[r['d0']])
     if f<1: w=tuple(x*f for x in w[:4])+(1-f*sum(w[:4]),)
     return vt(w, r['vol'])
+def old_w(r):
+    return _row(r, OLD_W)
 def new_w(r):
-    # 2026-09-19: the state-D gate, decided on the weekly signal date d0
+    # 2026-09-19: the state-D gate, decided on the weekly signal date d0; E = 100% cash via TARGET_WEIGHTS
     if d_gate_active(r['state'], BP.get(r['d0']), gaps[r['d0']][200]):
         return (0.0,0.0,0.0,0.0,1.0)
-    return old_w(r)
+    return _row(r, TARGET_WEIGHTS)
 def nav(wfn):
     prev=None; out=[]; n=1.0
     for r in rows:

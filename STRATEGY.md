@@ -22,7 +22,7 @@ C row when the fast read is A/B/C.
 | B | 75% SPMO / 25% TQQQ | 1.5x |
 | C | 100% SPMO | 1.0x |
 | D | 100% QLD | 2.0x |
-| E | 50% XLU / 50% BOXX | 0.25x |
+| E | 100% BOXX | 0.00x |
 | F | 100% BOXX | 0.00x |
 
 **Extension trim (graded):** when the effective state is A, count how many
@@ -33,6 +33,12 @@ of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
 estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
 state, on L1 drift > 5% (3% until 2026-09-09), on a zero-target leg still held above 0.10%,
 or on the state-D gate switching.
+
+**State E → 100% BOXX (2026-09-19, owner decision):** the 50% XLU leg was
+dropped after the E pair/union study showed every feasible E row (all cash,
+all XLU, all SPMO, all QQQ and the mixes) sits within 0.013 Sharpe of every
+other; cash has the shallowest tail on both harnesses and is one instrument
+fewer. Not an edge — a simplification. Section "State E → 100% cash" below.
 
 **State-D gate (APPLIED 2026-09-19 by OWNER OVERRIDE — not a research
 result):** on a macro state-D day the whole row is 100% BOXX instead of 100%
@@ -46,15 +52,16 @@ and the bootstrap against breadth; the owner applied it on SPMO-era
 evidence. Section "State D gate" below has the full record.
 
 **Standing figures** (design of 2026-09-19: A 50/50, trim step ⅓, plain
-30-day vol estimator, 5% drift band, state-D gate). 26-year QQQ-core proxy
-2000–2026: **25.74% CAGR / Sharpe 1.077 / max drawdown −28.5%** (QQQ
-buy-and-hold 8.7% / 0.45 / −80%). Real instruments, DAILY with the drift
-band, Nov 2015–Sep 2026: **37.75% / 1.484 / −19.4%** (the same harness
-gave the 2026-09-09 design 29.66% / 1.145 / −32.9%; the older weekly-clock
-figure for that design was 31.4% / 1.248 / −25.0%; QQQ 18.4% / 0.94 /
-−35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe 1.410, holdout
-(2000–2015) 0.828 — **below the 0.872 the breadth half alone gives in the
-holdout**; ~49 rebalances/yr at the 5% band. Pre-gate (2026-09-09 design):
+30-day vol estimator, 5% drift band, state-D gate, E = 100% cash). 26-year
+QQQ-core proxy 2000–2026: **25.46% CAGR / Sharpe 1.071 / max drawdown
+−27.0%** (QQQ buy-and-hold 8.7% / 0.45 / −80%). Real instruments, DAILY
+with the drift band, Nov 2015–Sep 2026: **37.30% / 1.475 / −18.6%** (with
+50% XLU in E, earlier the same day: 25.74% / 1.077 / −28.5% and 37.75% /
+1.484 / −19.4%; the 2026-09-09 design 22.18% / 0.913 / −33.6% and 29.66% /
+1.145 / −32.9%; QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%).
+Search-era Sharpe 1.399, holdout (2000–2015) 0.825 — **below the 0.872 the
+breadth half of the D gate alone gives in the holdout**; ~48 rebalances/yr
+at the 5% band. Pre-gate (2026-09-09 design):
 22.18% / 0.913 / −33.6%, S 1.103, H 0.768, ~47 rebalances/yr. (Under the max(10,30)
 estimator live 09-07..09-09 these read 22.12 / 0.938 / −32.8, real 30.67 /
 1.260 / −25.3, S 1.150 H 0.780, ~68 rebalances/yr — every difference inside
@@ -69,6 +76,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-19 | **state E → 100% BOXX** (was 50% XLU / 50% BOXX) | **owner decision**; all E rows within 0.013 Sharpe, cash has the shallowest tail; "State E → 100% cash" |
 | 2026-09-19 | **state-D gate**: D row → 100% BOXX when breadth pct < 0.20 OR QQQ < 2% above its 200d SMA | **owner override**; fails holdout and bootstrap vs breadth alone; "State D gate" |
 | 2026-09-09 | drift band 3% → 5%; Routines 15:55 → 15:50 ET; 16:10 watchdog + missed-run fallback; `session_lag` in fill log | "Execution improvements" |
 | 2026-09-09 | vol estimator max(10,30) → plain 30d | nine studies 09-08/09; "Volatility estimator reverted" |
@@ -283,7 +291,7 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | B | 75% | 25% | 0% | 0% | 0% | 1.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
 | D | 0% | 0% | 100% | 0% | 0% | 2.0x |
-| E | 0% | 0% | 0% | 50% | 50% | 0.25x |
+| E | 0% | 0% | 0% | 0% | 100% | 0.00x |
 | F | 0% | 0% | 0% | 0% | 100% | 0.00x |
 
 `target_weights(state)` returns this row — the base table, the right
@@ -383,6 +391,46 @@ the past two years it would have fired on 21 D days: 2024-09-06 (gap200),
 2025-02-27..03-07 (gap200, the week that takes the 2025 drawdown from
 −24.7% to −19.2%), 2026-02-11..24 (breadth), 2026-03-06..19 (both) and
 2026-04-08 (both).
+
+## State E → 100% cash (2026-09-19, owner decision)
+
+**What changed.** `TARGET_WEIGHTS['E']` went from (0, 0, 0, 0.50, 0.50) —
+50% XLU / 50% BOXX — to (0, 0, 0, 0, 1.00). XLU is no longer a target leg
+in any state. The column stays in the weight tuple at 0 so every harness,
+log and guard keeps its shape; `DEFENSIVE_INSTRUMENT` is retained for the
+same reason. Live triggers sell any residual XLU when the band fires (its
+target is 0% and the zero-leg sweep fires above 0.10%).
+
+**Why.** The E pair/union study (`e_pair_test.md`, same day) ran the whole
+constant-E ladder as its control: every E day held f × XLU + (1−f) cash and
+g × SPMO + (1−g) cash, 10% steps; a follow-up added QQQ as a sixth leg on
+the real ETFs. On the real daily harness with the D gate:
+
+| E row | CAGR | Sharpe | MaxDD | Sharpe vs 50% XLU |
+|---|---|---|---|---|
+| 50% XLU / 50% cash (old live) | 37.75% | 1.484 | −19.4% | — |
+| **100% cash (new live)** | **37.30%** | **1.475** | **−18.6%** | −0.009 |
+| 50% SPMO / 50% cash | 37.96% | 1.485 | −20.6% | +0.002 |
+| 100% SPMO | 38.50% | 1.474 | −23.9% | −0.010 |
+| 50% QQQ / 50% cash | 38.14% | 1.490 | −21.1% | +0.006 |
+| 100% QQQ | 38.89% | 1.482 | −24.7% | −0.001 |
+
+26-year proxy (core = QQQ): 50% XLU 25.74% / 1.077 / −28.5% (S 1.410, H
+0.828); **100% cash 25.46% / 1.071 / −27.0% (S 1.399, H 0.825)**; 50% core
+25.73% / 1.074 / −29.7% (H 0.818); 100% core 25.93% / 1.064 / −33.4% (H
+0.802). The whole ladder spans 0.013 of full-period Sharpe — the choice of
+E row is inside noise on every harness. Within that noise, cash is the only
+row that shallows the max drawdown on BOTH harnesses, the holdout Sharpe
+falls monotonically as equity is added to E, and E is the state that
+precedes F in ~30% of episodes. The owner was offered cash and half-SPMO and
+chose cash. **This is a simplification with a neutral-to-slightly-better
+tail, not an edge, and is recorded as such.** It reverses "The XLU update to
+state E" (2026-08-31), which rested on 32 E weeks and was flagged then as
+the most speculative live choice; nothing since strengthened it.
+
+**Cost.** About 0.45 pp/yr of real CAGR and 0.009 Sharpe against the old
+row, within the bootstrap's resolution (±0.02). One instrument fewer, no
+XLU fractional-hours constraint, no XLU wash-sale pairs.
 
 ## Fast re-entry overlay, 20/100 (added 2026-09-06)
 
@@ -859,10 +907,11 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -28.5% (proxy, 2000-2026) under the
+- **The real max drawdown is about -27.0% (proxy, 2000-2026) under the
   2026-09-19 design (A=50/50, D=100% QLD gated to cash by breadth OR
-  gap200, 20/100 fast re-entry overlay, graded extension trim at step ⅓);
-  it was -33.6% before the D gate.** The gate's holdout-era Sharpe is
+  gap200, E=100% cash, 20/100 fast re-entry overlay, graded extension trim
+  at step ⅓); it was -28.5% with 50% XLU in E and -33.6% before the D
+  gate.** The gate's holdout-era Sharpe is
   below the breadth-only rule's, so treat the drawdown improvement as
   SPMO-era evidence applied by owner override, not as a stress-tested
   floor.
@@ -3800,7 +3849,7 @@ test unchanged.** No pair or tree adds to the single breadth rule on its own
 terms. Cumulative candidates: 267 + 890 + 41 (+21 controls, 8 post-hoc
 sizing variants reported outside the permutation).
 
-### State E pairs and unions — tested 2026-09-19, NOT applied
+### State E pairs and unions — tested 2026-09-19, no rule applied; E row simplified to 100% cash the same day (owner decision)
 
 Owner asked for the D pair test to be repeated on state E. `paper-track/
 e_pair_test.py`, write-up `research_notes/e_pair_test.md`. Baseline = the
@@ -3824,7 +3873,7 @@ proxy drawdown to −33/−34% and the real one to −23.9% and loses the holdou
 proxy / 13 real E episodes; an effect under ±0.02 Sharpe cannot be resolved,
 and the whole feasible range is 0.013.
 
-**E stays 50% XLU / 50% BOXX.** Third negative on E substates (after
+**E stays 50% XLU / 50% BOXX** was the study's verdict; later the same day the owner chose to simplify E to 100% BOXX on the study's own control ladder (Part I "State E → 100% cash"). Third negative on E substates (after
 `substate_research.py` and `de_substate_search.py`). Not a forward-test
 candidate. Cumulative D/E candidates: 267 + 890 + 41 + 82.
 
