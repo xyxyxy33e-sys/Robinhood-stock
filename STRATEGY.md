@@ -3454,6 +3454,40 @@ equally holdout-weak; only QQEW/QQQ itself shows a holdout gain, on an
 **Verdict: pre-register only. Do not apply, not at half depth.** Today's
 readings have the rule off (QQEW/QQQ pct 0.82; effective state A).
 
+**Independent replication (outside study, 2026-09-19; not in this repo —
+its `fresh_d_study.py` / `fresh_d_verify.py` and outputs were shared as a
+report, baseline pinned to commit 65cf838).** A separately written
+vectorized executor (asserted against `state.py`'s rebalance predicate;
+baseline 22.21 / 0.914 / −33.58 vs our 22.18 / 0.913 / −33.6) scanned 79
+signals × both polarities × three D branches (495 portfolios, 20 constant-
+QLD/cash controls) and its family winner was THIS rule, exactly as
+pre-registered. On its own conventions (excess-of-cash Sharpe; QQEW from
+2006, missing observations leave D unchanged): proxy 25.72 / 0.976 /
+−29.88 vs live 22.21 / 0.839 / −33.58, nearest constant-D control (90%
+QLD) 21.78 / 0.845 / −31.99; **actual ETFs on a DAILY harness** (Yahoo
+adjusted SPMO/TQQQ/QLD/XLU, BIL then BOXX, 2015-10..2026-08) 37.92 / 1.365
+/ −24.48 vs live 31.42 / 1.117 / −32.89, nearest control (85% QLD) 30.64 /
+1.147 / −29.68. Two stresses this repo had not run, both survived: one
+extra session of signal lag 23.13 / 0.893 / −33.82 vs lagged live 19.74 /
+0.759 / −36.80; 20bp one-way cost 19.01 / 0.752 / −33.43 vs 16.18 / 0.640 /
+−37.00. An expanding-window forward replay (selection at 2010/13/16/19/22/
+25 on preceding-history Sharpe, holdings carried across boundaries, costs
+included) gives 29.37 / 1.078 / −30.85 vs live 26.98 / 0.963 / −33.58 over
+2010–2026, five of six windows up, 2013–15 down — a changing-rule process
+(10/30 cross → QQEW ratio SMA100 → 100d RS → 60d RS), not one fixed rule.
+Its DMA runners-up (SMA20 ≥ SMA60 → cash, price ≥ SMA100 → cash, within
+2% of the 200d → cash) point the same "fresh, unconfirmed break is the bad
+part of D" direction that `d_substate_fresh.py` found independently the
+same day. The study states its own limits and they match ours: selection-
+biased family winners, no multiple-search correction, post-selection
+bootstrap intervals, dot-com untested. **Classification unchanged:
+plausibly real, evidence not sufficient to act; replication of a known
+hypothesis is not an independent sample.** The forward test is the
+instrument; nothing here shortens it. (Its remark that earlier repo scripts
+"canceled costs" was checked: `monthly_returns.simulate` and
+`d_substate_fresh.py` subtract 4bp × turnover from each day's return, and
+the baselines agree to 0.03pp of CAGR.)
+
 **Anatomy (`dgate_anatomy.py`, `research_notes/dgate_anatomy.md`, 2026-09-11)
 — raised from "pre-register" to CANDIDATE (forward test with a mechanical
 decision; still NOT applied, not at half depth).** What the gate is: 40
