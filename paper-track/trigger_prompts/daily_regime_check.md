@@ -3,8 +3,10 @@
 # STATUS: APPLIED to the live trigger 2026-09-01; re-applied 2026-09-02 (weights
 # reweighted, micro overlay disabled); re-applied 2026-09-16 (section 7 stale
 # $5,000-per-event reference fixed; section 5 push notifications now state the
-# deposit dollar amount directly instead of deferring it to the report). This
-# file is the
+# deposit dollar amount directly instead of deferring it to the report);
+# re-applied 2026-09-19 (STATE-D GATE applied by owner override: breadth OR
+# gap200 -> cash on D days; breadth reading moved into step 1; weight call
+# takes breadth_pct). This file is the
 # source of record — edit here, then push via update_trigger, so the repo and
 # the live prompt never drift apart. list_triggers does NOT return prompt text,
 # so this file is the only readable copy.
@@ -33,6 +35,12 @@ better backtest. A change needs both-era improvement, exposure/beta-matched
 controls, a block bootstrap, and an owner decision -- the nine studies of
 09-08/09 are the standard. Measurement, bug fixes, doc/code consistency
 fixes and RECORDED-but-unapplied research are always fine.
+
+**2026-09-19: the owner OVERRODE this discipline once**, applying the state-D
+gate (breadth OR gap200 -> cash on D days) on SPMO-era evidence alone; it
+fails the holdout and the bootstrap-vs-breadth bar and is recorded as an
+owner decision, not a research result (STRATEGY.md "State D gate"). That
+override does not loosen the standard for anything else.
 
 ## 0. Execution convention — what the signal is computed on
 
@@ -106,10 +114,12 @@ every cost level. Lose the overnight, never the signal.
 
 ## 1. Compute today's reading
 
-Pull QQQ daily closes via `get_equity_historicals` (adjustment_type='split',
-enough history for a 200-day SMA plus the 30-day vol window — 18 months is
-ample). Then, using `paper-track/state.py`'s OWN functions — never a
-reimplementation:
+Pull QQQ AND QQEW daily closes via `get_equity_historicals`
+(adjustment_type='split'; QQEW is the equal-weight Nasdaq-100 ETF). Pull
+**24 months**: the breadth reading needs >= 312 common QQEW/QQQ sessions
+(60-session change inside a 252-session percentile window) on top of the
+200-day SMA and 30-day vol windows. Then, using `paper-track/state.py`'s OWN
+functions — never a reimplementation:
 
   - `compute_states(dates, px)` → today's macro state (A–F). NOTE this returns
     a LIST aligned to `dates`, not a dict — zip it with `dates` or index by
@@ -134,14 +144,31 @@ reimplementation:
     overlay. It is NOT a state of its own -- it only decides whether a macro
     B/C day holds A weights (fast in A/B) or a macro F day holds C weights
     (fast in A/B/C). See `effective_state()`.
-  - `live_target_weights(state, micro_agrees, vol, fast_state, gaps)`
+  - `breadth_reading(dates, qqew, qqq, as_of=<today>)` from
+    `paper-track/breadth_tracker.py` -> dict with `x60`, `pct`, `gate`.
+    Since 2026-09-19 this is a LIVE INPUT, not a measurement: `pct` feeds the
+    state-D gate below. `pct` None means too little history was pulled — pull
+    more; never pass None through and never substitute a guess.
+  - `live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct)`
     -> the 5 live weights (core, tqqq, qld, xlu, cash). **Call THIS, not
     `target_weights_with_voltarget`.** Added 2026-09-07: `fast_state` and
     `gaps` are REQUIRED positional arguments and are validated, raising
-    `MissingOverlayInputs`. The older function accepts them as None so
-    pre-overlay backtests still run, which meant a live call that forgot one
-    silently traded the PRE-OVERLAY design and looked fine doing it. `vol=None`
-    is still accepted and still degrades the multiplier to 1.0.
+    `MissingOverlayInputs`. Added 2026-09-19: `breadth_pct` (the reading's
+    `pct`, a float in [0, 1]) is REQUIRED too and None is refused. The older
+    function accepts these as None so pre-overlay backtests still run, which
+    meant a live call that forgot one silently traded the PRE-OVERLAY design
+    and looked fine doing it. `vol=None` is still accepted and still degrades
+    the multiplier to 1.0.
+  - **State-D gate (APPLIED 2026-09-19, owner override).** On a MACRO state-D
+    day the whole row is 100% BOXX when EITHER `breadth_pct < 0.20` OR the
+    200d gap `gaps[200] < 0.02` (QQQ less than 2% above its 200-day SMA);
+    otherwise D holds 100% QLD. `d_gate_flags(breadth_pct, gaps[200])` gives
+    the two flags and `d_gate_active(state, breadth_pct, gaps[200])` the
+    result; `live_target_weights` applies it itself. Report the breadth pct,
+    the 200d gap and both flags EVERY run, and on a D day say explicitly
+    "D gate ON (breadth)", "D gate ON (gap200)", "D gate ON (both)" or
+    "D gate off". The gate acts in D only; in A/B/C/E/F the flags are
+    informational.
   - `effective_state(state, fast_state)` → the state whose weight row is
     actually held. Report BOTH the macro state and the effective state
     whenever they differ.
@@ -180,7 +207,8 @@ authoritative.
     report, DO NOT TRADE. Note this guard reconciles two views of the SAME
     balance — it does NOT detect a deposit, and a deposit is not a failure.
   - `MissingOverlayInputs` from `live_target_weights` → abort, report, DO NOT
-    TRADE. It means an overlay input was not computed; never fall back to
+    TRADE. It means an overlay input (fast state, gaps, or since 2026-09-19
+    the breadth pct) was not computed; never fall back to
     `target_weights_with_voltarget` to get past it.
 
 Running `python3 paper-track/consistency_check.py` is cheap and now also
@@ -211,10 +239,12 @@ uninvested cash counts toward the cash leg. Then call `state.py`'s own gate:
 where `regime_changed` = today's EFFECTIVE state (`effective_state(macro,
 fast)`, A–F) differs from yesterday's confirmed close, OR the extension
 trim vote count (`extension_votes(effective_state, gaps)`) differs from
-yesterday's.
+yesterday's, OR the state-D gate (`d_gate_active(...)`, 2026-09-19) is on
+today and was off yesterday or vice versa.
 That covers a macro transition, the fast re-entry overlay switching on or
-off, and the extension trim switching on or off (both added 2026-09-06) —
-each one moves the weight row, so each one fires. A
+off, the extension trim switching on or off (both added 2026-09-06), and
+the D gate switching (100% QLD <-> 100% BOXX) — each one moves the weight
+row, so each one fires. A
 `micro_agrees` flip alone is NOT a regime change as of 2026-09-02 — that
 overlay is disabled, so a flip moves no weight. The rule it implements:
 
@@ -314,6 +344,10 @@ return alert.
 If a macro shift into A/B/C happens, events 1 and 3 are the same event — send
 ONE notification, and say it is a funding trigger.
 
+The state-D gate switching (2026-09-19) is NOT a fourth push event: it is an
+overlay move inside state D, reported in the rebalance entry like a trim
+step. Do not add it.
+
 ## 5a. Funding triggers — what to tell the owner
 
 The owner funds the account episodically, not monthly, at exactly two
@@ -406,8 +440,9 @@ would have been silently dropped.)
 On a rebalance: append to the weekly report artifact
 (https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
 newest week at top, stating the old state, new state (macro AND effective,
-if the fast overlay is active), the extension-trim vote count, both vol legs
-with the binding one and the resulting multiplier, the drift and which condition fired (regime change vs drift band),
+if the fast overlay is active), the extension-trim vote count, the breadth
+pct, 200d gap and D-gate status (2026-09-19), both vol legs
+with the binding one and the resulting multiplier, the drift and which condition fired (regime change vs drift band vs D gate),
 the weights traded to, the fills, and the notional-weighted slippage.
 
 To edit that artifact you must FIRST call the Artifact tool with
@@ -434,30 +469,25 @@ loop — call `improvement_search.run()` (or the harness that owns the figure).
 A hand-rolled loop silently rebalances costlessly every day and produces
 numbers that look right and are not.
 
-## 8. Breadth forward test — MEASUREMENT ONLY, after step 3 (added 2026-09-11)
+## 8. Breadth forward log — still recorded, now for a LIVE rule (changed 2026-09-19)
 
-A pre-registered candidate rule is under forward test: "effective state D AND
-the 60-day QQEW/QQQ relative-strength reading in its trailing-252 bottom
-quintile (pct < 0.20) -> D row to cash". It is NOT applied and changes no
-weight; the owner decides after 8 gated runs or 48 months by the rule in
-`research_notes/dgate_anatomy.md` section 6. Your only job is to LOG it,
-after every trading and reporting step and never inside 15:50-16:00:
-  - Pull QQEW and QQQ daily closes (`get_equity_historicals`, 18 months,
-    split-adjusted; QQEW is the equal-weight Nasdaq-100 ETF) and call
-    `paper-track/breadth_tracker.py`'s
-    `breadth_reading(dates, qqew, qqq, as_of=<today>)` -> x60, pct, gate.
-    Use the OFFICIAL closes if the run is after 16:00, else the 15:5x
-    snapshot and say so. pct None = insufficient history; report it, no row.
-  - EVERY session, one line: "breadth pct 0.84, gate off".
-  - On a session whose EFFECTIVE state is D: `record_d_day(date, 'D', x60,
-    pct, gate)`; on the NEXT session `fill_next_returns(<that date>,
-    qld_next, qqq_next)` with official close-to-close returns. In any report
-    entry for a D day add ONE informational line: the breadth bucket, its
-    historical breakdown rate `bucket_base_rate(pct)` (P(next state E/F);
-    unconditional D-episode base rate 0.16) and the distance to the 200d.
-    No commentary, no weight change, no notification.
-  - `summarize()` is the running tally. Do not change GATE_PCT, LOOKBACK or
-    WINDOW; do not act on the gate. Commit the log row with the NAV row.
+Until 2026-09-19 the breadth rule was measurement only. It is now HALF of the
+applied state-D gate (step 1), by owner override. Keep the log running so the
+gate can be judged on live D episodes that did not exist when it was found:
+  - The reading itself is already computed in step 1 (`breadth_reading`);
+    do not pull it twice. EVERY session, one line: "breadth pct 0.84, 200d gap
+    +8.9%, D gate off" (or "ON (breadth / gap200 / both)" on a gated D day).
+  - On a session whose MACRO state is D: `record_d_day(date, 'D', x60, pct,
+    gate, note='gap200=+1.2% gap_flag=True applied=True')` — put the 200d gap
+    and whether the row was actually held in cash in the note; on the NEXT
+    session `fill_next_returns(<that date>, qld_next, qqq_next)` with
+    official close-to-close returns. In any report entry for a D day add ONE
+    informational line: the breadth bucket, `bucket_base_rate(pct)` (P(next
+    state E/F); unconditional D-episode base rate 0.16) and the 200d gap.
+  - `summarize()` is the running tally. Do not change GATE_PCT, LOOKBACK,
+    WINDOW or the 2% gap threshold. Commit the log row with the NAV row.
+  - This logging runs AFTER trading and reporting, never inside 15:50-16:00;
+    only the step-1 reading is time-critical.
 
 If Robinhood MCP tools are unavailable, report that and stop — do not guess
 prices or place orders on stale data.

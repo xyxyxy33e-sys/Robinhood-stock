@@ -531,7 +531,7 @@ def real_metrics(out):
     return dict(cagr=c, sharpe=s, mdd=m), ser
 
 RPX, RQQQ, RDAYS, RQD, SIG_R = real_build()
-_ref = MR.simulate(RPX, RQQQ, RDAYS)
+_ref = MR.simulate(RPX, RQQQ, RDAYS, d_gate=False)   # baseline pinned to the pre-2026-09-19 design (no D gate)
 _mine, REAL_EXP, REAL_REB = simulate_real(RPX, RQQQ, RDAYS)
 assert len(_ref) == len(_mine) and all(a[0] == b[0] and abs(a[2] - b[2]) < 1e-12 for a, b in zip(_ref, _mine)), \
     'simulate_real does not reproduce monthly_returns.simulate'

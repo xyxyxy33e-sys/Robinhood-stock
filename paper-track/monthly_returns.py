@@ -21,7 +21,9 @@ trading day of the month, and the sleeve is NOT reset at month boundaries --
 months are reporting slices of one continuous simulation.
 
 Pass --no-vol-target to run the same weights with the volatility overlay off
-(multiplier pinned at 1.0) for an A/B against the live design.
+(multiplier pinned at 1.0) for an A/B against the live design. Pass
+--no-d-gate to run without the 2026-09-19 state-D gate (breadth OR gap200
+-> cash on D days), i.e. the pre-09-19 design.
 
 CAVEAT ON PRICES. Split-adjusted closes, so dividends are excluded. That
 understates SPMO (~0.7%/yr) and especially XLU (~3%/yr), so state-E months are
@@ -33,7 +35,8 @@ from collections import defaultdict
 
 sys.path.insert(0, 'paper-track')
 from state import (compute_fast_states, effective_state, compute_extension_gaps, extension_votes, compute_states, compute_micro_agreement, realized_vol, realized_vol_live,
-                   target_weights_with_voltarget, needs_rebalance)
+                   target_weights_with_voltarget, needs_rebalance, d_gate_active, D_GATE_ENABLED)
+import breadth_tracker as BT
 from backtest_overlay_etf import load_daily_csv
 from long_history_backtest import load_px
 
@@ -68,7 +71,29 @@ def build():
     return px, qqq, common
 
 
-def simulate(px, qqq, days, vol_target=True):
+QQEW_CSV = 'data/QQEW_daily_ext.csv'
+
+
+def load_qqew(path=QQEW_CSV):
+    import csv
+    out = {}
+    for r in csv.DictReader(open(path)):
+        try:
+            out[r['d']] = float(r['c'])
+        except (ValueError, KeyError):
+            pass
+    return out
+
+
+def breadth_pct_series(qqq, qqew=None):
+    """date -> trailing-252 percentile of the 60-session QQEW/QQQ reading,
+    via breadth_tracker's own functions (None before 312 common sessions)."""
+    qqew = load_qqew() if qqew is None else qqew
+    common, x = BT.relative_strength_series(sorted(qqq), qqew, qqq)
+    return dict(zip(common, BT.trailing_pct(x)))
+
+
+def simulate(px, qqq, days, vol_target=True, d_gate=D_GATE_ENABLED, qqew=None):
     """vol_target=False runs the same weights with the volatility overlay OFF
     (multiplier pinned at 1.0), i.e. target_weights_with_micro() directly."""
     qd = sorted(qqq)
@@ -76,18 +101,20 @@ def simulate(px, qqq, days, vol_target=True):
     micro = compute_micro_agreement(qd, qqq)
     fast = compute_fast_states(qd, qqq)          # 2026-09-06 fast re-entry overlay
     gaps = compute_extension_gaps(qd, qqq)       # 2026-09-06 graded extension trim
+    bp = breadth_pct_series(qqq, qqew) if d_gate else {}   # 2026-09-19 state-D gate (breadth half)
     held = prev = None
     out = []
     for i in range(1, len(days)):
         d0, d1 = days[i - 1], days[i]
         st, ag = states[d0], micro[d0]
+        gate = d_gate_active(st, bp.get(d0), gaps[d0][200]) if d_gate else False
         # 2026-09-07: must use the LIVE estimator, max(10d, 30d). This harness
         # reports the figures we quote for the live design; leaving it on the
         # plain 30-day reading would silently report a DIFFERENT strategy.
         vol = realized_vol_live(qd, qqq, as_of=d0) if vol_target else None
-        t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gaps=gaps[d0])
+        t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gaps=gaps[d0], d_gate=gate)
         eff = effective_state(st, fast[d0])
-        st = (eff, extension_votes(eff, gaps[d0]))   # regime = row held + trim votes
+        st = (eff, extension_votes(eff, gaps[d0]), gate)   # regime = row held + trim votes + D gate
         cost = 0.0
         if held is None:
             held = list(t)
@@ -108,9 +135,10 @@ def simulate(px, qqq, days, vol_target=True):
 
 def main():
     vol_target = '--no-vol-target' not in sys.argv
+    d_gate = '--no-d-gate' not in sys.argv
     px, qqq, common = build()
     warm = [d for d in common if d >= '2022-06-01']       # 200d SMA + vol warm-up
-    daily_all = simulate(px, qqq, warm, vol_target=vol_target)
+    daily_all = simulate(px, qqq, warm, vol_target=vol_target, d_gate=d_gate)
     # the trading day immediately BEFORE the reporting window, so January 2024
     # gets a real benchmark base instead of being compared against itself
     idx = [x[0] for x in daily_all]
@@ -129,7 +157,7 @@ def main():
     prev_close = {k: None for k in keys}
     for n, k in enumerate(keys):
         prev_close[k] = base_day if n == 0 else months[keys[n - 1]][-1][0]
-    tag = 'WITH 20% vol target' if vol_target else 'vol target OFF (multiplier 1.0)'
+    tag = ('WITH 20% vol target' if vol_target else 'vol target OFF (multiplier 1.0)') + ('' if d_gate else ', D gate OFF')
     print(f"Calendar-month returns, current design, real instruments, net of 4bps -- {tag}\n"
           f"{keys[0]} .. {keys[-1]}   ({len(daily)} trading days)\n")
     print(f"{'month':<9}{'strategy':>10}{'QQQ':>9}{'SPMO':>9}{'diff vs QQQ':>13}   states")

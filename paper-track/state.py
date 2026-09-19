@@ -993,7 +993,54 @@ def is_extended(eff_state, gaps_or_gap200):
     return eff_state == 'A' and gaps_or_gap200 > EXTENSION_GAP
 
 
-def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None):
+# ---------------------------------------------------------------------------
+# STATE-D GATE -- APPLIED 2026-09-19 by OWNER OVERRIDE of the change
+# discipline (STRATEGY.md "State D gate"). On a macro state-D day the whole
+# row goes to cash (BOXX) when EITHER
+#   * breadth: the 60-session QQEW/QQQ relative-strength reading is in its
+#     trailing-252 bottom quintile (pct < D_GATE_BREADTH_PCT; the reading is
+#     breadth_tracker.breadth_reading(), the pre-registered forward-test
+#     rule), OR
+#   * gap200: QQQ's close is less than D_GATE_GAP200 above its 200-day SMA
+#     (gaps[200] < 0.02 -- the same gap the extension trim already computes).
+# Otherwise D holds its normal row (100% QLD). Macro D never remaps under the
+# fast overlay and nothing remaps to D, so macro D == effective D here.
+#
+# Evidence (paper-track/d_pair_test.py, research_notes/d_pair_test.md, #10
+# "breadth OR gap200<2%"): 26y proxy 22.18% / 0.913 / -33.6% -> 25.74% /
+# 1.077 / -28.5%; real daily SPMO era 29.66% / 1.145 / -32.9% -> 37.75% /
+# 1.484 / -19.4%; search-era Sharpe 1.103 -> 1.410; HOLDOUT 0.768 -> 0.828
+# but 0.872 for breadth ALONE, i.e. the gap200 half LOSES -0.045 in
+# 2007-2015 and the pair failed the both-era bar, the bootstrap against
+# breadth (P<=0 0.43 proxy / 0.11 real) and the SPY holdout. The owner chose
+# to apply it on the SPMO-era evidence (every top-5 drawdown under 20%,
+# robust to a one-session lag and 20bp). Not a research result -- an owner
+# decision, recorded as such. The breadth forward log keeps running so the
+# gate can be judged on live D episodes.
+D_GATE_ENABLED = True
+D_GATE_BREADTH_PCT = 0.20     # == breadth_tracker.GATE_PCT; frozen
+D_GATE_GAP200 = 0.02          # close / SMA200 - 1 below this -> flag; frozen
+D_GATE_STATE = 'D'
+
+
+def d_gate_flags(breadth_pct, gap200):
+    """(breadth_flag, gap200_flag). None inputs never flag (warm-up)."""
+    b = breadth_pct is not None and breadth_pct < D_GATE_BREADTH_PCT
+    g = gap200 is not None and gap200 < D_GATE_GAP200
+    return b, g
+
+
+def d_gate_active(state, breadth_pct, gap200):
+    """True when the D row must be held as 100% cash. A change in THIS value
+    is a regime change for needs_rebalance() (it moves the whole row)."""
+    if not D_GATE_ENABLED or state != D_GATE_STATE:
+        return False
+    b, g = d_gate_flags(breadth_pct, gap200)
+    return b or g
+
+
+def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None,
+                                  d_gate=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -1014,8 +1061,15 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
     gaps: the {window: gap} dict for the same date from
     compute_extension_gaps() -- the graded three-window extension trim
     (2026-09-06). Live triggers MUST pass it. gap200 (a bare 200d gap) is the
-    legacy single-window trim, honoured only when gaps is None."""
+    legacy single-window trim, honoured only when gaps is None.
+
+    d_gate: the state-D gate reading for the same date from d_gate_active()
+    (2026-09-19). True on a macro-D day sends the WHOLE row to cash (the vol
+    multiplier is irrelevant to a cash row). None/False leaves D at its
+    normal row, which is also what every pre-gate backtest gets."""
     eff = effective_state(state, fast_state)
+    if d_gate and D_GATE_ENABLED and state == D_GATE_STATE:
+        return (0.0, 0.0, 0.0, 0.0, 1.0)
     core, tqqq, qld, xlu, cash = target_weights_with_micro(eff, micro_agrees)
     if gaps is not None:
         f = extension_scale(eff, gaps)
@@ -1031,7 +1085,7 @@ class MissingOverlayInputs(ValueError):
     """A live weight call omitted a mandatory overlay input."""
 
 
-def live_target_weights(state, micro_agrees, vol, fast_state, gaps):
+def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct):
     """THE function live triggers must call (added 2026-09-07).
 
     Identical maths to target_weights_with_voltarget(), but `fast_state` and
@@ -1044,7 +1098,13 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps):
 
     Raises MissingOverlayInputs when an overlay is enabled and its input is
     absent or malformed. `vol=None` is still allowed and still degrades the
-    multiplier to 1.0 -- that is a genuine fallback, not a missing input."""
+    multiplier to 1.0 -- that is a genuine fallback, not a missing input.
+
+    breadth_pct (REQUIRED since 2026-09-19, the state-D gate): today's
+    breadth_tracker.breadth_reading(dates, qqew, qqq, as_of=today)['pct'],
+    a float in [0, 1]. None is REFUSED: the live reading needs >= 312 common
+    QQEW/QQQ sessions, so None means too little history was pulled, not a
+    market condition. The gap200 half of the gate is read from gaps[200]."""
     if FAST_REENTRY_ENABLED:
         if fast_state is None:
             raise MissingOverlayInputs(
@@ -1058,8 +1118,18 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps):
         missing = [n for n, _ in EXTENSION_RULES if n not in gaps]
         if missing:
             raise MissingOverlayInputs(f"gaps is missing window(s) {missing}")
+    gate = None
+    if D_GATE_ENABLED:
+        if not isinstance(breadth_pct, (int, float)) or isinstance(breadth_pct, bool) \
+                or not (0.0 <= breadth_pct <= 1.0):
+            raise MissingOverlayInputs(
+                "breadth_pct is required: pass breadth_reading(dates, qqew, qqq, as_of=<date>)['pct'] "
+                "(a float in [0,1]; None means insufficient QQEW/QQQ history was pulled)")
+        if not isinstance(gaps, dict) or 200 not in gaps:
+            raise MissingOverlayInputs("gaps[200] is required for the state-D gate")
+        gate = d_gate_active(state, breadth_pct, gaps[200])
     return target_weights_with_voltarget(
-        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps)
+        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate)
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',

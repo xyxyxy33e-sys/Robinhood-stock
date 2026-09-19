@@ -4,39 +4,74 @@ from state.py's CURRENT design, plus the by-year table. Writes DATA.js, COMPARE.
 and byyear.json to the scratchpad path below; splice them into the artifact's
 script block in place of the existing constants.
 
-NEW = the live design as of 2026-09-06 (A=50/50, D=100% QLD, 20/100 fast
-re-entry overlay on B/C/F, graded extension trim on A). OLD = the 2026-09-02 design (A=70/30, D=85% QLD,
-no fast overlay) -- the prior comparison baseline, kept as the "before"
-column so the frontier-step-2 + overlay improvement is visible."""
-import json, math, sys
+NEW = the live design as of 2026-09-19 (A=50/50, D=100% QLD gated to cash
+by breadth pct < 0.20 OR 200d gap < 2%, 20/100 fast re-entry overlay on
+B/C/F, graded extension trim on A, plain 30d vol). OLD = the 2026-09-09
+design (identical minus the state-D gate) -- the prior comparison baseline,
+kept as the "before" column so the gate's effect is visible on its own.
+
+Data shim (2026-09-19): voltarget_live_backtest hard-codes a path that does
+not exist here, so the same symlink farm d_substate_fresh.py builds is used
+(SPMO/TQQQ/QLD/XLU -> data/*_ohlc.csv, DGS3MO -> data/dgs3mo_full.csv,
+synthetic BOXX from T-bills)."""
+import json, math, sys, os
 sys.path.insert(0,'paper-track')
+SCRATCH='/tmp/claude-0/-home-user-Robinhood-stock/e898e69c-6aab-5817-bca0-552f786d2da8/scratchpad'
+_TMP=os.path.join(SCRATCH,'kairos_shim'); _ETF=os.path.join(_TMP,'etf'); os.makedirs(_ETF,exist_ok=True)
+for dst,src in {'SPMO.csv':'spmo_ohlc.csv','TQQQ.csv':'tqqq_ohlc.csv','QLD.csv':'qld_ohlc.csv','XLU.csv':'xlu_ohlc.csv'}.items():
+    pth=os.path.join(_ETF,dst)
+    if not os.path.lexists(pth): os.symlink(os.path.abspath(os.path.join('data',src)),pth)
+pth=os.path.join(_TMP,'DGS3MO.csv')
+if not os.path.lexists(pth): os.symlink(os.path.abspath('data/dgs3mo_full.csv'),pth)
+import backtest_overlay_etf as BOE
 import voltarget_live_backtest as VL
-from state import TARGET_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED, compute_fast_states, effective_state, compute_extension_gaps, extension_scale
-from long_history_backtest import load_px
+BOE.ROBINHOOD_REPO=_TMP; VL.REPO=_TMP
+from state import (TARGET_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED, compute_fast_states, effective_state,
+                   compute_extension_gaps, extension_scale, d_gate_active)
+from long_history_backtest import load_px, load_tbill_long, make_rate_lookup, cash_index
 from four_leg_overlay import last_trading_day_per_week
+import breadth_tracker as BT
 assert not MICRO_OVERLAY_ENABLED
-rows=VL.build(); rows=rows[0] if isinstance(rows,tuple) else rows
 qqq=load_px('data/qqq_long_history.csv'); spy=load_px('data/spy_long_history.csv')
-qd=sorted(qqq); fast=compute_fast_states(qd,qqq); gaps=compute_extension_gaps(qd,qqq)
+qd=sorted(qqq)
+_boxx=os.path.join(_ETF,'BOXX.csv')
+if not os.path.exists(_boxx):
+    ci=cash_index(qd, make_rate_lookup(load_tbill_long()))
+    with open(_boxx,'w') as f:
+        f.write('d,c\n')
+        for d in qd: f.write(f'{d},{ci[d]*100:.6f}\n')
+rows=VL.build(); rows=rows[0] if isinstance(rows,tuple) else rows
+fast=compute_fast_states(qd,qqq); gaps=compute_extension_gaps(qd,qqq)
+def _load_dc(path):
+    import csv; out={}
+    for r in csv.DictReader(open(path)):
+        try: out[r['d']]=float(r['c'])
+        except ValueError: pass
+    return out
+_common,_x=BT.relative_strength_series(qd,_load_dc('data/QQEW_daily_ext.csv'),qqq)
+BP=dict(zip(_common,BT.trailing_pct(_x)))
 wkq=last_trading_day_per_week(sorted(qqq)); wks=last_trading_day_per_week(sorted(spy))
 d0_to_key={v:k for k,v in wkq.items()}
 keys=sorted(wkq)
+# SPY's long series can end before QQQ's: keep only weeks whose end date SPY also has
+rows=[r for r in rows if keys.index(d0_to_key[r['d0']])+1 < len(keys)
+      and d0_to_key[r['d0']] in wks and keys[keys.index(d0_to_key[r['d0']])+1] in wks]
 end_date={}
 for r in rows:
     k=d0_to_key[r['d0']]; nk=keys[keys.index(k)+1]; end_date[r['d0']]=wkq[nk]
-# 2026-09-02 design (previous baseline, no fast overlay): A 70/30, D 85% QLD
-OLD_W={'A':(.7,.3,0,0,0),'B':(.75,.25,0,0,0),'C':(1,0,0,0,0),'D':(0,0,.85,0,.15),'E':(0,0,0,.5,.5),'F':(0,0,0,0,1)}
 def vt(w,v):
     m=1.0 if not v else min(1.0,VOL_TARGET_PA/v); risky=sum(w[:4]); return tuple(x*m for x in w[:4])+(1-risky*m,)
-def new_w(r):
+def old_w(r):
+    # the 2026-09-09 design: everything below except the state-D gate
     st=effective_state(r['state'], fast[r['d0']])
     w=TARGET_WEIGHTS[st]; f=extension_scale(st, gaps[r['d0']])
     if f<1: w=tuple(x*f for x in w[:4])+(1-f*sum(w[:4]),)
     return vt(w, r['vol'])
-def old_w(r):
-    # the 2026-09-02 design used the plain 30-day estimator -- compare it on
-    # its OWN spec, not on today's max(10d, 30d) (2026-09-07)
-    return vt(OLD_W[r['state']], r['vol30'])
+def new_w(r):
+    # 2026-09-19: the state-D gate, decided on the weekly signal date d0
+    if d_gate_active(r['state'], BP.get(r['d0']), gaps[r['d0']][200]):
+        return (0.0,0.0,0.0,0.0,1.0)
+    return old_w(r)
 def nav(wfn):
     prev=None; out=[]; n=1.0
     for r in rows:

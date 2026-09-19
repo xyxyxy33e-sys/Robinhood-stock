@@ -59,8 +59,9 @@ def record_return(date, daily_return):
 
     daily_return must be yesterday's CONFIRMED state's weights dotted with each
     leg's official-close-to-official-close return, using
-    **target_weights_with_voltarget(state, micro_agrees, vol)** -- i.e. the
-    weights actually held, WITH the volatility overlay applied.
+    **live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct)**
+    -- i.e. the weights actually held, WITH every overlay applied (vol target,
+    fast re-entry, extension trim and, since 2026-09-19, the state-D gate).
 
     CHANGED 2026-09-01: this previously used target_weights_with_micro(), the
     un-vol-targeted design return. That was wrong for this tracker's purpose.

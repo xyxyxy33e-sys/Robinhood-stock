@@ -361,20 +361,60 @@ def check_live_target_weights_strict():
                                     ('A', None, 'gaps None'),
                                     ('A', {100: 0.0}, 'gaps missing windows')):
         try:
-            live_target_weights('A', False, 0.15, bad_fast, bad_gaps)
+            live_target_weights('A', False, 0.15, bad_fast, bad_gaps, 0.5)
         except MissingOverlayInputs:
             pass
         else:
             raise AssertionError(f"live_target_weights accepted {why}")
-    a = live_target_weights('A', False, 0.15, 'A', good)
+    a = live_target_weights('A', False, 0.15, 'A', good, 0.5)
     b = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=good)
     assert a == b, "live_target_weights must not change the maths"
-    assert live_target_weights('A', False, None, 'A', good)  # vol=None still allowed
+    assert live_target_weights('A', False, None, 'A', good, 0.5)  # vol=None still allowed
     print("OK: live_target_weights rejects missing/!invalid overlay inputs, maths unchanged")
 
 
 check_strategy_md_matches_code()
 check_live_target_weights_strict()
+
+
+def check_d_gate():
+    """State-D gate (APPLIED 2026-09-19, owner override): breadth pct < 0.20
+    OR close < 2% above the 200d SMA sends a macro-D day to 100% cash; every
+    other state is untouched; the live function refuses a missing breadth
+    reading; the permissive function with d_gate=None is the pre-gate design."""
+    from state import (D_GATE_ENABLED, D_GATE_BREADTH_PCT, D_GATE_GAP200, d_gate_flags, d_gate_active,
+                       live_target_weights, target_weights_with_voltarget, MissingOverlayInputs, STATE_LABEL)
+    import breadth_tracker as BT
+    assert D_GATE_ENABLED, "the state-D gate is applied (2026-09-19); flipping it off is a design change"
+    assert D_GATE_BREADTH_PCT == BT.GATE_PCT == 0.20, "gate percentile must equal breadth_tracker.GATE_PCT"
+    assert D_GATE_GAP200 == 0.02
+    assert d_gate_flags(0.19, 0.05) == (True, False) and d_gate_flags(0.5, 0.019) == (False, True)
+    assert d_gate_flags(0.20, 0.02) == (False, False), "thresholds are strict '<'"
+    assert d_gate_flags(None, None) == (False, False), "warm-up never flags"
+    cold = {100: 0.05, 150: 0.05, 200: 0.05}; hot = {100: 0.05, 150: 0.05, 200: 0.01}
+    for st in STATE_LABEL:
+        assert d_gate_active(st, 0.1, 0.0) == (st == 'D'), f"gate must only act in D, not {st}"
+        if st != 'D':
+            assert live_target_weights(st, False, 0.15, st, hot, 0.1) == \
+                target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=hot), f"gate moved state {st}"
+    cash = (0.0, 0.0, 0.0, 0.0, 1.0)
+    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5) == (0.0, 0.0, 1.0, 0.0, 0.0), "ungated D is 100% QLD"
+    assert live_target_weights('D', False, 0.15, 'D', hot, 0.5) == cash, "gap200 half must gate"
+    assert live_target_weights('D', False, 0.15, 'D', cold, 0.1) == cash, "breadth half must gate"
+    assert live_target_weights('D', False, 0.50, 'D', cold, 0.1) == cash, "gate ignores the vol multiplier"
+    assert target_weights_with_voltarget('D', False, 0.15, fast_state='D', gaps=hot) == (0.0, 0.0, 1.0, 0.0, 0.0), \
+        "d_gate=None must be the pre-gate design (research harnesses depend on this)"
+    for bad in (None, 'x', 1.5, -0.1, True):
+        try:
+            live_target_weights('D', False, 0.15, 'D', cold, bad)
+        except MissingOverlayInputs:
+            pass
+        else:
+            raise AssertionError(f"live_target_weights accepted breadth_pct={bad!r}")
+    print("OK: state-D gate -- breadth<0.20 OR gap200<2% -> cash on D only; live function refuses a missing breadth reading")
+
+
+check_d_gate()
 
 
 def check_vol_estimator():

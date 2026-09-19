@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-09)
+## Current design at a glance (2026-09-19)
 
 **What the account holds, by effective state** — see the tables under
 "Target weights"; effective state = macro 50/200 state, except that macro
@@ -31,15 +31,31 @@ of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
 (×⅔ / ×⅓ / ×0 — three votes is 100% cash). Then the four risky legs are scaled by
 `min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX (the max(10d, 30d)
 estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
-state, on L1 drift > 5% (3% until 2026-09-09), or on a zero-target leg still held above 0.10%.
+state, on L1 drift > 5% (3% until 2026-09-09), on a zero-target leg still held above 0.10%,
+or on the state-D gate switching.
 
-**Standing figures** (design of 2026-09-09: A 50/50, trim step ⅓, plain
-30-day vol estimator, 5% drift band). 26-year QQQ-core proxy 2000–2026: **22.18% CAGR /
-Sharpe 0.913 / max drawdown −33.6%** (QQQ buy-and-hold 8.7% / 0.45 / −80%).
-Real instruments, weekly, Nov 2015–Aug 2026: **31.4% / 1.248 / −25.0%**
-(QQQ 18.4% / 0.94 / −35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe
-1.103, holdout (2000–2015) 0.768; ~47 rebalances/yr at the 5% band (~55 at
-3%). (Under the max(10,30)
+**State-D gate (APPLIED 2026-09-19 by OWNER OVERRIDE — not a research
+result):** on a macro state-D day the whole row is 100% BOXX instead of 100%
+QLD when EITHER the 60-session QQEW/QQQ relative-strength reading is in its
+trailing-252 bottom quintile (breadth pct < 0.20, the pre-registered
+forward-test rule) OR QQQ closes less than 2% above its 200-day SMA. Both
+halves are strict `<`. `d_gate_active()` in `state.py`; `live_target_weights`
+now REQUIRES the breadth pct. The gate fails the both-era bar (the gap200
+half loses −0.045 Sharpe in the 2007–2015 holdout against breadth alone)
+and the bootstrap against breadth; the owner applied it on SPMO-era
+evidence. Section "State D gate" below has the full record.
+
+**Standing figures** (design of 2026-09-19: A 50/50, trim step ⅓, plain
+30-day vol estimator, 5% drift band, state-D gate). 26-year QQQ-core proxy
+2000–2026: **25.74% CAGR / Sharpe 1.077 / max drawdown −28.5%** (QQQ
+buy-and-hold 8.7% / 0.45 / −80%). Real instruments, DAILY with the drift
+band, Nov 2015–Sep 2026: **37.75% / 1.484 / −19.4%** (the same harness
+gave the 2026-09-09 design 29.66% / 1.145 / −32.9%; the older weekly-clock
+figure for that design was 31.4% / 1.248 / −25.0%; QQQ 18.4% / 0.94 /
+−35.5%, SPMO 17.4% / 0.94 / −28.3%). Search-era Sharpe 1.410, holdout
+(2000–2015) 0.828 — **below the 0.872 the breadth half alone gives in the
+holdout**; ~49 rebalances/yr at the 5% band. Pre-gate (2026-09-09 design):
+22.18% / 0.913 / −33.6%, S 1.103, H 0.768, ~47 rebalances/yr. (Under the max(10,30)
 estimator live 09-07..09-09 these read 22.12 / 0.938 / −32.8, real 30.67 /
 1.260 / −25.3, S 1.150 H 0.780, ~68 rebalances/yr — every difference inside
 bootstrap noise; see "Volatility estimator reverted".) A
@@ -53,6 +69,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-19 | **state-D gate**: D row → 100% BOXX when breadth pct < 0.20 OR QQQ < 2% above its 200d SMA | **owner override**; fails holdout and bootstrap vs breadth alone; "State D gate" |
 | 2026-09-09 | drift band 3% → 5%; Routines 15:55 → 15:50 ET; 16:10 watchdog + missed-run fallback; `session_lag` in fill log | "Execution improvements" |
 | 2026-09-09 | vol estimator max(10,30) → plain 30d | nine studies 09-08/09; "Volatility estimator reverted" |
 | 2026-09-06 | trim step 0.25 → ⅓ (A ×⅔/⅓/0); A 50/50 → 40/60 | step: both eras, controls, p=0.00; 40/60: owner decision; "Leverage under the trim" |
@@ -73,6 +90,14 @@ vote, two days after the code moved to 40/60 and ⅓. Do not hand-edit them;
 regenerate.
 
 ## Change freeze (2026-09-07) — LIFTED 2026-09-09 by owner decision for one change; its discipline still binds
+
+> **Status 2026-09-19.** The owner overrode the discipline a second time and
+> applied the state-D gate (breadth OR gap200 → cash on D days) on the
+> strength of the SPMO-era figures, knowing it fails the holdout and the
+> bootstrap against the breadth rule alone. That is recorded as an owner
+> decision, not as a research result, in "State D gate" below. The standard
+> below still binds everything else and the forward log keeps running so the
+> gate can be judged on live D episodes.
 
 > **Status 2026-09-09.** The owner lifted the freeze after nine independent
 > research lines on 09-08/09 (see the sections dated 2026-09-08/09 near the
@@ -265,8 +290,15 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 reference for each state's RELATIVE risk posture. A live trigger never calls
 it directly: two overlays apply on top, and the function that applies both is
 
-    target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast, gaps=gaps)
+    live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct)
 
+which wraps `target_weights_with_voltarget(state, micro_agrees, vol,
+fast_state=, gaps=, d_gate=)` and refuses a missing input.
+
+0. **State-D gate** (2026-09-19, owner override): if the macro state is D and
+   `d_gate_active('D', breadth_pct, gaps[200])` — breadth pct < 0.20 OR
+   200d gap < 2% — the row is 100% cash and nothing below runs. Section
+   "State D gate" below.
 1. **Fast re-entry overlay** (2026-09-06): `effective_state(state, fast_state)`
    may swap the row — macro B/C with a 20/100 read of A/B holds the **A**
    row; macro F with a 20/100 read of A/B/C holds the **C** row. Nothing
@@ -285,6 +317,72 @@ it directly: two overlays apply on top, and the function that applies both is
 overlay is DISABLED (2026-09-02) and it moves no weight. `validate_weights(state,
 core, tqqq, qld, xlu, cash)` must run on the result before any dollar target
 or order; `WeightSanityError` = abort, do not trade, report.
+
+## State D gate — breadth OR gap200 → cash (APPLIED 2026-09-19, owner override)
+
+**The rule.** On a macro state-D day (QQQ above its 50d, 50d below its 200d,
+1% hysteresis — macro D never remaps under the fast overlay and nothing
+remaps to D), hold 100% BOXX instead of 100% QLD when EITHER
+- **breadth**: the 60-session log-change of QQEW/QQQ is in its trailing-252
+  bottom quintile (`breadth_tracker.breadth_reading(...)['pct'] < 0.20`,
+  the rule pre-registered 2026-09-11), OR
+- **gap200**: QQQ's close is less than 2% above its 200-day SMA
+  (`gaps[200] < 0.02`, the same gap the extension trim computes).
+
+Any flip of the gate is a regime change for `needs_rebalance()`. Constants
+`D_GATE_ENABLED / D_GATE_BREADTH_PCT / D_GATE_GAP200` in `state.py`;
+`d_gate_flags()` and `d_gate_active()`; `live_target_weights()` takes
+`breadth_pct` as a sixth REQUIRED argument and refuses None; the real
+harness `monthly_returns.simulate()` applies it by default (`d_gate=False`
+runs the pre-gate design; `d_substate_fresh.py`'s baseline is pinned that
+way). `consistency_check.py` `check_d_gate()` asserts all of it.
+
+**How it was chosen.** The owner asked (2026-09-19) whether two of the five
+D-day rules from the outside study could be combined, then to explore a
+tree of special cases. `paper-track/d_pair_test.py` pre-registered 41
+candidates (section "State D pairs and a tree of special cases" in Part II).
+Row #10, breadth OR gap200<2%, was the best pair by full-period and real
+daily Sharpe:
+
+| | live D (100% QLD) | breadth alone | **breadth OR gap200** |
+|---|---|---|---|
+| 26y proxy CAGR / Sharpe / MaxDD | 22.18% / 0.913 / −33.6% | 26.13% / 1.070 / −28.5% | 25.74% / 1.077 / −28.5% |
+| search-era Sharpe (2015-11+) | 1.103 | 1.332 | 1.410 |
+| holdout Sharpe (2007–2015) | 0.768 | **0.872** | 0.828 |
+| real daily CAGR / Sharpe / MaxDD | 29.66% / 1.145 / −32.9% | 36.09% / 1.395 / −24.7% | 37.75% / 1.484 / −19.4% |
+| flagged D days / episodes (proxy) | — | 124 / 40 | 240 / 82 |
+| SPY analogue S / H | — | +0.075 / +0.102 | +0.070 / −0.003 |
+
+Versus breadth alone: bootstrap P(≤0) 0.43 proxy / 0.11 real; drop the
+SPMO era −0.045; 20 bp cost −0.016 full-period; whole-grid permutation of
+"combination beats its best member in both eras" p = 0.186. The pair's
+extra over breadth is the 200d rule's three episodes (2025-03-03..07
++10.1 pp, 2018-10-18..23 +8.9, 2016-01-04..06 +8.7 real); its unique days
+lose −40 bp/day for QLD in 2015+ and MAKE +21 bp/day in 2007–2015.
+
+**Why it was applied anyway.** The owner weighed the SPMO-era evidence
+above the holdout: every one of the pair's five worst real drawdowns is
+under 20% (−19.4% Nov 2021–Jan 2023, −19.2% Feb–Apr 2025, −17.0% Sep–Oct
+2023, −16.5% Jan–Feb 2018, −16.3% Mar–Apr 2018, vs live −32.9 / −24.7 /
+−24.6 / −22.8 / −20.2), the improvement survives a one-session lag (39.0% /
+1.516 / −21.2%) and 20 bp, and against live it is unambiguous (bootstrap
+P 0.002). Year by year on real ETFs the gate wins 2016 (+17.3 pp), 2018,
+2019, 2025 (+9.2) and 2026 and gives back in 2015, 2023 (−5.2) and 2024
+(−14.2 vs breadth alone). **The research verdict was and remains "no pair
+adds to the breadth rule on its own terms"; the application is an owner
+decision recorded as such.** The breadth forward log (`data/dgate_forward_log.csv`)
+keeps running with the 200d gap in the note field, so the gate is judged on
+live D episodes that did not exist when it was found. What would argue for
+removing the gap200 half: gated-by-gap200-only D days whose next-session
+QLD return is positive on average over 8 or more live episodes; what would
+argue for removing the gate entirely: the same for all gated days.
+
+**Live effect today.** 2026-09-18 close: macro A, effective A, breadth pct
+0.784, 200d gap +8.9% — both flags off and the gate is inert outside D. In
+the past two years it would have fired on 21 D days: 2024-09-06 (gap200),
+2025-02-27..03-07 (gap200, the week that takes the 2025 drawdown from
+−24.7% to −19.2%), 2026-02-11..24 (breadth), 2026-03-06..19 (both) and
+2026-04-08 (both).
 
 ## Fast re-entry overlay, 20/100 (added 2026-09-06)
 
@@ -761,9 +859,13 @@ would defeat the purpose by making the signal-to-noise ratio worse.
   the short window excludes the 2000-02 and 2008-09 bears. Anything that only
   needs QQQ prices should be re-checked on the long series before it is
   believed — see "What was tried and rejected" for the full write-up.
-- **The real max drawdown is about -35% (proxy, 2000-2026) under the
-  2026-09-06 design (A=40/60, D=100% QLD, 20/100 fast re-entry overlay,
-  graded extension trim at step ⅓).**
+- **The real max drawdown is about -28.5% (proxy, 2000-2026) under the
+  2026-09-19 design (A=50/50, D=100% QLD gated to cash by breadth OR
+  gap200, 20/100 fast re-entry overlay, graded extension trim at step ⅓);
+  it was -33.6% before the D gate.** The gate's holdout-era Sharpe is
+  below the breadth-only rule's, so treat the drawdown improvement as
+  SPMO-era evidence applied by owner override, not as a stress-tested
+  floor.
   History of the figure, same proxy (`paper-track/long_history_backtest.py`,
   `drift_band_test.py`, `improvement_search.py`): live weights WITHOUT the
   vol overlay -69.6% (dot-com alone -67.2%); vol target 20% + 3% band
@@ -3381,7 +3483,7 @@ leaving the design alone and ranking execution discipline above any
 indicator: the design's timing value falls 10.6 → 8.0 → 6.6pp/yr at 0 → 1 → 2
 sessions of delay.
 
-### Breadth and rates as regime inputs — tested 2026-09-10, NOT applied
+### Breadth and rates as regime inputs — tested 2026-09-10, NOT applied (breadth rule APPLIED 2026-09-19 as half of the state-D gate, owner override — see Part I "State D gate")
 
 Prompted by an outside manager's 09-09 downgrade (breadth: 192 NASDAQ yearly
 lows vs 35 highs; rates: ~2/3 hike odds, rising 10y, oil at a May high). Two
@@ -3648,7 +3750,7 @@ not a cliff, (iii) the same sign on SPY or a stated Nasdaq-specific
 reason, (iv) whole-grid p < 0.05 and a log-return CI excluding zero,
 (v) real-instrument CAGR that does not fall — and the owner's decision.
 
-### State D pairs and a tree of special cases — tested 2026-09-19, NOT applied
+### State D pairs and a tree of special cases — tested 2026-09-19; research verdict negative; row #10 APPLIED the same day by owner override (Part I "State D gate")
 
 Owner asked whether two of the five D-day rules from the outside study
 (breadth QQEW/QQQ 60d bottom quintile; QQQ SMA20 ≥ SMA60; QQQ ≥ SMA100;
