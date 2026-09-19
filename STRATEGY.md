@@ -3877,6 +3877,33 @@ and the whole feasible range is 0.013.
 `substate_research.py` and `de_substate_search.py`). Not a forward-test
 candidate. Cumulative D/E candidates: 267 + 890 + 41 + 82.
 
+### State E outcomes: break vs reversal, what the market data said — explored 2026-09-19, descriptive only
+
+Owner asked whether the E episodes that broke to F look different at entry
+from the ones that reversed. `paper-track/e_outcome_explore.py`,
+`research_notes/e_outcome_explore.md`. 32 completed E episodes on the
+26-year QQQ history, 16 BREAK (exit F) / 16 REVERSAL (exit D/A); real era
+13 (5/8). 27 quantities × three timings (entry, 10-session approach, mean of
+E sessions 1–3): VIX level/pct/change, VXN and VXN−VIX, 2y/10y/3m levels,
+slopes and changes, QQEW/QQQ and RSP/SPY breadth, distance below the 50d and
+200d, the 50–200 spread and its change, drawdown from the 252-day high,
+prior return, realised vol and vol ratio, time in A, prior state, days since
+F, QQQ/SPY relative.
+
+**At entry the two futures are indistinguishable.** Over the 41 pre-entry
+columns the label-shuffle permutation of max |AUC−0.5| gives p = 0.70 (real
+max 0.21, null median 0.23, 95th 0.33); LOO logistic AUCs 0.51–0.55. VIX,
+VXN, rates, breadth levels, vol and regime history all sit at AUC 0.46–0.56.
+The only robust difference is the path INSIDE E: breaks are still falling on
+session 3 (entry→session-3 return −1.0% vs +0.6%, AUC 0.19, p 0.003) and end
+~5% lower over ~16 sessions vs ~7 — the outcome unfolding, not a
+precondition. The mechanical 50–200 spread sorts only the tails (2020-03
+reversed from a 10.6% spread; 2003-01 and 2008-06 broke from <0.1%), AUC
+0.41. Weak leanings (breadth approach AUC 0.71 on 22 episodes, entry depth
+0.36) are inside the multiple-comparison null. Power: single-feature MDE is
+|AUC−0.5| ≈ 0.20. **Nothing proposed**; consistent with the day-level E
+studies. Cumulative D/E candidates unchanged (this was descriptive).
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two

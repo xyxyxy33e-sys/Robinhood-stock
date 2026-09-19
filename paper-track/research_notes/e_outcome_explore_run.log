@@ -1,0 +1,256 @@
+e_outcome_explore -- state-E episodes split by exit (BREAK -> F vs REVERSAL -> D/A/B/C). DESCRIPTIVE ONLY.
+QQQ closes 1999-09-15..2026-09-04 (6784 sessions); states via state.compute_states (50/200, 1% buffer).
+Coverage: VIX 1990-01-02..2026-09-07; VXN 2001-02-02..; DGS2 1976-06-01..; DGS10 1962-01-02..; DGS3MO 1981-09-01..; QQEW breadth pct from 2007-07-27; RSP/SPY breadth pct from 2004-07-27; SPY 1999-09-15..2026-08-27
+
+======================================================================================================================
+1. E EPISODES: 32 completed (+0 ongoing): BREAK 16, REVERSAL 16
+======================================================================================================================
+  # start      end          n  prior exit  label     ret_in  post20  post60   VIX  brPct  spread%  flatX
+  0 2000-07-28 2000-08-04   6   A    D   REVERSAL    -1.9    13.9   -14.8  20.8     --     2.51     19
+  1 2000-08-10 2000-08-11   2   D    D   REVERSAL    -0.6     1.9    -9.5  19.2     --     2.85     15
+  2 2000-09-11 2000-09-21   9   A    F   BREAK       -7.8    -3.1   -27.2  18.4     --     1.16      9
+  3 2003-01-24 2003-02-11  13   F    F   BREAK       -5.3     0.3    15.0  31.5     --     0.09    115
+  4 2003-02-28 2003-03-12   9   F    A   REVERSAL    -2.2     5.1    24.3  29.6     --     0.02    102
+  5 2004-04-30 2004-05-04   3   D    D   REVERSAL    -1.1     3.3    -1.0  17.2     --     2.98     27
+  6 2004-05-10 2004-05-24  11   D    D   REVERSAL     1.3     5.3    -4.5  19.8     --     2.12     23
+  7 2004-07-13 2004-07-20   6   D    F   BREAK       -0.5    -6.1     0.5  14.5     --     0.20     26
+  8 2005-03-22 2005-04-25  24   D    F   BREAK       -3.3     7.0    11.5  14.3     --     1.92     26
+  9 2006-05-12 2006-06-13  22   D    F   BREAK       -8.6    -0.9     3.3  14.2     --     2.57     32
+ 10 2008-01-07 2008-01-31  18   D    F   BREAK       -6.8    -4.8     4.7  23.8   0.14     5.22     30
+ 11 2008-06-25 2008-07-07   8   F    F   BREAK       -4.1    -1.0   -13.3  21.1   0.36     0.07    137
+ 12 2010-06-07 2010-06-10   4   D    D   REVERSAL    -0.0    -1.0     2.1  36.6   0.10     6.79     26
+ 13 2010-06-29 2010-07-20  15   D    F   BREAK        0.3     0.2    11.6  34.1   0.09     3.54     12
+ 14 2011-06-17 2011-06-27   7   D    D   REVERSAL     2.2     7.9     0.2  21.9   0.92     4.81     23
+ 15 2011-08-04 2011-08-16   9   D    F   BREAK       -5.1     2.7     5.4  31.7   0.00     1.37     19
+ 16 2011-12-14 2011-12-30  12   D    D   REVERSAL     0.1     8.4    21.7  26.0   0.43     0.61     14
+ 17 2012-11-07 2012-12-12  25   D    F   BREAK        0.2     2.2     4.4  19.1   0.99     3.95     24
+ 18 2015-08-21 2015-09-29  27   D    F   BREAK       -7.1    13.7    13.2  28.0   0.29     3.01     25
+ 19 2016-01-07 2016-02-03  19   D    F   BREAK       -6.1     3.9     4.0  25.0   0.46     3.52     23
+ 20 2016-05-09 2016-05-23  11   F    D   REVERSAL     0.7     1.1    10.3  14.6   0.96     0.04     25
+ 21 2016-06-17 2016-06-22   4   A    D   REVERSAL    -0.7     5.5     9.4  19.4   0.94     0.61      8
+ 22 2016-06-24 2016-06-27   2   D    F   BREAK       -6.0    11.3    15.6  25.8   0.93     0.27      3
+ 23 2018-10-11 2018-10-11   1   D    D   REVERSAL    -1.2     2.9    -5.2  25.0   0.28     6.31     38
+ 24 2018-10-24 2018-11-06  10   D    D   REVERSAL    -1.7    -2.0     0.5  25.2   0.03     5.26     25
+ 25 2018-11-12 2018-11-30  14   D    F   BREAK       -1.3    -8.6     3.0  20.4   1.00     3.11     15
+ 26 2019-06-03 2019-06-04   2   D    D   REVERSAL     0.6     8.6     5.8  18.9   0.55     5.43     40
+ 27 2020-03-09 2020-03-09   1   D    D   REVERSAL    -6.9     1.5    22.3  54.5   0.09    11.08     35
+ 28 2020-03-11 2020-04-09  22   D    D   REVERSAL    -1.6    11.9    27.8  53.9   0.00    10.59     34
+ 29 2022-01-20 2022-02-28  27   D    F   BREAK       -5.4     5.2   -17.2  25.6   0.16     7.06     33
+ 30 2025-03-10 2025-04-11  25   D    F   BREAK       -7.6    11.8    22.2  27.9   0.99     5.34     27
+ 31 2026-03-20 2026-04-07  12   D    D   REVERSAL    -0.7    15.8    21.1  26.8   0.30     3.11     17
+  exit-state counts: {'D': 15, 'F': 16, 'A': 1}
+  prior-state counts: {'A': 3, 'D': 25, 'F': 4}
+  BREAK    n       n=16 mean   16.44 median   16.50  min    2.00 max   27.00
+  BREAK    ret_in  n=16 mean   -4.65 median   -5.35  min   -8.57 max    0.33
+  BREAK    post20  n=16 mean    2.12 median    1.25  min   -8.56 max   13.68
+  BREAK    post60  n=16 mean    3.54 median    4.53  min  -27.21 max   22.24
+  REVERSAL n       n=16 mean    7.31 median    6.50  min    1.00 max   22.00
+  REVERSAL ret_in  n=16 mean   -0.88 median   -0.74  min   -6.95 max    2.15
+  REVERSAL post20  n=16 mean    5.64 median    5.18  min   -1.97 max   15.80
+  REVERSAL post60  n=16 mean    6.90 median    3.95  min  -14.82 max   27.76
+  Real-instrument era (2015-11-01+): 13 episodes: BREAK 5, REVERSAL 8: 2016-01-07(B), 2016-05-09(R), 2016-06-17(R), 2016-06-24(B), 2018-10-11(R), 2018-10-24(R), 2018-11-12(B), 2019-06-03(R), 2020-03-09(R), 2020-03-11(R), 2022-01-20(B), 2025-03-10(B), 2026-03-20(R)
+  Note: post20/post60 are QQQ returns from the E exit close; for BREAKs the exit day is the first F day.
+
+======================================================================================================================
+2. FEATURES: 57 feature columns from 27 base quantities x (entry / approach10 / avg3)
+======================================================================================================================
+  n = 32 (16 BREAK / 16 REVERSAL). With nb=16, nr=16 the SE of an AUC near 0.5 is about 0.104, so the 5% two-sided minimum detectable |AUC-0.5| for a SINGLE pre-specified feature is about 0.20 (AUC about 0.70), and Cohen's d needs to be about 0.99 for 80% power at alpha 5%.
+  Bonferroni threshold for 57 features at family-wise 5%: p < 0.00088. With 57 correlated features the max |AUC-0.5| under the null is expected to exceed 0.2; see the permutation in section 3.
+  feature                          fam           nB nR     meanB     medB    meanR     medR     diff  Welch t     p_t    p_MW    AUC
+  below200_pct@avg3                price         16 16    -3.546   -3.776   -1.609   -1.198   -1.936    -3.67   0.001   0.001  0.148
+  QQEW_pct@approach10              breadth       11 11     0.109    0.119    0.000   -0.032    0.109     1.35   0.192   0.094  0.711
+  QQEW_x60@approach10              breadth       11 11     0.007    0.009   -0.002   -0.004    0.010     1.26   0.227   0.140  0.686
+  dd_from_252hi@avg3               price         16 14   -13.567  -11.663  -12.427   -9.269   -1.140    -0.42   0.680   0.096  0.321
+  below200_pct@entry               price         16 16    -2.614   -2.446   -1.841   -1.631   -0.772    -1.83   0.078   0.187  0.363
+  below50_pct@avg3                 price         16 16    -5.818   -6.200   -5.198   -4.307   -0.619    -0.56   0.582   0.243  0.379
+  since_last_F@entry               regime        16 16   285.750  242.500  202.750  210.500   83.000     1.07   0.294   0.258  0.617
+  spread50_200_pct@approach10      spread        16 16    -0.481   -0.582   -0.211    0.093   -0.270    -0.75   0.458   0.274  0.387
+  rvol30@approach10                realised_vol  16 16     0.713    1.348    4.114    1.967   -3.401    -1.64   0.115   0.291  0.391
+  spread_chg20@entry               spread        16 16    -0.616   -1.082   -0.062   -0.239   -0.553    -0.73   0.472   0.309  0.395
+  slope_10y3m@approach10           rates         16 16    -0.113   -0.090    0.005   -0.055   -0.118    -1.40   0.173   0.327  0.398
+  ret20_pre@entry                  price         16 16    -5.004   -4.673   -6.542   -6.148    1.538     1.02   0.317   0.327  0.602
+  VIX@approach10                   vol_implied   16 16     4.956    4.535    5.008    2.260   -0.053    -0.02   0.985   0.346  0.598
+  spread50_200_pct@avg3            spread        16 16     2.531    2.700    3.997    2.862   -1.466    -1.48   0.151   0.346  0.402
+  VIX_minus_m20@avg3               vol_implied   16 16     5.043    3.349    5.128    1.493   -0.085    -0.03   0.976   0.366  0.594
+  spread50_200_pct@entry           spread        16 16     2.651    2.790    4.070    3.044   -1.420    -1.42   0.169   0.366  0.406
+  RSP_x60@approach10               breadth       14 13     0.001   -0.000   -0.008   -0.009    0.008     1.34   0.191   0.409  0.593
+  QQEW_pct@entry                   breadth       11 11     0.492    0.355    0.419    0.304    0.073     0.44   0.666   0.470  0.591
+  RSP_pct@approach10               breadth       13 11     0.034   -0.008   -0.027   -0.060    0.061     0.69   0.499   0.469  0.587
+  rvol30@entry                     realised_vol  16 16    22.135   21.913   25.759   24.173   -3.623    -1.18   0.250   0.407  0.414
+  QQEW_pct@avg3                    breadth       11 11     0.512    0.396    0.436    0.315    0.077     0.49   0.628   0.533  0.579
+  rvol30@avg3                      realised_vol  16 16    22.464   22.561   26.225   24.312   -3.761    -1.16   0.259   0.498  0.430
+  RSP_pct@avg3                     breadth       13 11     0.421    0.394    0.368    0.325    0.053     0.38   0.711   0.582  0.566
+  VXN@approach10                   vol_implied   15 14     4.489    4.630    4.796    3.930   -0.306    -0.11   0.910   0.600  0.557
+  VIX_pct252@avg3                  vol_implied   16 16     0.731    0.877    0.648    0.651    0.083     0.73   0.470   0.585  0.557
+  RSP_pct@entry                    breadth       13 11     0.400    0.395    0.351    0.260    0.049     0.34   0.736   0.643  0.556
+  slope_10y2y@entry                rates         16 16     1.127    1.150    1.022    0.715    0.105     0.32   0.749   0.598  0.555
+  VIX_pct252@entry                 vol_implied   16 16     0.728    0.893    0.680    0.718    0.047     0.42   0.678   0.624  0.551
+  VIX_minus_m20@entry              vol_implied   16 16     4.432    3.466    5.336    3.414   -0.904    -0.37   0.714   0.651  0.547
+  slope_10y3m@entry                rates         16 16     1.568    1.700    1.406    1.110    0.163     0.37   0.713   0.651  0.547
+  VXN@entry                        vol_implied   15 14    27.241   28.110   31.021   27.835   -3.779    -1.15   0.264   0.694  0.457
+  VXN_minus_VIX@avg3               vol_implied   15 14     3.598    3.703    3.050    2.327    0.549     0.40   0.691   0.694  0.543
+  DGS2@approach10                  rates         16 16    -0.059   -0.080   -0.096   -0.040    0.037     0.40   0.691   0.692  0.459
+  VIX@entry                        vol_implied   16 16    23.457   24.390   26.829   23.415   -3.372    -1.00   0.329   0.706  0.461
+  VIX_chg5@entry                   vol_implied   16 16     4.343    4.065    4.880    3.000   -0.537    -0.25   0.803   0.706  0.539
+  QQQ_SPY_rel20@avg3               relative      16 16    -1.463   -1.770   -1.185   -1.623   -0.278    -0.32   0.752   0.706  0.461
+  VXN_minus_VIX@entry              vol_implied   15 14     3.447    2.910    3.218    2.600    0.229     0.18   0.859   0.743  0.536
+  volratio_10_30@entry             realised_vol  16 16     1.035    1.035    1.048    0.985   -0.013    -0.16   0.872   0.734  0.535
+  DGS2@entry                       rates         16 16     2.257    2.120    2.123    1.675    0.134     0.20   0.841   0.763  0.531
+  prior_is_D@entry                 regime        16 16     0.812    1.000    0.750    1.000    0.062     0.42   0.681   0.674  0.531
+  dd_from_252hi@approach10         price         15 14    -4.317   -4.038   -4.443   -3.413    0.126     0.10   0.922   0.793  0.471
+  below50_pct@entry                price         16 16    -5.031   -5.105   -5.504   -5.242    0.473     0.46   0.648   0.821  0.523
+  QQEW_x60@avg3                    breadth       11 11    -0.014   -0.016   -0.015   -0.011    0.001     0.11   0.912   0.870  0.521
+  volratio_10_30@avg3              realised_vol  16 16     1.036    1.046    1.069    0.993   -0.034    -0.43   0.672   0.851  0.480
+  QQQ_SPY_rel20@entry              relative      16 16    -1.380   -1.737   -1.167   -1.825   -0.213    -0.23   0.816   0.851  0.480
+  slope_10y2y@approach10           rates         16 16    -0.037   -0.020   -0.024   -0.010   -0.013    -0.33   0.746   0.880  0.484
+  DGS10_chg20@entry                rates         16 16    -0.097   -0.075   -0.123   -0.185    0.026     0.20   0.839   0.880  0.516
+  dd_from_252hi@entry              price         15 14   -12.168  -10.463  -12.603  -10.237    0.435     0.16   0.871   0.896  0.486
+  flat_sessions_to_cross@entry     spread        16 16    34.750   25.500   29.438   25.000    5.312     0.50   0.622   0.895  0.486
+  A_days_prior120@entry            regime        16 16    59.000   65.500   57.625   72.500    1.375     0.11   0.914   0.910  0.488
+  RSP_x60@avg3                     breadth       14 13    -0.004    0.002   -0.005   -0.005    0.001     0.12   0.906   0.923  0.489
+  VXN@avg3                         vol_implied   15 14    28.392   28.053   30.925   27.760   -2.533    -0.68   0.504   0.930  0.490
+  VXN_minus_VIX@approach10         vol_implied   15 14    -0.672   -1.230   -0.849   -0.125    0.177     0.20   0.841   0.930  0.490
+  DGS2_chg20@entry                 rates         16 16    -0.050   -0.065   -0.089   -0.080    0.039     0.30   0.770   0.955  0.506
+  RSP_x60@entry                    breadth       14 13    -0.004   -0.003   -0.005   -0.007    0.001     0.16   0.877   0.961  0.505
+  QQEW_x60@entry                   breadth       11 11    -0.015   -0.015   -0.016   -0.015    0.001     0.11   0.915   0.974  0.496
+  VIX@avg3                         vol_implied   16 16    24.396   24.626   26.865   22.623   -2.469    -0.64   0.529   0.970  0.496
+  features with p_t<0.05: 1/57; p_MW<0.05: 1/57; under Bonferroni (0.00088): 1; expected false positives at 5% if all null and independent: 2.9
+  features with |AUC-0.5| > 0.20: 2; > 0.25: 1
+
+  Real-era subset (2015-11-01+), AUC of the top-10 full-history features on the subset (n=13):
+    below200_pct@avg3                full AUC 0.148 -> real-era AUC  0.150 (nB=5, nR=8)
+    QQEW_pct@approach10              full AUC 0.711 -> real-era AUC  0.775 (nB=5, nR=8)
+    QQEW_x60@approach10              full AUC 0.686 -> real-era AUC  0.875 (nB=5, nR=8)
+    dd_from_252hi@avg3               full AUC 0.321 -> real-era AUC  0.300 (nB=5, nR=8)
+    below200_pct@entry               full AUC 0.363 -> real-era AUC  0.250 (nB=5, nR=8)
+    below50_pct@avg3                 full AUC 0.379 -> real-era AUC  0.375 (nB=5, nR=8)
+    since_last_F@entry               full AUC 0.617 -> real-era AUC  0.650 (nB=5, nR=8)
+    spread50_200_pct@approach10      full AUC 0.387 -> real-era AUC  0.275 (nB=5, nR=8)
+    rvol30@approach10                full AUC 0.391 -> real-era AUC  0.375 (nB=5, nR=8)
+    spread_chg20@entry               full AUC 0.395 -> real-era AUC  0.250 (nB=5, nR=8)
+
+  CAVEAT on @avg3 features: they average sessions 1-3 of the episode, so they contain the price PATH inside E (and are
+  truncated for 1-2 session episodes). They are NOT available at entry. Checks:
+    episodes shorter than 3 sessions: 5 (1 BREAK, 4 REVERSAL)
+    below200_pct@avg3            on episodes with n>=3 only: AUC 0.167 p_MW 0.003 (nB=15, nR=12)
+    below200_pct@entry           on episodes with n>=3 only: AUC 0.367 p_MW 0.242 (nB=15, nR=12)
+    dd_from_252hi@avg3           on episodes with n>=3 only: AUC 0.297 p_MW 0.082 (nB=15, nR=11)
+    QQQ return from entry close to session 3 of E: BREAK mean -1.48% median -0.99% | REVERSAL mean 0.58% median 0.63% | AUC 0.188 p_MW 0.003
+    same, n>=3 episodes only: AUC 0.228 p_MW 0.017 (nB=15, nR=12)
+    below200_pct on session 3 alone, n>=3 episodes: BREAK median -3.38% REVERSAL median -1.90% AUC 0.183 p_MW 0.005
+
+======================================================================================================================
+3. PERMUTATION: shuffle the 32 labels 2000x, max |AUC-0.5| over all 57 features
+======================================================================================================================
+  real max |AUC-0.5| = 0.352 (below200_pct@avg3, AUC 0.148)
+  null max |AUC-0.5|: median 0.242, 90th 0.316, 95th 0.338, 99th 0.383; share of shuffles with max > 0.20: 0.807
+  permutation p (share of shuffles whose max >= real max) = 0.032
+  PRE-ENTRY features only (41 columns: @entry and @approach10): real max |AUC-0.5| = 0.211 (QQEW_pct@approach10, AUC 0.711, nB=11, nR=11)
+    null max: median 0.234, 90th 0.309, 95th 0.332, 99th 0.380; permutation p = 0.701
+  count of features with p_MW<0.05: real 1; null (500 shuffles) median 2, 95th 8, p = 0.714
+
+======================================================================================================================
+4. LEAVE-ONE-EPISODE-OUT LOGISTIC (ridge 0.5 on standardised slopes)
+======================================================================================================================
+  best single (full coverage): below200_pct@avg3 (AUC 0.148, p_MW 0.001)
+  second (different family, full coverage, |corr| with best < 0.6): since_last_F@entry (AUC 0.617, p_MW 0.258); corr = -0.23
+  single: below200_pct@avg3                                              in-sample AUC 0.852  LOO AUC 0.797  (n=32; weights ['0.09', '-1.35'])
+  single: since_last_F@entry                                             in-sample AUC 0.617  LOO AUC 0.418  (n=32; weights ['0.00', '0.37'])
+  pair: below200_pct@avg3 + since_last_F@entry                           in-sample AUC 0.836  LOO AUC 0.793  (n=32; weights ['0.09', '-1.32', '0.21'])
+  best PRE-ENTRY single with full coverage: below200_pct@entry (AUC 0.363); second: since_last_F@entry (AUC 0.617); corr -0.15
+  pre-entry single: below200_pct@entry                                   in-sample AUC 0.637  LOO AUC 0.512  (n=32; weights ['0.01', '-0.63'])
+  pre-entry pair: below200_pct@entry + since_last_F@entry                in-sample AUC 0.660  LOO AUC 0.512  (n=32; weights ['0.02', '-0.61', '0.32'])
+  single: QQEW_pct@approach10 (2007-07+ episodes)                        in-sample AUC 0.711  LOO AUC 0.545  (n=22)
+  (LOO AUC of a near-null feature can fall far below 0.5: leaving out a positive lowers the fitted intercept for that
+   fold, which is the known negative bias of pooled LOO-AUC. Treat LOO AUCs below 0.5 as 'no signal', not as inverse signal.)
+  mechanical single: spread50_200_pct@entry                              in-sample AUC 0.594  LOO AUC 0.500  (n=32)
+  mechanical single: flat_sessions_to_cross@entry                        in-sample AUC 0.486  LOO AUC 0.000  (n=32)
+  mechanical single: spread_chg20@entry                                  in-sample AUC 0.605  LOO AUC 0.398  (n=32)
+  pair: spread50_200_pct@entry + below200_pct@avg3                       in-sample AUC 0.867  LOO AUC 0.809  (n=32)
+  (LOO on the real-era subset alone is not run: 13 episodes with 5 breaks cannot support a fitted model.)
+
+======================================================================================================================
+5. NARRATIVE TABLES
+======================================================================================================================
+  BREAK episodes (16):
+  2000-09-11..2000-09-21 ( 9d, prior A, exit F): VIX  18.4 (pct 0.06) VXN    -- | QQEW pct   -- RSP pct   -- | 10y-2y -0.35 | spread  1.16% chg20 -1.58 flatX   9 | dd252    --% ret20   1.9% rvol30   32 A120  37 | in-E  -7.8% then +20d  -3.1% +60d -27.2%
+  2003-01-24..2003-02-11 (13d, prior F, exit F): VIX  31.5 (pct 0.73) VXN  39.8 | QQEW pct   -- RSP pct   -- | 10y-2y  2.28 | spread  0.09% chg20  5.88 flatX 115 | dd252 -36.4% ret20  -2.1% rvol30   32 A120   0 | in-E  -5.3% then +20d   0.3% +60d  15.0%
+  2004-07-13..2004-07-20 ( 6d, prior D, exit F): VIX  14.5 (pct 0.03) VXN  21.4 | QQEW pct   -- RSP pct   -- | 10y-2y  1.92 | spread  0.20% chg20 -0.79 flatX  26 | dd252  -7.9% ret20  -2.1% rvol30   16 A120  69 | in-E  -0.5% then +20d  -6.1% +60d   0.5%
+  2005-03-22..2005-04-25 (24d, prior D, exit F): VIX  14.3 (pct 0.45) VXN  18.0 | QQEW pct   -- RSP pct 0.03 | 10y-2y  0.77 | spread  1.92% chg20 -3.03 flatX  26 | dd252 -10.7% ret20  -2.1% rvol30   14 A120  39 | in-E  -3.3% then +20d   7.0% +60d  11.5%
+  2006-05-12..2006-06-13 (22d, prior D, exit F): VIX  14.2 (pct 0.91) VXN  17.1 | QQEW pct   -- RSP pct 0.20 | 10y-2y  0.18 | spread  2.57% chg20 -0.05 flatX  32 | dd252  -7.0% ret20  -4.5% rvol30   13 A120  82 | in-E  -8.6% then +20d  -0.9% +60d   3.3%
+  2008-01-07..2008-01-31 (18d, prior D, exit F): VIX  23.8 (pct 0.83) VXN  29.4 | QQEW pct 0.14 RSP pct 0.12 | 10y-2y  1.10 | spread  5.22% chg20 -2.45 flatX  30 | dd252 -12.5% ret20  -7.9% rvol30   25 A120  68 | in-E  -6.8% then +20d  -4.8% +60d   4.7%
+  2008-06-25..2008-07-07 ( 8d, prior F, exit F): VIX  21.1 (pct 0.39) VXN  26.4 | QQEW pct 0.36 RSP pct 0.71 | 10y-2y  1.30 | spread  0.07% chg20  3.10 flatX 137 | dd252 -13.6% ret20  -3.4% rvol30   21 A120   0 | in-E  -4.1% then +20d  -1.0% +60d -13.3%
+  2010-06-29..2010-07-20 (15d, prior D, exit F): VIX  34.1 (pct 0.96) VXN  35.0 | QQEW pct 0.09 RSP pct 0.11 | 10y-2y  2.36 | spread  3.54% chg20 -3.84 flatX  12 | dd252 -14.2% ret20  -4.0% rvol30   28 A120  58 | in-E   0.3% then +20d   0.2% +60d  11.6%
+  2011-08-04..2011-08-16 ( 9d, prior D, exit F): VIX  31.7 (pct 1.00) VXN  31.7 | QQEW pct 0.00 RSP pct 0.00 | 10y-2y  2.20 | spread  1.37% chg20 -1.56 flatX  19 | dd252  -9.1% ret20  -8.5% rvol30   24 A120  65 | in-E  -5.1% then +20d   2.7% +60d   5.4%
+  2012-11-07..2012-12-12 (25d, prior D, exit F): VIX  19.1 (pct 0.62) VXN  20.4 | QQEW pct 0.99 RSP pct 0.98 | 10y-2y  1.41 | spread  3.95% chg20 -1.40 flatX  24 | dd252  -8.8% ret20  -6.1% rvol30   15 A120  66 | in-E   0.2% then +20d   2.2% +60d   4.4%
+  2015-08-21..2015-09-29 (27d, prior D, exit F): VIX  28.0 (pct 1.00) VXN  30.2 | QQEW pct 0.29 RSP pct 0.39 | 10y-2y  1.41 | spread  3.01% chg20 -0.76 flatX  25 | dd252 -10.2% ret20  -7.8% rvol30   20 A120 109 | in-E  -7.1% then +20d  13.7% +60d  13.2%
+  2016-01-07..2016-02-03 (19d, prior D, exit F): VIX  25.0 (pct 0.94) VXN  26.8 | QQEW pct 0.46 RSP pct 0.09 | 10y-2y  1.20 | spread  3.52% chg20  1.68 flatX  23 | dd252  -8.9% ret20  -8.5% rvol30   20 A120  48 | in-E  -6.1% then +20d   3.9% +60d   4.0%
+  2016-06-24..2016-06-27 ( 2d, prior D, exit F): VIX  25.8 (pct 0.91) VXN  24.9 | QQEW pct 0.93 RSP pct 0.70 | 10y-2y  0.93 | spread  0.27% chg20 -0.34 flatX   3 | dd252  -9.4% ret20  -4.8% rvol30   17 A120  16 | in-E  -6.0% then +20d  11.3% +60d  15.6%
+  2018-11-12..2018-11-30 (14d, prior D, exit F): VIX  20.4 (pct 0.88) VXN  28.1 | QQEW pct 1.00 RSP pct 0.50 | 10y-2y  0.25 | spread  3.11% chg20 -2.86 flatX  15 | dd252 -10.9% ret20  -3.4% rvol30   33 A120  94 | in-E  -1.3% then +20d  -8.6% +60d   3.0%
+  2022-01-20..2022-02-28 (27d, prior D, exit F): VIX  25.6 (pct 0.93) VXN  30.6 | QQEW pct 0.16 RSP pct 0.49 | 10y-2y  0.75 | spread  7.06% chg20 -0.49 flatX  33 | dd252 -10.5% ret20  -7.1% rvol30   22 A120  87 | in-E  -5.4% then +20d   5.2% +60d -17.2%
+  2025-03-10..2025-04-11 (25d, prior D, exit F): VIX  27.9 (pct 0.99) VXN  28.8 | QQEW pct 0.99 RSP pct 0.89 | 10y-2y  0.33 | spread  5.34% chg20 -1.37 flatX  27 | dd252 -12.4% ret20  -9.6% rvol30   23 A120 106 | in-E  -7.6% then +20d  11.8% +60d  22.2%
+
+  REVERSAL episodes with the largest post-exit 60-session QQQ gain (top 8 of 16):
+  2020-03-11..2020-04-09 (22d, prior D, exit D): VIX  53.9 (pct 0.99) VXN  50.7 | QQEW pct 0.00 RSP pct 0.00 | 10y-2y  0.32 | spread 10.59% chg20  2.07 flatX  34 | dd252 -17.6% ret20 -15.9% rvol30   44 A120  99 | in-E  -1.6% then +20d  11.9% +60d  27.8%
+  2003-02-28..2003-03-12 ( 9d, prior F, exit A): VIX  29.6 (pct 0.57) VXN  40.3 | QQEW pct   -- RSP pct   -- | 10y-2y  2.18 | spread  0.02% chg20 -0.52 flatX 102 | dd252 -34.9% ret20   2.5% rvol30   26 A120   0 | in-E  -2.2% then +20d   5.1% +60d  24.3%
+  2020-03-09..2020-03-09 ( 1d, prior D, exit D): VIX  54.5 (pct 1.00) VXN  53.7 | QQEW pct 0.09 RSP pct 0.00 | 10y-2y  0.16 | spread 11.08% chg20  2.74 flatX  35 | dd252 -18.3% ret20 -15.5% rvol30   40 A120 101 | in-E  -6.9% then +20d   1.5% +60d  22.3%
+  2011-12-14..2011-12-30 (12d, prior D, exit D): VIX  26.0 (pct 0.64) VXN  26.1 | QQEW pct 0.43 RSP pct 0.26 | 10y-2y  1.67 | spread  0.61% chg20  1.24 flatX  14 | dd252  -7.9% ret20  -5.6% rvol30   26 A120  24 | in-E   0.1% then +20d   8.4% +60d  21.7%
+  2026-03-20..2026-04-07 (12d, prior D, exit D): VIX  26.8 (pct 0.93) VXN  29.2 | QQEW pct 0.30 RSP pct 0.88 | 10y-2y  0.51 | spread  3.11% chg20 -2.36 flatX  17 | dd252  -8.4% ret20  -4.4% rvol30   17 A120  75 | in-E  -0.7% then +20d  15.8% +60d  21.1%
+  2016-05-09..2016-05-23 (11d, prior F, exit D): VIX  14.6 (pct 0.33) VXN  17.4 | QQEW pct 0.96 RSP pct 0.96 | 10y-2y  1.05 | spread  0.04% chg20  2.87 flatX  25 | dd252  -8.1% ret20  -2.5% rvol30   13 A120  24 | in-E   0.7% then +20d   1.1% +60d  10.3%
+  2016-06-17..2016-06-22 ( 4d, prior A, exit D): VIX  19.4 (pct 0.69) VXN  20.2 | QQEW pct 0.94 RSP pct 0.77 | 10y-2y  0.92 | spread  0.61% chg20  0.19 flatX   8 | dd252  -7.5% ret20   1.1% rvol30   12 A120  18 | in-E  -0.7% then +20d   5.5% +60d   9.4%
+  2019-06-03..2019-06-04 ( 2d, prior D, exit D): VIX  18.9 (pct 0.74) VXN  24.2 | QQEW pct 0.55 RSP pct 0.42 | 10y-2y  0.25 | spread  5.43% chg20  1.66 flatX  40 | dd252 -10.9% ret20 -10.9% rvol30   18 A120  28 | in-E   0.6% then +20d   8.6% +60d   5.8%
+
+  REVERSAL episodes with the SMALLEST post-exit 60-session gain (bottom 4, for contrast):
+  2004-05-10..2004-05-24 (11d, prior D, exit D): VIX  19.8 (pct 0.81) VXN  27.9 | QQEW pct   -- RSP pct   -- | 10y-2y  2.20 | spread  2.12% chg20 -2.17 flatX  23 | dd252 -10.2% ret20  -6.7% rvol30   22 A120  71 | in-E   1.3% then +20d   5.3% +60d  -4.5%
+  2018-10-11..2018-10-11 ( 1d, prior D, exit D): VIX  25.0 (pct 0.97) VXN  27.8 | QQEW pct 0.28 RSP pct 0.09 | 10y-2y  0.29 | spread  6.31% chg20 -0.07 flatX  38 | dd252  -9.2% ret20  -8.1% rvol30   17 A120 106 | in-E  -1.2% then +20d   2.9% +60d  -5.2%
+  2000-08-10..2000-08-11 ( 2d, prior D, exit D): VIX  19.2 (pct 0.03) VXN    -- | QQEW pct   -- RSP pct   -- | 10y-2y -0.40 | spread  2.85% chg20  0.77 flatX  15 | dd252    --% ret20  -8.8% rvol30   40 A120  21 | in-E  -0.6% then +20d   1.9% +60d  -9.5%
+  2000-07-28..2000-08-04 ( 6d, prior A, exit D): VIX  20.8 (pct 0.14) VXN    -- | QQEW pct   -- RSP pct   -- | 10y-2y -0.26 | spread  2.51% chg20 -0.41 flatX  19 | dd252    --% ret20  -5.2% rvol30   41 A120  21 | in-E  -1.9% then +20d  13.9% +60d -14.8%
+
+======================================================================================================================
+6. THE MECHANICAL SPREAD POINT
+======================================================================================================================
+  F is DEFINED by the 50d crossing below the 200d. So the 50d-200d spread at E entry, and the rate at which it is
+  closing, are near-tautological predictors of BREAK: a narrow, shrinking spread simply needs fewer down sessions to cross.
+  BREAK    n=16  spread% at entry: mean  2.65 median  2.79 min  0.07 max  7.06 | 20-session spread change: mean -0.62 median -1.08 | flat-price sessions to cross: median   26 (min 3, max 137) | episode length median   16
+  REVERSAL n=16  spread% at entry: mean  4.07 median  3.04 min  0.02 max 11.08 | 20-session spread change: mean -0.06 median -0.24 | flat-price sessions to cross: median   25 (min 8, max 102) | episode length median    6
+  Per BREAK episode: spread at entry, sessions to cross if price flatlined at the entry close, actual E length, and the
+  spread's own approach rate (20-session change / 20) -> sessions to close at that rate:
+    2000-09-11 spread  1.16%  flat-cross   9  actual   9  approach rate  0.079%/session ->   14.7 sessions at that rate
+    2003-01-24 spread  0.09%  flat-cross 115  actual  13  approach rate     --%/session ->     -- sessions at that rate
+    2004-07-13 spread  0.20%  flat-cross  26  actual   6  approach rate  0.039%/session ->    5.2 sessions at that rate
+    2005-03-22 spread  1.92%  flat-cross  26  actual  24  approach rate  0.152%/session ->   12.7 sessions at that rate
+    2006-05-12 spread  2.57%  flat-cross  32  actual  22  approach rate  0.003%/session -> 1012.0 sessions at that rate
+    2008-01-07 spread  5.22%  flat-cross  30  actual  18  approach rate  0.122%/session ->   42.7 sessions at that rate
+    2008-06-25 spread  0.07%  flat-cross 137  actual   8  approach rate     --%/session ->     -- sessions at that rate
+    2010-06-29 spread  3.54%  flat-cross  12  actual  15  approach rate  0.192%/session ->   18.4 sessions at that rate
+    2011-08-04 spread  1.37%  flat-cross  19  actual   9  approach rate  0.078%/session ->   17.5 sessions at that rate
+    2012-11-07 spread  3.95%  flat-cross  24  actual  25  approach rate  0.070%/session ->   56.5 sessions at that rate
+    2015-08-21 spread  3.01%  flat-cross  25  actual  27  approach rate  0.038%/session ->   79.3 sessions at that rate
+    2016-01-07 spread  3.52%  flat-cross  23  actual  19  approach rate     --%/session ->     -- sessions at that rate
+    2016-06-24 spread  0.27%  flat-cross   3  actual   2  approach rate  0.017%/session ->   15.8 sessions at that rate
+    2018-11-12 spread  3.11%  flat-cross  15  actual  14  approach rate  0.143%/session ->   21.7 sessions at that rate
+    2022-01-20 spread  7.06%  flat-cross  33  actual  27  approach rate  0.024%/session ->  289.7 sessions at that rate
+    2025-03-10 spread  5.34%  flat-cross  27  actual  25  approach rate  0.069%/session ->   77.7 sessions at that rate
+  spread@entry AUC for BREAK = 0.406 (p_MW 0.366) -- AUC < 0.5 means NARROWER spread -> more BREAKs; flat-cross sessions AUC = 0.486 (p_MW 0.895)
+  split at the median spread (2.99%): spread <= median -> 8/16 BREAK (50%); spread > median -> 8/16 BREAK (50%)
+  spread <= 2%: 7/11 BREAK; spread > 2%: 9/21 BREAK
+  spread <= 3%: 8/16 BREAK; spread > 3%: 8/16 BREAK
+  spread <= 4%: 13/22 BREAK; spread > 4%: 3/10 BREAK
+  spread <= 5%: 13/23 BREAK; spread > 5%: 3/9 BREAK
+  flat-cross <= 20 sessions: 5/10 BREAK; > 20: 11/22 BREAK
+  flat-cross <= 40 sessions: 14/29 BREAK; > 40: 2/3 BREAK
+  flat-cross <= 60 sessions: 14/29 BREAK; > 60: 2/3 BREAK
+  Correlation (Pearson, over episodes) of the top non-spread features with spread@entry -- a feature that merely
+  tracks the spread adds nothing beyond the mechanical point:
+    below200_pct@avg3                AUC 0.148  corr with spread  -0.11
+    QQEW_pct@approach10              AUC 0.711  corr with spread  -0.11
+    QQEW_x60@approach10              AUC 0.686  corr with spread  -0.05
+    dd_from_252hi@avg3               AUC 0.321  corr with spread   0.05
+    below200_pct@entry               AUC 0.363  corr with spread  -0.06
+    below50_pct@avg3                 AUC 0.379  corr with spread  -0.85
+    since_last_F@entry               AUC 0.617  corr with spread   0.52
+    rvol30@approach10                AUC 0.391  corr with spread   0.70
+
+======================================================================================================================
+7. WHAT THIS DOES AND DOES NOT IMPLY -- see the note. No rule is proposed; n = 32 (16 breaks) is the binding constraint.
+======================================================================================================================
