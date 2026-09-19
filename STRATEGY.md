@@ -3558,6 +3558,62 @@ correlation 0.998, COVID-only (+0.357 alone, +0.004 dropped), +10
 rebalances/yr, −2.7pp/yr in recoveries. Nine candidates, zero survivors;
 the single-index 30d QQQ estimator stands. Cumulative candidates: 267.
 
+### State D sub-state, fresh search — tested 2026-09-19, NOT applied
+
+Owner asked for a third look at splitting state D, "start fresh, ignore the
+previous finding, test various DMA lines and other concepts"
+(`paper-track/d_substate_fresh.py`, `research_notes/d_substate_fresh.md`,
+full log `d_substate_fresh_run.log`). The grid was built to find something:
+**890 candidates** — 61 a-priori binary rules (price vs 10/20/30/100/150d
+SMA, gap buckets, SMA slopes 20/50/100/200 over 5/10/20 sessions, 20/50,
+20/100, 50/100 crossovers, the live fast 20/100 read, EMA variants, episode
+age, depth vs 50d/200d, realised-vol regime, 252d drawdown, RSI(14), down
+streaks, 20/60d momentum, range expansion, QQQ/SPY relative strength, 3m
+T-bill change, VIX level/percentile/change) × rule-true/rule-false × five
+actions (D → cash, 100% SPMO, 50% QLD/50% cash, 50% QLD/50% XLU, and the
+A row 50/50 — the upside direction), plus 28 two-rule AND/OR pairs. Both
+harnesses: 26y proxy (standing 22.18/0.913/−33.6 reproduced) and real
+DAILY instruments 2015-11..2026-09 (29.66%/1.145/−32.9%, asserted equal
+to `monthly_returns.simulate` day by day).
+
+**Result: negative.** 278 of 890 pass "Sharpe up in both eras", but that
+number is empty — the XLU action passes on almost any split because the
+flat row "D → 50% QLD/50% XLU every day" is itself +0.111/+0.029 (a row
+change rejected on isolated validation in August, not a sub-state), and
+the A-row action is a flat +0.016 both eras on ~every split (a leverage
+dial, no timing content; its whole column's permutation null 95th is
++0.017). **Whole-grid max-statistic permutation (200 circular shifts of the
+D-day flags): null best-of-890 full-Sharpe gain median +0.101, 95th
++0.165; best real candidate #335 "D and EMA20 still above EMA50 → cash"
++0.157, p = 0.070; both-era statistic +0.127 vs null 95th +0.132,
+p = 0.050. Zero of 890 clear 0.05.** #335 run through the survivor
+diagnostics anyway: exposure/beta controls and leave-one-regime-out pass
+(+0.13..+0.18), but the threshold is a cliff (±1% on the EMA cross →
+−0.05..−0.08; the SMA20/50 analogue −0.008), the next-day profile is
+U-shaped not monotonic (quintiles +39/+52/−30/−6/+31 bp), **the same rule
+on an SPY core reverses sign** (dS_S −0.100, dS_H −0.188), the log-return
+bootstrap spans zero (P 0.19), and real weekly CAGR falls 31.35% → 29.10%.
+Its money is 25 D→E episodes (+110.6pp) against 63 D→A episodes
+(−65.5pp), 2003 alone −22.2pp.
+
+Two things learned that are worth more than the verdict: (1) **D's losing
+days are the fresh break, not the deep one** — every "pullback has
+deteriorated" flag (gap50 < −6%, dd252 < −10%, RSI < 30, EMA20 < EMA50,
+fast read E/F) marks D days on which the QLD leg does *well* (+44 to
++276 bp/day); the negatives sit on the first sessions after the 50d break.
+"Deteriorating → de-risk" has the sign backwards, and the only splits that
+gain amount to selling the first days of every D episode — the behaviour
+the fast re-entry overlay exists to avoid. (2) **No D half wants more
+leverage than QLD** (best A-row split +0.019/+0.016 at 22.71%/0.930).
+
+**D stays 100% QLD.** Third independent negative on this question, from a
+different direction than the first two. Cumulative candidates: 267 + 890.
+Adoption of anything here would need (i) a pre-registered rule confirmed
+on live D episodes that did not exist when it was found, (ii) a plateau
+not a cliff, (iii) the same sign on SPY or a stated Nasdaq-specific
+reason, (iv) whole-grid p < 0.05 and a log-return CI excluding zero,
+(v) real-instrument CAGR that does not fall — and the owner's decision.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
