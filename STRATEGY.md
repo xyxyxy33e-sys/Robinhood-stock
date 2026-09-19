@@ -3800,6 +3800,34 @@ test unchanged.** No pair or tree adds to the single breadth rule on its own
 terms. Cumulative candidates: 267 + 890 + 41 (+21 controls, 8 post-hoc
 sizing variants reported outside the permutation).
 
+### State E pairs and unions — tested 2026-09-19, NOT applied
+
+Owner asked for the D pair test to be repeated on state E. `paper-track/
+e_pair_test.py`, write-up `research_notes/e_pair_test.md`. Baseline = the
+CURRENT live design with the D gate (proxy 25.74%/1.077/−28.5%, real daily
+37.75%/1.484/−19.4%, both asserted). 82 pre-registered candidates: the five
+D-study rules (gap200 re-thresholded to "more than 2% BELOW the 200d", since
+every E day is below it) as singles, AND/OR pairs and unions, × two action
+families — CASH (flagged E day → 100% BOXX) and RISK (unflagged E day →
+100% SPMO) — plus 22 constant-E controls. No rule was degenerate; the full
+grid ran.
+
+**Result: nothing.** The entire constant-E ladder (all cash → all XLU → all
+SPMO on every E day) spans 0.013 of full-period Sharpe, which is the ceiling
+on any E-row rule; live 50% XLU sits within 0.003 of the best point. Best
+candidate (CASH: SMA20≥SMA60 OR volratio>1.5) is +0.011 vs live, bootstrap
+P(≤0) 0.11 proxy / 0.20 real, lifetime gain +5.8 pp of which +4.8 is
+Aug–Sep 2015. Whole-grid permutation: full-period p 0.495, both-era p 0.259,
+combination-over-best-member p 0.383 / 0.712. The RISK family deepens the
+proxy drawdown to −33/−34% and the real one to −23.9% and loses the holdout
+(breadth OR gap200<−2%: −0.049; LORO negative in every drop). Power: 32
+proxy / 13 real E episodes; an effect under ±0.02 Sharpe cannot be resolved,
+and the whole feasible range is 0.013.
+
+**E stays 50% XLU / 50% BOXX.** Third negative on E substates (after
+`substate_research.py` and `de_substate_search.py`). Not a forward-test
+candidate. Cumulative D/E candidates: 267 + 890 + 41 + 82.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
