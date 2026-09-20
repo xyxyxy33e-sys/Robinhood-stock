@@ -364,6 +364,57 @@ def stage_perm():
         log(f"  {nm:<46} null median {pct(null,0.5):+.3f}  95th {pct(null,0.95):+.3f}  max {max(null):+.3f} | "
             f"real {rl:+.3f} -> p = {p:.3f}")
 
+
+# ---------------------------------------------------------------- paired permutation (common day map)
+def _pw2(seed):
+    """PAIRED null: ONE random bijection on A-days, applied to EVERY rule set's label vector.
+    This keeps the joint structure across rule sets (a day that is 3-vote under RULES3 keeps whatever
+    the 2-rule sets said about the SAME donor day), so the arm and the base see the same draw --
+    the way the 2026-09-20 step study's permutation was paired within one rule set."""
+    rnd = random.Random(seed)
+    donors = list(_DS); rnd.shuffle(donors)
+    m = dict(zip(_DS, donors))
+    sv = {rs: {d: VQ[rs][m[d]] for d in _DS} for rs in RULESETS}
+    base = evaluate_full(pfn(LIVE_STEP, sv['3 rules LIVE']))[0]
+    out = {}
+    for lab, rs, st in MENU:
+        ev = evaluate_full(pfn(st, sv[rs]))[0]
+        out[lab] = (ev['sharpe'] - base['sharpe'],
+                    min(ev['s_sharpe'] - base['s_sharpe'], ev['h_sharpe'] - base['h_sharpe']))
+    return out
+
+def stage_perm2():
+    import multiprocessing as mp
+    L = RES['LIVE   3 rules, 1/3']
+    log("\n" + "=" * 124)
+    log(f"7b  PERMUTATION, PAIRED VARIANT, {N_PERM} draws: ONE day-map applied to every rule set (see _pw2 docstring).")
+    log("=" * 124)
+    log("  Stage 7 shuffled each rule set's labels INDEPENDENTLY, which decorrelates the arm from its base and")
+    log("  widens the null (95th +0.155 vs the +0.074 the 3-rule-only study saw). This variant restores the pairing.")
+    real = {}
+    for lab, rs, st in MENU:
+        ev, _ = peval(st, VQ[rs])
+        real[lab] = (ev['sharpe'] - L['ev']['sharpe'],
+                     min(ev['s_sharpe'] - L['ev']['s_sharpe'], ev['h_sharpe'] - L['ev']['h_sharpe']))
+    t = time.time()
+    with mp.Pool(N_PROCS) as pool:
+        res = pool.map(_pw2, [SEED + 5000 + i for i in range(N_PERM)])
+    log(f"  {N_PERM} draws in {time.time()-t:.0f}s")
+    def pct(v, q):
+        s = sorted(v); return s[min(len(s) - 1, int(q * len(s)))]
+    C2 = '2 rules 10/15 x 0.5'; C3 = '3 rules LIVE x 0.5'
+    tests = [('(a) SINGLE pre-specified C2, full-period', [r[C2][0] for r in res], real[C2][0]),
+             ('(a) SINGLE pre-specified C2, both-era min', [r[C2][1] for r in res], real[C2][1]),
+             ('    (reference) SINGLE C3, full-period', [r[C3][0] for r in res], real[C3][0]),
+             ('    (reference) SINGLE C3, both-era min', [r[C3][1] for r in res], real[C3][1]),
+             (f'(b) MENU of {len(MENU)} cells, full-period', [max(r[k][0] for k in r) for r in res], real[C2][0]),
+             (f'(b) MENU of {len(MENU)} cells, both-era min', [max(r[k][1] for k in r) for r in res], real[C2][1])]
+    log("")
+    for nm, null, rl in tests:
+        p = sum(1 for x in null if x >= rl) / len(null)
+        log(f"  {nm:<46} null median {pct(null,0.5):+.3f}  95th {pct(null,0.95):+.3f}  max {max(null):+.3f} | "
+            f"real {rl:+.3f} -> p = {p:.3f}")
+
 # ---------------------------------------------------------------- sensitivity
 def stage_sens():
     L = RES['LIVE   3 rules, 1/3']
@@ -408,5 +459,6 @@ if __name__ == '__main__':
     stage_main()
     if STAGE in ('all', 'boot'): stage_boot()
     if STAGE in ('all', 'perm'): stage_perm()
+    if STAGE in ('all', 'perm2'): stage_perm2()
     if STAGE in ('all', 'sens'): stage_sens()
     log(f"\n[done] elapsed {time.time()-T0:.0f}s")
