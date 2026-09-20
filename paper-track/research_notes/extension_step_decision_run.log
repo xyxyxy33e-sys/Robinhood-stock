@@ -1,0 +1,366 @@
+==========================================================================================================================
+RESEARCH LINE extension_step_decision (2026-09-20): EXTENSION_STEP -- keep 1/3, or move to 0.5? Two schedules, nothing else.
+==========================================================================================================================
+  [d_substate_fresh] STANDING FIGURES (must match 22.18% / 0.913 / -33.6%, S 1.103, H 0.768; real weekly ~31.40% / 1.248 / -25.0%)
+  [d_substate_fresh] 26y proxy 22.18% / 0.913 / -33.6%  S 1.103  H 0.768  exposure 67.7% | real weekly 31.35% / 1.247 / -25.0%  (6575 proxy rows 2000-07-03..2026-08-26, 565 real weekly rows)
+  [d_substate_fresh] state D: 934 proxy days (14.2%), search 382, holdout 552
+  [d_substate_fresh] real DAILY harness (SPMO/TQQQ/QLD/XLU/BOXX-synthetic, 2015-11-02..2026-09-04, 2725 sessions): 29.66% / 1.145 / -32.9%  exposure 72.2%  45.2 rebalances/yr  (mirror verified against monthly_returns.simulate)
+  breadth for the D gate: breadth_tracker on data/QQEW_daily_ext.csv; gate pct < 0.2, gap200 < 0.02
+
+==========================================================================================================================
+1  SETUP, and the CLIPPING CODE FACT
+==========================================================================================================================
+  state.extension_scale(eff_state, gaps) returns  1.0 - EXTENSION_STEP * votes  -- there is NO clip at zero.
+    STEP = 1/3, 3 votes -> extension_scale = +0.0000   (fine: the A row is 100% cash)
+    STEP = 0.5, 3 votes -> extension_scale = -0.5000   NEGATIVE.
+    target_weights_with_voltarget('A', ..., gaps={100:.5,150:.5,200:.5}) then returns
+      (core -0.250, tqqq -0.250, qld -0.000, xlu -0.000, cash +1.500)  sum 1.000
+    state.validate_weights on that tuple -> WeightSanityError: core_weight=-0.25 out of [0,1] range for state A
+  CONSEQUENCE, stated plainly and verified above:
+    (i)  this test harness CLIPS the multiplier at 0 (mults() above), so the 0.5 arm's 3-vote rung is the intended all-cash row;
+    (ii) ADOPTING 0.5 would require a one-line clip in state.py FIRST (e.g. max(0.0, 1.0 - EXTENSION_STEP * votes)).
+         Without it the live trigger calls validate_weights*, that raises, and the trigger ABORTS (report, do not trade)
+         on every 3-vote day -- i.e. it would not trade the intended cash row, it would fail to trade at all.
+    (iii) at STEP 1/3 the expression never goes negative (3 votes x 1/3 = 1.0 exactly), which is why no clip exists today.
+
+  ARMS (A row core/TQQQ/cash at 0 / 1 / 2 / 3 extension votes; the vol target multiplies on top, as live):
+    STEP 1/3 (LIVE)  multipliers 1.000/0.667/0.333/0.000   rows (50.0,50.0,0.0) / (33.3,33.3,33.3) / (16.7,16.7,66.7) / (0.0,0.0,100.0)
+    STEP 0.5         multipliers 1.000/0.500/0.000/0.000   rows (50.0,50.0,0.0) / (25.0,25.0,50.0) / (0.0,0.0,100.0) / (0.0,0.0,100.0)
+    (0.5 is deeper at 1 vote, and reaches full cash at 2 votes instead of 3. Rung 0 is identical in both.)
+
+  BASELINE ARM (STEP 1/3) -- asserted:
+    proxy  25.46% / 1.071 / -27.0%  S 1.399 H 0.825 exp 62.2% reb 47.9/yr (6575 rows 2000-07-03..2026-08-26; gated D days 240, E days 380)
+    real daily  37.30% / 1.475 / -18.6% exp 67.2% reb 45.3/yr (2725 sessions 2015-11-02..2026-09-04)
+    BASELINES REPRODUCED (asserted: proxy 25.46 / 1.071 / -27.0, S 1.399, H 0.825, exp 62.2%; real 37.30 / 1.475 / -18.6 at 45.3 reb/yr).
+
+  CROSS-CHECK of the STEP 0.5 arm against the independent standalone loop's figures:
+  figure                        standalone    this harness   agree?
+  real CAGR                         37.60%         37.595%     YES
+  real Sharpe                        1.50           1.501      YES
+  real MaxDD                       -18.40%        -18.357%     YES
+  real rebalances/yr                44.80          44.759      YES
+
+  real-daily per-year RETURN of the 0.5 arm (standalone figures are levels, not deltas; 2015/2016/2022 must equal live):
+  year      live %   0.5 arm %  standalone   |diff|  agree?  identical-to-live check   
+  2015        -6.8        -6.8     == live    0.000     YES   identical to live: YES
+  2016       +14.8       +14.8     == live    0.000     YES   identical to live: YES
+  2017       +70.6       +71.4       +71.4    0.043     YES
+  2018       +11.2       +11.4       +11.4    0.003     YES
+  2019       +44.2       +45.1       +45.1    0.039     YES
+  2020       +60.9       +52.7       +52.7    0.017     YES
+  2021       +45.9       +50.3       +50.3    0.025     YES
+  2022        -9.2        -9.2     == live    0.000     YES   identical to live: YES
+  2023       +60.0       +64.6       +64.6    0.031     YES
+  2024       +61.9       +62.5       +62.5    0.018     YES
+  2025       +37.6       +40.3       +40.3    0.045     YES
+  2026       +38.6       +36.0       +36.0    0.002     YES
+  headline cross-check agrees: YES; all per-year figures agree (within 0.06 pp): YES
+
+==========================================================================================================================
+2  HEADLINE: proxy full / search (2015-11+) / holdout (2000-07..2015-10), and real daily. Deltas = 0.5 minus 1/3.
+==========================================================================================================================
+  arm          | proxy full     CAGR  Sharpe   MaxDD    exp   reb | search     CAGR     Sh     DD | holdout     CAGR     Sh     DD | real daily     CAGR     Sh     DD    exp   reb
+  STEP 1/3     |              25.46%   1.071  -27.0%  62.2%  47.9 |          37.14%  1.399 -25.3% |           17.84%  0.825 -27.0% |              37.30%  1.475 -18.6%  67.2%  45.3
+  STEP 0.5     |              25.78%   1.094  -26.6%  59.9%  44.8 |          37.48%  1.424 -25.0% |           18.15%  0.846 -26.6% |              37.60%  1.501 -18.4%  64.9%  44.8
+  DELTA        |              +0.32  +0.023   +0.4  -2.3  -3.2 |          +0.34 +0.026  +0.3  |           +0.32 +0.021  +0.4  |              +0.29 +0.026  +0.2  -2.3  -0.6
+  both-era Sharpe improvement (search AND holdout both up): PASS  (dS +0.026, dH +0.021)
+
+==========================================================================================================================
+3  EXPOSURE-MATCHED CONTROL: the LIVE (1/3) design flat de-levered -- all four risky legs x k EVERY day -- to the 0.5 arm's average exposure
+==========================================================================================================================
+  proxy: 0.5 arm exposure 59.9% (live 62.2%) -> k = 0.9630
+    control  24.63% / 1.074 / -26.0% S 1.403 H 0.828 exp 59.9%
+    0.5 arm  25.78% / 1.094 / -26.6% S 1.424 H 0.846 exp 59.9%
+    0.5 - control: full +0.020, search +0.021, holdout +0.019 Sharpe; CAGR +1.15 pp; MaxDD -0.6 pp
+  proxy, ERA-MATCHED controls (k fitted inside each era separately): search k 0.9654 -> S Sharpe 1.403 (0.5 - ctl +0.021); holdout k 0.9610 -> H Sharpe 0.828 (0.5 - ctl +0.018)
+  real daily: 0.5 arm exposure 64.9% (live 67.2%) -> k = 0.9657
+    control  36.04% / 1.478 / -18.0% exp 64.9%; 0.5 arm  37.60% / 1.501 / -18.4%; 0.5 - control Sharpe +0.023, CAGR +1.56 pp, MaxDD -0.4 pp
+  BEATS THE EXPOSURE-MATCHED CONTROL in both proxy eras: PASS; on real daily: PASS
+  (k < 1 means the 0.5 arm holds LESS capital than live, so the control de-levers live to match. If the 0.5 arm only beats live
+   because it holds less risk, this control captures the whole of that and the difference above collapses to ~0.)
+
+==========================================================================================================================
+4a  CIRCULAR BLOCK BOOTSTRAP (2000 draws, 20d and 60d blocks; paired -- the same blocks for both series)
+==========================================================================================================================
+  comparison                blk |         Sharpe diff 95% CI   P(<=0) |     log-return diff 95% CI (pp/yr)   P(<=0)
+  0.5 vs 1/3, proxy         20d | [    -0.016,    +0.062]        0.110 | [         -0.67,         +1.15]        0.283
+  0.5 vs 1/3, proxy         60d | [    -0.013,    +0.059]        0.105 | [         -0.63,         +1.07]        0.277
+  0.5 vs control, proxy     20d | [    -0.017,    +0.054]        0.170 | [         -0.00,         +1.74]        0.025
+  0.5 vs control, proxy     60d | [    -0.013,    +0.054]        0.113 | [         +0.13,         +1.77]        0.014
+  0.5 vs 1/3, real          20d | [    -0.033,    +0.087]        0.189 | [         -1.12,         +1.68]        0.363
+  0.5 vs 1/3, real          60d | [    -0.023,    +0.076]        0.150 | [         -1.01,         +1.39]        0.353
+  0.5 vs control, real      20d | [    -0.034,    +0.082]        0.222 | [         -0.19,         +2.48]        0.047
+  0.5 vs control, real      60d | [    -0.029,    +0.072]        0.179 | [         -0.06,         +2.26]        0.032
+  (P(<=0) is the share of resamples in which the 0.5 arm does NOT beat the comparison. The project bar is P < 0.05.)
+
+==========================================================================================================================
+4b  PERMUTATION: vote labels shuffled among effective-A days (counts kept), 8 draws, proxy. Paired -- both arms re-evaluated on the SAME shuffle.
+==========================================================================================================================
+  Null: 'the vote label carries no information about whether a deeper trim helps'. Statistics reported in two forms:
+    (a) SINGLE PRE-SPECIFIED CANDIDATE: the STEP-0.5 Sharpe gain over STEP-1/3, full period and both-era-min = min(dSearch, dHoldout).
+    (b) HONEST MENU: max over the four scalar steps {0.25, 0.3333, 0.5, 1} of that same gain -- the statistic you are
+        actually entitled to, because 0.5 was chosen after the step had already been moved once (0.25 -> 1/3).
+  the four menu steps on the REAL labels (proxy): 0.25: F -0.030 / both-era-min -0.037 (CAGR 24.94%, DD -27.4%); 0.3333: F +0.000 / both-era-min +0.000 (CAGR 25.46%, DD -27.0%); 0.5: F +0.023 / both-era-min +0.021 (CAGR 25.78%, DD -26.6%); 1: F +0.032 / both-era-min +0.019 (CAGR 25.73%, DD -26.6%)
+
+  null                                             real  null med  null 95th  null 99th       p
+  (a) single candidate, full period              +0.023    -0.046     -0.024     -0.024   0.000
+  (a) single candidate, both-era min             +0.021    -0.056     -0.042     -0.042   0.000
+  (b) menu max-stat, full period                 +0.032    +0.047     +0.077     +0.077   0.750
+  (b) menu max-stat, both-era min                +0.021    +0.025     +0.074     +0.074   0.625
+  (8 draws. The menu max is attained at step 1 full-period and 0.5 both-era on the real labels.)
+  Reading: the single-candidate null is the generous one -- it pretends 0.5 was the only schedule ever considered. The menu null is
+  the honest one. A gain that only clears (a) is a gain that survives only if you forget the search that produced it.
+
+==========================================================================================================================
+5a  LEAVE-ONE-MAJOR-REGIME-OUT (proxy; full-period Sharpe with that window removed)
+==========================================================================================================================
+  drop                          STEP 1/3  STEP 0.5   control   0.5 - 1/3  0.5 - ctl
+  dot-com 2000-2002                1.174     1.194     1.177      +0.020     +0.017
+  GFC 2007-2009                    1.071     1.099     1.074      +0.028     +0.026
+  COVID 2020                       1.026     1.055     1.029      +0.029     +0.026
+  2022 bear                        1.132     1.157     1.135      +0.025     +0.022
+  whole SPMO era 2015-11+          0.825     0.846     0.828      +0.021     +0.019
+  range of (0.5 - 1/3) across the five drops: +0.020 .. +0.029 (all five positive: YES); vs control +0.017 .. +0.026 (all five positive: YES)
+
+==========================================================================================================================
+5b  ONE-SESSION EXECUTION LAG (vote count read from the PREVIOUS close, for BOTH arms) -- the key discriminator
+==========================================================================================================================
+  lagged   STEP 1/3  proxy  23.83% / 1.021 / -28.1% S 1.366 H 0.761 | real  36.11% / 1.446 / -18.9%
+  lagged   STEP 0.5  proxy  24.15% / 1.043 / -26.6% S 1.369 H 0.798 | real  35.61% / 1.446 / -18.9%
+  0.5 - 1/3, both lagged:  full +0.023   search +0.003   holdout +0.037   real daily +0.000   (real CAGR -0.50 pp, real MaxDD +0.1 pp)
+  0.5 lagged vs the exposure-matched control refitted at the lagged exposure (k 0.9645): F -0.031 S -0.034 H -0.029
+  unlagged deltas for comparison:        full +0.023   search +0.026   holdout +0.021   real daily +0.026
+  BENCHMARK: the deeper DEEP schedule (trim_destination_test Part III) FAILED this test at search -0.031 and real -0.040.
+  This arm under the lag: search +0.003, real +0.000 -> SURVIVES
+
+==========================================================================================================================
+5c  20 bp ONE-WAY COST (both arms; live cost is 4 bp)
+==========================================================================================================================
+  20 bp    STEP 1/3  proxy  18.56% / 0.833 / -33.7% S 1.157 H 0.590 | real  29.40% / 1.219 / -21.9%
+  20 bp    STEP 0.5  proxy  18.57% / 0.842 / -33.2% S 1.166 H 0.598 | real  29.28% / 1.228 / -21.8%
+  0.5 - 1/3 at 20 bp:  full +0.009   search +0.009   holdout +0.008   real daily +0.009   (vs control at 20 bp, k 0.9630: F +0.006 S +0.005 H +0.006)
+  20 bp verdict: SURVIVES (the 0.5 arm trades -3.2 reb/yr on the proxy and -0.6 on real vs the 1/3 arm)
+
+==========================================================================================================================
+6  PER-YEAR, both harnesses, every year. Return %, delta = 0.5 minus 1/3 in pp, and that year's effective-A vote-day counts.
+==========================================================================================================================
+
+  PROXY (QQQ core, 2000-07..2026-08)
+  year     STEP 1/3   STEP 0.5   delta pp |   A days  0 votes  1 vote  2 votes  3 votes   >=1 vote days
+  2000        -18.9      -18.6       +0.3 |       34       32       2        0        0               2
+  2001         +6.6       +7.2       +0.6 |       28       19       9        0        0               9
+  2002         -1.7       +0.0       +1.7 |       39       17      22        0        0              22
+  2003        +75.3      +72.2       -3.1 |      193       59      29       39       66             134
+  2004        +12.3      +13.5       +1.1 |      152      118      19       13        2              34
+  2005        -15.4      -15.4       +0.0 |      119      119       0        0        0               0
+  2006        +17.9      +19.4       +1.4 |      134      121      11        2        0              13
+  2007        +25.8      +28.6       +2.8 |      178      164       9        2        3              14
+  2008         -1.6       -0.6       +1.0 |       45       44       1        0        0               1
+  2009        +54.2      +44.7       -9.5 |      187       15      41       72       59             172
+  2010        +46.9      +51.7       +4.8 |      140       80      28       32        0              60
+  2011         -6.4       -4.7       +1.7 |      119       84       8       21        6              35
+  2012        +19.4      +18.3       -1.1 |      149      110       6       14       19              39
+  2013        +57.9      +57.9       +0.0 |      222      222       0        0        0               0
+  2014        +25.3      +25.3       +0.0 |      191      191       0        0        0               0
+  2015         +3.1       +3.1       +0.0 |      164      164       0        0        0               0
+  2016        +14.3      +14.3       +0.0 |      140      140       0        0        0               0
+  2017        +75.9      +77.3       +1.4 |      244      239       5        0        0               5
+  2018         +6.7       +7.2       +0.5 |      159      149       3        2        5              10
+  2019        +53.9      +54.7       +0.8 |      172      154      18        0        0              18
+  2020        +57.0      +50.5       -6.4 |      208       44      12       67       85             164
+  2021        +53.2      +56.3       +3.0 |      198      160       7       15       16              38
+  2022        -18.4      -18.4       +0.0 |       15       15       0        0        0               0
+  2023        +74.1      +80.6       +6.5 |      188      112      15       16       45              76
+  2024        +62.7      +62.7       +0.1 |      207      149      19       14       25              58
+  2025        +36.5      +38.5       +2.0 |      181      111      52       16        2              70
+  2026        +39.2      +36.3       -2.9 |      103       65       6        6       26              38
+  years 0.5 beats 1/3: 16/27 (identical in 6); worst year 2009 -9.5 pp, best year 2023 +6.5 pp; sum of deltas +6.9 pp
+
+  REAL DAILY (SPMO era, 2015-11+)
+  year     STEP 1/3   STEP 0.5   delta pp |   A days  0 votes  1 vote  2 votes  3 votes   >=1 vote days
+  2015         -6.8       -6.8       +0.0 |       33       33       0        0        0               0
+  2016        +14.8      +14.8       +0.0 |      140      140       0        0        0               0
+  2017        +70.6      +71.4       +0.9 |      244      239       5        0        0               5
+  2018        +11.2      +11.4       +0.2 |      159      149       3        2        5              10
+  2019        +44.2      +45.1       +0.8 |      172      154      18        0        0              18
+  2020        +60.9      +52.7       -8.2 |      208       44      12       67       85             164
+  2021        +45.9      +50.3       +4.4 |      198      160       7       15       16              38
+  2022         -9.2       -9.2       +0.0 |       15       15       0        0        0               0
+  2023        +60.0      +64.6       +4.6 |      188      112      15       16       45              76
+  2024        +61.9      +62.5       +0.6 |      207      149      19       14       25              58
+  2025        +37.6      +40.3       +2.8 |      181      111      52       16        2              70
+  2026        +38.6      +36.0       -2.6 |      109       71       6        6       26              38
+  years 0.5 beats 1/3: 7/12 (identical in 3); worst year 2020 -8.2 pp, best year 2023 +4.6 pp; sum of deltas +3.5 pp
+
+==========================================================================================================================
+7a  BEHAVIOUR: vote-level census, time fully in cash, exposure, turnover, regime changes, longest all-cash stretch
+==========================================================================================================================
+  effective-A days by vote level (identical under both arms -- the schedule changes what is HELD, not what fires):
+  harness / era         A days       0       1       2       3   share of A days at 0/1/2/3        
+  proxy full              3909    2897     322     331     359   74.1% / 8.2% / 8.5% / 9.2%
+                      -> STEP 0.5 is fully in cash on the 690 A days at >= 2 votes (17.7% of A days); STEP 1/3 only on the 359 at 3 votes (9.2%)
+  proxy search            1848    1371     137     136     204   74.2% / 7.4% / 7.4% / 11.0%
+                      -> STEP 0.5 is fully in cash on the 340 A days at >= 2 votes (18.4% of A days); STEP 1/3 only on the 204 at 3 votes (11.0%)
+  proxy holdout           2061    1526     185     195     155   74.0% / 9.0% / 9.5% / 7.5%
+                      -> STEP 0.5 is fully in cash on the 350 A days at >= 2 votes (17.0% of A days); STEP 1/3 only on the 155 at 3 votes (7.5%)
+  real daily              1854    1377     137     136     204   74.3% / 7.4% / 7.3% / 11.0%
+                      -> STEP 0.5 is fully in cash on the 340 A days at >= 2 votes (18.3% of A days); STEP 1/3 only on the 204 at 3 votes (11.0%)
+
+  % of ALL sessions whose TARGET row is fully in cash, and the longest continuous all-cash stretch:
+  harness / era      sessions | 1/3       n       %  longest  window                   | 0.5       n       %  longest  window                   |  change pp
+  proxy full             6575 |        1747    26.6%       55  2008-01-02..2008-03-20   |        2078    31.6%       74  2009-07-15..2009-10-27   |      +5.0
+  proxy search           2719 |         610    22.4%       49  2020-06-29..2020-09-04   |         746    27.4%       57  2020-06-29..2020-09-17   |      +5.0
+  proxy holdout          3856 |        1137    29.5%       55  2008-01-02..2008-03-20   |        1332    34.5%       74  2009-07-15..2009-10-27   |      +5.1
+  real daily             2725 |         610    22.4%       49  2020-06-29..2020-09-04   |         746    27.4%       57  2020-06-29..2020-09-17   |      +5.0
+
+  average deployed capital: proxy 1/3 62.2% -> 0.5 59.9% (-2.3 pp); real 1/3 67.2% -> 0.5 64.9% (-2.3 pp)
+  real daily trading: 1/3 turnover 14.73%/session, 45.3 reb/yr, 32.5 regime changes/yr; 0.5 turnover 15.48%/session, 44.8 reb/yr, 32.5 regime changes/yr
+  proxy trading: 1/3 47.9 reb/yr; 0.5 44.8 reb/yr (-3.2)
+
+==========================================================================================================================
+7b  RECOVERY-WINDOW COST: return of each arm over the 60 and 120 sessions AFTER each major drawdown trough
+==========================================================================================================================
+  The trough is located on the STEP-1/3 (live) NAV inside each window, and the SAME date is used for both arms, so this
+  measures only what each arm earns coming out of it. This is where a deeper trim is known to cost: the melt-up off the low
+  pushes the 100/150/200-day gaps straight through the thresholds while the market is still rising.
+  harness     window                trough        live DD |   60d 1/3  60d 0.5  delta pp |   120d 1/3  120d 0.5  delta pp
+  proxy       dot-com               2002-08-28     -26.7% |     +16.7    +16.7      +0.0 |       +4.5      +5.9      +1.4
+  proxy       GFC                   2009-03-13     -25.4% |     +25.8    +24.4      -1.3 |      +35.3     +34.7      -0.6
+  proxy       COVID 2020            2020-04-20      -7.2% |     +24.3    +21.8      -2.5 |      +33.5     +27.8      -5.8
+  proxy       2022 bear             2022-12-16     -24.8% |     +19.6    +21.3      +1.8 |      +47.5     +46.8      -0.7
+  real daily  2020                  2020-04-21      -6.5% |     +23.6    +21.1      -2.5 |      +33.2     +27.3      -5.9
+  real daily  2022                  2022-09-14     -18.2% |      +2.2     +2.2      +0.0 |       +7.0      +8.2      +1.3
+  real daily  2025                  2025-03-04     -17.8% |      +7.8     +7.8      +0.0 |      +29.3     +30.0      +0.7
+  recovery-window deltas (0.5 - 1/3): 60d range -2.5 .. +1.8 pp (mean -0.7); 120d range -5.9 .. +1.4 pp (mean -1.4); windows where 0.5 costs: 3/7 at 60d, 4/7 at 120d
+
+==========================================================================================================================
+8a  SENSITIVITY to the three trim thresholds, shifted TOGETHER by -2, -1, 0, +1, +2 pp (10%/12%/15% -> ...)
+==========================================================================================================================
+  shift   thresholds              A days >=1 vote    proxy 1/3 Sh   0.5 Sh      dF      dS      dH     real 1/3 Sh   0.5 Sh   d real  ranking   
+    -2 pp  8%/10%/13%                         1569           1.035    1.005  -0.031  -0.067  -0.004           1.446    1.382   -0.064  1/3 ahead   
+    -1 pp  9%/11%/14%                         1255           1.072    1.082  +0.010  +0.024  -0.001           1.477    1.501   +0.023  mixed       
+    +0 pp  10%/12%/15%                        1012           1.071    1.094  +0.023  +0.026  +0.021           1.475    1.501   +0.026  0.5 ahead   
+    +1 pp  11%/13%/16%                         800           1.009    1.017  +0.008  +0.015  +0.002           1.409    1.420   +0.011  0.5 ahead   
+    +2 pp  12%/14%/17%                         636           0.997    1.001  +0.004  +0.011  -0.002           1.400    1.414   +0.014  mixed       
+  ranking stable across all five threshold shifts: NO -- it changes with the thresholds
+
+==========================================================================================================================
+8b  SENSITIVITY to the A row: 40/60 and 60/40 (core/TQQQ) instead of the live 50/50. Only the A row changes; the step schedules scale it.
+==========================================================================================================================
+  A row     rows at 0/1/2/3 votes (0.5 arm)                    |  proxy 1/3     0.5      dF      dS      dH  dCAGR pp   dDD pp |   real 1/3     0.5   d real  dCAGR pp  ranking   
+  40/60     (40.0,60.0,0.0) / (20.0,30.0,50.0) / (0.0,0.0,100.0) / (0.0,0.0,100.0) |      1.063   1.088  +0.025  +0.027  +0.022     +0.38     +1.3 |      1.452   1.480   +0.028     +0.36  0.5 ahead   
+  50/50 (live)(50.0,50.0,0.0) / (25.0,25.0,50.0) / (0.0,0.0,100.0) / (0.0,0.0,100.0) |      1.071   1.094  +0.023  +0.026  +0.021     +0.32     +0.4 |      1.475   1.501   +0.026     +0.29  0.5 ahead   
+  60/40     (60.0,40.0,0.0) / (30.0,20.0,50.0) / (0.0,0.0,100.0) / (0.0,0.0,100.0) |      1.077   1.099  +0.022  +0.024  +0.020     +0.27     +0.3 |      1.493   1.517   +0.024     +0.23  0.5 ahead   
+  ranking stable across the three A rows: YES -- 0.5 ahead at all three
+  (The live A row was moved to 40/60 by the owner after the step-1/3 decision, per state.py's note, so the 40/60 line is the one
+   that matters most for a forward decision; 50/50 is what this harness's asserted baselines are built on.)
+
+==========================================================================================================================
+9  VERDICT CARD against the project bar
+==========================================================================================================================
+  1. both-era improvement (search AND holdout Sharpe up):  dS +0.026, dH +0.021   -> PASS
+  2. beats the exposure-matched control:                   proxy S +0.021, H +0.019; real +0.023   -> PASS
+  3. bootstrap P(<=0) < 0.05 on all four comparisons (60d): 0.5 vs 1/3 proxy 0.105, 0.5 vs control proxy 0.113, 0.5 vs 1/3 real 0.150, 0.5 vs control real 0.179   -> FAIL
+  4. permutation p < 0.05:  single pre-specified candidate p = 0.000 (PASS); honest menu max-stat p = 0.625 (FAIL)
+  5. real CAGR not falling:                                 +0.29 pp   -> PASS
+  6. one-session lag (the DEEP killer):                     search +0.003, real +0.000   -> PASS
+  7. 20 bp one-way cost:                                    search +0.009, holdout +0.008, real +0.009   -> PASS
+  8. LORO (0.5 - 1/3) range across five dropped regimes:    +0.020 .. +0.029   -> PASS (all positive)
+
+  side facts: proxy CAGR +0.32 pp / MaxDD +0.4 pp; real CAGR +0.29 pp / MaxDD +0.2 pp; exposure -2.3 pp proxy / -2.3 pp real
+  the two years the owner will look at first: real 2020 -8.2 pp, real 2023 +4.6 pp; proxy 2020 -6.4 pp, proxy 2009 -9.5 pp
+
+  IF A READER WEIGHTS DRAWDOWN MORE THAN RETURN: the relevant lines are MaxDD (+0.4 pp proxy, +0.2 pp real),
+     average exposure (-2.3 pp proxy / -2.3 pp real) and the extra time fully in cash (section 7a). Those, plus the control result in
+     section 3, say whether the 0.5 arm buys drawdown with something other than simply holding less.
+  IF A READER WEIGHTS RETURN MORE THAN DRAWDOWN: the relevant lines are real CAGR (+0.29 pp), the per-year table in section 6
+     (especially the melt-up years), and the recovery-window table in section 7b, which is where a deeper trim is paid for.
+
+  NOTHING IS APPLIED. state.py is unchanged; if 0.5 were ever adopted the clip in section 1 must land first. The owner decides.
+  Candidate count this line: 2 schedules (live 1/3 and the pre-specified 0.5) + 2 menu-only steps inside the permutation null
+  + exposure-matched controls + 5 threshold shifts x 2 arms + 2 alternative A rows x 2 arms (sensitivity, not candidates).
+
+[total 16 s]
+
+======================================================================================================================
+RESEARCH LINE extension_step_decision -- EXTENSION_STEP 1/3 vs 0.5 (one decision, two schedules)
+======================================================================================================================
+  CODE FACT: state.extension_scale() = 1 - STEP*votes with NO clip. At STEP 0.5, 3 votes -> -0.500 (negative risky weights).
+             This harness clips at 0. Adopting 0.5 REQUIRES a one-line clip in state.py; without it validate_weights raises and the trigger aborts on 3-vote days.
+  live EXTENSION_STEP = 0.3333; A row (0.5, 0.5); rules ((100, 0.1), (150, 0.12), (200, 0.15))
+  schedule 1/3  (SPMO,TQQQ,cash) at 0/1/2/3 votes: (50,50,0) / (33,33,33) / (17,17,67) / (0,0,100)
+  schedule 0.5                                   : (50,50,0) / (25,25,50) / (0,0,100) / (0,0,100)
+
+  BASELINE (asserted by trim_destination_test at import):
+    proxy  25.46% / 1.071 / -27.0% S 1.399 H 0.825 exp 62.2%
+    real   37.30% / 1.475 / -18.6% exp 67.2% reb 45.3/yr
+    scalar-1/3 schedule reproduces the harness live arm exactly (asserted).
+
+======================================================================================================================
+HEADLINE. proxy full / search(2015-11+) / holdout(2000-07..2015-10); real daily. delta = 0.5 minus 1/3
+======================================================================================================================
+  1/3 LIVE   proxy  25.46% / 1.071 / -27.0% S 1.399 H 0.825 exp 62.2% reb 47.9/yr | real  37.30% / 1.475 / -18.6% exp 67.2% reb 45.3/yr
+  0.5        proxy  25.78% / 1.094 / -26.6% S 1.424 H 0.846 exp 59.9% reb 44.8/yr | real  37.60% / 1.501 / -18.4% exp 64.9% reb 44.8/yr
+  DELTA      proxy CAGR +0.32pp  Sharpe +0.023 (S +0.026, H +0.021)  MaxDD +0.4pp | real CAGR +0.29pp Sharpe +0.026 MaxDD +0.2pp
+
+  CROSS-CHECK vs the standalone loop (real daily): expected 0.5 -> 37.60% / 1.501 / -18.4% at 44.8 reb/yr
+    got 37.60% / 1.501 / -18.4% at 44.8 -> AGREES
+
+======================================================================================================================
+EXPOSURE-MATCHED CONTROL (flat de-lever of LIVE to the 0.5 arm's average exposure)
+======================================================================================================================
+  proxy control k 0.9630:  24.63% / 1.074 / -26.0% S 1.403 H 0.828 exp 59.9%
+    0.5 minus control: F +0.020  S +0.021  H +0.019
+  real  control k 0.9657:  36.04% / 1.478 / -18.0% exp 64.9%
+    0.5 minus control: +0.023
+
+======================================================================================================================
+PER YEAR (0.5 minus 1/3), with extension-vote day counts
+======================================================================================================================
+  year    proxy 1/3  proxy 0.5    diff   votes 0/1/2/3       real 1/3  real 0.5    diff   votes 0/1/2/3
+  2000       -18.9%     -18.6%    +0.3   32/2/0/0           
+  2001         6.6%       7.2%    +0.6   19/9/0/0           
+  2002        -1.7%       0.0%    +1.7   17/22/0/0           
+  2003        75.3%      72.2%    -3.1   59/29/39/66          
+  2004        12.3%      13.5%    +1.1   118/19/13/2           
+  2005       -15.4%     -15.4%    +0.0   119/0/0/0           
+  2006        17.9%      19.4%    +1.4   121/11/2/0           
+  2007        25.8%      28.6%    +2.8   164/9/2/3           
+  2008        -1.6%      -0.6%    +1.0   44/1/0/0           
+  2009        54.2%      44.7%    -9.5   15/41/72/59          
+  2010        46.9%      51.7%    +4.8   80/28/32/0           
+  2011        -6.4%      -4.7%    +1.7   84/8/21/6           
+  2012        19.4%      18.3%    -1.1   110/6/14/19          
+  2013        57.9%      57.9%    +0.0   222/0/0/0           
+  2014        25.3%      25.3%    +0.0   191/0/0/0           
+  2015         3.1%       3.1%    +0.0   164/0/0/0                -6.8%     -6.8%    +0.0   33/0/0/0
+  2016        14.3%      14.3%    +0.0   140/0/0/0                14.8%     14.8%    +0.0   140/0/0/0
+  2017        75.9%      77.3%    +1.4   239/5/0/0                70.6%     71.4%    +0.9   239/5/0/0
+  2018         6.7%       7.2%    +0.5   149/3/2/5                11.2%     11.4%    +0.2   149/3/2/5
+  2019        53.9%      54.7%    +0.8   154/18/0/0                44.2%     45.1%    +0.8   154/18/0/0
+  2020        57.0%      50.5%    -6.4   44/12/67/85               60.9%     52.7%    -8.2   44/12/67/85
+  2021        53.2%      56.3%    +3.0   160/7/15/16               45.9%     50.3%    +4.4   160/7/15/16
+  2022       -18.4%     -18.4%    +0.0   15/0/0/0                -9.2%     -9.2%    +0.0   15/0/0/0
+  2023        74.1%      80.6%    +6.5   112/15/16/45               60.0%     64.6%    +4.6   112/15/16/45
+  2024        62.7%      62.7%    +0.1   149/19/14/25               61.9%     62.5%    +0.6   149/19/14/25
+  2025        36.5%      38.5%    +2.0   111/52/16/2                37.6%     40.3%    +2.8   111/52/16/2
+  2026        39.2%      36.3%    -2.9   65/6/6/26               38.6%     36.0%    -2.6   71/6/6/26
+
+======================================================================================================================
+BEHAVIOUR
+======================================================================================================================
+  1/3 LIVE   longest continuous fully-cash stretch (proxy): 55 sessions 2008-01-02..2008-03-20
+  1/3 LIVE   A-days 0/1/2/3 = 2897/322/331/359 of 3909; proxy fully-cash 1747/6575 = 26.6% of ALL sessions; exposure 62.2% proxy / 67.2% real; reb 47.9 proxy / 45.3 real
+  0.5        longest continuous fully-cash stretch (proxy): 74 sessions 2009-07-15..2009-10-27
+  0.5        A-days 0/1/2/3 = 2897/322/331/359 of 3909; proxy fully-cash 2078/6575 = 31.6% of ALL sessions; exposure 59.9% proxy / 64.9% real; reb 44.8 proxy / 44.8 real
+
+======================================================================================================================
+PERMUTATION RERUN, 1000 draws (the 2026-09-20 study above ran only 8; this supersedes section 4b) ( vote labels shuffled among effective-A days, counts kept; proxy)
+======================================================================================================================
+  1000 draws in 43s
+  (a) SINGLE pre-specified candidate, full-period      null median -0.042  95th -0.012  max +0.017 | real +0.023 -> p = 0.000
+  (a) SINGLE pre-specified candidate, both-era min     null median -0.056  95th -0.023  max +0.005 | real +0.021 -> p = 0.000
+  (b) MENU of 4 scalar steps, full-period              null median +0.048  95th +0.074  max +0.105 | real +0.023 -> p = 0.932
+  (b) MENU of 4 scalar steps, both-era min             null median +0.035  95th +0.063  max +0.094 | real +0.021 -> p = 0.755
+
+[done] elapsed 47s

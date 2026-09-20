@@ -4004,6 +4004,57 @@ the destination of the trimmed weight.** Not applied; the decision it really
 poses is whether to revisit `EXTENSION_STEP`, chosen as a deliberate
 non-corner point.
 
+### EXTENSION_STEP ⅓ vs 0.5 — tested 2026-09-20, NOT applied
+
+The follow-on the trim-destination note asked for: the DEEP cell measured
+trim *depth*, so test depth directly, two schedules only, one decision.
+`paper-track/extension_step_decision.py`,
+`research_notes/extension_step_decision.md`. A row (SPMO, TQQQ, cash) at
+0/1/2/3 votes — live ⅓: 50/50/0, 33/33/33, 17/17/67, 0/0/100; the 0.5 arm:
+50/50/0, 25/25/50, 0/0/100, 0/0/100.
+
+**Code fact, independent of the decision:** `state.extension_scale()` is
+`1 − EXTENSION_STEP × votes` with **no clip at zero**. At ⅓ it never goes
+negative (3 × ⅓ = 1.0 exactly); at 0.5 three votes gives −0.500, so
+`target_weights_with_voltarget` returns negative risky weights,
+`validate_weights` raises `WeightSanityError`, and the live trigger **aborts
+rather than trading the intended all-cash row** on every 3-vote day.
+Adopting 0.5 (or anything > ⅓) requires a one-line clip first. The research
+harness clips at 0.
+
+**Result.** Proxy 25.78% / 1.094 / −26.6% (S 1.424, H 0.846, exp 59.9%,
+44.8 reb) vs live 25.46% / 1.071 / −27.0% (S 1.399, H 0.825, exp 62.2%,
+47.9 reb); real daily 37.60% / 1.501 / −18.4% vs 37.30% / 1.475 / −18.6%
+(+0.29 pp CAGR, +0.026 Sharpe, 0.2 pp shallower, −2.3 pp exposure),
+cross-checked by an independent standalone loop on every headline and
+per-year figure. **Passes** both eras (dS +0.026, dH +0.021), the
+exposure-matched control on both harnesses (+0.019 to +0.023), LORO across
+five dropped regimes (+0.020 … +0.029, all positive), 20 bp cost (+0.008 to
++0.009 — it trades less), real CAGR not falling, and — unlike DEEP — the
+**one-session execution lag** (search +0.003, real +0.000, where DEEP was
+−0.031 / −0.040). **Fails** the block bootstrap (no Sharpe CI excludes zero;
+P(≤0) 0.105 / 0.113 / 0.150 / 0.179 at 60d, though the log-return comparison
+against the control does pass at P 0.014–0.047) and the honest permutation:
+1000 draws, vote labels shuffled among effective-A days, give the single
+pre-specified candidate p = 0.000 (null median **−0.042**, i.e. a deeper trim
+hurts on random vote days — the label carries information) but the menu of
+four scalar steps p = 0.932 / 0.755. **Not stable** to the thresholds: at
+−2 pp (8/10/13%) the ranking flips to ⅓ ahead by −0.031 proxy / −0.064 real;
+stable across A rows 40/60, 50/50, 60/40.
+
+**What it costs:** time fully in cash 26.6% → 31.6% of all sessions
+(+5.0 pp everywhere; longest proxy all-cash stretch 55 → 74 sessions); the
+120-session window after a trough averages −1.4 pp, worst −5.9 pp after the
+2020 low. Per-year real: wins 7/12, 2020 −8.2 pp against 2023 +4.6 and 2021
++4.4, sum +3.5 pp.
+
+**Not applied.** Recommendation on the record: keep the freeze to 7 December.
+The gain is the size a search over four steps produces by chance, no Sharpe
+CI excludes zero, the ranking is threshold-fragile, and it would be the third
+design change in a week on top of the state-D gate and the E row, neither of
+which has been observed live for a single session. Cumulative: +2 candidates
+(+2 menu-only steps inside the permutation null).
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
