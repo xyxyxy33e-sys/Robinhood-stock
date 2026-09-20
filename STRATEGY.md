@@ -4203,6 +4203,52 @@ Robinhood's — that answers the only genuinely open question (does IBKR Pro
 fill better than Robinhood's PFOF routing?) with data, at no risk to the live
 account. No account action taken.
 
+### Where to cut max drawdown — researched 2026-09-20, NOTHING applied
+
+Owner asked where drawdown could be cut. `paper-track/drawdown_study.py`,
+`research_notes/drawdown_study.md`. **Framing:** any risk cut reduces
+drawdown, so the null is not "no change" but **flat de-levering** (all four
+risky legs × k daily), which traces a (CAGR, MaxDD) frontier. Levers are
+scored as arm MaxDD minus the frontier's MaxDD at the same CAGR; positive =
+shallower than simply holding less.
+
+**Where the damage comes from.** Census of every episode deeper than 5%, plus
+regime/leg attribution inside the worst three on each harness. Three facts:
+(i) **it is always the leveraged legs** — TQQQ or QLD accounts for essentially
+the whole loss in every episode, core and BOXX are flat or positive (proxy
+2004-12→2005-10 −27.0%: state D −30.0 pp over 48 days, QLD leg −28.3 pp; real
+2021-11→2023-01 −18.6%: state A −16.5 pp over 43 days, TQQQ −13.4 pp);
+(ii) **in the long bears the classifier already worked** — average exposure
+through the 2000–02 episode was 15.6% (374 of 531 sessions in F) and through
+2021–23 31.9% (150 in F), so the drawdown is the residual risk-on days, not a
+failure to de-risk; (iii) **the fastest episodes are uncatchable** — the second
+worst real drawdown is −17.8% in **nine sessions** at 80% exposure, which no
+30-day vol target and no realised-loss brake can react to.
+
+**The null's exchange rate.** De-levering buys ~**0.53 pp of MaxDD per 1 pp of
+CAGR**, strikingly stable across k = 1.00 → 0.60, and **Sharpe rises** as k
+falls (1.475 → 1.543). Real daily: k 0.85 → 31.83% / −15.5%; k 0.75 → 28.28% /
+−13.6%; k 0.60 → 22.96% / −11.0%.
+
+**Nineteen levers tested; one beats the null on both harnesses, by 0.1 pp.**
+Only `drift band 3%` is positive on both (+0.11 real / +0.07 proxy) — noise.
+Instructive failures: **widening the D gate is the worst thing tested**
+(gap200 < 5% takes real CAGR 37.29% → 30.10% and makes MaxDD **deeper**,
+−18.6% → −30.4%, scoring −15.74 vs the frontier — a wider gate sells after the
+fall and sits out the recovery); **NAV brakes are structurally late** (−10% →
+cash takes real CAGR to 3.55%; every variant loses on at least one harness);
+**vol-target and leverage-cap changes essentially are the frontier** (within
+±0.6 pp on real, below it on the proxy) because turning the vol target down
+just is de-levering, and making it state-contingent adds nothing.
+
+**Conclusion.** There is no free drawdown reduction in this design. If less
+drawdown is wanted, de-lever and price it honestly from the section-2 menu.
+**Tension stated for the record:** the standing objective is to outperform SPY
+and QQQ; de-levering is fairly priced in Sharpe terms but directly reduces
+expected outperformance. That is an owner call on risk appetite — research
+says only that the price is fair and no cheaper route exists. Cumulative:
++19 candidates.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
