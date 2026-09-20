@@ -4142,6 +4142,67 @@ This is **not** the step-0.5 decision. That candidate (C3) remains not applied;
 see the two entries above. The clip was applied on its own so the trap is gone
 whichever way the step decision goes in December.
 
+### Portability to an IBKR account — researched 2026-09-20, NO account action
+
+Owner asked whether this strategy can be run in an Interactive Brokers
+account. `research_notes/ibkr_portability.md`. **The strategy ports; the
+automation does not.**
+
+**The blocker is execution, not economics.** IBKR's official Claude connector
+is draft-and-sign-off by design: it exposes read tools plus
+`get_order_instructions`, and an instruction sits in an **AI Instructions**
+tab until the owner clicks Review & Submit inside an IBKR app — IBKR's
+documentation states instructions never become orders automatically. The live
+design is an unattended Routine placing orders at 15:54–15:57 ET on the same
+session's close proxy. Under that connector every one of ~45 rebalances a year
+needs a human in a five-minute window. The cost of missing it is measured:
+executing the live design one session late costs **proxy Sharpe −0.050 (search
+−0.033, holdout −0.064) and real daily −0.029 Sharpe / −1.19 pp CAGR**
+(37.30% → 36.11%) — several times the +0.29 pp that the whole step-0.5 debate
+was about.
+
+**Second constraint: market data.** Real-time US quotes at IBKR need a
+subscription (~$4.50/mo); free data is delayed 10–20 min, or Cboe One/IEX
+real-time but non-consolidated with no NBBO. A 15:50 decision on delayed data
+is a 15:35 decision, silently breaking the snapshot convention every figure on
+record is calibrated to. Subscriptions attach per username.
+
+**Not problems.** All four legs (SPMO, TQQQ, QLD, BOXX) trade at IBKR;
+fractional covers 10,500+ US stocks/ETFs at a $0.01 minimum (permissions must
+be enabled, eligibility confirmed per ticker). Cost is a non-issue: the design
+turns over **~3700% of NAV one-way per year** (490 rebalances in 10.8 yrs,
+45.3/yr, average L1 drift 81.7% per rebalance), so the modelled 4 bp is
+already **148 bp/yr of drag inside the 37.30% CAGR**; IBKR commissions add
+**+12.9 bp/yr Pro Tiered (~$268 on $207.6k)**, +18.5 bp Pro Fixed, or $0 on
+Lite — against a design re-tested and still winning at 20 bp one-way
+(741 bp/yr). PDT never engages (overnight holds). A **margin** account is
+required — same-session sell-to-fund-buy under T+1 risks good-faith violations
+in a cash account. Code coupling is small: `state.py`, `monthly_returns.py`
+and every backtest are broker-agnostic; the Robinhood dependency is entirely
+in the two trigger prompts.
+
+**One genuine IBKR upgrade:** market-on-close orders, which Robinhood lacks,
+would fill at the actual official close and collapse the snapshot-vs-close
+tracking error `fill_quality.py` measures. Not free — MOC cutoffs are 15:45 ET
+(NYSE) / 15:50 (Nasdaq), *before* the current trigger, so the signal would move
+to ~15:40 and orders become uncancellable. A different convention; it would
+need its own study.
+
+**Routes.** (a) Official connector with owner sign-off — works today, loses
+unattended execution. (b) Self-hosted TWS-API MCP bridge — the only route that
+keeps autonomy, but TWS/IB Gateway must run persistently and IBKR does not
+support headless sessions (needs Xvfb + IBC on an always-on machine); **this
+cloud session cannot host it**, being ephemeral. (c) Stay at Robinhood.
+
+**Recommendation: do not move the live account.** Nothing about IBKR improves
+this strategy's economics, and the move either surrenders unattended execution
+or takes on infrastructure IBKR does not support for unattended use. If IBKR
+is wanted for other reasons, run it as a **shadow book** for a quarter with
+`fill_quality.py` recording IBKR fills against the official close alongside
+Robinhood's — that answers the only genuinely open question (does IBKR Pro
+fill better than Robinhood's PFOF routing?) with data, at no risk to the live
+account. No account action taken.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
