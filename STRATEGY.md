@@ -3927,6 +3927,35 @@ k, permutation p 0.68; real k = 2 +0.036 is the same three short reversals
 hand-off.** Candidates this line: 3 + 8 (counterfactual). Cumulative D/E:
 267 + 890 + 41 + 82 + 11.
 
+### Extension trim destination: SPMO instead of cash — tested 2026-09-20, NOT applied
+
+Owner asked whether the trimmed A-row exposure was ever moved into SPMO
+rather than BOXX. It had not been (every trim variant on record frees
+weight to cash). `paper-track/trim_destination_test.py`,
+`research_notes/trim_destination_test.md`. Baseline = current live design
+(D gate, E cash; proxy 25.46%/1.071/−27.0%, S 1.399 H 0.825; real daily
+37.30%/1.475/−18.6%, asserted). Six pre-registered A-row schedules at
+1/2/3 votes: TQQQ-first never cash (75/25 → 100/0 → 100/0), TQQQ-first then
+half cash, TQQQ-first then all cash, freed weight split SPMO/cash, core at
+any vote, core then cash steps (100/0 → 50/0/50 → cash).
+
+**Result: cash is the right destination.** Five of six are worse than live
+on every slice (proxy full Sharpe 1.023–1.049 vs 1.071; holdout 0.787–0.804
+vs 0.825; real 1.428–1.455 vs 1.475) and worse than the live design
+flat-levered to their exposure (−0.013 to −0.048); the more core held at
+2–3 votes, the worse. The sixth, core only at 1 vote then cash, is within
+0.01 of live everywhere (1.079 / S 1.405 / H 0.834; real 1.477, CAGR
+−0.31 pp), bootstrap P(≤0) 0.21 proxy / 0.47 real, permutation over the six
+p = 1.00 (real gain +0.008 vs null 95th +0.122 — below the null minimum),
+reverses under a one-session lag (search −0.017, real −0.023) and at 20 bp
+(−0.02 to −0.03). **Why:** the trim fires on days when the core's own
+next-session return is at or below cash on every harness and rung (proxy
+core bp/day at 0/1/2/3 votes +9.1 / −0.8 / −2.0 / −3.9; SPMO +9.5 / +2.0 /
+−1.7 / −1.0; cash +0.8), so there is no unlevered drift to capture. Distinct
+from the state-A-confidence rejection (core on the best A days cost Sharpe
+because those days carry drift); here core on the worst A days earns
+nothing because they do not. Cumulative: +6 candidates.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two

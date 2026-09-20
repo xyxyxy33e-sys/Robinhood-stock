@@ -1,0 +1,187 @@
+======================================================================================================================
+RESEARCH LINE trim_destination_test (2026-09-20): does the extension trim's freed weight belong in SPMO instead of cash?
+======================================================================================================================
+  [d_substate_fresh] STANDING FIGURES (must match 22.18% / 0.913 / -33.6%, S 1.103, H 0.768; real weekly ~31.40% / 1.248 / -25.0%)
+  [d_substate_fresh] 26y proxy 22.18% / 0.913 / -33.6%  S 1.103  H 0.768  exposure 67.7% | real weekly 31.35% / 1.247 / -25.0%  (6575 proxy rows 2000-07-03..2026-08-26, 565 real weekly rows)
+  [d_substate_fresh] state D: 934 proxy days (14.2%), search 382, holdout 552
+  [d_substate_fresh] real DAILY harness (SPMO/TQQQ/QLD/XLU/BOXX-synthetic, 2015-11-02..2026-09-04, 2725 sessions): 29.66% / 1.145 / -32.9%  exposure 72.2%  45.2 rebalances/yr  (mirror verified against monthly_returns.simulate)
+  breadth for the D gate: breadth_tracker on data/QQEW_daily_ext.csv (first value proxy 2006-05-02, real 2006-05-02); gate pct < 0.2, gap200 < 0.02
+
+  BASELINE = CURRENT live design (A 50/50, trim step 1/3 to cash, vol target 20 %, 5 % band, D gate, E = cash):
+    proxy  25.46% / 1.071 / -27.0%  S 1.399 H 0.825 exp 62.2% reb 47.9/yr (6575 rows 2000-07-03..2026-08-26; gated D days 240, E days 380)
+    real daily  37.30% / 1.475 / -18.6% exp 67.2% reb 45.3/yr (2725 sessions 2015-11-02..2026-09-04)
+    BOTH BASELINES REPRODUCED (asserted: proxy 25.46 / 1.071 / -27.0, S 1.399, H 0.825; real 37.30 / 1.475 / -18.6).
+
+  EFFECTIVE-A DAYS BY VOTE COUNT (these are the only days any schedule touches; rung 0 is identical in all 7):
+                          A days  0 votes   1 vote  2 votes  3 votes   share of A days at 1/2/3     of all days
+  proxy full                3909     2897      322      331      359     8.2% /   8.5% /   9.2%        15.4%
+  proxy search 2015-11-01+    1848     1371      137      136      204     7.4% /   7.4% /  11.0%        17.5%
+  proxy holdout ..2015-10    2061     1526      185      195      155     9.0% /   9.5% /   7.5%        13.9%
+  real daily 2015-11+       1854     1377      137      136      204     7.4% /   7.3% /  11.0%        17.5%
+  (A days here = effective state A after the 20/100 fast overlay, excluding gated-D and E days, which are cash under every schedule.)
+
+======================================================================================================================
+GRID: the 7 pre-registered schedules (+ no-trim reference). Proxy full / search / holdout, real daily; deltas vs live
+======================================================================================================================
+  id  rungs (SPMO,TQQQ,cash) at 0/1/2/3 votes                    |    CAGR Sharpe  MaxDD   exp   reb | S    CAGR    Sh     DD | H    CAGR    Sh     DD |    dS_F   dS_S   dS_H | real    CAGR    Sh     DD   exp  reb   rdSh
+  S0  (50,50,0) / (33.3,33.3,33.3) / (16.7,16.7,66.7) / (0,0,100) |  25.46%  1.071 -27.0% 62.2%  47.9 |    37.14% 1.399 -25.3% |    17.84% 0.825 -27.0% |  +0.000 +0.000 +0.000 |       37.30% 1.475 -18.6% 67.2% 45.3 +0.000
+  S1  (50,50,0) / (75,25,0) / (100,0,0) / (100,0,0)              |  24.70%  1.023 -27.5% 71.9%  47.3 |    36.27% 1.336 -25.4% |    17.15% 0.787 -27.5% |  -0.048 -0.063 -0.038 |       37.04% 1.428 -18.3% 78.9% 47.6 -0.046
+  S2  (50,50,0) / (75,25,0) / (100,0,0) / (50,0,50)              |  24.95%  1.041 -27.5% 69.4%  49.3 |    36.63% 1.364 -25.4% |    17.33% 0.798 -27.5% |  -0.030 -0.034 -0.027 |       37.12% 1.450 -18.3% 75.4% 46.9 -0.024
+  S3  (50,50,0) / (75,25,0) / (100,0,0) / (0,0,100)              |  25.09%  1.049 -27.5% 66.8%  48.7 |    36.79% 1.375 -25.4% |    17.46% 0.804 -27.5% |  -0.022 -0.023 -0.021 |       37.04% 1.455 -18.3% 71.8% 46.0 -0.020
+  S4  (50,50,0) / (58.3,33.3,8.3) / (58.3,16.7,25.0) / (50,0,50) |  25.04%  1.040 -27.9% 67.8%  49.1 |    36.76% 1.363 -25.5% |    17.40% 0.797 -27.9% |  -0.031 -0.036 -0.028 |       37.19% 1.447 -18.5% 73.9% 46.5 -0.028
+  S5  (50,50,0) / (100,0,0) / (100,0,0) / (100,0,0)              |  24.76%  1.036 -26.6% 71.9%  43.5 |    36.06% 1.342 -25.0% |    17.37% 0.804 -26.6% |  -0.035 -0.056 -0.021 |       36.72% 1.431 -17.8% 78.9% 47.6 -0.044
+  S6  (50,50,0) / (100,0,0) / (50,0,50) / (0,0,100)              |  25.41%  1.079 -26.6% 64.4%  48.2 |    36.96% 1.405 -25.0% |    17.88% 0.834 -26.6% |  +0.008 +0.007 +0.009 |       36.99% 1.477 -17.8% 69.6% 45.5 +0.002
+  REF (50,50,0) / (50,50,0) / (50,50,0) / (50,50,0)              |  23.06%  0.907 -30.7% 71.9%  37.7 |    34.22% 1.176 -25.9% |    15.76% 0.699 -30.7% |  -0.164 -0.223 -0.127 |       34.89% 1.250 -20.4% 78.9% 48.0 -0.225
+  descriptions: S0 = LIVE: x2/3, x1/3, x0 to cash; S1 = TQQQ-first, never cash; S2 = TQQQ-first then cash; S3 = TQQQ-first then all cash; S4 = half-and-half (verbatim); S5 = core-only at any vote; S6 = core then cash steps; REF = no trim (reference only)
+  (REF is not a candidate: it is the same design with the trim switched off, printed so the reader can see where each destination sits between 'no trim' and 'trim to cash'.)
+  live CAGR deltas (pp) and MaxDD deltas (pp): S1: proxy -0.76 / DD -0.5, real -0.26 / DD +0.3; S2: proxy -0.51 / DD -0.5, real -0.18 / DD +0.3; S3: proxy -0.37 / DD -0.5, real -0.26 / DD +0.3; S4: proxy -0.42 / DD -1.0, real -0.11 / DD +0.1; S5: proxy -0.70 / DD +0.4, real -0.58 / DD +0.8; S6: proxy -0.04 / DD +0.4, real -0.31 / DD +0.8
+  both-era (S and H Sharpe both above live): S6; real Sharpe above live: S6; real CAGR above live: NONE
+
+======================================================================================================================
+EXPOSURE-MATCHED CONTROLS: LIVE flat de-levered (all four risky legs x k every day) to each candidate's average exposure
+======================================================================================================================
+  id  | proxy    exp      k  ctl Sh  ctl S  ctl H | cand-ctl       F      S      H | real    exp      k  ctl Sh ctl DD | cand-ctl     rSh
+  S1  |        71.9%  1.157   1.060  1.384  0.816 |           -0.037 -0.048 -0.030 |       78.9%  1.176   1.458 -21.9% |          -0.030
+  S2  |        69.4%  1.116   1.063  1.387  0.820 |           -0.022 -0.022 -0.022 |       75.4%  1.123   1.465 -20.9% |          -0.014
+  S3  |        66.8%  1.074   1.066  1.390  0.822 |           -0.017 -0.015 -0.018 |       71.8%  1.069   1.469 -19.9% |          -0.014
+  S4  |        67.8%  1.091   1.065  1.388  0.822 |           -0.025 -0.026 -0.024 |       73.9%  1.100   1.467 -20.4% |          -0.020
+  S5  |        71.9%  1.157   1.060  1.384  0.816 |           -0.024 -0.042 -0.013 |       78.9%  1.176   1.458 -21.9% |          -0.028
+  S6  |        64.4%  1.036   1.069  1.394  0.824 |           +0.011 +0.011 +0.010 |       69.6%  1.036   1.472 -19.1% |          +0.005
+  (k > 1 means the candidate holds MORE capital than live; the control then levers live up to match, cash negative on those days is allowed in the harness as in exposure_control().)
+  beats control in both proxy eras: S6; beats control on real: S6
+
+======================================================================================================================
+PER-RUNG ATTRIBUTION (descriptive): mean next-session return of the SPMO/core leg and of TQQQ on A days by vote count; cash for reference
+======================================================================================================================
+  harness                    votes     n  core bp/d     t  TQQQ bp/d     t cash bp/d core-cash t
+  proxy full                     0  2897        9.1  4.78       25.1  4.42       0.7        4.39
+  proxy full                     1   322       -0.8 -0.11       -4.7 -0.22       0.9       -0.24
+  proxy full                     2   331       -2.0 -0.31       -7.3 -0.38       0.4       -0.37
+  proxy full                     3   359       -3.9 -0.58      -13.5 -0.68       0.7       -0.69
+  proxy search 2015-11-01+       0  1371       10.1  3.95       27.9  3.65       0.9        3.61
+  proxy search 2015-11-01+       1   137        4.7  0.53       10.8  0.41       1.4        0.38
+  proxy search 2015-11-01+       2   136       -2.9 -0.27      -10.9 -0.33       0.8       -0.34
+  proxy search 2015-11-01+       3   204       -3.0 -0.33      -11.8 -0.43       1.1       -0.44
+  proxy holdout                  0  1526        8.2  2.94       22.7  2.72       0.6        2.71
+  proxy holdout                  1   185       -4.9 -0.47      -16.2 -0.52       0.5       -0.52
+  proxy holdout                  2   195       -1.3 -0.17       -4.8 -0.21       0.2       -0.19
+  proxy holdout                  3   155       -5.0 -0.53      -15.9 -0.56       0.2       -0.55
+  real daily                     0  1377        9.5  3.85       27.7  3.67       0.9        3.49
+  real daily                     1   137        2.0  0.23        9.8  0.37       1.4        0.07
+  real daily                     2   136       -1.7 -0.17      -10.7 -0.33       0.8       -0.25
+  real daily                     3   204       -1.0 -0.12      -10.9 -0.40       1.1       -0.24
+  (proxy core = QQQ total-return leg, TQQQ = synthetic 3x; real core = SPMO. Positive core-minus-cash at 1-3 votes is what any SPMO destination needs.)
+
+  [grid done in 13 s]
+
+======================================================================================================================
+MAX-STATISTIC PERMUTATION over the 6 candidates: vote labels shuffled among effective-A days (counts kept), 1000 draws, proxy
+======================================================================================================================
+  Statistic per draw: max over S1..S6 of (candidate Sharpe - live Sharpe), BOTH evaluated on the same shuffled labels (paired null:
+  'the vote label carries no information about whether the freed weight does better in SPMO or in cash'). Full-period gain, and
+  both-era gain = min(dS_search, dS_holdout) with sliced Sharpes (as d_pair_test). Also the r2-precedent unpaired form (candidate
+  under shuffled labels minus the FIXED real live Sharpe), for reference only.
+  real best full-period gain vs live: +0.008 (S6); null median +0.083, 95th +0.122, 99th +0.142 -> p = 1.000
+  real best both-era min gain vs live: +0.006 (S6); null median +0.069, 95th +0.108, 99th +0.125 -> p = 0.998
+  (unpaired r2-style, full period: null 95th -0.158 -> p = 0.000)
+  lower tail: null full-period min +0.027, 1st pct +0.039, 5th +0.053; draws <= real best 0.000. both-era: min -0.002, 1st +0.017, 5th +0.034; draws <= real best 0.002.
+  (Reading: under the null the best SPMO destination beats trim-to-cash by the null median simply because random A days earn the core's drift;
+   the real gain being far below that says the actual vote days are days on which the core does NOT earn it -- the label is informative,
+   and in the direction that favours cash.)
+  per-candidate real gains (F, both-era min): S1: -0.048 / -0.063; S2: -0.030 / -0.034; S3: -0.022 / -0.023; S4: -0.031 / -0.036; S5: -0.035 / -0.056; S6: +0.008 / +0.006
+  [perm done in 54 s]
+
+======================================================================================================================
+DEEP BLOCK. best by proxy full Sharpe: S6; best by real Sharpe: S6; best by both-era min gain: S6
+======================================================================================================================
+
+----------------------------------------------------------------------------------------------------------------------
+DEEP S6 (core then cash steps): proxy  25.41% / 1.079 / -26.6% S 1.405 H 0.834 exp 64.4% | real  36.99% / 1.477 / -17.8% exp 69.6% | control k 1.036 (proxy) 1.036 (real)
+  (a) circular block bootstrap (2000 draws) of the Sharpe / log-return difference:
+      proxy vs live                    block 20d: Sharpe 95% CI [-0.012, +0.028] P(<=0)=0.205   log-return [-0.52, +0.43] pp/yr P(<=0)=0.568
+      proxy vs live                    block 60d: Sharpe 95% CI [-0.011, +0.029] P(<=0)=0.209   log-return [-0.53, +0.45] pp/yr P(<=0)=0.548
+      proxy vs matched control         block 20d: Sharpe 95% CI [-0.009, +0.032] P(<=0)=0.154   log-return [-1.33, -0.06] pp/yr P(<=0)=0.986
+      proxy vs matched control         block 60d: Sharpe 95% CI [-0.012, +0.031] P(<=0)=0.151   log-return [-1.37, -0.07] pp/yr P(<=0)=0.986
+      real daily vs live               block 20d: Sharpe 95% CI [-0.081, +0.078] P(<=0)=0.467   log-return [-2.15, +1.52] pp/yr P(<=0)=0.585
+      real daily vs live               block 60d: Sharpe 95% CI [-0.083, +0.082] P(<=0)=0.484   log-return [-2.20, +1.66] pp/yr P(<=0)=0.611
+      real daily vs matched control    block 20d: Sharpe 95% CI [-0.072, +0.078] P(<=0)=0.426   log-return [-3.13, +0.68] pp/yr P(<=0)=0.889
+      real daily vs matched control    block 60d: Sharpe 95% CI [-0.081, +0.090] P(<=0)=0.459   log-return [-3.29, +0.91] pp/yr P(<=0)=0.871
+  (b) leave-one-major-regime-out (Sharpe difference vs live / vs matched control with that window removed; proxy, and real where the window overlaps):
+      drop dot-com 2000-2002          proxy: vs live +0.004, vs control +0.006
+      drop GFC 2007-2009              proxy: vs live +0.010, vs control +0.012
+      drop COVID 2020                 proxy: vs live +0.011, vs control +0.014   | real: vs live +0.012, vs control +0.015
+      drop 2022 bear                  proxy: vs live +0.009, vs control +0.011   | real: vs live +0.003, vs control +0.006
+      drop whole SPMO era 2015-11+    proxy: vs live +0.009, vs control +0.010
+  (c) one-extra-session lag (vote count from the previous close, for candidate AND live):
+      live lagged  proxy  23.83% / 1.021 / -28.1% S 1.366 H 0.761 | real  36.11% / 1.446 / -18.9%
+      S6 lagged   proxy  23.52% / 1.019 / -27.3% S 1.350 H 0.770 | real  35.03% / 1.423 / -18.5%
+      S6 lagged vs live lagged: F -0.002 S -0.017 H +0.009 real -0.023; vs UNLAGGED live (d_pair_test convention): F -0.052 S -0.049 H -0.055 real -0.052
+  (d) 20 bp one-way cost (both sides): live proxy  18.56% / 0.833 / -33.7% S 1.157 H 0.590; S6  17.80% / 0.813 / -33.3% S 1.131 H 0.573 (vs live F -0.021 S -0.025 H -0.017; vs matched control at 20 bp F -0.018 S -0.021 H -0.016)
+      real: live  29.40% / 1.219 / -21.9% S6  28.18% / 1.187 / -21.0% (-0.031)
+
+======================================================================================================================
+PER-YEAR RETURNS: live vs the best two by proxy full Sharpe (S6, S3); no-trim reference alongside
+======================================================================================================================
+  PROXY (QQQ core): year, live, S6, S3, no-trim ref; deltas vs live in pp; tag = STRATEGY.md 'trim costs' (C) / 'trim pays' (P) year
+  year      live      S6      S3     ref |      dS6     dS3    dref  tag
+  2000     -18.9   -18.6   -19.1   -19.6 |     +0.4    -0.2    -0.7  
+  2001      +6.6    +7.3    +6.3    +5.6 |     +0.7    -0.3    -0.9  
+  2002      -1.7    -0.1    -2.7    -5.1 |     +1.6    -1.0    -3.4  
+  2003     +75.3   +73.7   +75.0   +55.4 |     -1.6    -0.3   -19.9  C
+  2004     +12.3   +12.5   +11.5    +7.9 |     +0.1    -0.8    -4.5  
+  2005     -15.4   -15.4   -15.4   -15.4 |     +0.0    +0.0    +0.0  
+  2006     +17.9   +17.9   +17.2   +15.0 |     -0.0    -0.7    -2.9  
+  2007     +25.8   +27.2   +24.3   +11.1 |     +1.4    -1.5   -14.7  P
+  2008      -1.6    -0.6    -2.1    -3.8 |     +1.0    -0.5    -2.2  
+  2009     +54.2   +48.4   +57.0   +85.0 |     -5.8    +2.8   +30.9  C
+  2010     +46.9   +46.8   +44.7   +37.4 |     -0.1    -2.2    -9.4  P
+  2011      -6.4    -5.8    -7.2    -8.2 |     +0.7    -0.7    -1.7  P
+  2012     +19.4   +19.1   +19.9   +21.4 |     -0.3    +0.5    +2.0  
+  2013     +57.9   +57.9   +57.9   +57.9 |     +0.0    +0.0    +0.0  
+  2014     +25.3   +25.3   +25.3   +25.3 |     +0.0    +0.0    +0.0  
+  2015      +3.1    +3.1    +3.1    +3.1 |     +0.0    +0.0    +0.0  
+  2016     +14.3   +14.3   +14.3   +14.3 |     +0.0    +0.0    +0.0  
+  2017     +75.9   +77.3   +75.2   +73.0 |     +1.5    -0.7    -2.9  
+  2018      +6.7    +6.2    +6.4    +3.2 |     -0.6    -0.3    -3.5  P
+  2019     +53.9   +54.7   +53.5   +52.1 |     +0.9    -0.4    -1.8  
+  2020     +57.0   +53.2   +59.6   +68.4 |     -3.8    +2.7   +11.5  CP
+  2021     +53.2   +53.4   +51.5   +47.1 |     +0.1    -1.8    -6.2  
+  2022     -18.4   -18.4   -18.4   -18.4 |     +0.0    +0.0    +0.0  
+  2023     +74.1   +78.0   +70.7   +82.3 |     +3.9    -3.3    +8.3  C
+  2024     +62.7   +60.9   +61.9   +44.6 |     -1.8    -0.7   -18.1  CP
+  2025     +36.5   +35.3   +35.4   +29.1 |     -1.2    -1.1    -7.4  P
+  2026     +39.2   +38.9   +40.2   +29.3 |     -0.3    +1.1    -9.8  CP
+    sum over trim-cost years present (2003, 2009, 2020, 2023, 2024, 2026): S6 -9.3 pp; S3 +2.2 pp; ref +2.8 pp
+    sum over trim-pay years present (2007, 2010, 2011, 2018, 2020, 2024, 2025, 2026): S6 -5.6 pp; S3 -2.8 pp; ref -53.1 pp
+  REAL DAILY (SPMO era): year, live, S6, S3, no-trim ref; deltas vs live in pp; tag = STRATEGY.md 'trim costs' (C) / 'trim pays' (P) year
+  year      live      S6      S3     ref |      dS6     dS3    dref  tag
+  2015      -6.8    -6.8    -6.8    -6.8 |     +0.0    +0.0    +0.0  
+  2016     +14.8   +14.8   +14.8   +14.8 |     +0.0    +0.0    +0.0  
+  2017     +70.6   +75.6   +72.2   +68.8 |     +5.0    +1.6    -1.8  
+  2018     +11.2   +10.9   +12.3    +8.3 |     -0.3    +1.0    -2.9  P
+  2019     +44.2   +44.5   +43.5   +42.5 |     +0.3    -0.7    -1.7  
+  2020     +60.9   +56.1   +63.2   +74.6 |     -4.7    +2.3   +13.7  CP
+  2021     +45.9   +47.0   +43.6   +37.0 |     +1.1    -2.3    -8.9  
+  2022      -9.2    -9.2    -9.2    -9.2 |     +0.0    +0.0    +0.0  
+  2023     +60.0   +68.8   +63.8   +69.4 |     +8.8    +3.7    +9.4  C
+  2024     +61.9   +57.8   +58.9   +48.4 |     -4.1    -3.0   -13.5  CP
+  2025     +37.6   +31.5   +32.9   +28.8 |     -6.1    -4.6    -8.8  P
+  2026     +38.6   +36.8   +38.2   +29.8 |     -1.8    -0.4    -8.8  CP
+    sum over trim-cost years present (2020, 2023, 2024, 2026): S6 -1.8 pp; S3 +2.7 pp; ref +0.9 pp
+    sum over trim-pay years present (2018, 2020, 2024, 2025, 2026): S6 -17.0 pp; S3 -4.6 pp; ref -20.3 pp
+
+======================================================================================================================
+PROJECT BAR, per candidate: both-era improvement | beats matched control (S and H) | real Sharpe up | real CAGR not down
+======================================================================================================================
+  S1: both-era fail (dS -0.063, dH -0.038) | control fail (vC S -0.048, H -0.030, F -0.037; real vC -0.030) | real Sharpe -0.046 | real CAGR -0.26 pp | proxy MaxDD -0.5 pp, real MaxDD +0.3 pp
+  S2: both-era fail (dS -0.034, dH -0.027) | control fail (vC S -0.022, H -0.022, F -0.022; real vC -0.014) | real Sharpe -0.024 | real CAGR -0.18 pp | proxy MaxDD -0.5 pp, real MaxDD +0.3 pp
+  S3: both-era fail (dS -0.023, dH -0.021) | control fail (vC S -0.015, H -0.018, F -0.017; real vC -0.014) | real Sharpe -0.020 | real CAGR -0.26 pp | proxy MaxDD -0.5 pp, real MaxDD +0.3 pp
+  S4: both-era fail (dS -0.036, dH -0.028) | control fail (vC S -0.026, H -0.024, F -0.025; real vC -0.020) | real Sharpe -0.028 | real CAGR -0.11 pp | proxy MaxDD -1.0 pp, real MaxDD +0.1 pp
+  S5: both-era fail (dS -0.056, dH -0.021) | control fail (vC S -0.042, H -0.013, F -0.024; real vC -0.028) | real Sharpe -0.044 | real CAGR -0.58 pp | proxy MaxDD +0.4 pp, real MaxDD +0.8 pp
+  S6: both-era PASS (dS +0.007, dH +0.009) | control PASS (vC S +0.011, H +0.010, F +0.011; real vC +0.005) | real Sharpe +0.002 | real CAGR -0.31 pp | proxy MaxDD +0.4 pp, real MaxDD +0.8 pp
+  permutation (proxy, 1000 draws): full-period best +0.008 (S6) p = 1.000 (null 95th +0.122); both-era best +0.006 (S6) p = 0.998 (null 95th +0.108)
+
+  candidate count this line: 6 pre-registered + live + 1 labelled reference (no-trim) + 6 exposure-matched controls. Nothing applied; owner decides.
+  [deep done in 63 s]
+
+[total 63 s]
