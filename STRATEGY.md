@@ -3956,6 +3956,31 @@ from the state-A-confidence rejection (core on the best A days cost Sharpe
 because those days carry drift); here core on the worst A days earns
 nothing because they do not. Cumulative: +6 candidates.
 
+**S6 anatomy (same day, Part II of the same note; +24 neighbour cells).**
+Owner asked for a closer look at the one near-live schedule. Decomposed:
+the 1-vote SPMO rung alone is −0.000 F / −0.005 S / +0.002 H, real −0.012,
+real CAGR −0.67 pp; the 2-vote 50/0/50 rung alone is +0.005 / +0.008 /
++0.003, real +0.011 — S6's +0.008 is the 2-vote rung, and it is a variance
+effect (proxy sd 150.2 → 148.5 bp/d, mean unchanged), not return (−0.89 pp
+proxy, −2.48 pp real over the whole history). Its MaxDD gains are four
+sessions in Dec 2004 and ONE session on the real rows (2021-11-19). 1-vote
+core next-session return: search +4.7 bp/d (t 0.5), holdout −4.9 (t −0.5)
+— signs disagree, neither with confidence. A 5×5 neighbour grid (1-vote row
+× 2-vote row, cash at 3) is a plateau of trim DEPTH, not of the core
+destination: marginals are monotone in cash (1-vote 50/0/50 +0.022 >
+75/0/25 +0.016 > 100/0/0 +0.007 > live +0.005 > 75/25/0 −0.003), every cell
+that keeps TQQQ at 1 vote fails the holdout, and the best cell (50/0/50 →
+cash → cash: 1.103, S 1.426, H 0.860, real 1.501) is the known 1/.5/0/0
+depth with the levered leg dropped first. Permutation over the 24: vs live
+p 0.021, vs matched control **p 0.066**. Threshold shifts: both-era positive
+only at 0/+1/+2 pp, a point on the loose side. S6 bootstrap P(≤0) 0.20
+proxy / 0.49 real; reverses under lag (search −0.017, real −0.023) and 20 bp
+(−0.02 to −0.03); turnover +12%. **Honest one-liner: S6 is a slightly
+deeper trim that drops the levered leg first; the core as a destination adds
+nothing in either era.** The surface is the trim-depth monotonicity already
+recorded under "Leverage under the trim" (deeper is better, ⅓ was the
+deliberate non-corner pick). Not applied.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
