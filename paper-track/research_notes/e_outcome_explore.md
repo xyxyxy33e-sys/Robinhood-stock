@@ -588,3 +588,261 @@ shape.
   the full pre-registered battery (proxy full / search / holdout, real daily,
   exposure-matched controls, whole-grid permutation) on both eras, and at
   these n the battery is not powered to pass it.
+
+---
+
+# Part III — two owner hypotheses run as pre-registered candidates (2026-09-20, NOT applied, owner decides)
+
+Same script (`part3_time_in_state()`), same log (appended). Harness:
+`d_substate_fresh` proxy rows (QQQ-core, 2000-07..2026-08, 6575 rows) and
+its real-daily mirror (SPMO/TQQQ/QLD/XLU/synthetic BOXX, 2015-11..2026-09,
+2725 sessions), exactly as `e_pair_test` used them. Sharpe is the repo's
+zero-rate Sharpe. Every number below is from the log. No adoption language:
+these are reported against their baselines and matched controls.
+
+## III.1 SPMO time-in-state rule on the CURRENT design (k = 2, 3, 5)
+
+Rule(k): E session age ≤ k → the C row (100% SPMO; on the proxy the core
+leg); age > k → 100% cash. Baseline = current live E row (100% cash) with
+the D gate on D days, built explicitly by E override and asserted: proxy
+**25.46% / 1.071 / −27.0%** (S 1.399, H 0.825, exposure 62.2%, 47.9 reb/yr);
+real daily **37.30% / 1.475 / −18.6%** (67.2%, 45.3 reb/yr). The harness
+pins the old E row in `state.TARGET_WEIGHTS`, so the mirror was checked in
+two steps: no-override run == `monthly_returns.simulate` day by day (gives
+the e_pair_test gated figure 37.75 / 1.484 / −19.4), then the E→cash
+override reproduces the standing 37.30 / 1.475 / −18.6. Control = the
+constant-E SPMO ladder (g × SPMO + (1−g) cash on every E day), matched by
+average exposure.
+
+Raw ingredient — return of the risk leg over E sessions 1..min(k, n)
+(position taken at the close of E session 1; this is exactly what rule(k)
+earns on the leg). QQQ over the 32 part-I episodes; SPMO over the real
+harness's 13 episodes:
+
+| k | leg | BREAK mean / median (pos) | REVERSAL mean / median (pos) | ALL mean / median (pos) |
+|---|---|---|---|---|
+| 2 | QQQ (n 16/16/32) | −1.35 / −0.75 (4/16) | +1.28 / +1.27 (12/16) | −0.04 / +0.05 (16/32) |
+| 2 | SPMO (n 5/8/13) | −0.40 / 0.00 (1/5) | +1.10 / +0.89 (5/8) | +0.52 / 0.00 (6/13) |
+| 3 | QQQ | −1.05 / −0.65 (7/16) | +0.38 / +0.98 (11/16) | −0.33 / +0.18 (18/32) |
+| 3 | SPMO | −0.62 / −0.08 (0/5) | −1.15 / +0.68 (4/8) | −0.95 / 0.00 (4/13) |
+| 5 | QQQ | −1.21 / −1.15 (5/16) | +0.98 / +2.40 (12/16) | −0.11 / +0.30 (17/32) |
+| 5 | SPMO | −1.51 / −3.12 (1/5) | −0.16 / +1.74 (5/8) | −0.68 / 0.00 (6/13) |
+
+Pooled, the first k E sessions earn about zero on QQQ (−0.04% to −0.33%) and
+slightly negative on SPMO; the BREAK/REVERSAL split is the part-II path
+finding again (BREAKs are falling, REVERSALs bouncing), which the rule
+cannot use because it does not know the label.
+
+The three candidates:
+
+| k | E days → SPMO (proxy / real) | proxy full CAGR / Sharpe / MaxDD | S Sharpe / MaxDD | H Sharpe / MaxDD | dSharpe vs live F / S / H | matched ctl (proxy) | vs ctl F / S / H | real CAGR / Sharpe / MaxDD | real dSharpe vs live | real ctl / vs ctl |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2 | 62 / 24 | 25.08% / 1.054 / −28.7% | 1.417 / −27.0% | 0.781 / −28.7% | **−0.017** / +0.018 / −0.044 | SPMO 20% | −0.020 / +0.010 / −0.043 | 37.90% / 1.488 / −19.8% | **+0.014** | SPMO 20% / +0.007 |
+| 3 | 89 / 33 | 24.92% / 1.046 / −29.2% | 1.387 / −28.4% | 0.790 / −29.2% | −0.025 / −0.012 / −0.035 | SPMO 20% | −0.028 / −0.020 / −0.034 | 36.77% / 1.449 / −20.5% | −0.026 | SPMO 30% / −0.035 |
+| 5 | 139 / 50 | 25.05% / 1.048 / −29.9% | 1.383 / −29.1% | 0.796 / −29.9% | −0.023 / −0.015 / −0.029 | SPMO 40% | −0.028 / −0.031 / −0.025 | 36.70% / 1.442 / −21.1% | −0.033 | SPMO 40% / −0.045 |
+
+CAGR deltas vs live: k=2 proxy −0.38 pp (S +0.86, H −1.12), real +0.60 pp;
+k=3 proxy −0.54 (S −0.07, H −0.82), real −0.53; k=5 proxy −0.40 (S −0.06,
+H −0.61), real −0.61. MaxDD deepens for every k on both harnesses (proxy
+−1.8 / −2.3 / −3.0 pp, real −1.2 / −2.0 / −2.6 pp).
+
+Per-episode gain vs live (log-return difference over the episode, pp):
+
+| k | harness | positive | total / mean / median | BREAK mean (pos) | REVERSAL mean (pos) | top 3 | bottom 3 |
+|---|---|---|---|---|---|---|---|
+| 2 | proxy (32) | 16/32 | −7.53 / −0.24 / −0.04 | −1.38 (4/16) | +0.91 (12/16) | 2019-06-03 +3.38, 2018-10-11 +2.66, 2020-03-09 +2.66 | 2011-08-04 (B) −5.83, 2015-08-21 (B) −4.43, 2008-06-25 (B) −3.93 |
+| 2 | real (13) | 6/13 | +5.02 / +0.39 / −0.04 | −0.41 (1/5) | +0.88 (5/8) | 2019-06-03 +3.07, 2018-10-11 +2.38, 2020-03-09 +1.75 | 2022-01-20 (B) −1.49, 2020-03-11 (R) −1.34, 2018-11-12 (B) −0.97 |
+| 3 | proxy | 17/32 | −10.92 / −0.34 / +0.07 | −1.20 (7) | +0.52 (10) | same three 1–2 day reversals | 2020-03-11 (R) −5.29, 2008-06-25 (B) −4.80, 2022-01-20 (B) −4.21 |
+| 3 | real | 4/13 | −3.92 / −0.30 / −0.16 | −0.68 (0) | −0.07 (4) | same | 2020-03-11 (R) −6.82, 2022-01-20 (B) −2.47, 2018-10-24 (R) −1.84 |
+| 5 | proxy | 17/32 | −7.91 / −0.25 / +0.19 | −1.24 (5) | +0.74 (12) | same | 2008-06-25 (B) −5.64, 2022-01-20 (B) −5.20, 2020-03-11 (R) −3.76 |
+| 5 | real | 7/13 | −4.42 / −0.34 / +0.04 | −1.31 (1) | +0.27 (6) | 2019-06-03 +3.07, 2018-10-11 +2.38, 2025-03-10 (B) +2.13 | 2020-03-11 (R) −4.45, 2016-01-07 (B) −3.40, 2026-03-20 (R) −3.33 |
+
+The real-era k=2 gain (+5.0 pp total) comes from three 1–2 session
+REVERSALs (2019-06-03, 2018-10-11, 2020-03-09) worth +7.2 pp together; the
+other ten real episodes sum to −2.2 pp.
+
+Block bootstrap (2000 paired circular draws) for the best k (k=2 on both
+harnesses):
+
+| comparison | block | Sharpe diff 95% CI | P(≤0) | log-return pp/yr 95% CI | P(≤0) |
+|---|---|---|---|---|---|
+| proxy vs live | 20d | [−0.055, +0.018] | 0.834 | [−1.15, +0.53] | 0.761 |
+| proxy vs live | 60d | [−0.055, +0.014] | 0.844 | [−1.17, +0.43] | 0.777 |
+| proxy vs SPMO 20% control | 60d | [−0.056, +0.010] | 0.901 | [−1.21, +0.32] | 0.861 |
+| real vs live | 20d | [−0.019, +0.052] | 0.242 | [−0.31, +1.37] | 0.152 |
+| real vs live | 60d | [−0.015, +0.048] | 0.203 | [−0.25, +1.30] | 0.118 |
+| real vs SPMO 20% control | 60d | [−0.021, +0.038] | 0.295 | [−0.40, +0.99] | 0.217 |
+
+Sliced Sharpe of k=2: search 1.416 vs live 1.398, holdout 0.781 vs live 0.825.
+
+Reading (descriptive): on the proxy all three k's lower full-period Sharpe
+(−0.017 to −0.025), lose the holdout (−0.029 to −0.044), deepen the max
+drawdown, and sit below their exposure-matched constant-SPMO control in
+every era. k=2 is the only one positive anywhere — search era +0.018 and
+real +0.014 — and that is inside its own bootstrap (P(≤0) 0.20–0.24 real,
+0.84 proxy) and is not above the 20% constant-SPMO ladder row on the real
+rows by more than +0.007. This is the same picture as `e_pair_test`'s RISK
+family: equity in E adds CAGR in the real era, costs drawdown everywhere,
+and never clears the holdout.
+
+## III.2 Carry-over rule on the CURRENT design: a no-op, by enumeration
+
+Rule as clarified: on a D→E transition keep the row held on the LAST D day
+for E sessions 1..k, then the E row (cash). Ungated last-D day → 100% QLD
+carried; gated last-D day (`state.d_gate_active`: breadth pct < 0.20 OR
+gap200 < 2%) → already cash, no-op. A→E and F→E entries hold cash from
+session 1.
+
+Enumeration of the 25 D→E entries on the proxy (the script prints the last
+D day's breadth percentile, gap200 and which gate condition held):
+
+```
+  entry         n last D       breadth   gap200  gated  why
+  2000-08-10    2 2000-08-09        --    0.49%  YES    gap200<2%
+  2004-04-30    3 2004-04-29        --    1.77%  YES    gap200<2%
+  2004-05-10   11 2004-05-07        --   -0.92%  YES    gap200<2%
+  2004-07-13    6 2004-07-12        --   -0.85%  YES    gap200<2%
+  2005-03-22   24 2005-03-21        --   -0.46%  YES    gap200<2%
+  2006-05-12   22 2006-05-11        --    0.28%  YES    gap200<2%
+  2008-01-07   18 2008-01-04      0.12   -0.96%  YES    breadth + gap200<2%
+  2010-06-07    4 2010-06-04      0.10    0.72%  YES    breadth + gap200<2%
+  2010-06-29   15 2010-06-28      0.16   -0.22%  YES    breadth + gap200<2%
+  2011-06-17    7 2011-06-16      0.85   -0.90%  YES    gap200<2%
+  2011-08-04    9 2011-08-03      0.00    1.33%  YES    breadth + gap200<2%
+  2011-12-14   12 2011-12-13      0.38   -0.86%  YES    gap200<2%
+  2012-11-07   25 2012-11-06      0.98    0.65%  YES    gap200<2%
+  2015-08-21   27 2015-08-20      0.07    0.18%  YES    breadth + gap200<2%
+  2016-01-07   19 2016-01-06      0.38   -0.81%  YES    gap200<2%
+  2016-06-24    2 2016-06-23      0.99    1.03%  YES    gap200<2%
+  2018-10-11    1 2018-10-10      0.37    0.19%  YES    gap200<2%
+  2018-10-24   10 2018-10-23      0.02    0.69%  YES    breadth + gap200<2%
+  2018-11-12   14 2018-11-09      0.98   -0.46%  YES    gap200<2%
+  2019-06-03    2 2019-05-31      0.46   -0.20%  YES    gap200<2%
+  2020-03-09    1 2020-03-06      0.13    4.43%  YES    breadth
+  2020-03-11   22 2020-03-10      0.01    2.37%  YES    breadth
+  2022-01-20   27 2022-01-19      0.10    0.31%  YES    breadth + gap200<2%
+  2025-03-10   25 2025-03-07      0.97   -0.22%  YES    gap200<2%
+  2026-03-20   12 2026-03-19      0.31    0.08%  YES    gap200<2%
+```
+
+**25 of 25 D→E entries were gated on the last D day** (23 by gap200 < 2%,
+the two 2020-03 entries with gap200 4.43% / 2.37% by breadth 0.13 / 0.01);
+**0 ungated** in either era (proxy 25 D-entries, real 11 D-entries, 0 and 0
+ungated; the other proxy entries are 3 from A and 4 from F). This is
+near-tautological: an E entry requires QQQ below 0.99 × SMA200, so on the
+last D day price is within one session's move of the 200d and gap200 < 2%
+is all but guaranteed; when a one-day crash jumps the 2% band (2020-03) the
+breadth leg catches it. Under the current design the carry-over rule
+therefore carries cash on every episode and equals live for every k; no
+sweep, permutation or bootstrap was run for it. The only path by which a
+carry-over could matter is if the D gate were ever removed.
+
+## III.3 Counterfactual: the carry-over on the RETIRED 2026-09-09 design
+
+"What the carry-over would have been worth had the D gate not been adopted."
+Design: no D gate (every D day 100% QLD) and E = 50% XLU / 50% cash — the
+baseline `d_substate_fresh` pins, asserted: proxy **22.18% / 0.913 / −33.6%**
+(S 1.103, H 0.768, exposure 67.7%); real daily **29.66% / 1.145 / −32.9%**
+(72.2%). Under it every D→E cross is an ungated QLD entry, so the rule acts
+on all 25 proxy episodes (search 11, holdout 14) and 11 real episodes; the
+3 A→E and 4 F→E entries hold the old E row from session 1. k=0 is the old
+design itself. Control = f × QLD + (1−f) × old E row on every E day
+(f = 0 reproduces k = 0 exactly), matched by exposure.
+
+Raw ingredient — QLD-leg return over E sessions 1..min(k, n) on the D→E
+entries (proxy = the harness's synthetic 2× leg, real = QLD), i.e. what the
+rule holds instead of 50% XLU / 50% cash:
+
+| k | proxy 2× BREAK (n 13) | proxy 2× REVERSAL (n 12) | proxy 2× ALL (n 25) | real QLD BREAK (n 5) | real QLD REVERSAL (n 6) | real QLD ALL (n 11) |
+|---|---|---|---|---|---|---|
+| 1 | −2.56 / −2.03 (2/13) | +1.77 / +2.80 (9/12) | −0.48 / −0.36 (11/25) | −2.39 / −1.74 (1/5) | +2.05 / +5.51 (5/6) | +0.04 / +0.04 (6/11) |
+| 2 | −2.87 / −1.69 (3) | +3.20 / +3.55 (9) | +0.04 / −0.11 (12) | −1.09 / −1.05 (2) | +3.79 / +3.59 (5) | +1.58 / +0.82 (7) |
+| 3 | −2.14 / −1.93 (5) | +1.25 / +3.71 (9) | −0.51 / +0.84 (14) | −1.62 / +0.18 (3) | −0.57 / +3.82 (4) | −1.05 / +1.25 (7) |
+| 5 | −1.50 / −1.48 (5) | +1.65 / +5.24 (9) | +0.01 / +0.76 (14) | −2.91 / −1.85 (2) | −0.04 / +5.23 (4) | −1.34 / +0.18 (6) |
+| 10 | −1.79 / −2.47 (4) | +4.52 / +5.55 (11) | +1.24 / +1.88 (15) | −0.83 / −2.59 (2) | +3.37 / +6.29 (5) | +1.46 / +1.96 (7) |
+| all | −4.15 / −6.43 (4) | +7.21 / +7.17 (12) | +1.30 / +5.36 (16) | −4.28 / −6.76 (2) | +7.47 / +7.49 (6) | +2.13 / +5.55 (8) |
+(mean / median %, positive count)
+
+The k curve (old design):
+
+| k | acts on S/H/real | proxy CAGR / Sharpe / MaxDD | S Sharpe / MaxDD | H Sharpe / MaxDD | dSharpe F / S / H | ctl f | vs ctl F | real CAGR / Sharpe / MaxDD | real dSharpe | real vs ctl |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | — | 22.18% / 0.913 / −33.6% | 1.103 / −33.3% | 0.768 / −30.0% | 0 / 0 / 0 | 0% | 0 | 29.66% / 1.145 / −32.9% | 0 | 0 |
+| 1 | 11/14/11 | 21.83% / 0.895 / −41.0% | 1.113 / −32.5% | 0.728 / −33.0% | −0.018 / +0.010 / −0.040 | 0% | −0.018 | 30.40% / 1.153 / −26.5% | +0.008 | +0.008 |
+| 2 | 11/14/11 | 22.24% / 0.904 / −40.3% | 1.136 / −31.7% | 0.726 / −33.3% | −0.008 / **+0.034** / −0.042 | 25% | −0.009 | 31.55% / 1.181 / −27.5% | **+0.036** | +0.024 |
+| 3 | 11/14/11 | 22.11% / 0.895 / −33.9% | 1.090 / −33.9% | 0.746 / −31.3% | −0.017 / −0.012 / −0.022 | 25% | −0.019 | 30.07% / 1.131 / −28.1% | −0.014 | −0.026 |
+| 4 | 11/14/11 | 21.78% / 0.882 / −36.1% | 1.071 / −33.8% | 0.736 / −32.9% | −0.031 / −0.031 / −0.032 | 25% | −0.032 | 29.51% / 1.109 / −27.8% | −0.036 | −0.048 |
+| 5 | 11/14/11 | 22.00% / 0.885 / −35.2% | 1.053 / −35.2% | 0.757 / −32.7% | −0.027 / −0.050 / −0.011 | 25% | −0.028 | 28.90% / 1.088 / −29.5% | −0.058 | −0.069 |
+| 7 | 11/14/11 | 21.89% / 0.877 / −40.5% | 1.069 / −34.6% | 0.730 / −34.3% | −0.036 / −0.033 / −0.038 | 50% | −0.030 | 29.79% / 1.105 / −29.3% | −0.040 | −0.051 |
+| 10 | 11/14/11 | 23.16% / 0.912 / −36.5% | 1.116 / −32.0% | 0.756 / −36.5% | **−0.000** / +0.013 / −0.012 | 50% | +0.006 | 31.74% / 1.154 / −26.0% | +0.008 | −0.003 |
+| all | 11/14/11 | 22.20% / 0.868 / −41.3% | 1.063 / −37.2% | 0.715 / −34.5% | −0.045 / −0.039 / −0.053 | 75% | −0.025 | 30.82% / 1.096 / −36.3% | −0.049 | −0.051 |
+
+Shape: **no k beats k=0 on full-period proxy Sharpe (0/8)** and no k is
+positive in both proxy eras (0/8). The best proxy k is 10 at −0.000, the
+others range −0.008 to −0.045; the curve is neither a plateau nor a spike —
+it is negative with two shallow points (k=2, k=10) that owe their
+position to the search era. The holdout Sharpe falls for every k (−0.011 to
+−0.053) and the proxy MaxDD deepens by 0.3–7.7 pp (k=1: −41.0% vs −33.6%).
+On the real rows the max drawdown is *shallower* for every k ≤ 10 (−26.0 to
+−29.5% vs −32.9%; the drawdown window was not traced), but the real Sharpe
+gain is positive only at k=1, 2, 10 (+0.008 / +0.036 / +0.008) and negative
+at k=3, 4, 5, 7 and whole-episode (−0.014 to −0.058).
+
+Per-episode gain vs k=0 at k=3: proxy 13/25 positive, total −1.71 pp
+(median +0.69; BREAK mean −1.76, REVERSAL +1.77); real 6/11 positive, total
++3.26 pp (BREAK −1.27, REVERSAL +1.61). Top 3 on both harnesses are the
+1–2 session reversals 2019-06-03 (+5.8), 2018-10-11 (+5.5), 2020-03-09
+(+5.1); bottom 3 proxy 2020-03-11 (R, 22d) −8.37, 2022-01-20 (B) −7.08,
+2004-07-13 (B) −7.04; real 2020-03-11 −7.79, 2022-01-20 −7.21, 2025-03-10
+(B) −1.54.
+
+Permutation (2000 circular shifts of the 380-day E action-flag sequences,
+all 8 k's shifted together, statistic = best-of-8 full-proxy Sharpe gain vs
+k=0): null best-k gain median +0.010, 95th **+0.053**, max +0.083; real
+best-k gain **−0.000** (k=10) → **p = 0.683**. Per k the real gain is at or
+below the null median for every k except k=10 (p 0.219) and k=2 (p 0.453).
+
+Block bootstrap (2000 paired circular draws), best proxy k=10 and best real
+k=2:
+
+| comparison | block | Sharpe diff 95% CI | P(≤0) | log-return pp/yr CI | P(≤0) |
+|---|---|---|---|---|---|
+| k=10 proxy vs k=0 | 60d | [−0.070, +0.074] | 0.498 | [−0.97, +2.64] | 0.195 |
+| k=10 proxy vs QLD 50% ladder | 60d | [−0.046, +0.064] | 0.425 | [−0.79, +1.96] | 0.238 |
+| k=10 real vs k=0 | 60d | [−0.096, +0.126] | 0.445 | [−0.88, +4.50] | 0.120 |
+| k=10 real vs QLD 50% ladder | 60d | [−0.091, +0.103] | 0.527 | [−1.44, +3.05] | 0.286 |
+| k=2 proxy vs k=0 | 60d | [−0.060, +0.044] | 0.618 | [−1.27, +1.38] | 0.466 |
+| k=2 proxy vs QLD 25% ladder | 60d | [−0.057, +0.034] | 0.650 | [−1.33, +0.97] | 0.566 |
+| k=2 real vs k=0 | 60d | [−0.032, +0.122] | **0.158** | [−0.41, +3.77] | 0.083 |
+| k=2 real vs QLD 25% ladder | 60d | [−0.035, +0.085] | 0.213 | [−0.65, +2.63] | 0.121 |
+(20-day blocks in the log give the same picture.)
+
+Reading (descriptive, on a retired design): had the D gate never been
+adopted, carrying QLD into E would not have improved the 26-year proxy for
+any k, would have lost the holdout for every k, and would have deepened the
+proxy drawdown; the real-era k=2 gain (+0.036 Sharpe, +1.9 pp CAGR) rests
+on three 1–2 session reversals, is P(≤0) 0.16 against k=0 and 0.21 against
+the matched constant-QLD row, and the best-of-8 selection sits at the
+permutation null median. The k=10 point is a search-era artefact (S +0.013,
+H −0.012).
+
+## III.4 What this does and does not imply
+
+- **No rule is proposed and nothing is applied.** Three SPMO time-in-state
+  candidates and a nine-point carry-over sweep were run as specified and
+  reported against their baselines and exposure-matched controls.
+- **SPMO for the first k E sessions (current design):** every k lowers
+  full-period proxy Sharpe and loses the holdout; k=2 alone shows a real-era
+  gain (+0.014) inside its bootstrap and within +0.007 of the constant-SPMO
+  ladder. Consistent with `e_pair_test`'s RISK family and the constant-E
+  ladder's 0.013 Sharpe span: the E row cannot move the book.
+- **Carry-over (current design):** identically live, because the D gate's
+  2% band is on for the last D day of every D→E cross in 26 years (25/25).
+  It could only ever matter if the D gate were removed.
+- **Carry-over (retired design, counterfactual):** 0/8 k's beat k=0 on the
+  proxy, permutation p 0.68 for the best k; the real-era k=2 gain is a
+  three-episode effect with P(≤0) 0.16.
+- The one thing all three blocks agree on is the part-II point: the first
+  E sessions are a coin flip pooled (QQQ −0.04% to −0.33% over sessions
+  1..k; QLD-leg +0.04% to +1.58% real, −0.48% to +1.24% proxy), split
+  sharply by an outcome label nobody has at the time.

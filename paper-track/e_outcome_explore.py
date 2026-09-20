@@ -31,13 +31,19 @@ survivorship and the conditional base rate P(BREAK | still in E at k), the featu
 entry, Mann-Whitney/AUC per feature with a per-k permutation of the max, LOO logistic, forward QQQ returns from k (to exit
 and next 20 sessions) by group and their Spearman correlation with the best feature, and one-line paths per episode.
 
+PART III (owner hypothesis, pre-registered 2026-09-20, three candidates): a TIME-IN-STATE rule for E -- C row (100 % SPMO)
+for E sessions 1..k then cash, k in {2, 3, 5} -- run on the d_substate_fresh proxy and real-daily harnesses with the D gate,
+against the current live E row (100 % cash, baselines asserted) and the constant-E SPMO ladder as exposure-matched control:
+full / search / holdout and real figures, deltas, per-episode gains, 2000-draw block bootstrap for the best k, and the raw
+ingredient (QQQ and SPMO return over E sessions 1..k by label). Reported, not recommended.
+
 Pure Python (no numpy/scipy in this environment). Research only; nothing in the repo is modified.
 
 Run from the repo root:
     python3 paper-track/e_outcome_explore.py
 Log: paper-track/research_notes/e_outcome_explore_run.log
 """
-import sys, os, math, csv, bisect, random, statistics
+import sys, os, math, csv, bisect, random, statistics, time
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO_ROOT)
@@ -907,7 +913,486 @@ def part2():
     log(f"\n{'='*118}\nII.6  No rule proposed. See the note, part II.\n{'='*118}")
 
 
+# ----------------------------------------------------------------------------------------------------------------
+# PART III (owner hypothesis, pre-registered 2026-09-20, THREE candidates only): a TIME-IN-STATE rule for E.
+#   hold the C row (100 % SPMO; on the proxy the core leg) for E sessions 1..k, then 100 % cash for the rest of the
+#   episode, k in {2, 3, 5}. Baseline = CURRENT live E row (100 % cash) with the D gate applied on D days, built
+#   explicitly by E override and asserted to reproduce proxy 25.46 % / 1.071 / -27.0 % and real daily 37.30 % /
+#   1.475 / -18.6 % (STRATEGY.md "State E -> 100% cash", e_pair_test ladder rows XLU 0 % / SPMO 0 %). Control = the
+#   constant-E SPMO ladder (g x SPMO + (1-g) cash on every E day, 10 % steps), matched by average exposure.
+#   Harness: d_substate_fresh (proxy rows, real daily mirror) exactly as e_pair_test used it. No adoption language.
+# ----------------------------------------------------------------------------------------------------------------
+TIS_KS = (2, 3, 5)
+
+def part3_time_in_state():
+    os.environ.setdefault('DSF_STAGE', 'none')
+    import io, contextlib
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):                     # the harness prints its standing figures at import
+        import d_substate_fresh as DSF
+        import monthly_returns as MR
+        import block_bootstrap as BB
+    from d_substate_fresh import (rows, run, vt, RF, evaluate_full, run_count, real_metrics, RPX, RQQQ, RDAYS, RQD,
+                                  SIG_R, RIX, SEARCH, HOLDOUT, bstats, boot, sliced_sharpe)
+    from state import (d_gate_active, compute_micro_agreement, compute_fast_states, compute_extension_gaps,
+                       realized_vol_live, target_weights_with_voltarget, effective_state, extension_votes,
+                       needs_rebalance, REBALANCE_DRIFT_BAND, D_GATE_ENABLED)
+    assert D_GATE_ENABLED
+    assert BB.N_BOOT == 2000
+    log(f"\n\n{'#'*118}\nPART III: TIME-IN-STATE RULE FOR E (owner hypothesis, pre-registered, 3 candidates: k in {TIS_KS}). NOT applied; owner decides.\n{'#'*118}")
+    log("  rule(k): E session age <= k -> C row (100 % SPMO; proxy: core leg), age > k -> 100 % cash. Baseline: live E = 100 % cash, D gate on.")
+    log("  Control: constant-E SPMO ladder (every E day g x SPMO + (1-g) cash), matched to the rule by average exposure. Harness: d_substate_fresh.")
+    for line in buf.getvalue().splitlines():
+        if 'harness' in line or 'proxy' in line: log('  [harness] ' + line.strip())
+
+    CASH = (0.0, 0.0, 0.0, 0.0, 1.0); SPMO = (1.0, 0.0, 0.0, 0.0, 0.0)
+    # breadth for the D gate, breadth_tracker verbatim (as e_pair_test)
+    def breadth_pct(qqq_):
+        common, x = bt.relative_strength_series(sorted(qqq_), qqew, qqq_)
+        return dict(zip(common, bt.trailing_pct(x)))
+    BP_Q = breadth_pct(DSF._QQQ_FULL); BP_R = breadth_pct(RQQQ)
+    # ---- proxy: gated baseline with E -> cash
+    GATE_Q = set(r['d'] for r in rows if r['state'] == 'D' and d_gate_active(r['state'], BP_Q.get(r['d']), r['gaps'][200]))
+    E_ROWS = [i for i, r in enumerate(rows) if r['state'] == 'E']
+    E_SET = set(rows[i]['d'] for i in E_ROWS)
+    def eps_of(idx):
+        out = []; cur = None
+        for i in idx:
+            if cur is not None and i == cur[1] + 1: cur[1] = i
+            else:
+                if cur: out.append(tuple(cur))
+                cur = [i, i]
+        if cur: out.append(tuple(cur))
+        return out
+    E_EPS_Q = eps_of(E_ROWS)
+    AGE_Q = {}
+    for a, b in E_EPS_Q:
+        for j, i in enumerate(range(a, b + 1)): AGE_Q[rows[i]['d']] = j + 1
+    GBASE_CASH = {}
+    for r in rows:
+        if r['d'] in GATE_Q or r['d'] in E_SET: GBASE_CASH[r['d']] = vt(CASH, r['vol'])
+        else: GBASE_CASH[r['d']] = DSF.BASE[r['d']]
+    def proxy_eval(row_fn):
+        """row_fn(d, age) -> action row on E days; everything else the gated baseline."""
+        def fn(r):
+            if r['d'] in E_SET: return vt(row_fn(r['d'], AGE_Q[r['d']]), r['vol'])
+            return GBASE_CASH[r['d']]
+        return evaluate_full(fn)
+    LIVE_EV, LIVE_SER = proxy_eval(lambda d, age: CASH)
+    # ---- real daily mirror with D gate + E override (copy of e_pair_test.simulate_real_e)
+    def simulate_real_e(px, qqq_, days, override_e=None):
+        qd = sorted(qqq_)
+        states_ = dict(zip(qd, state.compute_states(qd, qqq_)))
+        micro = compute_micro_agreement(qd, qqq_)
+        fast = compute_fast_states(qd, qqq_); gaps = compute_extension_gaps(qd, qqq_)
+        held = prev = None; out = []; risky = 0.0; nreb = 0
+        for i in range(1, len(days)):
+            d0, d1 = days[i - 1], days[i]
+            st, ag = states_[d0], micro[d0]
+            gate = d_gate_active(st, BP_R.get(d0), gaps[d0][200])
+            vol = realized_vol_live(qd, qqq_, as_of=d0)
+            row = override_e(d0) if (override_e is not None and st == 'E') else None
+            if row is None:
+                t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gaps=gaps[d0], d_gate=gate)
+            else:
+                t = RF.vt(row, vol)
+            eff = effective_state(st, fast[d0])
+            stk = (eff, extension_votes(eff, gaps[d0]), gate, row is not None)
+            cost = 0.0
+            if held is None:
+                held = list(t); nreb += 1
+            else:
+                do, drift, _ = needs_rebalance(t, held, stk != prev)
+                if do:
+                    cost = MR.ONE_WAY * drift; held = list(t); nreb += 1
+            r = [px[s_][d1] / px[s_][d0] - 1 for s_ in MR.LEGS]
+            g = sum(held[j] * r[j] for j in range(5))
+            risky += sum(held[:4])
+            out.append((d1, stk[0], g - cost))
+            dn = 1 + g
+            if dn > 0: held = [held[j] * (1 + r[j]) / dn for j in range(5)]
+            prev = stk
+        n = len(out)
+        return out, risky / n, nreb / (n / 252.0)
+    RE_IDX = [k for k, d in enumerate(RDAYS[:-1]) if SIG_R['state'][RIX[d]] == 'E']
+    RE_EPS = eps_of(RE_IDX)
+    AGE_R = {}
+    for a, b in RE_EPS:
+        for j, k in enumerate(range(a, b + 1)): AGE_R[RDAYS[k]] = j + 1
+    def real_eval(row_fn):
+        out, exp, reb = simulate_real_e(RPX, RQQQ, RDAYS, lambda d0: row_fn(d0, AGE_R[d0]))
+        m, ser = real_metrics(out)
+        return dict(m, exp=exp, reb=reb), ser
+    # d_substate_fresh pins state.TARGET_WEIGHTS['E'] back to 50 % XLU at import, so MR.simulate here runs the OLD E row:
+    # (1) the mirror with no override must equal MR.simulate day by day (mechanics), (2) the E -> cash override is the
+    # explicit current-live baseline and must reproduce the standing figure 37.30 % / 1.475 / -18.6 % (asserted below).
+    assert state.TARGET_WEIGHTS['E'] == (0.0, 0.0, 0.0, 0.5, 0.5), 'expected d_substate_fresh to have pinned the E row'
+    _ref = MR.simulate(RPX, RQQQ, RDAYS)
+    _mine, _, _ = simulate_real_e(RPX, RQQQ, RDAYS, None)
+    assert len(_ref) == len(_mine) and all(a[0] == b[0] and abs(a[2] - b[2]) < 1e-12 for a, b in zip(_ref, _mine)), \
+        'real mirror (no override) does not reproduce monthly_returns.simulate'
+    _old = real_metrics(_mine)[0]
+    log(f"  (mirror check: no-override real run = monthly_returns.simulate day by day; with the harness-pinned old E row it gives "
+        f"{_old['cagr']*100:.2f}% / {_old['sharpe']:.3f} / {_old['mdd']*100:.1f}%, the e_pair_test gated baseline 37.75 / 1.484 / -19.4)")
+    RLIVE_EV, RLIVE_SER = real_eval(lambda d, age: CASH)
+    def fmt_ev(ev): return f"{ev['cagr']*100:6.2f}% /{ev['sharpe']:6.3f} /{ev['mdd']*100:6.1f}%"
+    log(f"\n  BASELINE (live: E = 100 % cash, D gate): proxy {fmt_ev(LIVE_EV)}  S {LIVE_EV['s_sharpe']:.3f} H {LIVE_EV['h_sharpe']:.3f} "
+        f"exp {LIVE_EV['risky']*100:.1f}% reb {LIVE_EV['reb']:.1f}/yr | real daily {fmt_ev(RLIVE_EV)} exp {RLIVE_EV['exp']*100:.1f}% reb {RLIVE_EV['reb']:.1f}/yr")
+    assert abs(LIVE_EV['cagr'] * 100 - 25.46) < 0.006 and abs(LIVE_EV['sharpe'] - 1.071) < 0.0006 and abs(LIVE_EV['mdd'] * 100 + 27.0) < 0.06, 'proxy baseline != 25.46/1.071/-27.0'
+    assert abs(RLIVE_EV['cagr'] * 100 - 37.30) < 0.006 and abs(RLIVE_EV['sharpe'] - 1.475) < 0.0006 and abs(RLIVE_EV['mdd'] * 100 + 18.6) < 0.06, 'real baseline != 37.30/1.475/-18.6'
+    log("  both baselines reproduced (asserted).")
+    log(f"  proxy: {len(E_ROWS)} E days in {len(E_EPS_Q)} episodes; real daily: {len(RE_IDX)} E days in {len(RE_EPS)} episodes.")
+
+    # ---- raw ingredient: return over E sessions 1..k (held from the close of E session 1 through the close after session min(k, n))
+    log(f"\n  RAW INGREDIENT: return earned by holding the risk leg over E sessions 1..min(k, n) (position taken at the close of E session 1,")
+    log(f"  each session's return is close-to-next-close, so this is exactly what rule(k) earns on the risk leg). QQQ from qqq_long_history (all 32")
+    log(f"  completed episodes, part I labels); SPMO from the real harness (its {len(RE_EPS)} E episodes, 2015-11+). Also the uncapped k-session return (n >= k only).")
+    log(f"  {'leg':<5} {'k':>2} {'group':<9} {'n':>3} {'mean%':>7} {'med%':>7} {'pos':>5} | uncapped (n>=k) {'n':>3} {'mean%':>7} {'med%':>7}")
+    for k in TIS_KS:
+        for gname in ('BREAK', 'REVERSAL', 'ALL'):
+            g = [e for e in EPS if gname == 'ALL' or e['label'] == gname]
+            capped = [(px[e['i0'] + min(k, e['n'])] / px[e['i0']] - 1) * 100 for e in g]
+            unc = [(px[e['i0'] + k] / px[e['i0']] - 1) * 100 for e in g if e['n'] >= k]
+            log(f"  {'QQQ':<5} {k:>2} {gname:<9} {len(capped):>3} {statistics.mean(capped):>7.2f} {statistics.median(capped):>7.2f} {sum(1 for x in capped if x > 0):>2}/{len(capped):<2} | "
+                f"{'':>16} {len(unc):>3} {fmt(statistics.mean(unc) if unc else None,7,2)} {fmt(statistics.median(unc) if unc else None,7,2)}")
+        sp = RPX['SPMO']; rd = RDAYS
+        capped = []; unc = []; lab_r = []
+        for a, b in RE_EPS:
+            n_ = b - a + 1; i_end = min(a + min(k, n_), len(rd) - 1)
+            capped.append((sp[rd[i_end]] / sp[rd[a]] - 1) * 100)
+            if n_ >= k: unc.append((sp[rd[a + k]] / sp[rd[a]] - 1) * 100)
+            # label from the QQQ classifier on the real harness's own dates
+            nxt = SIG_R['state'][RIX[rd[b + 1]]] if b + 1 < len(rd) else None
+            lab_r.append('BREAK' if nxt == 'F' else 'REVERSAL')
+        for gname in ('BREAK', 'REVERSAL', 'ALL'):
+            c = [x for x, l in zip(capped, lab_r) if gname == 'ALL' or l == gname]
+            log(f"  {'SPMO':<5} {k:>2} {gname:<9} {len(c):>3} {statistics.mean(c):>7.2f} {statistics.median(c):>7.2f} {sum(1 for x in c if x > 0):>2}/{len(c):<2} | "
+                + (f"{'':>16} {len(unc):>3} {statistics.mean(unc):>7.2f} {statistics.median(unc):>7.2f}" if gname == 'ALL' else ''))
+    log("  (The per-session QQQ mean on E days overall, from part I's daily state series: "
+        f"{statistics.mean([(px[i+1]/px[i]-1)*100 for i in range(N-1) if states[i]=='E']):+.3f}%/day over {sum(1 for i in range(N-1) if states[i]=='E')} E days.)")
+
+    # ---- constant-E SPMO ladder (control)
+    log(f"\n  CONSTANT-E SPMO LADDER (control; g = 0 is live): proxy full / S / H, real daily")
+    log(f"  {'g':>4} | {'CAGR':>7}{'Sharpe':>7}{'MaxDD':>7}{'exp':>6}{'reb':>6}{'S Sh':>7}{'H Sh':>7}{'dS_F':>7} | {'rCAGR':>7}{'rSh':>7}{'rDD':>7}{'rexp':>6}{'rreb':>6}{'rdSh':>7}")
+    LAD = []
+    for g in range(0, 101, 10):
+        row = (g / 100.0, 0.0, 0.0, 0.0, 1 - g / 100.0)
+        ev, ser = proxy_eval(lambda d, age, row=row: row); rev, rser = real_eval(lambda d, age, row=row: row)
+        LAD.append(dict(g=g, ev=ev, real=rev, ser=ser, rser=rser))
+        log(f"  {g:>3}% | {ev['cagr']*100:>6.2f}%{ev['sharpe']:>7.3f}{ev['mdd']*100:>6.1f}%{ev['risky']*100:>5.1f}%{ev['reb']:>6.1f}{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{ev['sharpe']-LIVE_EV['sharpe']:>+7.3f} | "
+            f"{rev['cagr']*100:>6.2f}%{rev['sharpe']:>7.3f}{rev['mdd']*100:>6.1f}%{rev['exp']*100:>5.1f}%{rev['reb']:>6.1f}{rev['sharpe']-RLIVE_EV['sharpe']:>+7.3f}")
+    assert abs(LAD[0]['ev']['sharpe'] - LIVE_EV['sharpe']) < 1e-12 and abs(LAD[0]['real']['sharpe'] - RLIVE_EV['sharpe']) < 1e-12
+    def match(exp, key):
+        return min(LAD, key=lambda c: abs((c['ev']['risky'] if key == 'ev' else c['real']['exp']) - exp))
+
+    # ---- the three candidates
+    log(f"\n  CANDIDATES rule(k): proxy full / search ({SEARCH[0]}+) / holdout, real daily; deltas vs live and vs the exposure-matched SPMO ladder row")
+    log(f"  {'k':>2} {'days->SPMO (proxy/real)':<24} | {'CAGR':>7}{'Sharpe':>7}{'MaxDD':>7}{'exp':>6}{'reb':>6} | S {'CAGR':>7}{'Sh':>6}{'DD':>7} | H {'CAGR':>7}{'Sh':>6}{'DD':>7} | {'dS_F':>7}{'dS_S':>7}{'dS_H':>7} {'ctl':>5}{'vC_F':>7}{'vC_S':>7}{'vC_H':>7} | real {'CAGR':>7}{'Sh':>6}{'DD':>7}{'exp':>5}{'reb':>5}{'rdSh':>7}{'rctl':>5}{'rvC':>7}")
+    CAND = []
+    for k in TIS_KS:
+        rf = lambda d, age, k=k: SPMO if age <= k else CASH
+        ev, ser = proxy_eval(rf); rev, rser = real_eval(rf)
+        nq = sum(1 for d in E_SET if AGE_Q[d] <= k); nr = sum(1 for d in AGE_R if AGE_R[d] <= k)
+        c = match(ev['risky'], 'ev'); cr = match(rev['exp'], 'real')
+        rec = dict(k=k, ev=ev, real=rev, ser=ser, rser=rser, nq=nq, nr=nr, ctl=c, rctl=cr,
+                   dF=ev['sharpe'] - LIVE_EV['sharpe'], dS=ev['s_sharpe'] - LIVE_EV['s_sharpe'], dH=ev['h_sharpe'] - LIVE_EV['h_sharpe'],
+                   vCF=ev['sharpe'] - c['ev']['sharpe'], vCS=ev['s_sharpe'] - c['ev']['s_sharpe'], vCH=ev['h_sharpe'] - c['ev']['h_sharpe'],
+                   rd=rev['sharpe'] - RLIVE_EV['sharpe'], rvC=rev['sharpe'] - cr['real']['sharpe'])
+        CAND.append(rec)
+        log(f"  {k:>2} {f'{nq} / {nr}':<24} | {ev['cagr']*100:>6.2f}%{ev['sharpe']:>7.3f}{ev['mdd']*100:>6.1f}%{ev['risky']*100:>5.1f}%{ev['reb']:>6.1f} | "
+            f"{ev['s_cagr']*100:>8.2f}%{ev['s_sharpe']:>6.3f}{ev['s_mdd']*100:>6.1f}% | {ev['h_cagr']*100:>8.2f}%{ev['h_sharpe']:>6.3f}{ev['h_mdd']*100:>6.1f}% | "
+            f"{rec['dF']:>+7.3f}{rec['dS']:>+7.3f}{rec['dH']:>+7.3f} {str(c['g'])+'%':>5}{rec['vCF']:>+7.3f}{rec['vCS']:>+7.3f}{rec['vCH']:>+7.3f} | "
+            f"{rev['cagr']*100:>11.2f}%{rev['sharpe']:>6.3f}{rev['mdd']*100:>6.1f}%{rev['exp']*100:>4.0f}%{rev['reb']:>5.1f}{rec['rd']:>+7.3f}{str(cr['g'])+'%':>5}{rec['rvC']:>+7.3f}")
+    log(f"  live for reference: proxy {fmt_ev(LIVE_EV)} S {LIVE_EV['s_sharpe']:.3f} H {LIVE_EV['h_sharpe']:.3f} exp {LIVE_EV['risky']*100:.1f}% reb {LIVE_EV['reb']:.1f} | "
+        f"real {fmt_ev(RLIVE_EV)} exp {RLIVE_EV['exp']*100:.1f}% reb {RLIVE_EV['reb']:.1f}")
+    log(f"  live CAGR deltas (pp): " + "; ".join(f"k={r['k']}: proxy {(r['ev']['cagr']-LIVE_EV['cagr'])*100:+.2f} (S {(r['ev']['s_cagr']-LIVE_EV['s_cagr'])*100:+.2f}, H {(r['ev']['h_cagr']-LIVE_EV['h_cagr'])*100:+.2f}), "
+        f"real {(r['real']['cagr']-RLIVE_EV['cagr'])*100:+.2f}; MaxDD proxy {(r['ev']['mdd']-LIVE_EV['mdd'])*100:+.1f} pp, real {(r['real']['mdd']-RLIVE_EV['mdd'])*100:+.1f} pp" for r in CAND))
+
+    # ---- per-episode gains vs live
+    log(f"\n  PER-EPISODE GAIN vs live (log-return difference accumulated over the episode's days, pp): proxy episodes (32) and real episodes ({len(RE_EPS)})")
+    pdates = [r['d'] for r in rows]
+    for rec in CAND:
+        k = rec['k']
+        for hname, eps_, ser, base, dts in (('proxy', E_EPS_Q, rec['ser'], LIVE_SER, pdates), ('real', RE_EPS, rec['rser'], RLIVE_SER, RDAYS[:-1])):
+            gains = []
+            for a, b in eps_:
+                g = sum(math.log1p(ser[i]) - math.log1p(base[i]) for i in range(a, b + 1)) * 100
+                # label: the state after the episode on that harness
+                if hname == 'proxy':
+                    nxt = rows[b + 1]['state'] if b + 1 < len(rows) else None
+                else:
+                    nxt = SIG_R['state'][RIX[dts[b + 1]]] if b + 1 < len(dts) else None
+                gains.append((g, dts[a], dts[b], b - a + 1, 'B' if nxt == 'F' else ('R' if nxt else '?')))
+            gains.sort()
+            pos = sum(1 for g in gains if g[0] > 0); tot = sum(g[0] for g in gains)
+            gb = [g[0] for g in gains if g[4] == 'B']; gr = [g[0] for g in gains if g[4] == 'R']
+            log(f"  k={k} {hname:<5}: {len(gains)} episodes, positive {pos}/{len(gains)}, total {tot:+.2f} pp, mean {tot/len(gains):+.2f}, median {statistics.median([g[0] for g in gains]):+.2f}; "
+                f"by label: BREAK n={len(gb)} mean {statistics.mean(gb) if gb else float('nan'):+.2f} (pos {sum(1 for x in gb if x>0)}), REVERSAL n={len(gr)} mean {statistics.mean(gr) if gr else float('nan'):+.2f} (pos {sum(1 for x in gr if x>0)})")
+            log(f"        top 3: " + "; ".join(f"{d0}..{d1} ({n}d,{l}) {g:+.2f}" for g, d0, d1, n, l in gains[-1:-4:-1]))
+            log(f"     bottom 3: " + "; ".join(f"{d0}..{d1} ({n}d,{l}) {g:+.2f}" for g, d0, d1, n, l in gains[:3]))
+
+    # ---- block bootstrap for the best k (by full-period proxy Sharpe vs live; also the best on real rows if different)
+    best = max(CAND, key=lambda r: r['dF']); best_r = max(CAND, key=lambda r: r['rd'])
+    picks = [best] + ([best_r] if best_r is not best else [])
+    log(f"\n  BLOCK BOOTSTRAP (circular, {BB.N_BOOT} draws, paired blocks) of the Sharpe and log-return difference: best k by proxy full Sharpe = {best['k']}"
+        + (f"; best on real rows = {best_r['k']}" if best_r is not best else " (also best on real rows)"))
+    for rec in picks:
+        for lab, a, b in ((f"k={rec['k']} proxy vs live", rec['ser'], LIVE_SER), (f"k={rec['k']} proxy vs SPMO {rec['ctl']['g']}% control", rec['ser'], rec['ctl']['ser']),
+                          (f"k={rec['k']} real vs live", rec['rser'], RLIVE_SER), (f"k={rec['k']} real vs SPMO {rec['rctl']['g']}% control", rec['rser'], rec['rctl']['rser'])):
+            for blk in (20, 60):
+                l1, l2, pl, s1, s2, ps = boot(a, b, blk, seed=(rec['k'] * 7919 + blk + len(lab)) & 0xffff)
+                log(f"      {lab:<40} block {blk:>2}d: Sharpe diff 95% CI [{s1:+.3f}, {s2:+.3f}] P(<=0) = {ps:.3f} | log-return [{l1*100:+.2f}, {l2*100:+.2f}] pp/yr P(<=0) = {pl:.3f}")
+    # era-sliced Sharpe of the best vs live, for the record
+    log(f"  best k={best['k']} sliced Sharpe: search {sliced_sharpe(best['ser'], *SEARCH):.3f} vs live {sliced_sharpe(LIVE_SER, *SEARCH):.3f}; "
+        f"holdout {sliced_sharpe(best['ser'], *HOLDOUT):.3f} vs live {sliced_sharpe(LIVE_SER, *HOLDOUT):.3f}")
+    log(f"\n  No adoption language here: three pre-registered candidates, reported against live and the exposure-matched control. The owner decides.")
+
+    # ============================================================================================================
+    # CARRY-OVER RULE (owner request, second addition; clarified: D -> E transitions ONLY). On a D -> E transition keep
+    # the row held on the LAST D day for E sessions 1..k, then the E row (cash). Ungated last-D day -> 100 % QLD
+    # carried; gated last-D day (state.d_gate_active) -> already cash, the rule is a no-op for that episode. E episodes
+    # entered from A or F hold 100 % cash from session 1. The carried row is the pre-vol-target row of the last D day,
+    # vol-targeted daily like every other row.
+    # ============================================================================================================
+    from state import d_gate_flags, D_GATE_GAP200, D_GATE_BREADTH_PCT
+    QLD = tuple(state.TARGET_WEIGHTS['D'])
+    assert QLD == (0.0, 0.0, 1.0, 0.0, 0.0), QLD
+    KS = [0, 1, 2, 3, 4, 5, 7, 10, 'all']
+    log(f"\n{'='*118}\n  CARRY-OVER RULE (D -> E only): hold the last D day's row (ungated D = 100 % QLD; gated D = cash, no-op) for E sessions 1..k, then cash. "
+        f"k in {KS}. A -> E and F -> E entries: cash from session 1.\n{'='*118}")
+    gaps_r = compute_extension_gaps(sorted(RQQQ), RQQQ)
+    def entry_proxy(a):
+        pr = rows[a - 1]['state'] if a > 0 else None
+        if pr != 'D': return pr, None, None, None
+        d = rows[a - 1]['d']; bp = BP_Q.get(d); g2 = rows[a - 1]['gaps'][200]
+        return pr, bp, g2, d in GATE_Q
+    def entry_real(a):
+        d = RDAYS[a - 1] if a > 0 else None
+        pr = SIG_R['state'][RIX[d]] if d else None
+        if pr != 'D': return pr, None, None, None
+        bp = BP_R.get(d); g2 = gaps_r[d][200]
+        return pr, bp, g2, d_gate_active('D', bp, g2)
+    EPQ = [(a, b) + entry_proxy(a) for a, b in E_EPS_Q]      # (a, b, prior, breadth, gap200, gated)
+    EPR = [(a, b) + entry_real(a) for a, b in RE_EPS]
+    log(f"  LAST D DAY before each D -> E entry (proxy): the gate is breadth pct < {D_GATE_BREADTH_PCT} OR gap200 < {D_GATE_GAP200*100:.0f} %")
+    log(f"  {'entry':<11} {'n':>3} {'last D':<11} {'breadth':>8} {'gap200':>8}  gated  why")
+    for a, b, pr, bp, g2, gated in EPQ:
+        if pr != 'D': continue
+        bflag, gflag = d_gate_flags(bp, g2)
+        why = ' + '.join(x for x, f in (('breadth', bflag), ('gap200<2%', gflag)) if f) or '(none)'
+        log(f"  {pdates[a]:<11} {b-a+1:>3} {rows[a-1]['d']:<11} {fmt(bp,8,2)} {fmt(g2*100 if g2 is not None else None,7,2)}%  {'YES' if gated else 'no ':<5}  {why}")
+    nD = sum(1 for e in EPQ if e[2] == 'D'); nUG = sum(1 for e in EPQ if e[2] == 'D' and not e[5])
+    nDr = sum(1 for e in EPR if e[2] == 'D'); nUGr = sum(1 for e in EPR if e[2] == 'D' and not e[5])
+    log(f"  proxy: {len(EPQ)} episodes, {nD} entered from D, of which UNGATED on the last D day: {nUG}; entered from A: {sum(1 for e in EPQ if e[2]=='A')}, from F: {sum(1 for e in EPQ if e[2]=='F')}")
+    log(f"  real:  {len(EPR)} episodes, {nDr} entered from D, of which UNGATED on the last D day: {nUGr}")
+    log(f"  MECHANICAL POINT: an E entry needs QQQ below 0.99 x SMA200, so on the last D day price is at most a session's move above the 200d;")
+    log(f"  gap200 < 2 % on that day is all but guaranteed (the 2020-03 entries are the exception by gap and are caught by breadth). The gate")
+    log(f"  therefore holds the D row as cash on the last D day of EVERY D -> E transition, and the carry-over rule carries cash: it is live.")
+    ACT_Q = [e for e in EPQ if e[2] == 'D' and not e[5]]; ACT_R = [e for e in EPR if e[2] == 'D' and not e[5]]
+    log(f"  -> under the CURRENT design the carry-over rule acts on {len(ACT_Q)} proxy and {len(ACT_R)} real episodes: it is a no-op for every k and equals live.")
+    log(f"     No k sweep, permutation or bootstrap is run for it. The only path by which a carry-over could matter is if the D gate were ever removed.")
+
+    # ============================================================================================================
+    # COUNTERFACTUAL on the RETIRED 2026-09-09 design (owner request): NO D gate (every D day 100 % QLD) and
+    # E = 50 % XLU / 50 % cash -- exactly the baseline d_substate_fresh pins (proxy 22.18 % / 0.913 / -33.6 %, S 1.103
+    # H 0.768; real daily 29.66 % / 1.145 / -32.9 %). Under that design every D -> E cross is an ungated QLD entry, so
+    # the rule acts on all 25 (real: 11). Rule: E entered from D -> 100 % QLD for E sessions 1..k, then the old E row;
+    # E entered from A or F -> the old E row from session 1. k = 0 is the old design itself.
+    # ============================================================================================================
+    E_OLD = (0.0, 0.0, 0.0, 0.5, 0.5)
+    assert state.TARGET_WEIGHTS['E'] == E_OLD
+    log(f"\n{'='*118}\n  COUNTERFACTUAL ON THE RETIRED 2026-09-09 DESIGN: no D gate, E = 50 % XLU / 50 % cash. 'What the carry-over would have been worth had the D gate not been adopted.'\n{'='*118}")
+    OLD_EV, OLD_SER = DSF.BASE_EV, DSF.LIVE_SER
+    OLD_REV, OLD_RSER = DSF.REAL_EV, DSF.REAL_SER
+    log(f"  BASELINE (old design, k = 0): proxy {fmt_ev(OLD_EV)} S {OLD_EV['s_sharpe']:.3f} H {OLD_EV['h_sharpe']:.3f} exp {OLD_EV['risky']*100:.1f}% | real daily {fmt_ev(OLD_REV)} exp {DSF.REAL_EXP*100:.1f}%")
+    assert abs(OLD_EV['cagr'] * 100 - 22.18) < 0.006 and abs(OLD_EV['sharpe'] - 0.913) < 0.0006 and abs(OLD_EV['mdd'] * 100 + 33.6) < 0.06 \
+        and abs(OLD_EV['s_sharpe'] - 1.103) < 0.0006 and abs(OLD_EV['h_sharpe'] - 0.768) < 0.0006, 'old proxy baseline != 22.18/0.913/-33.6, S 1.103 H 0.768'
+    assert abs(OLD_REV['cagr'] * 100 - 29.66) < 0.006 and abs(OLD_REV['sharpe'] - 1.145) < 0.0006 and abs(OLD_REV['mdd'] * 100 + 32.9) < 0.06, 'old real baseline != 29.66/1.145/-32.9'
+    log("  both old-design baselines reproduced (asserted; d_substate_fresh asserts its real mirror against monthly_returns.simulate(d_gate=False)).")
+    # real mirror WITHOUT the gate and with an E override (None -> the pinned old design on that day)
+    def simulate_real_old(px, qqq_, days, override_e):
+        qd = sorted(qqq_)
+        states_ = dict(zip(qd, state.compute_states(qd, qqq_)))
+        micro = compute_micro_agreement(qd, qqq_)
+        fast = compute_fast_states(qd, qqq_); gaps = compute_extension_gaps(qd, qqq_)
+        held = prev = None; out = []; risky = 0.0; nreb = 0
+        for i in range(1, len(days)):
+            d0, d1 = days[i - 1], days[i]
+            st, ag = states_[d0], micro[d0]
+            vol = realized_vol_live(qd, qqq_, as_of=d0)
+            row = override_e(d0) if st == 'E' else None
+            if row is None:
+                t = target_weights_with_voltarget(st, ag, vol, fast_state=fast[d0], gaps=gaps[d0], d_gate=False)
+            else:
+                t = RF.vt(row, vol)
+            eff = effective_state(st, fast[d0])
+            stk = (eff, extension_votes(eff, gaps[d0]), row is not None)
+            cost = 0.0
+            if held is None:
+                held = list(t); nreb += 1
+            else:
+                do, drift, _ = needs_rebalance(t, held, stk != prev)
+                if do:
+                    cost = MR.ONE_WAY * drift; held = list(t); nreb += 1
+            r = [px[s_][d1] / px[s_][d0] - 1 for s_ in MR.LEGS]
+            g = sum(held[j] * r[j] for j in range(5))
+            risky += sum(held[:4])
+            out.append((d1, stk[0], g - cost))
+            dn = 1 + g
+            if dn > 0: held = [held[j] * (1 + r[j]) / dn for j in range(5)]
+            prev = stk
+        n = len(out)
+        return out, risky / n, nreb / (n / 252.0)
+    _chk, _, _ = simulate_real_old(RPX, RQQQ, RDAYS, lambda d0: None)
+    assert all(abs(a[2] - b) < 1e-12 for a, b in zip(_chk, OLD_RSER)), 'old-design real mirror with E override hook does not reproduce d_substate_fresh'
+    def proxy_eval_old(row_fn):
+        """row_fn(d, age) -> action row or None on E days (None = the old design's own row that day); everything else the old design."""
+        def fn(r):
+            if r['d'] in E_SET:
+                row = row_fn(r['d'], AGE_Q[r['d']])
+                return DSF.BASE[r['d']] if row is None else vt(row, r['vol'])
+            return DSF.BASE[r['d']]
+        return evaluate_full(fn)
+    def real_eval_old(row_fn):
+        out, exp, reb = simulate_real_old(RPX, RQQQ, RDAYS, lambda d0: row_fn(d0, AGE_R[d0]))
+        m, ser = real_metrics(out)
+        return dict(m, exp=exp, reb=reb), ser
+    _e0, _ = proxy_eval_old(lambda d, age: None); _r0, _ = real_eval_old(lambda d, age: None)
+    assert abs(_e0['sharpe'] - OLD_EV['sharpe']) < 1e-12 and abs(_r0['sharpe'] - OLD_REV['sharpe']) < 1e-12
+    ALLD_Q = [e for e in EPQ if e[2] == 'D']; ALLD_R = [e for e in EPR if e[2] == 'D']
+    nS_ = sum(1 for e in ALLD_Q if pdates[e[0]] >= SEARCH[0])
+    log(f"  under the old design every D -> E cross is an ungated QLD entry: the rule acts on {len(ALLD_Q)} proxy episodes (search {nS_}, holdout {len(ALLD_Q)-nS_}) and {len(ALLD_R)} real episodes;")
+    log(f"  the {sum(1 for e in EPQ if e[2]=='A')} A -> E and {sum(1 for e in EPQ if e[2]=='F')} F -> E proxy entries hold the old E row from session 1.")
+    # control: f x QLD + (1-f) x old E row on every E day (f = 0 reproduces k = 0 up to the extension trim on E days, checked)
+    log(f"\n  CONSTANT-QLD-IN-E LADDER (control, old design): f x QLD + (1-f) x (50 % XLU / 50 % cash) on every E day")
+    log(f"  {'f':>4} | {'CAGR':>7}{'Sharpe':>7}{'MaxDD':>7}{'exp':>6}{'S Sh':>7}{'H Sh':>7}{'dS_F':>7} | {'rCAGR':>7}{'rSh':>7}{'rDD':>7}{'rexp':>6}{'rdSh':>7}")
+    QLAD = []
+    for f in (0, 25, 50, 75, 100):
+        row = (0.0, 0.0, f / 100.0, 0.5 * (1 - f / 100.0), 0.5 * (1 - f / 100.0))
+        ev, ser = proxy_eval_old(lambda d, age, row=row: row); rev, rser = real_eval_old(lambda d, age, row=row: row)
+        QLAD.append(dict(f=f, ev=ev, real=rev, ser=ser, rser=rser))
+        log(f"  {f:>3}% | {ev['cagr']*100:>6.2f}%{ev['sharpe']:>7.3f}{ev['mdd']*100:>6.1f}%{ev['risky']*100:>5.1f}%{ev['s_sharpe']:>7.3f}{ev['h_sharpe']:>7.3f}{ev['sharpe']-OLD_EV['sharpe']:>+7.3f} | "
+            f"{rev['cagr']*100:>6.2f}%{rev['sharpe']:>7.3f}{rev['mdd']*100:>6.1f}%{rev['exp']*100:>5.1f}%{rev['sharpe']-OLD_REV['sharpe']:>+7.3f}")
+    log(f"  (f = 0 % vs k = 0: proxy Sharpe {QLAD[0]['ev']['sharpe']-OLD_EV['sharpe']:+.4f}, real {QLAD[0]['real']['sharpe']-OLD_REV['sharpe']:+.4f} -- any difference is the explicit-row path vs the design's own E-day row.)")
+    def qmatch(exp, key): return min(QLAD, key=lambda c: abs((c['ev']['risky'] if key == 'ev' else c['real']['exp']) - exp))
+    def maps(EP, dts, act_set):
+        m = {}
+        for e in EP:
+            a, b = e[0], e[1]; act = e in act_set
+            for j, i in enumerate(range(a, b + 1)): m[dts[i]] = (j + 1, act)
+        return m
+    MQ_ = maps(EPQ, pdates, set(ALLD_Q)); MR_ = maps(EPR, RDAYS, set(ALLD_R))
+    def rule(m, k):
+        kk = 10 ** 9 if k == 'all' else k
+        return lambda d, age: (QLD if (m[d][1] and m[d][0] <= kk) else None)
+    log(f"\n  K CURVE (old design; k = 0 is the old design itself). act ep = episodes the rule acts on, search / holdout / real")
+    log(f"  {'k':>4} {'act ep S/H/real':<16} | {'CAGR':>7}{'Sharpe':>7}{'MaxDD':>7}{'exp':>6}{'reb':>6} | S {'CAGR':>7}{'Sh':>6}{'DD':>7} | H {'CAGR':>7}{'Sh':>6}{'DD':>7} | {'dS_F':>7}{'dS_S':>7}{'dS_H':>7} | real {'CAGR':>7}{'Sh':>6}{'DD':>7}{'exp':>5}{'rdSh':>7} | ctl {'f':>4}{'vC_F':>7}{'rvC':>7}")
+    CO = []
+    for k in KS:
+        ev, ser = proxy_eval_old(rule(MQ_, k)); rev, rser = real_eval_old(rule(MR_, k))
+        kk = 10 ** 9 if k == 'all' else k
+        actS = nS_ if kk >= 1 else 0; actH = (len(ALLD_Q) - nS_) if kk >= 1 else 0; actR = len(ALLD_R) if kk >= 1 else 0
+        c = qmatch(ev['risky'], 'ev'); cr = qmatch(rev['exp'], 'real')
+        rec = dict(k=k, ev=ev, real=rev, ser=ser, rser=rser, dF=ev['sharpe'] - OLD_EV['sharpe'], dS=ev['s_sharpe'] - OLD_EV['s_sharpe'],
+                   dH=ev['h_sharpe'] - OLD_EV['h_sharpe'], rd=rev['sharpe'] - OLD_REV['sharpe'], ctl=c, rctl=cr,
+                   vCF=ev['sharpe'] - c['ev']['sharpe'], rvC=rev['sharpe'] - cr['real']['sharpe'])
+        CO.append(rec)
+        log(f"  {str(k):>4} {f'{actS}/{actH}/{actR}':<16} | {ev['cagr']*100:>6.2f}%{ev['sharpe']:>7.3f}{ev['mdd']*100:>6.1f}%{ev['risky']*100:>5.1f}%{ev['reb']:>6.1f} | "
+            f"{ev['s_cagr']*100:>8.2f}%{ev['s_sharpe']:>6.3f}{ev['s_mdd']*100:>6.1f}% | {ev['h_cagr']*100:>8.2f}%{ev['h_sharpe']:>6.3f}{ev['h_mdd']*100:>6.1f}% | "
+            f"{rec['dF']:>+7.3f}{rec['dS']:>+7.3f}{rec['dH']:>+7.3f} | {rev['cagr']*100:>11.2f}%{rev['sharpe']:>6.3f}{rev['mdd']*100:>6.1f}%{rev['exp']*100:>4.0f}%{rec['rd']:>+7.3f} | "
+            f"{str(c['f'])+'%':>8}{rec['vCF']:>+7.3f}{rec['rvC']:>+7.3f}")
+    ks1 = [r for r in CO if r['k'] != 0]
+    bestk = max(ks1, key=lambda r: r['dF']); others = [r['dF'] for r in ks1 if r is not bestk]
+    spread_ = max(r['dF'] for r in ks1) - min(r['dF'] for r in ks1)
+    shape = ("PLATEAU (all k within 0.01 of each other)" if spread_ < 0.01 else
+             "SPIKE (best k more than 0.01 above the next)" if bestk['dF'] - max(others) > 0.01 else "neither a clean plateau nor a spike")
+    log(f"  shape (proxy full Sharpe gain vs k=0): best k = {bestk['k']} at {bestk['dF']:+.3f}; other k's range [{min(others):+.3f}, {max(others):+.3f}]; "
+        f"k's with gain > 0: {sum(1 for r in ks1 if r['dF'] > 0)}/{len(ks1)}; both-era (S and H) gain > 0: {sum(1 for r in ks1 if r['dS'] > 0 and r['dH'] > 0)}/{len(ks1)}; "
+        f"real gain at best proxy k {bestk['rd']:+.3f}; best real k = {max(ks1, key=lambda r: r['rd'])['k']} at {max(r['rd'] for r in ks1):+.3f} -> {shape}")
+    log(f"  MaxDD change vs k=0 (pp): " + ", ".join(f"k={r['k']} proxy {(r['ev']['mdd']-OLD_EV['mdd'])*100:+.1f} real {(r['real']['mdd']-OLD_REV['mdd'])*100:+.1f}" for r in ks1))
+    # per-episode gains k=3
+    log(f"\n  PER-EPISODE GAIN vs k=0, k=3 (pp, log-return difference over the episode; D -> E entries)")
+    r3 = next(r for r in CO if r['k'] == 3)
+    for hname, EP, ser, base, dts, nxt_of in (('proxy', ALLD_Q, r3['ser'], OLD_SER, pdates, lambda b: rows[b + 1]['state'] if b + 1 < len(rows) else None),
+                                              ('real', ALLD_R, r3['rser'], OLD_RSER, RDAYS[:-1], lambda b: SIG_R['state'][RIX[RDAYS[b + 1]]] if b + 1 < len(RDAYS) - 1 else None)):
+        gains = []
+        for e in EP:
+            a, b = e[0], e[1]
+            g = sum(math.log1p(ser[i]) - math.log1p(base[i]) for i in range(a, b + 1)) * 100
+            nx = nxt_of(b); gains.append((g, dts[a], dts[b], b - a + 1, 'B' if nx == 'F' else 'R'))
+        gains.sort(); gb = [g[0] for g in gains if g[4] == 'B']; gr = [g[0] for g in gains if g[4] == 'R']
+        log(f"  {hname:<5}: {len(gains)} acting episodes, positive {sum(1 for g in gains if g[0] > 0)}/{len(gains)}, total {sum(g[0] for g in gains):+.2f} pp, "
+            f"median {statistics.median([g[0] for g in gains]):+.2f}; BREAK n={len(gb)} mean {fmt(statistics.mean(gb) if gb else None,6,2)} (pos {sum(1 for x in gb if x>0)}), "
+            f"REVERSAL n={len(gr)} mean {fmt(statistics.mean(gr) if gr else None,6,2)} (pos {sum(1 for x in gr if x>0)})")
+        log(f"        top 3: " + "; ".join(f"{d0}..{d1} ({n}d,{l}) {g:+.2f}" for g, d0, d1, n, l in gains[-1:-4:-1]))
+        log(f"     bottom 3: " + "; ".join(f"{d0}..{d1} ({n}d,{l}) {g:+.2f}" for g, d0, d1, n, l in gains[:3]))
+    # raw ingredient
+    log(f"\n  RAW INGREDIENT: QLD-leg return over E sessions 1..min(k, n) on the {len(ALLD_Q)} proxy / {len(ALLD_R)} real D -> E entries (proxy = the harness's synthetic 2x leg, real = QLD);")
+    log(f"  by outcome label (BREAK = exits to F) and pooled. This is what the rule holds instead of the old E row's 50 % XLU / 50 % cash.")
+    log(f"  {'leg':<9} {'k':>4} {'group':<9} {'n':>3} {'mean%':>7} {'med%':>7} {'pos':>6}")
+    for k in [1, 2, 3, 5, 10, 'all']:
+        kk = 10 ** 9 if k == 'all' else k
+        for hname, EP, legret, nxt_of in (('proxy2x', ALLD_Q, lambda i: rows[i]['legs'][2], lambda b: rows[b + 1]['state'] if b + 1 < len(rows) else None),
+                                          ('realQLD', ALLD_R, lambda i: RPX['QLD'][RDAYS[i + 1]] / RPX['QLD'][RDAYS[i]] - 1, lambda b: SIG_R['state'][RIX[RDAYS[b + 1]]] if b + 1 < len(RDAYS) - 1 else None)):
+            vals = []
+            for e in EP:
+                a, b = e[0], e[1]; n_ = min(kk, b - a + 1); v = 1.0
+                for i in range(a, a + n_): v *= 1 + legret(i)
+                vals.append(((v - 1) * 100, 'B' if nxt_of(b) == 'F' else 'R'))
+            for gname in ('BREAK', 'REVERSAL', 'ALL'):
+                c = [x for x, l in vals if gname == 'ALL' or l == gname[0]]
+                if not c: continue
+                log(f"  {hname:<9} {str(k):>4} {gname:<9} {len(c):>3} {statistics.mean(c):>7.2f} {statistics.median(c):>7.2f} {sum(1 for x in c if x > 0):>3}/{len(c):<2}")
+    # permutation: circular shift of the per-E-day action flags (all k together); statistic = best-of-k full-proxy Sharpe gain vs k=0
+    E_ORDER = [rows[i]['d'] for i in E_ROWS]
+    kl = [k for k in KS if k != 0]
+    FLAGS = {k: [(MQ_[d][1] and MQ_[d][0] <= (10 ** 9 if k == 'all' else k)) for d in E_ORDER] for k in kl}
+    global _P3
+    _P3 = dict(rows=rows, run=run, vt=vt, GB=DSF.BASE, E_ORDER=E_ORDER, FLAGS=FLAGS, kl=kl, QLD=QLD, LIVE_SH=bstats(OLD_SER)[1], bstats=bstats, nE=len(E_ORDER))
+    real_gains = {k: next(r for r in CO if r['k'] == k)['dF'] for k in kl}
+    chk = _p3_worker(0)
+    assert all(abs(chk[k] - real_gains[k]) < 1e-9 for k in kl), 'permutation worker at shift 0 does not reproduce the k curve'
+    NP = int(os.environ.get('EOE_NPERM3', '2000'))
+    rng = random.Random(20260920); shifts = [rng.randrange(1, len(E_ORDER)) for _ in range(NP)]
+    from multiprocessing import Pool
+    t1 = time.time()
+    with Pool(4) as pool:
+        outs = pool.map(_p3_worker, shifts, chunksize=8)
+    null_best = sorted(max(o.values()) for o in outs)
+    real_best = max(real_gains.values())
+    q = lambda v, p_: v[min(len(v) - 1, int(len(v) * p_))]
+    log(f"\n  PERMUTATION ({NP} circular shifts of the {len(E_ORDER)}-day E action-flag sequences, all {len(kl)} k's shifted together, run structure preserved; "
+        f"statistic = best-of-{len(kl)} full-proxy Sharpe gain vs k=0; {time.time()-t1:.0f}s):")
+    log(f"    null best-k gain: median {q(null_best,0.5):+.3f}, 90th {q(null_best,0.9):+.3f}, 95th {q(null_best,0.95):+.3f}, max {null_best[-1]:+.3f} | "
+        f"real best-k gain {real_best:+.3f} (k={max(real_gains, key=real_gains.get)}) -> p = {sum(1 for x in null_best if x >= real_best)/NP:.3f}")
+    for k in kl:
+        nk = sorted(o[k] for o in outs)
+        log(f"    k={str(k):>3}: real {real_gains[k]:+.3f}; null median {q(nk,0.5):+.3f} 95th {q(nk,0.95):+.3f}; p = {sum(1 for x in nk if x >= real_gains[k])/NP:.3f}")
+    bestr = max(ks1, key=lambda r: r['rd'])
+    log(f"\n  BLOCK BOOTSTRAP ({BB.N_BOOT} draws, paired circular blocks): best k by proxy = {bestk['k']}" + (f", best k by real = {bestr['k']}" if bestr is not bestk else " (also best on real)"))
+    for rec in ([bestk] + ([bestr] if bestr is not bestk else [])):
+        for lab, a, b in ((f"k={rec['k']} proxy vs k=0", rec['ser'], OLD_SER), (f"k={rec['k']} proxy vs QLD {rec['ctl']['f']}% ladder", rec['ser'], rec['ctl']['ser']),
+                          (f"k={rec['k']} real vs k=0", rec['rser'], OLD_RSER), (f"k={rec['k']} real vs QLD {rec['rctl']['f']}% ladder", rec['rser'], rec['rctl']['rser'])):
+            for blk in (20, 60):
+                l1, l2, pl, s1, s2, ps = boot(a, b, blk, seed=(len(str(rec['k'])) * 7919 + blk * 13 + len(lab)) & 0xffff)
+                log(f"      {lab:<36} block {blk:>2}d: Sharpe diff 95% CI [{s1:+.3f}, {s2:+.3f}] P(<=0) = {ps:.3f} | log-return [{l1*100:+.2f}, {l2*100:+.2f}] pp/yr P(<=0) = {pl:.3f}")
+    log(f"\n  No adoption language: on the current design the carry-over rule equals live; the counterfactual is on a retired design. The owner decides.")
+
+
+_P3 = None
+def _p3_worker(shift):
+    """full-proxy Sharpe gain vs k=0 for every k, with the per-E-day QLD action flags circularly shifted by `shift`."""
+    P = _P3; nE = P['nE']; out = {}
+    for k in P['kl']:
+        fl = P['FLAGS'][k]
+        on = set(P['E_ORDER'][j] for j in range(nE) if fl[(j - shift) % nE])
+        ser, _ = P['run'](P['rows'], lambda r: P['vt'](P['QLD'], r['vol']) if r['d'] in on else P['GB'][r['d']])
+        out[k] = P['bstats'](ser)[1] - P['LIVE_SH']
+    return out
+
+
 if __name__ == '__main__':
     main()
     part2()
+    part3_time_in_state()
     _log_f.close()

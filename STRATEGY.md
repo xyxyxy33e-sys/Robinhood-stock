@@ -3904,6 +3904,29 @@ reversed from a 10.6% spread; 2003-01 and 2008-06 broke from <0.1%), AUC
 |AUC−0.5| ≈ 0.20. **Nothing proposed**; consistent with the day-level E
 studies. Cumulative D/E candidates unchanged (this was descriptive).
 
+**Parts II–III (same day).** Inside E at sessions 3/5/10 the survivors'
+break rate rises 0.50 → 0.56 → 0.62 → 0.65 purely by survivorship; the only
+separating feature at 3/5 is depth below the 200d (permutation p 0.18 /
+0.49, zero correlation with the next-20-session return), nothing by 10;
+VIX/VXN, rates, breadth: non-price permutation p 0.91 / 0.59 / 0.96. Two
+owner hypotheses then tested as small pre-registered rules: (a) **hold
+100% SPMO for E sessions 1..k then cash**, k = 2/3/5, on the current design:
+proxy Sharpe −0.017 / −0.025 / −0.023 vs live, holdout down at every k,
+MaxDD deeper on both harnesses; real k = 2 +0.014 rests on three 1–2-session
+reversals (bootstrap P(≤0) 0.20). Raw ingredient: QQQ over E sessions 1..k
+pooled −0.04 / −0.33 / −0.11%. (b) **carry the D row (QLD) into E for k
+sessions after a D → E cross**: a no-op under the live design — all 25 D→E
+crosses in 26 years had the last D day gated (23 by gap200 < 2%, which is
+near-mechanical since E entry needs price below the 200d; 2020-03-09/11 by
+breadth 0.13/0.01), zero ungated in either era. As a counterfactual on the
+retired 2026-09-09 design (no gate, E 50% XLU) the k sweep 1..10/all beats
+k = 0 on full-period proxy Sharpe for 0 of 8 k, loses the holdout at every
+k, permutation p 0.68; real k = 2 +0.036 is the same three short reversals
+(P(≤0) 0.16). QLD over E sessions 1..k is negative in every break episode.
+**E stays 100% cash from session 1; the D gate already performs the D → E
+hand-off.** Candidates this line: 3 + 8 (counterfactual). Cumulative D/E:
+267 + 890 + 41 + 82 + 11.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
