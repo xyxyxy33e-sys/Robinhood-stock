@@ -4249,6 +4249,52 @@ expected outperformance. That is an owner call on risk appetite — research
 says only that the price is fair and no cheaper route exists. Cumulative:
 +19 candidates.
 
+### Where to cut max drawdown, Part II: the general question — 2026-09-20, NOTHING applied
+
+Owner asked the broader version: across the whole strategy, not just its knobs.
+`paper-track/drawdown_study2.py`, `research_notes/drawdown_study2.md`. Four
+angles, same null as Part I (flat de-levering frontier).
+
+**A. It is mostly beta, and the classifier has already taken the slack.**
+Episode-level split into avg effective beta × QQQ move vs a timing residual:
+the residual is **6–32% of each real drawdown**. Reference — hold a constant
+beta equal to the design's own average (proxy 1.20, real 1.31): proxy MaxDD
+**−86.7%** and CAGR 8.89%, against the design's −27.0% / 25.46%; real **−45.0%**
+and 23.65%, against −18.6% / 37.29%. The timing machinery already converts a
+−87% drawdown into −27% while nearly tripling return.
+
+**B. State A carries the drawdown by volume; D by intensity.** Across all
+sessions (real): A is 68.0% of time at 78.2% exposure and **72.9% of all
+drawdown loss** (70.3% of downside semi-variance, −39.6 bp/day while in
+drawdown); D is 10.7% of time but **−78.4 bp/day**, twice as damaging per day,
+22.7% of the loss. E, F and gated-D contribute ~0.2% — the cash states work.
+Seven leverage redistributions between states were tested; none clears the
+frontier on both harnesses. **"D as TQQQ 70/30 cash" (same ~2.1× beta, different
+vehicle) scores exactly +0.00 real / −0.55 proxy** — the cleanest confirmation
+that only the size of the beta matters. Taking leverage out of D is the worst
+(−7.03 real), consistent with the same-day D-row test.
+
+**C. It is not a speed problem.** The macro classifier recomputed end to end at
+50/150, 40/150, 30/200, 30/120 and 20/100 — **every faster pair is worse on both
+axes at once**: 40/150 is −3.49 pp CAGR and 1.96 pp deeper; 20/100 is −16.26 pp
+and 10.1 pp deeper. Whipsaw costs more than the early exit saves. (The 50/200
+row reproduces LIVE exactly — asserted.)
+
+**D. A bond sleeve does not help.** 10/20/30% of the risky book carved into a
+10y-note proxy (DGS10 carry − 8.5 × Δy, full history): all below the frontier
+(real −0.43 / −1.19 / −1.74). The sleeve's own MaxDD over the real era is
+**−26.8%**, deeper than the strategy's, at 0.52% CAGR — bonds fell in the same
+episodes. This closes the cheap version of the diversification question, not
+the general one.
+
+**Conclusion: the only lever that works is the size of the beta.** Price from
+Part I: ~0.53 pp of MaxDD per 1 pp of CAGR, Sharpe-positive as you de-lever.
+That is an owner call on risk appetite against the standing objective of
+outperforming SPY and QQQ. Genuinely untested: convexity (puts/collars, which
+pay premium instead of cutting exposure) and non-bond diversifiers; options
+cannot be evaluated on this history with the data here. Cumulative:
++16 candidates.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two

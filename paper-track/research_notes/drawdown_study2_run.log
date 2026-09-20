@@ -1,0 +1,150 @@
+
+====================================================================================================================================
+PART II  drawdown_study2 (2026-09-20): where to cut max DD across the WHOLE strategy
+====================================================================================================================================
+  LIVE (asserted): proxy 25.46% / 1.071 / -27.0% | real 37.29% / 1.475 / -18.6%
+
+====================================================================================================================================
+A  IS IT JUST LEVERAGED BETA? Each episode split into (avg effective beta x index move) vs a timing residual.
+====================================================================================================================================
+   effective beta = sum(weight_j x leg_beta_j), leg betas core 1.0 / TQQQ 3.0 / QLD 2.0 / XLU 0.2 / BOXX 0.
+
+  PROXY
+  peak -> trough               depth  avg beta   QQQ move  beta-implied   residual  resid share
+  2004-12-13 -> 2005-10-31    -27.0%      1.33      -3.6%         -4.7%     -22.2%          82%
+  2000-07-14 -> 2002-08-28    -26.7%      0.21     -76.4%        -16.2%     -10.5%          39%
+  2007-11-05 -> 2009-03-13    -25.4%      0.43     -47.7%        -20.6%      -4.8%          19%
+  2021-11-18 -> 2023-01-18    -25.3%      0.45     -31.5%        -14.2%     -11.1%          44%
+  2011-04-26 -> 2011-12-13    -20.6%      1.04      -6.7%         -7.0%     -13.6%          66%
+  2012-04-26 -> 2012-06-01    -19.7%      1.92      -8.9%        -17.2%      -2.5%          13%
+
+  REAL
+  peak -> trough               depth  avg beta   QQQ move  beta-implied   residual  resid share
+  2021-11-18 -> 2023-01-17    -18.6%      0.45     -30.8%        -13.9%      -4.7%          25%
+  2025-02-18 -> 2025-03-03    -17.8%      1.61      -8.1%        -13.1%      -4.7%          26%
+  2023-09-13 -> 2023-10-26    -17.0%      1.92      -7.7%        -14.8%      -2.2%          13%
+  2018-01-30 -> 2018-02-07    -16.5%      1.71      -9.0%        -15.4%      -1.0%           6%
+  2018-03-09 -> 2018-04-05    -16.3%      1.45      -9.5%        -13.8%      -2.5%          15%
+  2018-08-28 -> 2018-12-07    -15.0%      0.87     -11.7%        -10.2%      -4.8%          32%
+
+  Reference: hold a CONSTANT beta to QQQ, equal to the design's own average effective beta, over the same window.
+  (First-order: beta x daily QQQ return, no financing or rebalancing drag -- a floor on what constant leverage costs.)
+    proxy  design avg beta 1.20  ->  constant-beta MaxDD  -86.7%  CAGR   8.89%   |  the DESIGN: MaxDD  -27.0%  CAGR  25.46%
+           i.e. the timing machinery turns a -86.7% drawdown into -27.0% while raising CAGR from 8.89% to 25.46%
+    real   design avg beta 1.31  ->  constant-beta MaxDD  -45.0%  CAGR  23.65%   |  the DESIGN: MaxDD  -18.6%  CAGR  37.29%
+           i.e. the timing machinery turns a -45.0% drawdown into -18.6% while raising CAGR from 23.65% to 37.29%
+
+====================================================================================================================================
+B1  RISK BY REGIME across ALL sessions: share of time, of loss taken while in drawdown, and of downside semi-variance
+====================================================================================================================================
+
+  PROXY  (6575 sessions)
+  regime         days   % time   avg exp  loss in DD  % of DD loss  % of semivar  loss/day in DD
+  A              3909    59.5%     78.2%    -1887.8%         70.7%         71.3%          -48.3bp
+  D               694    10.6%     95.5%     -537.2%         20.1%         23.6%          -77.4bp
+  C               281     4.3%     60.7%     -103.4%          3.9%          2.0%          -36.8bp
+  F               993    15.1%     13.0%      -83.0%          3.1%          1.5%           -8.4bp
+  B                78     1.2%     90.2%      -55.3%          2.1%          1.6%          -70.9bp
+  D-gated         240     3.7%      0.0%       -4.5%          0.2%          0.0%           -1.9bp
+  E               380     5.8%      0.0%       -0.2%          0.0%          0.0%           -0.0bp
+
+  REAL  (2725 sessions)
+  regime         days   % time   avg exp  loss in DD  % of DD loss  % of semivar  loss/day in DD
+  A              1854    68.0%     78.2%     -733.6%         72.9%         70.3%          -39.6bp
+  D               291    10.7%     91.8%     -228.2%         22.7%         27.8%          -78.4bp
+  C               100     3.7%     66.1%      -21.8%          2.2%          1.0%          -21.8bp
+  F               221     8.1%     14.7%      -12.0%          1.2%          0.5%           -5.4bp
+  B                18     0.7%     85.3%       -9.3%          0.9%          0.4%          -51.8bp
+  D-gated          91     3.3%      0.0%       -1.7%          0.2%          0.0%           -1.9bp
+  E               150     5.5%      0.0%       -0.1%          0.0%          0.0%           -0.1bp
+
+====================================================================================================================================
+B2  MOVE THE LEVERAGE BETWEEN STATES (total risk budget roughly held, distribution changed), scored vs the frontier
+====================================================================================================================================
+
+  REAL
+  variant                                CAGR   Sharpe    MaxDD     exp  |   dCAGR   dMaxDD  dSharpe  vs frontier
+  LIVE  A 50/50, B 75/25, D QLD        37.29%    1.475   -18.6%   67.2%  |   +0.00    +0.00   +0.000        +0.00
+  leverage INTO A (A 40/60, B 90/10)   39.69%    1.454   -20.8%   67.2%  |   +2.39    -2.22   -0.020        -2.22
+  leverage INTO B (A 65/35, B 55/45)   33.62%    1.494   -16.4%   67.2%  |   -3.67    +2.19   +0.019        +0.10
+  leverage OUT of D (D core, A 35/65)   31.75%    1.296   -22.5%   67.2%  |   -5.54    -3.97   -0.179        -7.03
+  D as TQQQ 70/30 cash (same ~2.1x)    38.31%    1.487   -18.6%   64.3%  |   +1.01    +0.00   +0.013        +0.00
+  D as QLD 85/15 cash, A 45/55         36.31%    1.448   -19.7%   65.7%  |   -0.99    -1.12   -0.026        -1.60
+  all leverage as QLD (A 0/0/100 QLD)   37.62%    1.425   -21.0%   67.2%  |   +0.32    -2.45   -0.050        -2.45
+
+  PROXY
+  variant                                CAGR   Sharpe    MaxDD     exp  |   dCAGR   dMaxDD  dSharpe  vs frontier
+  LIVE  A 50/50, B 75/25, D QLD        25.46%    1.071   -27.0%   62.2%  |   +0.00    +0.00   +0.000        +0.00
+  leverage INTO A (A 40/60, B 90/10)   27.12%    1.071   -28.4%   62.2%  |   +1.66    -1.49   -0.000        -1.49
+  leverage INTO B (A 65/35, B 55/45)   22.93%    1.066   -26.3%   62.2%  |   -2.53    +0.66   -0.005        -2.24
+  leverage OUT of D (D core, A 35/65)   23.23%    0.987   -29.7%   62.2%  |   -2.22    -2.77   -0.084        -5.34
+  D as TQQQ 70/30 cash (same ~2.1x)    26.22%    1.085   -27.5%   59.2%  |   +0.76    -0.55   +0.014        -0.55
+  D as QLD 85/15 cash, A 45/55         24.91%    1.053   -27.7%   60.7%  |   -0.55    -0.77   -0.017        -1.42
+  all leverage as QLD (A 0/0/100 QLD)   25.35%    1.067   -27.2%   62.2%  |   -0.11    -0.23   -0.004        -0.37
+
+====================================================================================================================================
+C1  HOW FAST DOES THE DESIGN SHED RISK after an episode peak? (effective beta, sessions after the peak)
+====================================================================================================================================
+
+  PROXY
+  peak -> trough               depth  beta at peak     +5d    +10d    +20d   sess to beta<0.5  trough at sess
+  2004-12-13 -> 2005-10-31    -27.0%          1.36    1.99    2.01    2.00                 27             223
+  2000-07-14 -> 2002-08-28    -26.7%          0.94    1.01    0.00    0.00                 10             531
+  2007-11-05 -> 2009-03-13    -25.4%          2.00    0.00    0.00    0.00                  4             340
+  2021-11-18 -> 2023-01-18    -25.3%          2.01    1.98    1.99    1.84                 21             291
+  2011-04-26 -> 2011-12-13    -20.6%          2.02    2.01    2.02    2.00                 32             161
+  2012-04-26 -> 2012-06-01    -19.7%          2.01    2.00    2.00    2.00                 25              25
+
+  REAL
+  peak -> trough               depth  beta at peak     +5d    +10d    +20d   sess to beta<0.5  trough at sess
+  2021-11-18 -> 2023-01-17    -18.6%          2.03    1.98    1.95    1.84                 21             290
+  2025-02-18 -> 2025-03-03    -17.8%          2.03    2.00    0.00    0.00                  7               9
+  2023-09-13 -> 2023-10-26    -17.0%          2.01    2.00    2.00    2.00                 31              31
+  2018-01-30 -> 2018-02-07    -16.5%          1.33    2.00    1.67    1.59              never               6
+  2018-03-09 -> 2018-04-05    -16.3%          1.01    1.51    1.90    1.48                 15              18
+  2018-08-28 -> 2018-12-07    -15.0%          2.03    2.02    2.01    2.02                 28              70
+
+====================================================================================================================================
+C2  FASTER MACRO CLASSIFIER (live 50/200). States recomputed end to end; fast overlay and everything else unchanged.
+====================================================================================================================================
+
+  REAL
+  variant                                CAGR   Sharpe    MaxDD     exp  |   dCAGR   dMaxDD  dSharpe  vs frontier
+  macro 50/200  (LIVE)                 37.29%    1.475   -18.6%   67.2%  |   +0.00    +0.00   +0.000        +0.00
+  macro 40/150                         33.81%    1.360   -20.5%   66.9%  |   -3.49    -1.96   -0.114        -3.94
+  macro 30/120                         30.88%    1.313   -23.6%   64.0%  |   -6.41    -5.00   -0.162        -8.51
+  macro 20/100                         21.03%    0.998   -28.7%   60.2%  |  -16.26   -10.13   -0.476       -18.67
+  macro 50/150                         35.80%    1.433   -18.6%   67.0%  |   -1.50    +0.00   -0.042        -0.72
+  macro 30/200                         36.30%    1.459   -20.7%   65.8%  |   -0.99    -2.18   -0.016        -2.66
+  (the 50/200 row is the classifier RECOMPUTED end to end; it reproduces LIVE exactly -- asserted)
+
+  PROXY
+  variant                                CAGR   Sharpe    MaxDD     exp  |   dCAGR   dMaxDD  dSharpe  vs frontier
+  macro 50/200  (LIVE)                 25.46%    1.071   -27.0%   62.2%  |   +0.00    +0.00   +0.000        +0.00
+  macro 40/150                         23.44%    1.006   -34.2%   61.6%  |   -2.02    -7.20   -0.065        -9.53
+  macro 30/120                         19.69%    0.904   -31.1%   59.6%  |   -5.76    -4.14   -0.167       -10.53
+  macro 20/100                         16.15%    0.794   -29.7%   57.1%  |   -9.31    -2.76   -0.277       -13.11
+  macro 50/150                         24.55%    1.044   -27.1%   61.7%  |   -0.91    -0.19   -0.027        -1.27
+  macro 30/200                         24.00%    1.027   -33.0%   61.6%  |   -1.46    -6.09   -0.044        -7.80
+  (the 50/200 row is the classifier RECOMPUTED end to end; it reproduces LIVE exactly -- asserted)
+
+====================================================================================================================================
+D  DIVERSIFICATION SLEEVE: carve x% out of the RISKY legs into a 10y-note proxy (DGS10 carry - 8.5 x dy).
+====================================================================================================================================
+   This is the one axis Part I never touched: not less risk, DIFFERENT risk. Scored on the same frontier.
+
+  REAL   bond proxy over this window: CAGR 0.52%, MaxDD -26.8%
+  variant                                CAGR   Sharpe    MaxDD     exp  |   dCAGR   dMaxDD  dSharpe  vs frontier
+  LIVE                                 37.29%    1.475   -18.6%   67.2%  |   +0.00    +0.00   +0.000        +0.00
+  bond sleeve 10% of risky             33.38%    1.473   -16.8%   60.6%  |   -3.91    +1.79   -0.002        -0.43
+  bond sleeve 20% of risky             29.54%    1.472   -15.5%   53.9%  |   -7.75    +3.05   -0.003        -1.19
+  bond sleeve 30% of risky             25.68%    1.465   -14.2%   47.2%  |  -11.61    +4.40   -0.010        -1.74
+
+  PROXY   bond proxy over this window: CAGR 3.48%, MaxDD -26.8%
+  variant                                CAGR   Sharpe    MaxDD     exp  |   dCAGR   dMaxDD  dSharpe  vs frontier
+  LIVE                                 25.46%    1.071   -27.0%   62.2%  |   +0.00    +0.00   +0.000        +0.00
+  bond sleeve 10% of risky             23.06%    1.074   -24.7%   56.1%  |   -2.40    +2.22   +0.003        -0.54
+  bond sleeve 20% of risky             20.62%    1.077   -22.5%   49.9%  |   -4.83    +4.47   +0.006        -0.91
+  bond sleeve 30% of risky             18.15%    1.077   -20.2%   43.7%  |   -7.31    +6.77   +0.006        -1.33
+
+[done] elapsed 6s

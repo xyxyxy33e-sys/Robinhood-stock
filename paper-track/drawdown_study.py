@@ -51,7 +51,28 @@ PLEG = {r['d']: r['legs'] for r in rows}
 W0 = dict(TARGET_WEIGHTS)
 
 # ---------------------------------------------------------------- one simulator, both harnesses
-def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=None, b_row=None,
+_MACRO = {}
+def macro_states(harness, sn, ln):
+    """Recompute the six-state macro classifier end to end at (short_n, long_n),
+    then the effective state through the live 20/100 fast overlay."""
+    k = (harness, sn, ln)
+    if k in _MACRO: return _MACRO[k]
+    from state import compute_states as _cs, compute_fast_states as _cf, effective_state as _es
+    if harness == 'real':
+        px = TDT.RQQQ
+    else:
+        import d_substate_fresh as _DSF
+        px = _DSF._QQQ_FULL              # REAL QQQ PRICES. rows['qqq'] is a RETURN, not a price.
+    ds = sorted(px)
+    st = dict(zip(ds, _cs(ds, px, short_n=sn, long_n=ln)))
+    fa = _cf(ds, px)
+    out = {d: (st[d], _es(st[d], fa[d])) for d in ds}
+    _MACRO[k] = out
+    return out
+
+
+def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=None,
+        a_row=None, b_row=None, d_row=None, macro=None, bond_sleeve=None,
         gate_breadth=0.20, gate_gap200=0.02, brake=None, band=REBALANCE_DRIFT_BAND,
         scale=1.0, one_way=None, detail=False):
     """Live design with one knob moved. brake=(x, m): when NAV is more than x
@@ -66,6 +87,8 @@ def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=Non
         RW = {r['d']: r for r in rows}
         info = lambda d: RW[d]; legs = lambda d: PLEG[d]; bp = BP_Q
         keyf = lambda I, v, g: (I['state'], I['agree'])
+    MS = macro_states(harness, *macro) if macro else None
+    BW, BR = (bond_sleeve if bond_sleeve else (0.0, None))
     held = prev = None
     out = []; risky = 0.0; nreb = 0
     nav = 1.0; peak = 1.0
@@ -73,6 +96,8 @@ def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=Non
         I = info(d)
         st = I['st'] if harness == 'real' else I['state']
         eff = I['eff']; gaps = I['gaps']; vol = I['vol']
+        if MS is not None and d in MS:
+            st, eff = MS[d]
         g200 = gaps.get(200)
         b = bp.get(d)
         gate = (st == 'D') and ((b is not None and b < gate_breadth) or
@@ -83,12 +108,12 @@ def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=Non
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             f = max(0.0, 1.0 - (1.0 / 3.0) * v)
-            w = W0['A']
+            w = a_row if a_row is not None else W0['A']
             row = tuple(a * f for a in w[:4]) + (1 - f * sum(w[:4]),)
         else:
             row = W0[eff]
-            if b_row is not None and eff == 'B':
-                row = b_row
+            if b_row is not None and eff == 'B': row = b_row
+            if d_row is not None and st == 'D': row = d_row
         if lev_cap is not None:                      # cap the 3x leg, surplus to core
             t3 = row[1]
             if t3 > lev_cap:
@@ -100,16 +125,22 @@ def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=Non
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)
         if scale != 1.0:
             rk = sum(t[:4]); t = tuple(x * scale for x in t[:4]) + (1.0 - rk * scale,)
+        if BW:                                   # carve BW of the risky book into the bond sleeve
+            bw = BW * sum(t[:4])
+            t = tuple(x * (1 - BW) for x in t[:4]) + (t[4], bw)
+        elif BR is not None:
+            t = tuple(t) + (0.0,)
         key = keyf(I, v, gate)
+        nl = len(t)
         cost = 0.0
         if held is None:
             held = list(t); nreb += 1
         else:
-            drift = sum(abs(t[j] - held[j]) for j in range(5))
+            drift = sum(abs(t[j] - held[j]) for j in range(nl))
             if key != prev or drift > band:
                 cost = ow * drift; held = list(t); nreb += 1
-        lr = legs(d)
-        gg = sum(held[j] * lr[j] for j in range(5))
+        lr = tuple(legs(d)) + ((BR.get(d, 0.0),) if BR is not None else ())
+        gg = sum(held[j] * lr[j] for j in range(nl))
         net = gg - cost
         risky += sum(held[:4])
         nav *= (1 + net); peak = max(peak, nav)
@@ -119,7 +150,7 @@ def sim(harness='real', vol_target=VOL_TARGET_PA, d_vol_target=None, lev_cap=Non
         else:
             out.append(net)
         dn = 1 + gg
-        if dn > 0: held = [held[j] * (1 + lr[j]) / dn for j in range(5)]
+        if dn > 0: held = [held[j] * (1 + lr[j]) / dn for j in range(nl)]
         prev = key
     n = len(days)
     return out, risky / n, nreb / (n / 252.0)
