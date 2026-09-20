@@ -4295,6 +4295,49 @@ pay premium instead of cutting exposure) and non-bond diversifiers; options
 cannot be evaluated on this history with the data here. Cumulative:
 +16 candidates.
 
+### Maximize Sharpe (BOXX as cash) — researched 2026-09-20, NOTHING applied
+
+Owner: "then maximize sharpe" / "treat boxx as cash". `paper-track/sharpe_study.py`,
+`research_notes/sharpe_study.md`. **Metric:** BOXX is the risk-free leg, so
+Sharpe = excess return over the cash leg. This matters — a raw Sharpe drifts up
+as the book de-levers (real 1.475 → 1.576 at k=0.50) purely because BOXX pays
+~2.3%/yr at 0.17% vol; excess Sharpe is flat under scaling (1.376 → 1.378
+real), which makes the objective well posed. **LIVE: real 1.376; proxy 0.990
+(search 1.305, holdout 0.754).**
+
+**The naive maximum overfits, and the holdout catches it.** A 46-setting
+one-at-a-time sweep over 9 knobs, then every setting that raises search-era
+Sharpe on both harnesses stacked: proxy search 1.305 → **1.360**, proxy holdout
+0.754 → **0.683**, MaxDD −27.0% → **−48.5%**; re-levered to live's CAGR the
+proxy drawdown is −46.3%, **19.3 pp worse**. The stack switches off the vol
+target and the gap200 gate. **Switching the vol target off raises search-era
+Sharpe on BOTH harnesses (+0.004 proxy, +0.016 real) and costs −0.111 on the
+proxy holdout, taking MaxDD to −51.3%** — the search era does not contain the
+event the vol target exists for. This is the strongest argument on record for
+keeping the vol target, and it exists only because the holdout does.
+
+**One survivor worth a second look: state D held as 70% TQQQ / 30% BOXX instead
+of 100% QLD** (same ~2.1× beta, different vehicle). Real Sharpe +0.014 and
+CAGR +1.01 pp at unchanged MaxDD, bootstrap Sharpe P 0.018 / return P 0.000;
+proxy +0.015 full, +0.021 search, +0.010 holdout, bootstrap P 0.000 on both;
+LORO positive in all five windows; re-levered to live's CAGR, MaxDD better by
+0.47 pp real / 0.37 pp proxy. **It clears more bars than anything tested this
+month.** Cautions: no clean mechanism (drag should be *worse* for 0.7×3× than
+1.0×2×, so the gain is path/interaction, not theory), it is Sharpe-positive but
+NOT drawdown-positive (+0.00 against the drawdown frontier in
+`drawdown_study2`), and it is a maximum over a 46-cell menu with **no menu
+permutation run** — historically where candidates die.
+
+Two weaker survivors, both proxy-only in substance: **B row 100/0** (real
+bootstrap P 0.320; state B is 0.7% of real sessions) and **D gate gap200 half
+OFF** (real P 0.454, proxy P 0.245) — the latter proposes undoing half of the
+state-D gate applied 2026-09-19; it fails the bootstrap, but it is on the
+record that the gap200 half is Sharpe-negative in both proxy eras.
+
+**Nothing applied.** The D-row candidate should be re-run pre-registered and
+alone after the 7 December freeze, with a menu permutation. Cumulative:
++46 candidates.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two

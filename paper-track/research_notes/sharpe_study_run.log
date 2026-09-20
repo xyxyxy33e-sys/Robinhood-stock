@@ -1,0 +1,257 @@
+
+======================================================================================================================================
+RESEARCH LINE sharpe_study (2026-09-20): maximize Sharpe, BOXX treated as cash (excess-return Sharpe)
+======================================================================================================================================
+0  SANITY: with BOXX as the risk-free leg, Sharpe is scale-invariant, so 'maximize Sharpe' is well posed.
+   (A RAW Sharpe is not: it drifts up as the book de-levers, purely because the cash leg pays a positive
+    return at ~zero vol. That is why every number below is EXCESS of the cash leg.)
+======================================================================================================================================
+
+  REAL  cash leg (BOXX): CAGR 2.34%, annualised sd 0.17%
+       k     CAGR   raw Sharpe   SHARPE (ex-cash)    MaxDD
+    1.00   37.29%        1.475              1.376   -18.6%
+    0.80   30.02%        1.498              1.374   -14.6%
+    0.60   22.96%        1.543              1.379   -11.0%
+    0.50   19.42%        1.576              1.378    -9.2%
+
+  PROXY  cash leg (BOXX): CAGR 1.94%, annualised sd 0.16%
+       k     CAGR   raw Sharpe   SHARPE (ex-cash)    MaxDD
+    1.00   25.46%        1.071              0.990   -27.0%
+    0.80   20.87%        1.089              0.989   -21.8%
+    0.60   16.20%        1.120              0.986   -16.7%
+    0.50   13.86%        1.146              0.985   -14.0%
+
+  Flat under scaling, as it must be. Everything below maximises this number.
+  LIVE: real Sharpe 1.376 (search 1.376) | proxy 0.990 (search 1.305, holdout 0.754)
+
+======================================================================================================================================
+1  ONE-AT-A-TIME SWEEP, REAL. Sharpe = excess over BOXX. Deltas vs LIVE.
+======================================================================================================================================
+  LIVE  Sharpe full 1.376  search 1.376  holdout nan   CAGR 37.29%  MaxDD -18.6%  exp 67.2%
+  knob              setting               full   search    hold  |   dFull  dSearch   dHold     CAGR    MaxDD  better?
+  vol target        0.12                 1.354    1.354     nan  |  -0.021   -0.021    +nan   28.14%   -15.4%  
+  vol target        0.14                 1.370    1.370     nan  |  -0.006   -0.006    +nan   31.50%   -14.9%  
+  vol target        0.16                 1.366    1.366     nan  |  -0.010   -0.010    +nan   33.88%   -16.6%  
+  vol target        0.18                 1.372    1.372     nan  |  -0.004   -0.004    +nan   35.85%   -17.3%  
+  vol target        0.20                 1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  vol target        0.25                 1.374    1.374     nan  |  -0.002   -0.002    +nan   39.37%   -21.0%  
+  vol target        0.30                 1.387    1.387     nan  |  +0.011   +0.011    +nan   40.54%   -21.1%  YES
+  vol target        1.00                 1.392    1.392     nan  |  +0.016   +0.016    +nan   41.48%   -22.1%  YES
+
+  A row core/TQQQ   30/70                1.342    1.342     nan  |  -0.033   -0.033    +nan   41.94%   -23.0%  
+  A row core/TQQQ   40/60                1.360    1.360     nan  |  -0.016   -0.016    +nan   39.63%   -20.8%  
+  A row core/TQQQ   50/50                1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  A row core/TQQQ   60/40                1.386    1.386     nan  |  +0.010   +0.010    +nan   34.90%   -16.8%  YES
+  A row core/TQQQ   70/30                1.388    1.388     nan  |  +0.012   +0.012    +nan   32.50%   -15.9%  YES
+
+  B row core/TQQQ   55/45                1.372    1.372     nan  |  -0.004   -0.004    +nan   37.23%   -18.6%  
+  B row core/TQQQ   65/35                1.374    1.374     nan  |  -0.002   -0.002    +nan   37.26%   -18.6%  
+  B row core/TQQQ   75/25                1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  B row core/TQQQ   85/15                1.377    1.377     nan  |  +0.002   +0.002    +nan   37.33%   -18.6%  YES
+  B row core/TQQQ   100/0                1.380    1.380     nan  |  +0.004   +0.004    +nan   37.38%   -18.6%  YES
+
+  D row             100% QLD             1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  D row             TQQQ 70/30 cash      1.390    1.390     nan  |  +0.014   +0.014    +nan   38.31%   -18.6%  YES
+  D row             QLD 85/15 cash       1.358    1.358     nan  |  -0.018   -0.018    +nan   35.14%   -18.6%  
+  D row             100% core            1.228    1.228     nan  |  -0.148   -0.148    +nan   28.52%   -19.3%  
+
+  TQQQ cap          none                 1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  TQQQ cap          0.40                 1.379    1.379     nan  |  +0.003   +0.003    +nan   34.90%   -16.8%  YES
+  TQQQ cap          0.25                 1.370    1.370     nan  |  -0.006   -0.006    +nan   31.20%   -15.4%  
+  TQQQ cap          0.00                 1.284    1.284     nan  |  -0.092   -0.092    +nan   25.00%   -13.2%  
+
+  D gate breadth    0.00                 1.180    1.180     nan  |  -0.196   -0.196    +nan   32.59%   -22.8%  
+  D gate breadth    0.15                 1.366    1.366     nan  |  -0.010   -0.010    +nan   37.45%   -20.8%  
+  D gate breadth    0.20                 1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  D gate breadth    0.25                 1.352    1.352     nan  |  -0.024   -0.024    +nan   36.03%   -19.7%  
+  D gate breadth    0.30                 1.386    1.386     nan  |  +0.010   +0.010    +nan   36.78%   -18.6%  YES
+
+  D gate gap200     0.00                 1.380    1.380     nan  |  +0.004   +0.004    +nan   38.23%   -18.6%  YES
+  D gate gap200     0.02                 1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  D gate gap200     0.03                 1.281    1.281     nan  |  -0.095   -0.095    +nan   33.93%   -20.4%  
+  D gate gap200     0.05                 1.199    1.199     nan  |  -0.177   -0.177    +nan   30.10%   -30.4%  
+
+  macro pair        50/200               1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  macro pair        50/150               1.333    1.333     nan  |  -0.042   -0.042    +nan   35.80%   -18.6%  
+  macro pair        60/200               1.374    1.374     nan  |  -0.002   -0.002    +nan   37.03%   -17.8%  
+  macro pair        40/200               1.336    1.336     nan  |  -0.040   -0.040    +nan   36.20%   -20.5%  
+  macro pair        40/150               1.262    1.262     nan  |  -0.114   -0.114    +nan   33.81%   -20.5%  
+  macro pair        30/200               1.359    1.359     nan  |  -0.017   -0.017    +nan   36.30%   -20.7%  
+
+  drift band        0.02                 1.372    1.372     nan  |  -0.003   -0.003    +nan   37.16%   -18.4%  
+  drift band        0.03                 1.375    1.375     nan  |  -0.001   -0.001    +nan   37.21%   -18.4%  
+  drift band        0.05                 1.376    1.376     nan  |  +0.000   +0.000    +nan   37.29%   -18.6%    <- LIVE
+  drift band        0.08                 1.381    1.381     nan  |  +0.006   +0.006    +nan   37.50%   -18.7%  YES
+  drift band        0.12                 1.391    1.391     nan  |  +0.015   +0.015    +nan   37.90%   -19.0%  YES
+
+
+======================================================================================================================================
+1  ONE-AT-A-TIME SWEEP, PROXY. Sharpe = excess over BOXX. Deltas vs LIVE.
+======================================================================================================================================
+  LIVE  Sharpe full 0.990  search 1.305  holdout 0.754   CAGR 25.46%  MaxDD -27.0%  exp 62.2%
+  knob              setting               full   search    hold  |   dFull  dSearch   dHold     CAGR    MaxDD  better?
+  vol target        0.12                 0.934    1.275   0.681  |  -0.056   -0.030  -0.074   18.99%   -24.3%  
+  vol target        0.14                 0.953    1.296   0.699  |  -0.037   -0.008  -0.056   21.23%   -26.9%  
+  vol target        0.16                 0.971    1.298   0.727  |  -0.019   -0.007  -0.028   23.09%   -27.0%  
+  vol target        0.18                 0.986    1.302   0.750  |  -0.004   -0.003  -0.005   24.56%   -27.0%  
+  vol target        0.20                 0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  vol target        0.25                 0.978    1.298   0.737  |  -0.012   -0.006  -0.017   26.35%   -34.1%  
+  vol target        0.30                 0.959    1.305   0.703  |  -0.031   +0.001  -0.051   26.46%   -41.2%  
+  vol target        1.00                 0.913    1.309   0.644  |  -0.077   +0.004  -0.111   26.43%   -51.3%  
+
+  A row core/TQQQ   30/70                0.983    1.289   0.753  |  -0.007   -0.015  -0.001   28.35%   -31.3%  
+  A row core/TQQQ   40/60                0.988    1.297   0.755  |  -0.002   -0.007  +0.001   26.93%   -28.8%  
+  A row core/TQQQ   50/50                0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  A row core/TQQQ   60/40                0.991    1.307   0.754  |  +0.001   +0.002  -0.001   23.95%   -26.3%  
+  A row core/TQQQ   70/30                0.989    1.307   0.750  |  -0.002   +0.002  -0.004   22.42%   -25.7%  
+
+  B row core/TQQQ   55/45                0.979    1.300   0.738  |  -0.012   -0.005  -0.016   25.20%   -27.4%  
+  B row core/TQQQ   65/35                0.985    1.302   0.746  |  -0.006   -0.002  -0.008   25.33%   -27.1%  
+  B row core/TQQQ   75/25                0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  B row core/TQQQ   85/15                0.996    1.307   0.762  |  +0.005   +0.002  +0.008   25.58%   -26.8%  YES
+  B row core/TQQQ   100/0                1.003    1.309   0.773  |  +0.013   +0.005  +0.019   25.77%   -26.7%  YES
+
+  D row             100% QLD             0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  D row             TQQQ 70/30 cash      1.005    1.325   0.764  |  +0.015   +0.021  +0.010   26.22%   -27.5%  YES
+  D row             QLD 85/15 cash       0.975    1.282   0.745  |  -0.016   -0.023  -0.009   24.17%   -26.6%  
+  D row             100% core            0.916    1.197   0.708  |  -0.074   -0.108  -0.046   21.18%   -26.4%  
+
+  TQQQ cap          none                 0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  TQQQ cap          0.40                 0.984    1.301   0.747  |  -0.006   -0.003  -0.008   23.89%   -26.6%  
+  TQQQ cap          0.25                 0.974    1.292   0.736  |  -0.016   -0.012  -0.018   21.53%   -25.7%  
+  TQQQ cap          0.00                 0.971    1.273   0.744  |  -0.019   -0.031  -0.011   17.99%   -23.6%  
+
+  D gate breadth    0.00                 0.889    1.126   0.707  |  -0.102   -0.179  -0.047   23.06%   -28.8%  
+  D gate breadth    0.15                 0.980    1.299   0.738  |  -0.011   -0.006  -0.016   25.31%   -27.0%  
+  D gate breadth    0.20                 0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  D gate breadth    0.25                 0.975    1.282   0.746  |  -0.015   -0.022  -0.008   24.83%   -27.0%  
+  D gate breadth    0.30                 0.979    1.312   0.730  |  -0.011   +0.007  -0.024   24.74%   -27.0%  
+
+  D gate gap200     0.00                 1.016    1.315   0.792  |  +0.026   +0.010  +0.037   26.68%   -26.1%  YES
+  D gate gap200     0.02                 0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  D gate gap200     0.03                 0.843    1.212   0.559  |  -0.148   -0.092  -0.195   20.75%   -33.9%  
+  D gate gap200     0.05                 0.816    1.132   0.574  |  -0.175   -0.172  -0.180   19.38%   -32.3%  
+
+  macro pair        50/200               0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  macro pair        50/150               0.963    1.262   0.738  |  -0.027   -0.042  -0.016   24.55%   -27.1%  
+  macro pair        60/200               0.974    1.292   0.734  |  -0.017   -0.012  -0.020   24.94%   -29.2%  
+  macro pair        40/200               0.951    1.250   0.726  |  -0.040   -0.055  -0.028   24.31%   -33.2%  
+  macro pair        40/150               0.925    1.181   0.731  |  -0.066   -0.124  -0.023   23.44%   -34.2%  
+  macro pair        30/200               0.946    1.285   0.697  |  -0.044   -0.019  -0.057   24.00%   -33.0%  
+
+  drift band        0.02                 0.992    1.302   0.759  |  +0.001   -0.002  +0.004   25.48%   -26.9%  
+  drift band        0.03                 0.991    1.302   0.757  |  +0.000   -0.002  +0.002   25.45%   -26.9%  
+  drift band        0.05                 0.990    1.305   0.754  |  +0.000   +0.000  +0.000   25.46%   -27.0%    <- LIVE
+  drift band        0.08                 0.991    1.307   0.754  |  +0.001   +0.002  -0.000   25.51%   -27.0%  
+  drift band        0.12                 0.993    1.311   0.755  |  +0.003   +0.007  +0.000   25.58%   -27.0%  YES
+
+
+======================================================================================================================================
+2  COMBINATION: settings that raise SEARCH-era Sharpe on BOTH harnesses, stacked, then tested honestly.
+======================================================================================================================================
+  settings that raise search-era Sharpe on BOTH harnesses:
+    D row               TQQQ 70/30 cash    min search gain +0.014
+    D gate breadth      0.30               min search gain +0.007
+    drift band          0.12               min search gain +0.007
+    vol target          1.00               min search gain +0.004
+    D gate gap200       0.00               min search gain +0.004
+    B row core/TQQQ     100/0              min search gain +0.004
+    A row core/TQQQ     60/40              min search gain +0.002
+
+  stacked configuration: {'d_row': (0, 0.7, 0, 0, 0.3), 'gate_breadth': 0.3, 'band': 0.12, 'vol_target': 1.0, 'gate_gap200': 0.0, 'b_row': (1.0, 0.0, 0, 0, 0), 'a_row': (0.6, 0.4, 0, 0, 0)}
+
+  arm                         full   search    hold     CAGR    MaxDD     exp    reb
+  REAL LIVE                  1.376    1.376     nan   37.29%   -18.6%   67.2%   45.1
+  REAL STACK                 1.441    1.441     nan   40.85%   -19.6%   68.9%   33.6
+                          delta full +0.065  search +0.065  holdout +nan  -> holdout FAILS
+                          RE-LEVERED to LIVE's CAGR: k 0.910 -> CAGR 37.29%, MaxDD -17.8% vs LIVE -18.6% (BETTER by 0.79 pp), exposure 62.9% vs 67.2%
+  PROXY LIVE                 0.990    1.305   0.754   25.46%   -27.0%   62.2%   47.9
+  PROXY STACK                0.958    1.360   0.683   26.70%   -48.5%   65.5%   38.3
+                          delta full -0.033  search +0.055  holdout -0.071  -> holdout FAILS
+                          RE-LEVERED to LIVE's CAGR: k 0.947 -> CAGR 25.46%, MaxDD -46.3% vs LIVE -27.0% (WORSE by 19.33 pp), exposure 62.1% vs 62.2%
+
+  block bootstrap of the excess-return Sharpe difference, stack vs LIVE (2000 draws, paired):
+    real   block 20d: Sharpe 95% CI [-0.121, +0.264] P(<=0)=0.255   log-return [-1.62, +7.63] pp/yr P(<=0)=0.135
+    real   block 60d: Sharpe 95% CI [-0.132, +0.257] P(<=0)=0.259   log-return [-2.24, +7.64] pp/yr P(<=0)=0.150
+    proxy  block 20d: Sharpe 95% CI [-0.172, +0.107] P(<=0)=0.676   log-return [-2.53, +4.57] pp/yr P(<=0)=0.282
+    proxy  block 60d: Sharpe 95% CI [-0.174, +0.100] P(<=0)=0.678   log-return [-2.59, +4.48] pp/yr P(<=0)=0.288
+
+  MENU SIZE: 46 settings over 9 knobs on two harnesses. Any maximum over a menu this size is
+  inflated; the stack is the best cell of that menu, not an independent finding.
+
+[done] elapsed 29s
+
+======================================================================================================================================
+RESEARCH LINE sharpe_study (2026-09-20): maximize Sharpe, BOXX treated as cash (excess-return Sharpe)
+======================================================================================================================================
+0  SANITY: with BOXX as the risk-free leg, Sharpe is scale-invariant, so 'maximize Sharpe' is well posed.
+   (A RAW Sharpe is not: it drifts up as the book de-levers, purely because the cash leg pays a positive
+    return at ~zero vol. That is why every number below is EXCESS of the cash leg.)
+======================================================================================================================================
+
+  REAL  cash leg (BOXX): CAGR 2.34%, annualised sd 0.17%
+       k     CAGR   raw Sharpe   SHARPE (ex-cash)    MaxDD
+    1.00   37.29%        1.475              1.376   -18.6%
+    0.80   30.02%        1.498              1.374   -14.6%
+    0.60   22.96%        1.543              1.379   -11.0%
+    0.50   19.42%        1.576              1.378    -9.2%
+
+  PROXY  cash leg (BOXX): CAGR 1.94%, annualised sd 0.16%
+       k     CAGR   raw Sharpe   SHARPE (ex-cash)    MaxDD
+    1.00   25.46%        1.071              0.990   -27.0%
+    0.80   20.87%        1.089              0.989   -21.8%
+    0.60   16.20%        1.120              0.986   -16.7%
+    0.50   13.86%        1.146              0.985   -14.0%
+
+  Flat under scaling, as it must be. Everything below maximises this number.
+  LIVE: real Sharpe 1.376 (search 1.376) | proxy 0.990 (search 1.305, holdout 0.754)
+
+[done] elapsed 4s
+
+======================================================================================================================================
+3  THE SURVIVORS. The stack in section 2 FAILED the proxy holdout (-0.071) and blew MaxDD to -48.5%:
+   it switched the vol target and the gap200 gate off, both of which only look good in the search era.
+   These are the settings positive in EVERY era on BOTH harnesses -- the only ones entitled to a second look.
+======================================================================================================================================
+
+  D row = TQQQ 70/30 cash   {'d_row': (0, 0.7, 0, 0, 0.3)}
+              full   search    hold   dFull  dSearch   dHold     CAGR   dCAGR    MaxDD    exp    reb
+  real       1.390    1.390     nan  +0.014   +0.014    +nan   38.31%   +1.01   -18.6%  64.3%   45.5
+          re-levered to LIVE CAGR: k 0.973 -> MaxDD -18.1% vs LIVE -18.6% (BETTER 0.47 pp), exposure 62.5% vs 67.2%
+          bootstrap 60d: Sharpe CI [+0.001, +0.028] P(<=0)=0.018  log-return [+0.41, +1.09] pp/yr P(<=0)=0.000
+  proxy      1.005    1.325   0.764  +0.015   +0.021  +0.010   26.22%   +0.76   -27.5%  59.2%   47.9
+          re-levered to LIVE CAGR: k 0.966 -> MaxDD -26.6% vs LIVE -27.0% (BETTER 0.37 pp), exposure 57.2% vs 62.2%
+          bootstrap 60d: Sharpe CI [+0.007, +0.023] P(<=0)=0.000  log-return [+0.39, +0.83] pp/yr P(<=0)=0.000
+          LORO (proxy, Sharpe delta with each window dropped): dot-com +0.015, GFC +0.014, COVID +0.015, 2022 +0.015, whole +0.010   all positive: YES
+
+  B row = 100/0 (no TQQQ in B)   {'b_row': (1.0, 0.0, 0, 0, 0)}
+              full   search    hold   dFull  dSearch   dHold     CAGR   dCAGR    MaxDD    exp    reb
+  real       1.380    1.380     nan  +0.004   +0.004    +nan   37.38%   +0.08   -18.6%  67.2%   45.1
+          re-levered to LIVE CAGR: k 0.998 -> MaxDD -18.5% vs LIVE -18.6% (BETTER 0.04 pp), exposure 67.0% vs 67.2%
+          bootstrap 60d: Sharpe CI [-0.010, +0.021] P(<=0)=0.320  log-return [-0.25, +0.43] pp/yr P(<=0)=0.372
+  proxy      1.003    1.309   0.773  +0.013   +0.005  +0.019   25.77%   +0.31   -26.7%  62.2%   47.9
+          re-levered to LIVE CAGR: k 0.986 -> MaxDD -26.4% vs LIVE -27.0% (BETTER 0.55 pp), exposure 61.3% vs 62.2%
+          bootstrap 60d: Sharpe CI [+0.000, +0.030] P(<=0)=0.024  log-return [-0.05, +0.62] pp/yr P(<=0)=0.058
+          LORO (proxy, Sharpe delta with each window dropped): dot-com +0.013, GFC +0.010, COVID +0.013, 2022 +0.014, whole +0.019   all positive: YES
+
+  D gate: gap200 half OFF   {'gate_gap200': 0.0}
+              full   search    hold   dFull  dSearch   dHold     CAGR   dCAGR    MaxDD    exp    reb
+  real       1.380    1.380     nan  +0.004   +0.004    +nan   38.23%   +0.93   -18.6%  68.1%   44.8
+          re-levered to LIVE CAGR: k 0.975 -> MaxDD -18.1% vs LIVE -18.6% (BETTER 0.42 pp), exposure 66.5% vs 67.2%
+          bootstrap 60d: Sharpe CI [-0.106, +0.105] P(<=0)=0.454  log-return [-1.60, +3.01] pp/yr P(<=0)=0.279
+  proxy      1.016    1.315   0.792  +0.026   +0.010  +0.037   26.68%   +1.22   -26.1%  63.6%   47.0
+          re-levered to LIVE CAGR: k 0.948 -> MaxDD -24.6% vs LIVE -27.0% (BETTER 2.40 pp), exposure 60.4% vs 62.2%
+          bootstrap 60d: Sharpe CI [-0.049, +0.102] P(<=0)=0.245  log-return [-0.79, +2.80] pp/yr P(<=0)=0.138
+          LORO (proxy, Sharpe delta with each window dropped): dot-com +0.025, GFC +0.026, COVID +0.028, 2022 +0.026, whole +0.037   all positive: YES
+
+    (all three together)   {'d_row': (0, 0.7, 0, 0, 0.3), 'b_row': (1.0, 0.0, 0, 0, 0), 'gate_gap200': 0.0}
+              full   search    hold   dFull  dSearch   dHold     CAGR   dCAGR    MaxDD    exp    reb
+  real       1.397    1.397     nan  +0.021   +0.021    +nan   39.35%   +2.06   -18.7%  64.9%   45.1
+          re-levered to LIVE CAGR: k 0.948 -> MaxDD -17.9% vs LIVE -18.6% (BETTER 0.63 pp), exposure 61.6% vs 67.2%
+          bootstrap 60d: Sharpe CI [-0.098, +0.128] P(<=0)=0.329  log-return [-1.05, +4.07] pp/yr P(<=0)=0.108
+  proxy      1.045    1.341   0.821  +0.054   +0.036  +0.067   27.85%   +2.39   -25.5%  60.2%   47.3
+          re-levered to LIVE CAGR: k 0.906 -> MaxDD -23.0% vs LIVE -27.0% (BETTER 3.99 pp), exposure 54.6% vs 62.2%
+          bootstrap 60d: Sharpe CI [-0.020, +0.134] P(<=0)=0.075  log-return [+0.09, +3.86] pp/yr P(<=0)=0.019
+          LORO (proxy, Sharpe delta with each window dropped): dot-com +0.053, GFC +0.051, COVID +0.057, 2022 +0.054, whole +0.067   all positive: YES
+
+[done stage 3] elapsed 53s
