@@ -1,0 +1,108 @@
+
+==============================================================================================================================
+RESEARCH LINE d_row_test (2026-09-20): state D = 60% SPMO / 40% cash instead of 100% QLD
+==============================================================================================================================
+  live D row (0.0, 0.0, 1.0, 0.0, 0.0) (100% QLD); candidate (0.6, 0.0, 0.0, 0.0, 0.4) (60% core / 40% cash)
+  the state-D GATE is unchanged and ON: breadth pct < 0.20 OR gap200 < 0.02 -> 100% cash under BOTH arms,
+  so this measures only the D days the design still takes risk on.
+  proxy : state D 934 days (14.2% of 6575), gated 240, UNGATED 694 (10.6% of all sessions)
+          ungated-D search 291, holdout 403
+  real  : state D 382 days, gated 91, UNGATED 291 (10.7% of 2725 sessions)
+  NOTE: the proxy's core leg is QQQ (SPMO has no pre-2015 history), so proxy rows are 60/40 QQQ/cash;
+        the real daily harness uses actual SPMO.
+
+==============================================================================================================================
+1  WHAT THE LEGS ACTUALLY EARNED on the ungated D days (next-session return, bp/day, of the SIGNAL day)
+==============================================================================================================================
+  slice                          n      core      TQQQ       QLD       XLU      BOXX   60/40 mix
+  proxy full                   694      18.2      52.6      35.2      12.4       0.7        11.2
+  proxy search 2015-11-01+     291      27.0      78.5      52.5      15.7       1.0        16.6
+  proxy holdout                403      11.8      33.8      22.6      10.0       0.5         7.3
+  real daily                   291      21.8      77.4      52.5      14.5       1.0        13.5
+  (QLD is the live D holding; '60/40 mix' is 0.6 x core + 0.4 x BOXX, before the vol target and costs.)
+
+==============================================================================================================================
+2  HEADLINE. proxy full / search(2015-11+) / holdout(2000-07..2015-10) and real daily.
+==============================================================================================================================
+  D row               |               proxy full       S      H    exp   reb |               real daily     exp   reb
+  LIVE 100% QLD       |  25.46% / 1.071 / -27.0%   1.399  0.825  62.2%  47.9 |  37.30% / 1.475 / -18.6%   67.2%  45.3  <- LIVE
+  60/40 core/cash     |  19.39% / 0.957 / -26.2%   1.229  0.755  58.2%  47.5 |  26.33% / 1.286 / -20.2%   63.3%  44.7  <- CANDIDATE
+  100% core           |  21.18% / 1.006 / -26.4%   1.302  0.787  62.2%  47.8 |  28.53% / 1.342 / -19.3%   67.2%  45.0
+  50/50 core/cash     |  18.93% / 0.941 / -26.2%   1.207  0.746  57.2%  47.3 |  25.75% / 1.268 / -20.7%   62.3%  44.3
+  70/30 core/cash     |  19.84% / 0.970 / -26.3%   1.249  0.764  59.2%  47.5 |  26.89% / 1.302 / -19.8%   64.3%  44.7
+  60/40 QLD/cash      |  21.98% / 1.023 / -26.4%   1.327  0.797  58.2%  47.4 |  31.56% / 1.418 / -18.6%   63.3%  44.4
+  100% cash           |  16.45% / 0.846 / -26.5%   1.070  0.681  52.1%  43.0 |  22.70% / 1.153 / -23.0%   57.4%  43.1
+  (the LIVE row reproduces the asserted harness baseline exactly -- asserted)
+
+  delta vs LIVE       |   CAGR pp   Sharpe       S       H  MaxDD pp  exp pp |  real CAGR   Sharpe   MaxDD  exp pp    reb
+  60/40 core/cash     |     -6.06   -0.114  -0.169  -0.070      +0.7    -4.0 |     -10.97   -0.189    -1.7    -3.9   -0.6
+  100% core           |     -4.28   -0.065  -0.096  -0.038      +0.6    -0.0 |      -8.77   -0.133    -0.7    -0.0   -0.3
+  50/50 core/cash     |     -6.52   -0.129  -0.192  -0.080      +0.7    -5.0 |     -11.55   -0.207    -2.1    -4.9   -1.0
+  70/30 core/cash     |     -5.61   -0.100  -0.149  -0.061      +0.7    -3.0 |     -10.41   -0.173    -1.3    -2.9   -0.6
+  60/40 QLD/cash      |     -3.48   -0.048  -0.071  -0.028      +0.5    -4.0 |      -5.74   -0.057    +0.0    -3.9   -0.9
+  100% cash           |     -9.01   -0.225  -0.328  -0.144      +0.5   -10.1 |     -14.60   -0.322    -4.4    -9.8   -2.2
+
+  CANDIDATE both-era improvement: dS -0.169  dH -0.070  -> FAIL
+
+==============================================================================================================================
+3  EXPOSURE-MATCHED CONTROL: the LIVE design flat de-levered (all four risky legs x k, every day) to the arm's exposure
+==============================================================================================================================
+  60/40 core/cash      proxy k 0.9346 ctl  24.00% / 1.077 / -25.2% S 1.407 H 0.830 | arm-ctl F -0.120 S -0.178 H -0.074 || real k 0.9411 ctl  35.12% / 1.480 / -17.5% arm-ctl -0.194 CAGR -8.79 pp
+  100% core            proxy k 1.0000 ctl  25.46% / 1.071 / -27.0% S 1.399 H 0.825 | arm-ctl F -0.065 S -0.096 H -0.038 || real k 1.0000 ctl  37.29% / 1.475 / -18.6% arm-ctl -0.133 CAGR -8.77 pp
+  50/50 core/cash      proxy k 0.9182 ctl  23.61% / 1.078 / -24.8% S 1.408 H 0.831 | arm-ctl F -0.136 S -0.201 H -0.085 || real k 0.9264 ctl  34.60% / 1.482 / -17.2% arm-ctl -0.214 CAGR -8.84 pp
+  70/30 core/cash      proxy k 0.9509 ctl  24.37% / 1.075 / -25.7% S 1.404 H 0.829 | arm-ctl F -0.105 S -0.155 H -0.065 || real k 0.9558 ctl  35.69% / 1.479 / -17.8% arm-ctl -0.177 CAGR -8.80 pp
+  60/40 QLD/cash       proxy k 0.9346 ctl  24.00% / 1.077 / -25.2% S 1.407 H 0.830 | arm-ctl F -0.054 S -0.080 H -0.033 || real k 0.9412 ctl  35.13% / 1.480 / -17.5% arm-ctl -0.062 CAGR -3.57 pp
+  100% cash            proxy k 0.8370 ctl  21.72% / 1.085 / -22.8% S 1.415 H 0.836 | arm-ctl F -0.239 S -0.345 H -0.155 || real k 0.8529 ctl  31.94% / 1.490 / -15.6% arm-ctl -0.338 CAGR -9.23 pp
+
+  [first run ended here: its foreground pipe was closed by head, killing the process at stage 4. Full rerun follows.]
+
+==============================================================================================================================
+RESEARCH LINE d_row_test (2026-09-20): state D = 60% SPMO / 40% cash instead of 100% QLD
+==============================================================================================================================
+  live D row (0.0, 0.0, 1.0, 0.0, 0.0) (100% QLD); candidate (0.6, 0.0, 0.0, 0.0, 0.4) (60% core / 40% cash)
+  the state-D GATE is unchanged and ON: breadth pct < 0.20 OR gap200 < 0.02 -> 100% cash under BOTH arms,
+  so this measures only the D days the design still takes risk on.
+  proxy : state D 934 days (14.2% of 6575), gated 240, UNGATED 694 (10.6% of all sessions)
+          ungated-D search 291, holdout 403
+  real  : state D 382 days, gated 91, UNGATED 291 (10.7% of 2725 sessions)
+  NOTE: the proxy's core leg is QQQ (SPMO has no pre-2015 history), so proxy rows are 60/40 QQQ/cash;
+        the real daily harness uses actual SPMO.
+
+==============================================================================================================================
+1  WHAT THE LEGS ACTUALLY EARNED on the ungated D days (next-session return, bp/day, of the SIGNAL day)
+==============================================================================================================================
+  slice                          n      core      TQQQ       QLD       XLU      BOXX   60/40 mix
+  proxy full                   694      18.2      52.6      35.2      12.4       0.7        11.2
+  proxy search 2015-11-01+     291      27.0      78.5      52.5      15.7       1.0        16.6
+  proxy holdout                403      11.8      33.8      22.6      10.0       0.5         7.3
+  real daily                   291      21.8      77.4      52.5      14.5       1.0        13.5
+  (QLD is the live D holding; '60/40 mix' is 0.6 x core + 0.4 x BOXX, before the vol target and costs.)
+
+==============================================================================================================================
+2  HEADLINE. proxy full / search(2015-11+) / holdout(2000-07..2015-10) and real daily.
+==============================================================================================================================
+  D row               |               proxy full       S      H    exp   reb |               real daily     exp   reb
+  LIVE 100% QLD       |  25.46% / 1.071 / -27.0%   1.399  0.825  62.2%  47.9 |  37.30% / 1.475 / -18.6%   67.2%  45.3  <- LIVE
+  60/40 core/cash     |  19.39% / 0.957 / -26.2%   1.229  0.755  58.2%  47.5 |  26.33% / 1.286 / -20.2%   63.3%  44.7  <- CANDIDATE
+  100% core           |  21.18% / 1.006 / -26.4%   1.302  0.787  62.2%  47.8 |  28.53% / 1.342 / -19.3%   67.2%  45.0
+  50/50 core/cash     |  18.93% / 0.941 / -26.2%   1.207  0.746  57.2%  47.3 |  25.75% / 1.268 / -20.7%   62.3%  44.3
+  70/30 core/cash     |  19.84% / 0.970 / -26.3%   1.249  0.764  59.2%  47.5 |  26.89% / 1.302 / -19.8%   64.3%  44.7
+  60/40 QLD/cash      |  21.98% / 1.023 / -26.4%   1.327  0.797  58.2%  47.4 |  31.56% / 1.418 / -18.6%   63.3%  44.4
+  100% cash           |  16.45% / 0.846 / -26.5%   1.070  0.681  52.1%  43.0 |  22.70% / 1.153 / -23.0%   57.4%  43.1
+  (the LIVE row reproduces the asserted harness baseline exactly -- asserted)
+
+  delta vs LIVE       |   CAGR pp   Sharpe       S       H  MaxDD pp  exp pp |  real CAGR   Sharpe   MaxDD  exp pp    reb
+  60/40 core/cash     |     -6.06   -0.114  -0.169  -0.070      +0.7    -4.0 |     -10.97   -0.189    -1.7    -3.9   -0.6
+  100% core           |     -4.28   -0.065  -0.096  -0.038      +0.6    -0.0 |      -8.77   -0.133    -0.7    -0.0   -0.3
+  50/50 core/cash     |     -6.52   -0.129  -0.192  -0.080      +0.7    -5.0 |     -11.55   -0.207    -2.1    -4.9   -1.0
+  70/30 core/cash     |     -5.61   -0.100  -0.149  -0.061      +0.7    -3.0 |     -10.41   -0.173    -1.3    -2.9   -0.6
+  60/40 QLD/cash      |     -3.48   -0.048  -0.071  -0.028      +0.5    -4.0 |      -5.74   -0.057    +0.0    -3.9   -0.9
+  100% cash           |     -9.01   -0.225  -0.328  -0.144      +0.5   -10.1 |     -14.60   -0.322    -4.4    -9.8   -2.2
+
+  CANDIDATE both-era improvement: dS -0.169  dH -0.070  -> FAIL
+
+==============================================================================================================================
+3  EXPOSURE-MATCHED CONTROL: the LIVE design flat de-levered (all four risky legs x k, every day) to the arm's exposure
+==============================================================================================================================
+  60/40 core/cash      proxy k 0.9346 ctl  24.00% / 1.077 / -25.2% S 1.407 H 0.830 | arm-ctl F -0.120 S -0.178 H -0.074 || real k 0.9411 ctl  35.12% / 1.480 / -17.5% arm-ctl -0.194 CAGR -8.79 pp
+  100% core            proxy k 1.0000 ctl  25.46% / 1.071 / -27.0% S 1.399 H 0.825 | arm-ctl F -0.065 S -0.096 H -0.038 || real k 1.0000 ctl  37.29% / 1.475 / -18.6% arm-ctl -0.133 CAGR -8.77 pp
