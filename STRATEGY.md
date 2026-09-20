@@ -3981,6 +3981,29 @@ nothing in either era.** The surface is the trim-depth monotonicity already
 recorded under "Leverage under the trim" (deeper is better, ⅓ was the
 deliberate non-corner pick). Not applied.
 
+**DEEP, the grid's best cell (Part III, full battery).** A row 50/50 → 1
+vote 50% SPMO / 50% cash → 2 and 3 votes cash (exposure 2.0/0.5/0/0 vs live
+2.0/1.33/0.67/0). Proxy 25.81% / 1.103 / −26.6% (S 1.426, H 0.860, exposure
+59.9%); real daily 37.30% / 1.501 / −17.8% at 44.8 reb/yr (live 37.30% /
+1.475 / −18.6% at 45.3) — **identical CAGR, +0.026 Sharpe, 0.8 pp shallower
+drawdown**, cross-checked by two independent loops. Per-year real: the two
+big years cancel (2020 −11.7, 2023 +10.9); 2017 +4.3, 2021 +3.6, 2019 +2.0
+against 2024 −2.4, 2025 −2.3, 2026 −1.6, 2018 −1.2; 2015/2016/2022 exactly
+zero (no vote days). **Passes:** both eras, the exposure-matched control on
+both harnesses, LORO (+0.022 to +0.041, sign kept in every drop), 20 bp
+(+0.007 to +0.019 — it trades less). **Fails:** block bootstrap (best P(≤0)
+0.117 proxy / 0.277 real, no CI excludes zero), the Part II permutation vs
+control (p 0.066), and a one-session execution lag (search −0.031, real
+−0.040). Time fully in cash rises 26.6% → 31.6% of all sessions. The 2-vote
+ladder is monotone to the corner and the 1-vote ladder peaks one rung PAST
+DEEP, with the top four rungs flat within 0.008 — i.e. this is the same
+trim-depth surface mapped on 2026-09-06 (1/.5/0/0 0.931, 1/0/0/0 0.937),
+whose written warning was "do not push it toward full cash at one vote on
+the strength of that monotonicity." **What DEEP measures is trim depth, not
+the destination of the trimmed weight.** Not applied; the decision it really
+poses is whether to revisit `EXTENSION_STEP`, chosen as a deliberate
+non-corner point.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two

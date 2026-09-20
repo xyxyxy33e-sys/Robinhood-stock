@@ -621,3 +621,174 @@ the search era and -4.9 bp/d (t -0.5) in the holdout.
 holding 50 % cash instead of 33 %, whose 1-vote SPMO rung adds nothing in either era, and whose neighbourhood is the
 trim-depth monotonicity STRATEGY.md already records -- not evidence that the core is a better destination than cash for
 the trimmed weight. The owner decides; nothing is applied.
+
+---
+
+# Part III: full deep battery on the grid's best cell (owner follow-up, 2026-09-20)
+
+Research only; nothing applied, no commit, no protected file touched. `TDT_STAGE=part3` (33 s); log appended under
+"PART III". **DEEP** = A row `(50,50,0) / (50,0,50) / (0,0,100) / (0,0,100)` — Part II grid cell 13, "50/0/50 x
+0/0/100". Baseline = current live design (D gate, E = cash), asserted again at stage start.
+
+## III.0 Headline and cross-check against the owner's standalone loop — **agrees, every figure**
+
+| | proxy CAGR / Sharpe / MaxDD | S | H | exp | reb/yr | real CAGR / Sharpe / MaxDD | real exp | real reb/yr |
+|---|---|---|---|---|---|---|---|---|
+| live | 25.46 % / 1.071 / −27.0 % | 1.399 | 0.825 | 62.2 % | 47.9 | 37.30 % / 1.475 / −18.6 % | 67.2 % | 45.3 |
+| **DEEP** | 25.81 % / 1.103 / −26.6 % | 1.426 | 0.860 | 59.9 % | 44.8 | 37.30 % / 1.501 / −17.8 % | 64.9 % | 44.8 |
+| vs live | +0.35 pp / **+0.032** / +0.4 pp | +0.028 | +0.034 | −2.3 pp | −3.1 | −0.01 pp / **+0.026** / +0.8 pp | −2.3 pp | −0.5 |
+| control (k 0.963 / 0.966) | 24.63 % / 1.074 / −26.0 % | 1.403 | 0.828 | 59.9 % | — | 36.03 % / 1.478 / −18.0 % | 64.9 % | — |
+| DEEP − control | +0.029 | +0.023 | +0.032 | — | — | +0.023 | — | — |
+
+Cross-check: live 37.302 % / 1.475 / −18.56 % / 45.31 reb-yr and DEEP 37.296 % / 1.501 / −17.76 % / 44.76 reb-yr
+reproduce the owner's 37.30 / 1.475 / −18.6 / 45.3 and 37.30 / 1.501 / −17.8 / 44.8 exactly at the quoted precision.
+Per-year real-daily differences (owner vs harness, pp): 2015 0.0/0.0, 2016 0.0/0.0, 2017 +4.3/+4.3, 2018 −1.2/−1.2,
+2019 +2.0/+2.0, 2020 −11.7/−11.7, 2021 +3.6/+3.6, 2022 0.0/0.0, 2023 +10.9/+10.9, 2024 −2.4/−2.4, 2025 −2.3/−2.3,
+2026 −1.6/−1.6 — **all twelve agree within 0.05 pp**, and 2015/2016/2022 are exactly 0.0 (no vote days). The
+standalone loop and the project harness are the same design.
+
+## III.1 Block bootstrap (2000 draws)
+
+| comparison | block | Sharpe 95 % CI | P(≤0) | log-return 95 % CI (pp/yr) | P(≤0) |
+|---|---|---|---|---|---|
+| DEEP proxy vs live | 20d | [−0.025, +0.089] | 0.128 | [−1.04, +1.62] | 0.334 |
+| DEEP proxy vs live | 60d | [−0.022, +0.084] | **0.117** | [−1.05, +1.53] | 0.330 |
+| DEEP proxy vs control | 20d | [−0.027, +0.087] | 0.162 | [−0.37, +2.28] | 0.079 |
+| DEEP proxy vs control | 60d | [−0.025, +0.082] | **0.157** | [−0.37, +2.20] | 0.080 |
+| DEEP real vs live | 20d | [−0.073, +0.126] | 0.308 | [−2.27, +2.26] | 0.512 |
+| DEEP real vs live | 60d | [−0.072, +0.124] | **0.277** | [−2.43, +2.29] | 0.495 |
+| DEEP real vs control | 20d | [−0.076, +0.126] | 0.319 | [−1.31, +3.24] | 0.206 |
+| DEEP real vs control | 60d | [−0.074, +0.115] | **0.313** | [−1.39, +3.03] | 0.203 |
+
+No Sharpe interval excludes zero on either harness, against either reference. This is the strongest candidate the whole
+line has produced and its best P(≤0) is 0.117 — the same order as the fast re-entry overlay (0.080) and the max(10,30)
+estimator (0.097), both of which STRATEGY.md records as **NOT significant**. Block length barely matters, as before.
+
+## III.2 Leave-one-major-regime-out (proxy Sharpe difference, window removed)
+
+| drop | DEEP | live | control | vs live | vs control |
+|---|---|---|---|---|---|
+| dot-com 2000-2002 | 1.196 | 1.174 | 1.177 | +0.022 | +0.019 |
+| GFC 2007-2009 | 1.108 | 1.071 | 1.074 | +0.037 | +0.035 |
+| COVID 2020 | 1.067 | 1.026 | 1.029 | +0.041 | +0.038 |
+| 2022 bear | 1.166 | 1.132 | 1.135 | +0.034 | +0.031 |
+| whole SPMO era 2015-11+ | 0.860 | 0.825 | 0.828 | +0.034 | +0.032 |
+
+Sign and rough size kept in every drop (+0.022 to +0.041 vs live), weakest without the dot-com years, and dropping the
+whole SPMO era — the window every parameter was fit in — leaves +0.034. This is the one part of the battery DEEP passes
+cleanly: the effect is not one episode.
+
+## III.3 Lag and cost
+
+| | proxy live | proxy DEEP | DEEP − live F / S / H | real live | real DEEP | real diff | DEEP − control F / S / H |
+|---|---|---|---|---|---|---|---|
+| one-session lag (both lagged) | 23.83 % / 1.021 / −28.1 % (S 1.366, H 0.761) | 23.62 % / 1.032 / −26.6 % (S 1.335, H 0.804) | **+0.012 / −0.031 / +0.043** | 36.11 % / 1.446 | 34.10 % / 1.406 | **−0.040** | −0.042 / −0.068 / −0.024 |
+| 20 bp one-way | 18.56 % / 0.833 / −33.7 % (S 1.157, H 0.590) | 18.60 % / 0.849 / −33.1 % (S 1.166, H 0.609) | **+0.016 / +0.009 / +0.019** | 29.40 % / 1.219 | 28.99 % / 1.225 | **+0.007** | +0.012 / +0.005 / +0.017 |
+
+DEEP survives 20 bp (it trades *less* than live: 44.8 vs 47.9 proxy rebalances/yr), which S6 did not. It does **not**
+survive the one-session lag: the search era goes to −0.031, the real rows to −0.040 and the comparison against the
+lagged control to −0.042 / −0.068 / −0.024. The holdout improves under lag (+0.043), so the lag result is era-split, not
+uniform. Same-close execution is load-bearing for this schedule.
+
+## III.4 Proxy per-year, all 26 years (delta vs live in pp; C = melt-up year the trim is known to cost)
+
+| year | live | DEEP | ctl | dDEEP | dctl | | year | live | DEEP | ctl | dDEEP | dctl |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2000 | −18.9 | −18.0 | −18.2 | +0.9 | +0.8 | | 2014 | +25.3 | +25.3 | +24.3 | 0.0 | −1.0 |
+| 2001 | +6.6 | +8.1 | +6.6 | +1.5 | −0.0 | | 2015 | +3.1 | +3.1 | +3.1 | 0.0 | −0.1 |
+| 2002 | −1.7 | +2.6 | −1.7 | +4.3 | +0.0 | | 2016 | +14.3 | +14.3 | +13.8 | 0.0 | −0.5 |
+| **2003 C** | +75.3 | +72.8 | +72.0 | **−2.5** | −3.3 | | 2017 | +75.9 | +79.5 | +72.4 | +3.7 | −3.5 |
+| 2004 | +12.3 | +13.7 | +12.0 | +1.4 | −0.3 | | 2018 | +6.7 | +6.0 | +6.7 | −0.7 | +0.0 |
+| 2005 | −15.4 | −15.4 | −14.8 | 0.0 | +0.7 | | 2019 | +53.9 | +56.2 | +52.0 | +2.3 | −1.9 |
+| 2006 | +17.9 | +18.8 | +17.5 | +0.9 | −0.5 | | **2020 C** | +57.0 | +47.0 | +54.5 | **−10.0** | −2.5 |
+| 2007 | +25.8 | +30.3 | +25.4 | +4.5 | −0.4 | | 2021 | +53.2 | +55.1 | +51.1 | +1.9 | −2.1 |
+| 2008 | −1.6 | +0.9 | −1.5 | +2.5 | +0.2 | | 2022 | −18.4 | −18.4 | −17.6 | 0.0 | +0.8 |
+| **2009 C** | +54.2 | +39.7 | +51.8 | **−14.5** | −2.4 | | **2023 C** | +74.1 | +86.2 | +71.1 | **+12.1** | −3.0 |
+| **2010 C** | +46.9 | +49.4 | +44.8 | **+2.5** | −2.1 | | 2024 | +62.7 | +60.4 | +60.3 | −2.3 | −2.4 |
+| 2011 | −6.4 | −4.3 | −6.1 | +2.1 | +0.3 | | 2025 | +36.5 | +35.2 | +35.3 | −1.2 | −1.2 |
+| 2012 | +19.4 | +18.3 | +18.8 | −1.1 | −0.6 | | 2026 | +39.2 | +37.7 | +37.7 | −1.5 | −1.4 |
+| 2013 | +57.9 | +57.9 | +55.5 | 0.0 | −2.4 | | | | | | | |
+
+Melt-up years the trim costs: **−12.3 pp in total** (2003 −2.5, 2009 −14.5, 2010 +2.5, 2020 −10.0, 2023 +12.1). DEEP
+beats live in 13 of 27 years; its distribution is wider in both directions than live's — 2009 −14.5 and 2020 −10.0
+against 2023 +12.1, 2007 +4.5, 2002 +4.3. The real-daily equivalents are 2020 −11.7 and 2023 +10.9. This is the
+behavioural cost STRATEGY.md already flags for depth ("Sits half-out through post-crash melt-ups"), roughly tripled.
+
+## III.5 Exposure and time fully in cash
+
+| harness / era | sessions | live all-cash | DEEP all-cash | change |
+|---|---|---|---|---|
+| proxy full | 6575 | 1747 (26.6 %) | 2078 (31.6 %) | **+5.0 pp** |
+| proxy search 2015-11+ | 2719 | 610 (22.4 %) | 746 (27.4 %) | +5.0 pp |
+| proxy holdout ..2015-10 | 3856 | 1137 (29.5 %) | 1332 (34.5 %) | +5.1 pp |
+| real daily | 2725 | 610 (22.4 %) | 746 (27.4 %) | +5.0 pp |
+
+Average deployed capital 62.2 → 59.9 % (proxy) and 67.2 → 64.9 % (real). DEEP is fully in cash on every A day with ≥ 2
+votes — 690 proxy days, 17.7 % of A days (live: the 359 three-vote days, 9.2 %) — so the fraction of *all* sessions
+spent entirely out of the market rises about a fifth, from roughly one session in four to nearly one in three. Real
+turnover 14.73 → 15.50 % per session with fewer rebalances (45.3 → 44.8/yr) and identical regime changes (32.5/yr).
+
+## III.6 The corner question, stated plainly
+
+**1-vote ladder** (2-vote row fixed at cash, 3-vote cash):
+
+| 1-vote row | beta | proxy Sharpe | S | H | exp | dF | vs control F / S / H | real Sharpe | real vs ctl |
+|---|---|---|---|---|---|---|---|---|---|
+| 100/0/0 | 1.00 | 1.087 | 1.417 | 0.839 | 62.1 % | +0.016 | +0.016 / +0.019 / +0.013 | 1.485 | +0.011 |
+| 75/0/25 | 0.75 | 1.096 | 1.423 | 0.851 | 61.0 % | +0.025 | +0.024 / +0.021 / +0.025 | 1.494 | +0.017 |
+| **50/0/50 (DEEP)** | 0.50 | 1.103 | **1.426** | 0.860 | 59.9 % | +0.032 | +0.029 / **+0.023** / +0.032 | **1.501** | **+0.023** |
+| 25/0/75 | 0.25 | **1.104** | 1.423 | 0.864 | 58.8 % | +0.033 | +0.028 / +0.018 / +0.034 | 1.501 | +0.022 |
+| 0/0/100 | 0.00 | 1.103 | 1.418 | **0.866** | 57.7 % | +0.032 | +0.026 / +0.011 / **+0.036** | 1.499 | +0.018 |
+| live 33/33/33 | 1.33 | 1.086 | 1.420 | 0.835 | 60.7 % | +0.015 | +0.013 / +0.018 / +0.008 | 1.495 | +0.019 |
+
+**2-vote ladder** (1-vote row fixed at DEEP's 50/0/50, 3-vote cash):
+
+| 2-vote row | beta | proxy Sharpe | S | H | exp | dF | vs control F / S / H | real Sharpe | real vs ctl |
+|---|---|---|---|---|---|---|---|---|---|
+| 100/0/0 | 1.00 | 1.066 | 1.379 | 0.830 | 64.5 % | −0.005 | −0.003 / −0.015 / +0.006 | 1.461 | −0.010 |
+| 75/0/25 | 0.75 | 1.081 | 1.397 | 0.843 | 63.4 % | +0.010 | +0.011 / +0.001 / +0.018 | 1.478 | +0.004 |
+| 50/0/50 | 0.50 | 1.094 | 1.414 | 0.854 | 62.2 % | +0.024 | +0.023 / +0.015 / +0.028 | 1.493 | +0.018 |
+| 25/0/75 | 0.25 | 1.100 | 1.421 | 0.858 | 61.1 % | +0.029 | +0.027 / +0.020 / +0.031 | 1.498 | +0.022 |
+| **0/0/100 (DEEP)** | 0.00 | **1.103** | **1.426** | **0.860** | 59.9 % | **+0.032** | **+0.029 / +0.023 / +0.032** | **1.501** | **+0.023** |
+| live 17/17/67 | 0.67 | 1.086 | 1.402 | 0.847 | 61.5 % | +0.015 | +0.013 / +0.002 / +0.021 | 1.478 | +0.002 |
+
+**Plainly: the 2-vote ladder is monotone all the way to the corner — every step toward cash raises the proxy Sharpe,
+and the corner (all cash at 2 votes) is the best rung. The 1-vote ladder is monotone in the holdout (0.839 → 0.866) but
+turns over elsewhere: full Sharpe peaks one rung past DEEP at 25/0/75 (1.104, a 0.001 difference), the search era peaks
+*at* DEEP (1.426) and falls to 1.418 at the corner, and the margin over the matched control peaks at DEEP (+0.023 S) and
+decays to +0.011 at the corner.** So DEEP is not a turning point discovered by the data; it is one rung short of a
+corner in one direction and at the corner in the other, on a surface that is flat to within 0.001–0.008 Sharpe across
+its top four rungs.
+
+This is the same surface STRATEGY.md already recorded, reached from a different direction. "Leverage under the trim;
+trim step sweep" (2026-09-06) swept the multiplier and found 1/.5/.25/0 → 0.922, 1/.5/0/0 → 0.931, 1/0/0/0 → 0.937
+against step ⅓'s 0.912, then wrote: *"Response is monotone in trim depth (a surface, not a spike)"*, *"Trim size is
+monotone — ×0.75 through ×0.0 all improve — so 0.5 was a deliberately non-corner pick and step ⅓ is the graded
+equivalent; **do not push it toward full cash at one vote on the strength of that monotonicity**"*, and recorded the
+cost as *"behavioural: at 3 votes the A row goes to 100% cash (9.2% of A days on the proxy; 17.7% at ≥2 votes for the
+1/.5/0/0 form)"*. DEEP is the 1/.5/0/0 form with the levered leg dropped first: its ≥2-vote cash share is that same
+**17.7 %** of A days, to the decimal. The destination grid re-derived the depth surface and landed on the rung the
+record explicitly declined to take.
+
+## III.7 Verdict against the project bar
+
+| bar | result |
+|---|---|
+| both-era improvement vs live | **PASS** (dS +0.028, dH +0.034) |
+| beats exposure-matched control | **PASS** (S +0.023, H +0.032, real +0.023) |
+| bootstrap P(≤0) < 0.05 | **FAIL** — proxy vs live 0.117, vs control 0.157; real vs live 0.277, vs control 0.313 |
+| permutation p < 0.05 | vs live p = 0.021 PASS; **vs matched control p = 0.066 FAIL** (Part II, 24-cell max-stat; DEEP is the real best cell) |
+| real CAGR not falling | **FAIL by a hair** — −0.01 pp (37.302 → 37.296 %), i.e. flat to the quoted precision |
+| one-session lag | **FAIL** on search (−0.031) and real (−0.040), holdout +0.043 |
+| 20 bp cost | PASS (+0.016 / +0.009 / +0.019, real +0.007) |
+| LORO | PASS (+0.022 to +0.041, every drop) |
+
+DEEP is the best-performing candidate this research line has produced: it clears both eras, clears its exposure-matched
+control on both harnesses, holds its sign through every regime drop and through 20 bp costs, and improves both drawdowns
+(proxy −27.0 → −26.6 %, real −18.6 → −17.8 %). It does not clear the two significance bars — the bootstrap is 0.117 at
+best and the permutation against the matched control is 0.066 — it gives up a one-session lag, it flattens real CAGR, it
+raises time fully in cash by 5 pp of all sessions, and it costs 14.5 pp in 2009 and 10.0 pp in 2020 on the proxy (11.7 pp
+real). And it is not a finding about the *destination* of the trimmed weight at all: the 1-vote and 2-vote ladders show
+the gain running monotonically toward cash in both rungs, which is trim depth — the surface the 2026-09-06 step sweep
+mapped and deliberately stopped short of, with a written warning against taking exactly this rung on exactly this
+evidence. The owner decides; nothing is applied.

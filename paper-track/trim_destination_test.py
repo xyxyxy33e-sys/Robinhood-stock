@@ -854,7 +854,199 @@ def stage_part2():
     log(f"  Part II candidate count: 2 (S6a, S6b) + 23 new neighbour cells + 5 threshold shifts x 2 designs (sensitivity, not candidates) + 27 exposure-matched controls. Nothing applied; owner decides.")
     log(f"  [part2 done in {time.time()-T0:.0f} s]")
 
+# ================================================================================================================
+# PART III (owner follow-up, 2026-09-20): the FULL deep battery on the 5x5 grid's best cell.
+#   DEEP = A row (50,50,0) / (50,0,50) / (0,0,100) / (0,0,100)  == Part II grid cell 13 "50/0/50 x 0/0/100".
+#   Cross-check first: the owner's standalone real-daily loop (live 37.30 / 1.475 / -18.6, 45.3 reb/yr; DEEP 37.30 /
+#   1.501 / -17.8, 44.8 reb/yr; per-year diffs 2017 +4.3, 2018 -1.2, 2019 +2.0, 2020 -11.7, 2021 +3.6, 2023 +10.9,
+#   2024 -2.4, 2025 -2.3, 2026 -1.6, 2015/2016/2022 exactly 0.0) reproduced through the project harness.
+#   Then, vs live AND vs the exposure-matched control: bootstrap, LORO, lag, 20 bp, per-year, exposure and
+#   time-fully-in-cash, the two marginal ladders (corner question), verdict. Run: TDT_STAGE=part3 (appends).
+# ================================================================================================================
+DEEP = [(.5, .5, 0), (.5, 0, .5), (0, 0, 1), (0, 0, 1)]
+OWNER_REAL = {'2015': 0.0, '2016': 0.0, '2017': +4.3, '2018': -1.2, '2019': +2.0, '2020': -11.7, '2021': +3.6,
+              '2022': 0.0, '2023': +10.9, '2024': -2.4, '2025': -2.3, '2026': -1.6}
+OWNER_HEAD = dict(live=(37.30, 1.475, -18.6, 45.3), deep=(37.30, 1.501, -17.8, 44.8))
+LAD1 = [('100/0/0', (1, 0, 0)), ('75/0/25', (.75, 0, .25)), ('50/0/50 (DEEP)', (.5, 0, .5)), ('25/0/75', (.25, 0, .75)),
+        ('0/0/100', (0, 0, 1)), ('live 33/33/33', (F3, F3, F3))]
+LAD2 = [('100/0/0', (1, 0, 0)), ('75/0/25', (.75, 0, .25)), ('50/0/50', (.5, 0, .5)), ('25/0/75', (.25, 0, .75)),
+        ('0/0/100 (DEEP)', (0, 0, 1)), ('live 17/17/67', (1 / 6, 1 / 6, 2 / 3))]
+
+def cash_share(sched, votes_q=VOTES_Q, votes_r=VOTES_R):
+    """% of sessions whose TARGET row is fully in cash (risky legs 0), by harness and era; and the A-day vote census."""
+    out = {}
+    for lab, ds_ in (('proxy full', PDATES), ('proxy search', [d for d in PDATES if d >= SEARCH[0]]),
+                     ('proxy holdout', [d for d in PDATES if d <= HOLDOUT[1]])):
+        n = 0
+        for d in ds_:
+            if d in votes_q:
+                a, b, c = sched[votes_q[d]]
+                if a + b < 1e-12: n += 1
+            elif d in GATE_Q or d in E_Q: n += 1
+            else:
+                r = OTHER_Q[d]
+                if sum(r[:4]) < 1e-12: n += 1
+        out[lab] = (n, len(ds_))
+    n = 0
+    for d in RDAYS[:-1]:
+        I = RINFO[d]
+        if I['gate'] or I['st'] == 'E': n += 1
+        elif d in votes_r:
+            a, b, c = sched[votes_r[d]]
+            if a + b < 1e-12: n += 1
+        elif sum(W[I['eff']][:4]) < 1e-12: n += 1
+    out['real daily'] = (n, len(RDAYS) - 1)
+    return out
+
+def stage_part3():
+    import multiprocessing as mp
+    log(f"\n\n{'#'*118}\nPART III: FULL DEEP BATTERY on the 5x5 grid's best cell. DEEP = A row (50,50,0) / (50,0,50) / (0,0,100) / (0,0,100)\n{'#'*118}")
+    log("  (= Part II grid cell 13 '50/0/50 x 0/0/100'. Baseline = current live design, D gate + E cash, asserted at import of this stage.)")
+    live_ev, live_ser = LIVE_EV, LIVE_SER; rlive_ev, rlive_ser = RLIVE_EV, RLIVE_SER
+    ev, ser = peval(DEEP); rev, rser = real_eval(DEEP)
+    k, cev, cser = proxy_control(ev['risky']); rk, rcev, rcser = real_control(rev['exp'])
+    _, _, rl_turn, rl_reg, rl_reb = simulate_real_detail(SCHED[0][2]); _, _, rd_turn, rd_reg, rd_reb = simulate_real_detail(DEEP)
+    log(f"\n  DEEP   proxy {fmt_ev(ev)} S {ev['s_sharpe']:.3f} H {ev['h_sharpe']:.3f} exp {ev['risky']*100:.1f}% reb {ev['reb']:.1f}/yr | real {fmt_ev(rev)} exp {rev['exp']*100:.1f}% reb {rev['reb']:.1f}/yr")
+    log(f"  live   proxy {fmt_ev(live_ev)} S {live_ev['s_sharpe']:.3f} H {live_ev['h_sharpe']:.3f} exp {live_ev['risky']*100:.1f}% reb {live_ev['reb']:.1f}/yr | real {fmt_ev(rlive_ev)} exp {rlive_ev['exp']*100:.1f}% reb {rlive_ev['reb']:.1f}/yr")
+    log(f"  vs live: proxy F {ev['sharpe']-live_ev['sharpe']:+.3f} S {ev['s_sharpe']-live_ev['s_sharpe']:+.3f} H {ev['h_sharpe']-live_ev['h_sharpe']:+.3f} CAGR {(ev['cagr']-live_ev['cagr'])*100:+.2f} pp MaxDD {(ev['mdd']-live_ev['mdd'])*100:+.1f} pp | "
+        f"real Sh {rev['sharpe']-rlive_ev['sharpe']:+.3f} CAGR {(rev['cagr']-rlive_ev['cagr'])*100:+.2f} pp MaxDD {(rev['mdd']-rlive_ev['mdd'])*100:+.1f} pp")
+    log(f"  exposure-matched control: proxy k {k:.3f} -> {fmt_ev(cev)} S {cev['s_sharpe']:.3f} H {cev['h_sharpe']:.3f}; real k {rk:.3f} -> {fmt_ev(rcev)}")
+    log(f"  DEEP - control: proxy F {ev['sharpe']-cev['sharpe']:+.3f} S {ev['s_sharpe']-cev['s_sharpe']:+.3f} H {ev['h_sharpe']-cev['h_sharpe']:+.3f} | real {rev['sharpe']-rcev['sharpe']:+.3f}")
+
+    # ---------------------------------------------------------------- III.0 cross-check vs the owner's standalone loop
+    log(f"\n{'='*118}\nIII.0  CROSS-CHECK against the owner's standalone real-daily loop\n{'='*118}")
+    log(f"  {'figure':<28}{'owner':>22}{'this harness':>26}{'agree?':>9}")
+    for lab, o, m, tol, unit in (('live CAGR', OWNER_HEAD['live'][0], rlive_ev['cagr'] * 100, 0.02, '%'),
+                                 ('live Sharpe', OWNER_HEAD['live'][1], rlive_ev['sharpe'], 0.002, ''),
+                                 ('live MaxDD', OWNER_HEAD['live'][2], rlive_ev['mdd'] * 100, 0.06, '%'),
+                                 ('live rebalances/yr', OWNER_HEAD['live'][3], rlive_ev['reb'], 0.06, ''),
+                                 ('DEEP CAGR', OWNER_HEAD['deep'][0], rev['cagr'] * 100, 0.02, '%'),
+                                 ('DEEP Sharpe', OWNER_HEAD['deep'][1], rev['sharpe'], 0.002, ''),
+                                 ('DEEP MaxDD', OWNER_HEAD['deep'][2], rev['mdd'] * 100, 0.06, '%'),
+                                 ('DEEP rebalances/yr', OWNER_HEAD['deep'][3], rev['reb'], 0.06, '')):
+        log(f"  {lab:<28}{o:>21.2f}{unit:<1}{m:>25.3f}{unit:<1}{'YES' if abs(o-m)<=tol else 'NO':>8}")
+    yl = byyear(rlive_ser, RD1); yd = byyear(rser, RD1)
+    log(f"\n  real-daily per-year difference DEEP - live (pp): owner vs this harness")
+    log(f"  {'year':<6}{'live %':>9}{'DEEP %':>9}{'owner d':>10}{'harness d':>11}{'|diff|':>8}{'agree?':>8}")
+    ok = True
+    for y in sorted(yl):
+        d = (yd[y] - yl[y]) * 100; o = OWNER_REAL.get(y)
+        a = o is not None and abs(o - d) <= 0.05
+        ok = ok and a
+        log(f"  {y:<6}{yl[y]*100:>+9.1f}{yd[y]*100:>+9.1f}{o if o is not None else float('nan'):>+10.1f}{d:>+11.1f}{abs((o if o is not None else 0)-d):>8.2f}{'YES' if a else 'NO':>8}")
+    log(f"  ALL PER-YEAR DIFFERENCES AGREE (within 0.05 pp): {'YES' if ok else 'NO'}; headline figures agree: see the table above.")
+
+    # ---------------------------------------------------------------- III.1 bootstrap
+    log(f"\n{'='*118}\nIII.1  BLOCK BOOTSTRAP (2000 draws, 20d / 60d): DEEP vs live and vs the exposure-matched control, proxy and real daily\n{'='*118}")
+    jobs = []
+    for cmp_, a, b in (('DEEP proxy vs live', ser, live_ser), ('DEEP proxy vs control', ser, cser),
+                       ('DEEP real vs live', rser, rlive_ser), ('DEEP real vs control', rser, rcser)):
+        for blk in (20, 60): jobs.append((cmp_, a, b, blk, (sum(ord(c) * (i + 1) for i, c in enumerate(cmp_)) + blk) & 0xffff))
+    with mp.Pool(min(N_PROCS, len(jobs))) as pool:
+        res = pool.map(_boot_worker, jobs)
+    B3 = {}
+    for lab, blk, (l1, l2, pl, s1, s2, ps) in res:
+        B3[(lab, blk)] = (ps, pl)
+        log(f"  {lab:<24} block {blk:>2}d: Sharpe 95% CI [{s1:+.3f}, {s2:+.3f}] P(<=0)={ps:.3f}   log-return 95% CI [{l1*100:+.2f}, {l2*100:+.2f}] pp/yr P(<=0)={pl:.3f}")
+
+    # ---------------------------------------------------------------- III.2 LORO
+    log(f"\n{'='*118}\nIII.2  LEAVE-ONE-MAJOR-REGIME-OUT (proxy; Sharpe difference with that window removed)\n{'='*118}")
+    log(f"  {'drop':<28}{'DEEP':>8}{'live':>8}{'control':>9}{'vs live':>9}{'vs ctl':>8}")
+    for rlab, a0, b0 in REGIMES:
+        keep = [i for i, d in enumerate(PDATES) if not (a0 <= d <= b0)]
+        sa = bstats([ser[i] for i in keep])[1]; sl = bstats([live_ser[i] for i in keep])[1]; sc = bstats([cser[i] for i in keep])[1]
+        log(f"  {rlab:<28}{sa:>8.3f}{sl:>8.3f}{sc:>9.3f}{sa-sl:>+9.3f}{sa-sc:>+8.3f}")
+
+    # ---------------------------------------------------------------- III.3 lag and 20 bp
+    log(f"\n{'='*118}\nIII.3  ONE-SESSION EXECUTION LAG (both sides lagged) and 20 bp ONE-WAY COST\n{'='*118}")
+    lagQ, lagR = lag_votes()
+    lvL, _ = proxy_eval(0, lagQ); dvL, _ = peval(DEEP, lagQ); rlvL, _ = real_eval(SCHED[0][2], votes=lagR); rdvL, _ = real_eval(DEEP, votes=lagR)
+    kL, cevL, _ = proxy_control(dvL['risky'])
+    log(f"  lag:   live   proxy {fmt_ev(lvL)} S {lvL['s_sharpe']:.3f} H {lvL['h_sharpe']:.3f} | real {fmt_ev(rlvL)}")
+    log(f"         DEEP   proxy {fmt_ev(dvL)} S {dvL['s_sharpe']:.3f} H {dvL['h_sharpe']:.3f} | real {fmt_ev(rdvL)}")
+    log(f"         DEEP - live (both lagged): F {dvL['sharpe']-lvL['sharpe']:+.3f} S {dvL['s_sharpe']-lvL['s_sharpe']:+.3f} H {dvL['h_sharpe']-lvL['h_sharpe']:+.3f} real {rdvL['sharpe']-rlvL['sharpe']:+.3f}; "
+        f"DEEP - control(lagged, k {kL:.3f}): F {dvL['sharpe']-cevL['sharpe']:+.3f} S {dvL['s_sharpe']-cevL['s_sharpe']:+.3f} H {dvL['h_sharpe']-cevL['h_sharpe']:+.3f}")
+    DSF.ONE_WAY_SPREAD = IS.ONE_WAY_SPREAD = 0.002
+    try:
+        l20, _ = proxy_eval(0); d20, _ = peval(DEEP); k20, c20, _ = proxy_control(d20['risky'])
+    finally:
+        DSF.ONE_WAY_SPREAD = IS.ONE_WAY_SPREAD = 0.0004
+    rl20, _ = real_eval(SCHED[0][2], one_way=0.002); rd20, _ = real_eval(DEEP, one_way=0.002)
+    log(f"  20 bp: live   proxy {fmt_ev(l20)} S {l20['s_sharpe']:.3f} H {l20['h_sharpe']:.3f} | real {fmt_ev(rl20)}")
+    log(f"         DEEP   proxy {fmt_ev(d20)} S {d20['s_sharpe']:.3f} H {d20['h_sharpe']:.3f} | real {fmt_ev(rd20)}")
+    log(f"         DEEP - live at 20 bp: F {d20['sharpe']-l20['sharpe']:+.3f} S {d20['s_sharpe']-l20['s_sharpe']:+.3f} H {d20['h_sharpe']-l20['h_sharpe']:+.3f} real {rd20['sharpe']-rl20['sharpe']:+.3f}; "
+        f"DEEP - control at 20 bp (k {k20:.3f}): F {d20['sharpe']-c20['sharpe']:+.3f} S {d20['s_sharpe']-c20['s_sharpe']:+.3f} H {d20['h_sharpe']-c20['h_sharpe']:+.3f}")
+
+    # ---------------------------------------------------------------- III.4 per-year proxy
+    log(f"\n{'='*118}\nIII.4  PROXY PER-YEAR, all 26 years (return %, delta vs live in pp); C = melt-up year the trim is known to cost\n{'='*118}")
+    pl_ = byyear(live_ser, PDATES); pd_ = byyear(ser, PDATES); pc_ = byyear(cser, PDATES)
+    COSTY = {'2003', '2009', '2010', '2020', '2023'}
+    log(f"  {'year':<6}{'live':>8}{'DEEP':>8}{'ctl':>8}{'dDEEP':>8}{'dctl':>8}  tag")
+    for y in sorted(pl_):
+        log(f"  {y:<6}{pl_[y]*100:>+8.1f}{pd_[y]*100:>+8.1f}{pc_[y]*100:>+8.1f}{(pd_[y]-pl_[y])*100:>+8.1f}{(pc_[y]-pl_[y])*100:>+8.1f}  {'C' if y in COSTY else ''}")
+    ks = [y for y in sorted(pl_) if y in COSTY]
+    log(f"  melt-up years the trim costs ({', '.join(ks)}): DEEP {sum((pd_[y]-pl_[y]) for y in ks)*100:+.1f} pp total ("
+        + ", ".join(f"{y} {(pd_[y]-pl_[y])*100:+.1f}" for y in ks) + f"); worst single year {min((pd_[y]-pl_[y])*100 for y in pl_):+.1f} ({min(pl_, key=lambda y: pd_[y]-pl_[y])}), "
+        f"best {max((pd_[y]-pl_[y])*100 for y in pl_):+.1f} ({max(pl_, key=lambda y: pd_[y]-pl_[y])}); years DEEP beats live {sum(1 for y in pl_ if pd_[y] > pl_[y]+1e-9)}/{len(pl_)}")
+
+    # ---------------------------------------------------------------- III.5 exposure and time fully in cash
+    log(f"\n{'='*118}\nIII.5  EXPOSURE and TIME FULLY IN CASH (target row all-cash), live vs DEEP, by harness and era\n{'='*118}")
+    cl = cash_share(SCHED[0][2]); cd = cash_share(DEEP)
+    log(f"  {'harness / era':<18}{'sessions':>9} | live cash {'n':>7}{'%':>8} | DEEP cash {'n':>7}{'%':>8} | {'change pp':>10}")
+    for lab in ('proxy full', 'proxy search', 'proxy holdout', 'real daily'):
+        (nl, tot), (nd, _) = cl[lab], cd[lab]
+        log(f"  {lab:<18}{tot:>9} | {nl:>17}{nl/tot*100:>8.1f}% | {nd:>17}{nd/tot*100:>8.1f}% | {(nd-nl)/tot*100:>+9.1f}")
+    log(f"  average deployed capital: proxy live {live_ev['risky']*100:.1f}% -> DEEP {ev['risky']*100:.1f}% ({(ev['risky']-live_ev['risky'])*100:+.1f} pp); "
+        f"real live {rlive_ev['exp']*100:.1f}% -> DEEP {rev['exp']*100:.1f}% ({(rev['exp']-rlive_ev['exp'])*100:+.1f} pp)")
+    log(f"  A-day vote census (share of effective-A days; unchanged by schedule, printed for the rung sizes):")
+    for lab, ds_, votes in (('proxy full', list(VOTES_Q), VOTES_Q), ('proxy search', [d for d in VOTES_Q if d >= SEARCH[0]], VOTES_Q),
+                            ('proxy holdout', [d for d in VOTES_Q if d <= HOLDOUT[1]], VOTES_Q), ('real daily', RA_DAYS, VOTES_R)):
+        c = [0, 0, 0, 0]
+        for d in ds_: c[votes[d]] += 1
+        log(f"    {lab:<16} A days {len(ds_):>5}: 0 {c[0]:>5} ({c[0]/len(ds_)*100:4.1f}%)  1 {c[1]:>4} ({c[1]/len(ds_)*100:4.1f}%)  2 {c[2]:>4} ({c[2]/len(ds_)*100:4.1f}%)  3 {c[3]:>4} ({c[3]/len(ds_)*100:4.1f}%)"
+            f"   -> DEEP is fully in cash on the {c[2]+c[3]} days at >= 2 votes ({(c[2]+c[3])/len(ds_)*100:.1f}% of A days), live on the {c[3]} at 3 votes ({c[3]/len(ds_)*100:.1f}%)")
+    log(f"  real daily turnover: live {rl_turn*100:.2f}%/session ({rl_reb:.1f} reb/yr, {rl_reg:.1f} regime changes/yr); DEEP {rd_turn*100:.2f}%/session ({rd_reb:.1f} reb/yr, {rd_reg:.1f})")
+
+    # ---------------------------------------------------------------- III.6 marginal ladders (corner question)
+    log(f"\n{'='*118}\nIII.6  MARGINAL LADDERS -- is the response monotone all the way to the corner, or does it turn over?\n{'='*118}")
+    for title, lad, mk in (("1-VOTE LADDER (2-vote row fixed at 0/0/100 cash, 3-vote cash)", LAD1, lambda r: [(.5, .5, 0), r, (0, 0, 1), (0, 0, 1)]),
+                           ("2-VOTE LADDER (1-vote row fixed at DEEP's 50/0/50, 3-vote cash)", LAD2, lambda r: [(.5, .5, 0), (.5, 0, .5), r, (0, 0, 1)])):
+        log(f"\n  {title}")
+        log(f"  {'1-vote row' if '1-VOTE' in title else '2-vote row':<18}{'beta':>6} | {'CAGR':>7}{'Sharpe':>8}{'S':>7}{'H':>7}{'MaxDD':>7}{'exp':>6} | {'dF':>7}{'dS':>7}{'dH':>7} | ctl {'k':>6}{'vC F':>7}{'vC S':>7}{'vC H':>7} | real {'CAGR':>7}{'Sh':>6}{'DD':>7}{'rdSh':>7}{'rvC':>7}")
+        prev = None; mono = True
+        for rl, r in lad:
+            s = mk(r); e, _ = peval(s); re_, _ = real_eval(s)
+            kk, cc, _ = proxy_control(e['risky']); rkk, rcc, _ = real_control(re_['exp'])
+            bet = r[0] + 3 * r[1]
+            log(f"  {rl:<18}{bet:>6.2f} | {e['cagr']*100:>6.2f}%{e['sharpe']:>8.3f}{e['s_sharpe']:>7.3f}{e['h_sharpe']:>7.3f}{e['mdd']*100:>6.1f}%{e['risky']*100:>5.1f}% | "
+                f"{e['sharpe']-live_ev['sharpe']:>+7.3f}{e['s_sharpe']-live_ev['s_sharpe']:>+7.3f}{e['h_sharpe']-live_ev['h_sharpe']:>+7.3f} | {kk:>10.3f}{e['sharpe']-cc['sharpe']:>+7.3f}{e['s_sharpe']-cc['s_sharpe']:>+7.3f}{e['h_sharpe']-cc['h_sharpe']:>+7.3f} | "
+                f"{re_['cagr']*100:>11.2f}%{re_['sharpe']:>6.3f}{re_['mdd']*100:>6.1f}%{re_['sharpe']-rlive_ev['sharpe']:>+7.3f}{re_['sharpe']-rcc['sharpe']:>+7.3f}")
+            if 'live' not in rl:
+                if prev is not None and e['sharpe'] < prev - 1e-9: mono = False
+                prev = e['sharpe']
+        log(f"  monotone in depth all the way to the corner (proxy full Sharpe rises at every rung): {'YES' if mono else 'NO -- it turns over'}")
+    log(f"\n  STANDING WARNING (STRATEGY.md 'Leverage under the trim; trim step sweep', 2026-09-06): the trim-depth response was ALREADY monotone")
+    log(f"  to the corner -- '1/.5/0/0 0.931, 1/0/0/0 0.937' against step 1/3's 0.912 -- and the record says: 'Trim size is monotone -- x0.75")
+    log(f"  through x0.0 all improve -- so 0.5 was a deliberately non-corner pick and step 1/3 is the graded equivalent; DO NOT PUSH IT TOWARD")
+    log(f"  FULL CASH AT ONE VOTE ON THE STRENGTH OF THAT MONOTONICITY.' DEEP is that push, re-derived from the destination grid: the ladders")
+    log(f"  above rediscover the same monotone surface, and DEEP sits at (or one rung short of) its corner in both directions.")
+
+    # ---------------------------------------------------------------- III.7 verdict
+    log(f"\n{'='*118}\nIII.7  VERDICT CARD (project bar)\n{'='*118}")
+    log(f"  both-era improvement vs live:      dS {ev['s_sharpe']-live_ev['s_sharpe']:+.3f}, dH {ev['h_sharpe']-live_ev['h_sharpe']:+.3f}  -> {'PASS' if ev['s_sharpe']>live_ev['s_sharpe'] and ev['h_sharpe']>live_ev['h_sharpe'] else 'fail'}")
+    log(f"  beats exposure-matched control:    S {ev['s_sharpe']-cev['s_sharpe']:+.3f}, H {ev['h_sharpe']-cev['h_sharpe']:+.3f}, real {rev['sharpe']-rcev['sharpe']:+.3f}  -> {'PASS' if ev['s_sharpe']>cev['s_sharpe'] and ev['h_sharpe']>cev['h_sharpe'] else 'fail'}")
+    log(f"  bootstrap P(<=0) < 0.05:           proxy vs live {B3[('DEEP proxy vs live',60)][0]:.3f} / vs control {B3[('DEEP proxy vs control',60)][0]:.3f}; real vs live {B3[('DEEP real vs live',60)][0]:.3f} / vs control {B3[('DEEP real vs control',60)][0]:.3f}  -> "
+        f"{'PASS' if max(B3[(l,60)][0] for l in ('DEEP proxy vs live','DEEP proxy vs control','DEEP real vs live','DEEP real vs control')) < 0.05 else 'fail'}")
+    log(f"  permutation p < 0.05:              Part II, 24-cell max-stat, this cell is the real best: vs live p = 0.021 PASS, vs matched control p = 0.066 fail")
+    log(f"  real CAGR not falling:             {(rev['cagr']-rlive_ev['cagr'])*100:+.2f} pp  -> {'PASS' if rev['cagr'] >= rlive_ev['cagr'] - 1e-9 else 'fail'}")
+    log(f"  side facts: proxy CAGR {(ev['cagr']-live_ev['cagr'])*100:+.2f} pp, proxy MaxDD {(ev['mdd']-live_ev['mdd'])*100:+.1f} pp, real MaxDD {(rev['mdd']-rlive_ev['mdd'])*100:+.1f} pp, "
+        f"average exposure {(ev['risky']-live_ev['risky'])*100:+.1f} pp (proxy) / {(rev['exp']-rlive_ev['exp'])*100:+.1f} pp (real), 2020 proxy {(pd_['2020']-pl_['2020'])*100:+.1f} pp / real {(yd['2020']-yl['2020'])*100:+.1f} pp")
+    log(f"  Part III candidate count: 1 (DEEP) + 10 ladder rungs (8 new) + 4 exposure-matched controls. Nothing applied; owner decides.")
+    log(f"  [part3 done in {time.time()-T0:.0f} s]")
+
 if __name__ == '__main__':
+    if STAGE == 'part3':
+        header(); stage_part3(); log(f"\n[total {time.time()-T0:.0f} s]"); sys.exit(0)
     if STAGE == 'part2':
         header(); stage_part2(); log(f"\n[total {time.time()-T0:.0f} s]"); sys.exit(0)
     if STAGE in ('all', 'grid'): stage_grid()
