@@ -312,8 +312,9 @@ fast_state=, gaps=, d_gate=)` and refuses a missing input.
    row; macro F with a 20/100 read of A/B/C holds the **C** row. Nothing
    else changes. Section "Fast re-entry overlay" below.
 2. **Extension trim** (2026-09-06, graded): if the effective state is A,
-   the four risky legs are scaled by `extension_scale(eff, gaps)` = 1 −
-   ⅓ × votes over `EXTENSION_RULES` (×⅔ / ×⅓ / ×0). Section "Extension
+   the four risky legs are scaled by `extension_scale(eff, gaps)` =
+   max(0, 1 − ⅓ × votes) over `EXTENSION_RULES` (×⅔ / ×⅓ / ×0; the floor is
+   a 2026-09-20 safety fix and a no-op at the live step). Section "Extension
    trim" below.
 3. **Volatility targeting** (2026-09-01; estimator changed 2026-09-07): the
    four risky legs of that row are scaled by
@@ -498,8 +499,10 @@ before vol targeting. Tests: `paper-track/research_plan_gaps.py`,
 later on 2026-09-06 — see "Leverage under the trim" in the research
 record), `compute_extension_gaps()`, `extension_votes()`,
 `extension_scale()`. When the effective state is A, each window whose gap
-exceeds its threshold is one vote; the four risky legs are scaled by 1 −
-⅓ × votes (×⅔ / ×⅓ / ×0 — at three votes the A row is 100% BOXX). Each
+exceeds its threshold is one vote; the four risky legs are scaled by
+max(0, 1 − ⅓ × votes) (×⅔ / ×⅓ / ×0 — at three votes the A row is 100% BOXX;
+the max() floor was added 2026-09-20 and is a no-op at the live step, which
+lands on exactly 0.0 at three votes — see "extension_scale floored at zero"). Each
 threshold sits near the 90th–95th percentile of A-day gaps
 for its window, so this is one rule measured three ways. No other state is
 touched; the trim only ever reduces exposure. A change in the vote count is
@@ -4107,6 +4110,37 @@ recommendation unchanged: hold the freeze to 7 December; the one defensible
 standalone change is the clip itself, a safety fix with no behaviour change at
 step ⅓. Cumulative: +3 candidates (+12 menu-only cells inside the permutation
 null).
+
+### extension_scale floored at zero — APPLIED 2026-09-20 (owner decision, safety fix)
+
+One line in `state.py`: `extension_scale()` now returns
+`max(0.0, 1.0 - EXTENSION_STEP * votes)`. **No behaviour change at the live
+step** — with `EXTENSION_STEP = 1/3` and three rules the expression lands on
+exactly 0.0 at three votes, so the floor is a no-op and every figure on record
+is unchanged (verified end to end: `d_substate_fresh` and
+`trim_destination_test` reproduce their asserted baselines, proxy 25.46% /
+1.071 / −27.0% S 1.399 H 0.825, real daily 37.30% / 1.475 / −18.6%).
+
+**Why.** Found in `extension_step_decision.py` while testing step 0.5: the
+expression had no floor, so any step above 1 / rule-count returns a negative
+multiplier at maximum votes. At step 0.5 with three rules that is −0.500, and
+`target_weights_with_voltarget('A', …)` yields core −0.25 / tqqq −0.25 /
+cash +1.50 — `validate_weights` raises `WeightSanityError` and the live
+trigger **aborts on exactly the days the trim is meant to act**. Fail-safe in
+that it never trades a short, but it stops trading rather than going to cash.
+The floor removes the trap so it cannot return if the step or the rule count
+is ever revised.
+
+Guarded by `check_extension_scale_floor()` in `consistency_check.py` (now 18
+checks), which asserts the floor holds at every step a revision might pick
+(0.25 through 2.0, `validate_weights` never raising), that it is a no-op at
+every vote count at the live step, and that the live step × rule count still
+lands on exactly zero. Trigger prompts unchanged — nothing the live procedure
+does is different.
+
+This is **not** the step-0.5 decision. That candidate (C3) remains not applied;
+see the two entries above. The clip was applied on its own so the trap is gone
+whichever way the step decision goes in December.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 

@@ -417,6 +417,58 @@ def check_d_gate():
 check_d_gate()
 
 
+def check_extension_scale_floor():
+    """extension_scale() is floored at zero (APPLIED 2026-09-20, owner
+    decision -- a safety fix with NO behaviour change at the live step).
+
+    Without the floor any EXTENSION_STEP above 1 / len(EXTENSION_RULES) returns
+    a negative multiplier at maximum votes, target_weights_with_voltarget hands
+    back negative risky weights, validate_weights raises, and the live trigger
+    ABORTS on exactly the days the trim should act. This check asserts (a) the
+    floor holds at every step a future revision might pick, (b) it is a no-op
+    at the live step, so every figure on record still stands, and (c) the live
+    step and rule count are still the pair that lands on exactly zero."""
+    import state as _S
+    from state import (extension_scale, extension_votes, EXTENSION_STEP, EXTENSION_RULES,
+                       target_weights_with_voltarget, validate_weights)
+    nrules = len(EXTENSION_RULES)
+    hot = {n: t + 0.10 for n, t in EXTENSION_RULES}          # every rule fires
+    cold = {n: t - 0.05 for n, t in EXTENSION_RULES}         # none fires
+    assert extension_votes('A', hot) == nrules and extension_votes('A', cold) == 0
+
+    # (c) live step x rule count lands on exactly zero -- the reason no floor was needed before
+    assert abs(1.0 - EXTENSION_STEP * nrules) < 1e-12, \
+        "live EXTENSION_STEP x rule count must land on exactly 0.0 at full votes"
+    # (b) no-op at the live step: the floor changes nothing at any vote count
+    for v in range(nrules + 1):
+        g = {n: (t + 0.10 if i < v else t - 0.05) for i, (n, t) in enumerate(EXTENSION_RULES)}
+        assert abs(extension_scale('A', g) - (1.0 - EXTENSION_STEP * v)) < 1e-12, \
+            f"floor must be a no-op at the live step ({v} votes)"
+    # (a) the floor holds for any step a revision might pick, and the row stays sane
+    base = _S.EXTENSION_STEP
+    try:
+        for step in (0.25, 1.0 / 3.0, 0.4, 0.5, 0.75, 1.0, 2.0):
+            _S.EXTENSION_STEP = step
+            for g in (cold, hot):
+                sc = extension_scale('A', g)
+                assert sc >= 0.0, f"extension_scale went negative at step {step}"
+                assert sc <= 1.0 + 1e-12
+            w = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=hot)
+            validate_weights("A", *w)         # must not raise at any step
+            assert abs(sum(w) - 1.0) < 1e-12 and min(w) >= -1e-12, f"weights unsane at step {step}"
+        _S.EXTENSION_STEP = 0.5
+        assert target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=hot)[4] == 1.0, \
+            "at step 0.5 and full votes the A row must be 100% cash, not a short"
+    finally:
+        _S.EXTENSION_STEP = base
+    assert _S.EXTENSION_STEP == base
+    print(f"OK: extension_scale floored at 0 -- no-op at the live step {EXTENSION_STEP:.4f} "
+          f"x {nrules} rules, and no step can produce a negative risky weight")
+
+
+check_extension_scale_floor()
+
+
 def check_vol_estimator():
     """max(vol10, vol30) estimator (2026-09-07): may only RAISE the vol
     estimate, hence only shrink the multiplier; None-handling unchanged."""

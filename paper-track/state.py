@@ -990,8 +990,22 @@ def extension_votes(eff_state, gaps):
 
 
 def extension_scale(eff_state, gaps):
-    """Multiplier on the four risky legs: 1 - EXTENSION_STEP * votes."""
-    return 1.0 - EXTENSION_STEP * extension_votes(eff_state, gaps)
+    """Multiplier on the four risky legs: 1 - EXTENSION_STEP * votes, floored
+    at zero (a full trim is 100% cash; it is never a short).
+
+    2026-09-20 (owner decision, safety fix -- NO behaviour change at the live
+    EXTENSION_STEP). Found while testing step 0.5 in extension_step_decision.py:
+    this expression had no floor, so any EXTENSION_STEP above 1/3 returns a
+    NEGATIVE multiplier at maximum votes -- at 0.5 and three votes it is -0.5,
+    target_weights_with_voltarget then yields core -0.25 / tqqq -0.25 /
+    cash +1.50, validate_weights raises WeightSanityError, and the live trigger
+    ABORTS on exactly the days the trim is meant to act (fail-safe, but it stops
+    trading rather than going to cash). At EXTENSION_STEP = 1/3 with three rules
+    the expression lands on exactly 0.0 at three votes, so max() is a no-op and
+    every figure on record is unchanged -- asserted in consistency_check.py.
+    The floor exists so the failure mode cannot return if the step or the rule
+    count is ever revised."""
+    return max(0.0, 1.0 - EXTENSION_STEP * extension_votes(eff_state, gaps))
 
 
 def is_extended(eff_state, gaps_or_gap200):
