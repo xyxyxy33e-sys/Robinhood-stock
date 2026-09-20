@@ -4055,6 +4055,59 @@ design change in a week on top of the state-D gate and the E row, neither of
 which has been observed live for a single session. Cumulative: +2 candidates
 (+2 menu-only steps inside the permutation null).
 
+### Step 0.5 with only the 10% and 15% rules — tested 2026-09-20, NOT applied
+
+Owner's follow-up to the step study: since `extension_scale()` has no clip,
+use only two trim rules so the vote count tops out at 2 and 1 − 0.5×2 = 0.0
+exactly. `paper-track/two_rule_trim_test.py`,
+`research_notes/two_rule_trim_test.md`. **The arithmetic is right and is worth
+keeping on the record:** with `EXTENSION_RULES = ((100, 0.10), (200, 0.15))`
+and `EXTENSION_STEP = 0.5`, verified against the live code, the scale at max
+votes is +0.0000 — step 0.5 with **no code change**, the same arithmetic that
+makes step ⅓ safe with three rules. Two ways exist to reach 0.5 safely: this,
+or the one-line clip.
+
+**But the 150d rule is where the gain lives.** Arms: LIVE (3 rules, ⅓), C3
+(3 rules, 0.5), C2 (2 rules 10/15, 0.5), T2 (2 rules, ⅓ — decomposition).
+Real daily vs live: C3 +0.29 pp CAGR / +0.026 Sharpe / 0.2 pp shallower;
+**C2 +0.06 pp / −0.007 / 0.5 pp deeper**; T2 −0.54 pp / −0.056. C2 minus C3 is
+−0.033 real Sharpe, −0.24 pp CAGR. **Mechanism:** the two-rule set trims on
+*fewer* days (23.0% of effective-A days vs 25.7%), and the deeper rung does
+not make it up — average real exposure **rises** to 68.0% against live's
+67.2%, where C3 falls to 64.9%. C2 is a shallower design wearing a deeper
+rung, not the deeper design made safe.
+
+**Battery.** C2 passes both eras only on a rounding edge (dS +0.000, dH
++0.005) and real CAGR (+0.06 pp). It **fails**: the exposure-matched control
+on real (−0.007); the block bootstrap (P 0.41–0.66, worse than a coin flip);
+LORO, where the sign flips (−0.003 … +0.007 against C3's +0.020 … +0.029);
+and — decisively — the **one-session execution lag at search −0.031 / real
+−0.032**, the level that killed DEEP and that C3 survived at +0.003 / +0.000.
+Paired permutation, 1000 draws: C3 reproduces the step study (null median
+−0.041, p 0.000 — with three rules, shuffled labels make a deeper trim hurt,
+so the label carries information), while **C2's null median is positive
+(+0.009) and its real +0.003 sits below it, p 0.654 / 0.436** — the two-rule
+vote label carries no information about whether the deeper trim helps. Menu
+of 16 cells (4 rule sets × 4 steps) p 1.000 / 0.994. Threshold shifts: C2's
+real delta is negative at all five. A rows 40/60, 50/50, 60/40: C2 −0.006 to
+−0.008 real at all three, C3 +0.024 to +0.028.
+
+**What C2 does win:** turnover (40.6 reb/yr vs live's 45.3), the punitive-cost
+case (+0.28 pp CAGR at 20 bp, against C3's −0.12), 2020 (−1.6 pp vs C3's
+−8.2), and needing no code change. Per-year real it beats live in 4 of 12
+years, sum +0.6 pp, against C3's 7 of 12 and +3.5 pp.
+
+Also on the record: every two-rule cell at step ⅓ or below is worse than live;
+the only two-rule cells that beat live sit at step 1.0 (all-cash at one vote),
+the corner the 2026-09-06 note warned against.
+
+**Not applied.** The question settled a real one — there is no free route to
+step 0.5. The version worth having is C3, and C3 needs the clip. Standing
+recommendation unchanged: hold the freeze to 7 December; the one defensible
+standalone change is the clip itself, a safety fix with no behaviour change at
+step ⅓. Cumulative: +3 candidates (+12 menu-only cells inside the permutation
+null).
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two

@@ -89,7 +89,7 @@ less aggressive than live.
 | 1 | both-era Sharpe up | +0.026 / +0.021 **PASS** | +0.000 / +0.005 **PASS (on a rounding edge)** |
 | 2 | beats exposure-matched control | proxy +0.020, real +0.023 **PASS** | proxy +0.004, **real −0.007 FAIL** |
 | 3 | block bootstrap P(≤0) < 0.05 | 0.086–0.165 FAIL | **0.41–0.66 FAIL badly** |
-| 4 | permutation | pre-specified p 0.000, menu 0.93 | see below |
+| 4 | permutation (paired) | pre-specified **p 0.000**, menu 0.93 | **pre-specified p 0.654 / 0.436 FAIL**, menu 1.000 |
 | 5 | real CAGR not falling | +0.29 pp PASS | +0.06 pp PASS |
 | 6 | **one-session execution lag** | search +0.003, real +0.000 **PASS** | **search −0.031, real −0.032 FAIL** |
 | 7 | 20 bp one-way cost | +0.009 real Sharpe PASS | +0.002 Sharpe, **+0.28 pp CAGR PASS** |
@@ -158,6 +158,26 @@ Every two-rule cell at step 1/3 or below is **worse** than live. The only
 two-rule cells that beat live are at step 1.0 — all-cash at a single vote —
 which is the corner the 2026-09-06 note explicitly warned against taking on
 the strength of trim-depth monotonicity.
+
+Paired null, 1000 draws (stage 7b — the one to read):
+
+| null | median | 95th | max | real | p |
+|---|---|---|---|---|---|
+| single pre-specified **C2**, full period | **+0.009** | +0.035 | +0.050 | +0.003 | **0.654** |
+| single pre-specified **C2**, both-era min | −0.003 | +0.026 | +0.043 | +0.000 | **0.436** |
+| *(reference)* single **C3**, full period | **−0.041** | −0.010 | +0.021 | +0.023 | **0.000** |
+| *(reference)* single **C3**, both-era min | −0.059 | −0.021 | +0.011 | +0.021 | **0.000** |
+| menu of 16 cells, full period | +0.096 | +0.149 | +0.210 | +0.003 | 1.000 |
+| menu of 16 cells, both-era min | +0.073 | +0.134 | +0.196 | +0.000 | 0.994 |
+
+This is the cleanest statement of the result. The C3 reference reproduces the
+step study exactly (null median −0.041 against its −0.042): with three rules,
+shuffling the vote labels makes a deeper trim **hurt**, so the label carries
+real information and C3's gain is not luck. For C2 the null median is
+**positive, +0.009** — random labels typically do *better* than the true ones,
+and C2's real +0.003 sits below its own null median. **The two-rule vote label
+carries no information about whether the deeper trim helps.** C2 fails even
+the generous pre-specified null that C3 passes at p = 0.000.
 
 ## Recommendation
 

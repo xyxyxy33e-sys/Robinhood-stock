@@ -363,3 +363,13 @@ RESEARCH LINE two_rule_trim_test (2026-09-20): EXTENSION_STEP 0.5 with only the 
 ============================================================================================================================
   Stage 7 shuffled each rule set's labels INDEPENDENTLY, which decorrelates the arm from its base and
   widens the null (95th +0.155 vs the +0.074 the 3-rule-only study saw). This variant restores the pairing.
+  1000 draws in 176s
+
+  (a) SINGLE pre-specified C2, full-period       null median +0.009  95th +0.035  max +0.050 | real +0.003 -> p = 0.654
+  (a) SINGLE pre-specified C2, both-era min      null median -0.003  95th +0.026  max +0.043 | real +0.000 -> p = 0.436
+      (reference) SINGLE C3, full-period         null median -0.041  95th -0.010  max +0.021 | real +0.023 -> p = 0.000
+      (reference) SINGLE C3, both-era min        null median -0.059  95th -0.021  max +0.011 | real +0.021 -> p = 0.000
+  (b) MENU of 16 cells, full-period              null median +0.096  95th +0.149  max +0.210 | real +0.003 -> p = 1.000
+  (b) MENU of 16 cells, both-era min             null median +0.073  95th +0.134  max +0.196 | real +0.000 -> p = 0.994
+
+[done] elapsed 184s
