@@ -4373,6 +4373,44 @@ control plus a 48-day artifact. The lesson is the standing one — an edge with
 no mechanism gets a beta-matched control *before* it gets written up as strong.
 The vol-target finding from that study is unaffected and stands.
 
+### Is SPMO the right core leg? — tested 2026-09-21, CONFIRMED (no change)
+
+The core-leg choice had **never been tested** — no prior entry — despite the
+core being 50% of state A, 75% of B, 100% of C and ~48% of the live book.
+`research_notes/core_leg_spmo_vs_qqq.md`.
+
+**Standalone** (2015-11..2026-09): SPMO +17.50% / Sharpe 0.887 / MaxDD −31.3%
+vs QQQ +18.51% / 0.876 / −35.6%; **beta 0.773, correlation 0.833, annualised
+alpha +3.22%**.
+
+**Inside the design**, swapping core SPMO → QQQ at identical 67.2% exposure:
+SPMO 37.29% / Sharpe(ex-cash) 1.376 / −18.6% against QQQ 36.74% / 1.300 /
+**−25.5%**. **SPMO dominates outright — higher CAGR, +0.076 Sharpe, a 6.9 pp
+shallower drawdown, at LOWER beta.** No exposure control is needed; any control
+de-levers the QQQ arm and widens the gap. (Opposite shape to the state-D
+TQQQ/QLD result, where the apparent winner was hidden leverage.)
+
+**The edge is risk, not return, and that part is stable.** ΔSharpe is +0.069 to
++0.091 in every slice — first half, second half, pre-2024, 2024+. ΔCAGR is not:
+**−0.32 pp over the eight years to 2023**, +3.63 pp in 2024-2026. So the recent
+momentum run is a bonus, not the case. **Hard limit: SPMO's inception is
+2015-10-09, so this can never be holdout-tested** — which is why the stable
+Sharpe matters more than the CAGR figure.
+
+**Post-reconstitution concern (holdings 2026-09-18, the standing check, now
+done).** $22.1B AUM, 0.13% ER, 44% turnover — but **top 3 = 26.3%** (MU
+**10.84%**, NVDA 9.05%, AVGO 6.43%), top 10 = 51.7%, **~44.8% semiconductors
+plus memory/storage**, IT sector 52.5%, and **50.6% of the top-25 weight is
+also in the Nasdaq-100 — doubled up with the TQQQ/QLD sleeve**. The entire case
+for SPMO rests on beta 0.773 / correlation 0.833, i.e. on it NOT being the
+Nasdaq. **Action: re-measure SPMO's beta and correlation to QQQ on a trailing
+6-month window each quarter.** If the rolling beta drifts toward 1.0 the
+diversification that justifies the core leg is gone and this test must be
+re-run. Forward-looking observation from current holdings, not a backtested
+finding.
+
+**Conclusion: SPMO stays. Nothing applied.** Cumulative: +1 candidate.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
