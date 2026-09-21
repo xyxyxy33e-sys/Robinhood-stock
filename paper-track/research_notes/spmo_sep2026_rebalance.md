@@ -110,7 +110,7 @@ September**, and the concern they raise stands; they are simply not yet the
 current portfolio. Both files are corrected.
 
 
-## Third-party report, 21 Sep 17:00 ET — UNVERIFIED
+## Third-party reports — CORROBORATED by two independent sources (holdings file still pending)
 
 The owner passed on a Seeking Alpha piece (The Sunday Investor) published after
 today's close, reporting on this reconstitution:
@@ -169,3 +169,69 @@ check these specific claims first — is NVDA actually gone, are AAPL and MRK in
 and at what weights, is MU ~8.99% — before recomputing the concentration and
 overlap figures and the rolling beta. Note the rolling beta will be dominated
 by the OLD portfolio for months; it is not a fast read on this change.
+
+
+## Online search, 21 Sep — the report is corroborated, and a key fact was missing
+
+Searching turned up a **second, independent source covering the same index**:
+Seoul Economic Daily on **Kiwoom's US S&P 500 Momentum ETF**, a Korean fund
+tracking the identical S&P 500 Momentum Index. Index-level changes must be the
+same in both funds, so this is genuine corroboration, not an echo.
+
+**Confirmed by both:** 54 substitutions (54 of 99 holdings, ~54.5% of the
+portfolio), **Apple added at 9.23% as the new largest holding**, **NVIDIA
+deleted**, Micron trimmed to ~8.95–8.99% from ~10.84–10.94%.
+
+**The fact the first article omitted: Broadcom was deleted too.** NVDA *and*
+AVGO — 9.05% + 6.43% = **15.48 pp** of the pre-rebalance book, and the two
+largest high-beta semiconductor positions, both gone.
+
+Other reported changes: Intel raised to 4.89% (from 2.36%), AMD to 4.89% (from
+3.87%); Dell, Marvell and Lumentum added in tech hardware; **Merck and
+UnitedHealth** in healthcare; **Valero and Marathon Petroleum** in energy.
+
+Sector deltas, which are the most useful numbers here:
+
+| sector | change |
+|---|---|
+| semiconductors & equipment | **−13.00 pp** |
+| technology hardware | **+12.10 pp** |
+| healthcare | **+3.55 pp** |
+| energy | **+2.35 pp** |
+| IT overall | 53.14% → **52.22%** (barely moved) |
+
+## What it means for this strategy
+
+**The Nasdaq-100 overlap barely moves; the risk character changes a lot.**
+Netting the named moves, overlap falls only about **−4.6 pp** (before Marvell,
+weight unknown) — AAPL simply replaces NVDA+AVGO inside the overlap. But it does
+*not* replace them in risk: Apple is a mega-cap with roughly market beta, while
+NVDA and AVGO are among the highest-beta names in the index. Add ~6 pp moving
+into healthcare and energy — sectors with low correlation to the Nasdaq — and
+the direction is clear.
+
+**Expected effect: SPMO's beta and correlation to QQQ go DOWN, not up.** That
+is the **opposite** of the concern recorded earlier on 21 Sep, and it
+*strengthens* the core-leg case in `core_leg_spmo_vs_qqq.md` rather than
+undermining it. The headline concentration figure improves too: the largest
+single position drops from MU at 10.84% to AAPL at 9.23%, and MU's memory bet
+is cut by ~1.9 pp.
+
+**The caveat that remains:** semis + memory are down 13 pp but not gone — MU is
+still ~9%, with INTC and AMD both raised to 4.89%. One commentator is already
+calling SPMO "a memory trade". The book is less of a levered-Nasdaq echo than
+it was, not a diversified one.
+
+**Still no primary confirmation.** Both holdings sources carry the old book
+(Webull timestamped 21 Sep 07:37 ET, NVDA still at 9.02%). Two independent
+secondary sources agreeing is strong, but the file is the record. Tomorrow's
+check stands, and now has specific claims to test: is NVDA gone, is AVGO gone,
+is AAPL ~9.23% and #1, is MU ~8.95%.
+
+**No account action.** SPMO is a single ETF; Invesco bore the ~54% turnover
+internally. The strategy holds what it held.
+
+**One forward note:** a rolling 6-month beta will be dominated by the OLD
+portfolio for months. If this change is to be measured, it needs either a
+short-window estimate that accepts wide error bars, or patience. Do not re-run
+the core-leg decision on a few weeks of post-rebalance data.

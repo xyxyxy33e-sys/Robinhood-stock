@@ -4423,10 +4423,29 @@ the owner (21 Sep, unverified) says 54 substitutions, ~40% turnover, AAPL and
 MRK the top additions, NVDA DELETED and MU #2 at 8.99%.** Neither data source
 confirms it — Webull's 21-Sep 07:37 ET snapshot still shows NVDA at 9.02% with
 a uniform +28.1% share-count change across every name (fund creations, not a
-rebalance). **If the report holds it cuts AGAINST the concentration concern
-above**: NVDA out removes ~9 pp of Nasdaq-100 overlap, AAPL is far lower-beta
-than NVDA, and MRK is not a Nasdaq name — so the diversification case for SPMO
-would strengthen, not weaken. See
+rebalance). **CORROBORATED 21 Sep by a second, independent source** — Seoul Economic
+Daily on Kiwoom's US S&P 500 Momentum ETF, a Korean fund tracking the identical
+index, so index changes must match. Both agree on 54 substitutions (of 99
+holdings), **AAPL added at 9.23% as the new largest holding**, **NVDA deleted**,
+MU trimmed to ~8.95%. The Korean source adds the fact the first omitted:
+**Broadcom was deleted too** — NVDA + AVGO together were 15.48 pp of the old
+book and its two largest high-beta semis. Also reported: INTC and AMD both
+raised to 4.89%; Dell, Marvell, Lumentum added; **Merck and UnitedHealth**
+(healthcare +3.55 pp) and **Valero and Marathon** (energy +2.35 pp).
+Semiconductors & equipment **−13.00 pp**, tech hardware **+12.10 pp**, IT
+overall barely moved (53.14% → 52.22%).
+
+**This cuts AGAINST the concentration concern above.** Nasdaq-100 overlap falls
+only ~4.6 pp on the named moves — AAPL replaces NVDA+AVGO in the *overlap* —
+but not in the *risk*: Apple carries roughly market beta where NVDA and AVGO are
+among the highest-beta names in the index, and ~6 pp moves into healthcare and
+energy. **Expected direction: SPMO's beta and correlation to QQQ go DOWN**,
+which strengthens the core-leg case rather than undermining it. Largest single
+position improves from MU 10.84% to AAPL 9.23%. Caveat: semis are down 13 pp,
+not gone — MU still ~9%, INTC and AMD at 4.89% each. Still **no primary
+confirmation** (both holdings feeds carry the old book; Webull's 21 Sep 07:37 ET
+snapshot still shows NVDA at 9.02%), so tomorrow's check stands with specific
+claims to test. See
 `research_notes/spmo_sep2026_rebalance.md` for the schedule, why today's price
 action cannot resolve it, and the follow-up steps. Measurement only — SPMO is a
 single ETF and Invesco bears the turnover; no account action is implied.
