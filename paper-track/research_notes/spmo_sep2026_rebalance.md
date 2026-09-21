@@ -91,6 +91,14 @@ than a diversification.
 
 Neither is urgent and neither implies a trade.
 
+**Status 2026-09-21 (owner decision): held over to tomorrow.** Owner confirmed
+the 18-Sep figures are not the reconstituted book. A self-reminder is scheduled
+for 2026-09-22 14:00 UTC (10:00 ET, well clear of the 15:50 trading window) —
+`trig_01Rm43Fd2cFQ1wpKo3XTuHv7`. **First action on that run is to check the
+holdings as-of date**; if it still reads 2026-09-18 or earlier the file has not
+updated, in which case change nothing, read no rebalance into price drift, and
+re-arm for the following morning.
+
 ## Correction to the record
 
 The `core_leg_spmo_vs_qqq.md` write-up and its STRATEGY.md entry, both written

@@ -4411,6 +4411,18 @@ finding.
 
 **Conclusion: SPMO stays. Nothing applied.** Cumulative: +1 candidate.
 
+**OPEN ITEM (owner, 2026-09-21): the September reconstitution has not been
+measured yet.** The index rebalanced effective after the 2026-09-18 close
+(semi-annual, third Friday of March and September, reference date the last
+business day of February and August — so 2026-08-31, our stored snapshot). The
+holdings published as of 18-Sep are still the PRE-reconstitution book: same 25
+names, zero entries, zero exits, 1.15 pp of pure price drift. Owner confirmed
+these are not the reconstituted numbers and held the check over to 2026-09-22
+(reminder `trig_01Rm43Fd2cFQ1wpKo3XTuHv7`). See
+`research_notes/spmo_sep2026_rebalance.md` for the schedule, why today's price
+action cannot resolve it, and the follow-up steps. Measurement only — SPMO is a
+single ETF and Invesco bears the turnover; no account action is implied.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
