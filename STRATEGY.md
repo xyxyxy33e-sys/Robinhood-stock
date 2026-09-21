@@ -4334,9 +4334,44 @@ OFF** (real P 0.454, proxy P 0.245) — the latter proposes undoing half of the
 state-D gate applied 2026-09-19; it fails the bootstrap, but it is on the
 record that the gap200 half is Sharpe-negative in both proxy eras.
 
-**Nothing applied.** The D-row candidate should be re-run pre-registered and
-alone after the 7 December freeze, with a menu permutation. Cumulative:
+**Nothing applied.** **SUPERSEDED 2026-09-21 — the D-row candidate is
+WITHDRAWN**; see "Leverage decay: 70% TQQQ vs 100% QLD" below. Cumulative:
 +46 candidates.
+
+### Leverage decay: 70% TQQQ vs 100% QLD in state D — 2026-09-21, candidate WITHDRAWN
+
+Owner asked what decay does to the `sharpe_study` D-row candidate. It kills it,
+and exposes a missing control. `paper-track/research_notes/leverage_decay_dq.md`.
+
+**Decay measured on actual fund prices** (2015-10..2026-09, QQQ vol 22.16%),
+against the L × QQQ daily-compounded ideal: TQQQ realizes **−7.21%/yr** of
+drag, QLD **−3.27%/yr** (naive theory 14.73% / 4.91% — realized runs about half
+because QQQ trends, but the ordering holds). **Per unit of beta TQQQ costs
+2.40%/yr against QLD's 1.64%/yr — the 3× route is ~0.77%/yr more expensive for
+the same exposure.** Holding period is there for it to bite: real D episodes
+have a median length of 8 sessions and 96% of D days sit in episodes longer
+than 3.
+
+**The control I failed to apply: 0.70 × 3 = 2.10, not 2.00.** The tested row
+carried 5% more beta than the QLD row it beat. Beta-matched and daily
+rebalanced over the whole era: **100% QLD +32.84%/yr vs 66.7% TQQQ / 33.3%
+BOXX +31.45%/yr — QLD wins by 1.39%/yr.** On the 291 ungated real D days
+themselves: QLD **+52.5 bp/day** vs beta-matched TQQQ +51.9. The as-tested
+70/30 row's +54.5 bp/day is the extra leverage, not the vehicle.
+
+**What survived beta-matching is 48 observations.** Beta-matching costs a
+quarter of the harness gain (real Sharpe +0.014 → +0.011); attributing the
+rest by bucket gives ungated D days +0.68 pp over eleven years (291 sessions),
+**first day AFTER a D episode +1.54 pp over 48 sessions**, all other 2386
+sessions exactly +0.00. **69% of the edge is 48 handoff days** — a transition
+artifact, not a property of the instrument.
+
+**Withdrawn. QLD stays the state-D vehicle.** This corrects the 2026-09-20
+sharpe_study write-up, which called it the strongest candidate of the line
+while noting it had no clean mechanism; the mechanism was a missing exposure
+control plus a 48-day artifact. The lesson is the standing one — an edge with
+no mechanism gets a beta-matched control *before* it gets written up as strong.
+The vol-target finding from that study is unaffected and stands.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
