@@ -4423,6 +4423,36 @@ these are not the reconstituted numbers and held the check over to 2026-09-22
 action cannot resolve it, and the follow-up steps. Measurement only — SPMO is a
 single ETF and Invesco bears the turnover; no account action is implied.
 
+### Dashboard refresh Routine — ADDED 2026-09-21 (owner request)
+
+Owner asked for daily dashboard updates after the close. New Routine
+**"Dashboard refresh — after the close (Mon–Fri 16:30 ET)"**,
+`trig_01NkDsF5kye81aGy1r1YxNHW`, cron `30 20 * * 1-5` UTC, firing into this
+session. It refreshes
+<https://claude.ai/artifact/HoxQpURsWcALzFG7hGr5ck> on the **official close**.
+
+Placed at 16:30 ET so it runs *after* both the 16:10 watchdog and the 16:15
+summary push — the watchdog may have executed a fallback trade, and the
+dashboard must show the settled result.
+
+**Reporting only.** The Routine may not trade, may not edit `state.py`,
+`STRATEGY.md` or the trigger prompts, and may not override a guard. It carries
+a market-day guard (no republish on a closed market), the requirement to read
+the artifact before republishing, instructions to edit the saved `index.html`
+surgically rather than retype it, and a pre-publish sanity check. It leaves the
+six-states table, the occupancy/duration charts and the yearly bars alone —
+those are backtest figures — and touches the Research section only when there
+is genuinely new research.
+
+**DST:** the cron is UTC, so 16:30 ET holds only while Eastern is on daylight
+time. **When EDT ends on 1 Nov 2026 this must move to `30 21 * * 1-5`**, along
+with the other account Routines (daily check `50 19 * * 1-4`, weekly `50 19 * *
+5`, watchdog `10 20 * * 1-5`).
+
+Account Routines now: daily regime check 15:50 ET Mon–Thu, weekly rebalance
+15:50 ET Fri, execution watchdog 16:10 ET Mon–Fri, dashboard refresh 16:30 ET
+Mon–Fri.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
