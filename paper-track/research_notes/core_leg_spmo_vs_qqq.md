@@ -5,8 +5,10 @@ record, yet the core is 50% of state A, 75% of B, 100% of C — right now ~48%
 of the live book. Testing it: **SPMO dominates QQQ inside the design, and the
 advantage is risk, not return.** Confirmed, not applied (nothing changes).
 
-Separately, the standing post-reconstitution holdings check is now done and it
-raises a live concern — section 3.
+Separately, the holdings check raises a live concern — section 3. NOTE: the
+2026-09-18 holdings used there are the PRE-reconstitution book; the September
+rebalance went effective after the 9/18 close. See
+`spmo_sep2026_rebalance.md`.
 
 ## 1. Standalone (2015-11 → 2026-09, 2726 sessions)
 
@@ -66,7 +68,7 @@ lives entirely inside the search era and **can never be holdout-tested**. That
 is the same constraint that makes the whole real harness search-only, and it
 is why the stable-Sharpe result matters more than the CAGR number.
 
-## 3. The post-reconstitution concern (holdings as of 2026-09-18)
+## 3. The concentration concern (holdings as of 2026-09-18 — PRE-rebalance)
 
 $22.1B AUM, 0.13% expense ratio, 44% annual turnover — liquid and cheap. But
 the September reconstitution has left it extremely concentrated:

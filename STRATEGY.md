@@ -4397,8 +4397,8 @@ momentum run is a bonus, not the case. **Hard limit: SPMO's inception is
 2015-10-09, so this can never be holdout-tested** — which is why the stable
 Sharpe matters more than the CAGR figure.
 
-**Post-reconstitution concern (holdings 2026-09-18, the standing check, now
-done).** $22.1B AUM, 0.13% ER, 44% turnover — but **top 3 = 26.3%** (MU
+**Concentration concern (holdings 2026-09-18 — the PRE-reconstitution book;
+see the September-rebalance note below).** $22.1B AUM, 0.13% ER, 44% turnover — but **top 3 = 26.3%** (MU
 **10.84%**, NVDA 9.05%, AVGO 6.43%), top 10 = 51.7%, **~44.8% semiconductors
 plus memory/storage**, IT sector 52.5%, and **50.6% of the top-25 weight is
 also in the Nasdaq-100 — doubled up with the TQQQ/QLD sleeve**. The entire case
