@@ -108,3 +108,64 @@ concentration figures quoted there (top 3 = 26.3%, ~44.8% semis, 50.6%
 Nasdaq-100 overlap) are accurate for the portfolio held **through 18
 September**, and the concern they raise stands; they are simply not yet the
 current portfolio. Both files are corrected.
+
+
+## Third-party report, 21 Sep 17:00 ET — UNVERIFIED
+
+The owner passed on a Seeking Alpha piece (The Sunday Investor) published after
+today's close, reporting on this reconstitution:
+
+- **54 substitutions, ~40% of the portfolio** turned over
+- **Apple and Merck the top additions**
+- **NVIDIA DELETED**, despite a +30.24% one-year gain
+- **Micron still #2, at 8.99%** (it was #1 at 10.84% pre-rebalance)
+- still ~52% technology
+
+**I could not verify any of it.** Both holdings sources still carry the old
+book: alpha_vantage's snapshot is dated 18-Sep, and Webull's is timestamped
+**2026-09-21 07:37 ET** — after the rebalance was effective, and still showing
+**NVDA at 9.02%** and MU at 11.09%. Webull additionally reports a **uniform
++28.1% share-count change across every single name**, which is fund creations
+(shares outstanding up ~28%), not a reconstitution — a 54-substitution event
+cannot leave every surviving name's weight intact and change every share count
+by the same percentage.
+
+So the article is a **lead, not a fact**, and it is treated as one. What it
+does do is corroborate the section above: ~40% turnover is exactly the scale
+that makes the 1.15 pp of drift in the published file obviously stale.
+
+### If the report is right, it cuts the other way from the 21 Sep concern
+
+The concern recorded in `core_leg_spmo_vs_qqq.md` was that the book was drifting
+*toward* the Nasdaq and eroding the beta-0.773 diversification that justifies
+SPMO as the core leg. A NVDA deletion would push hard the other way:
+
+- **NVDA out removes ~9.0 pp of Nasdaq-100 overlap** — the single largest
+  doubled-up position against the TQQQ sleeve.
+- **AAPL in adds overlap back** (it is a Nasdaq-100 name), but AAPL is a far
+  lower-beta, lower-volatility stock than NVDA. Swapping one for the other
+  should **lower** SPMO's beta and vol, not raise them.
+- **MRK in is purely diversifying** — NYSE healthcare, not in the Nasdaq-100.
+- **MU 10.84% → ~8.99%** reduces the largest single-name concentration.
+
+Net, on these reports, the reconstitution likely **strengthens** the core-leg
+case rather than weakening it. That is the opposite of what I flagged this
+morning, and worth saying plainly.
+
+### Why a momentum index would delete a stock that rose 30%
+
+Not a contradiction. S&P's momentum score is **risk-adjusted** — price momentum
+divided by the volatility of returns — so a name can post a large raw gain and
+still score poorly if it got there violently. That is also the structural
+reason SPMO carries beta 0.773 to QQQ rather than ~1.0: the methodology
+systematically down-weights the highest-volatility winners. It is the same
+property that makes SPMO the better core leg in the backtest, working as
+designed.
+
+### Verification deferred to tomorrow
+
+The 2026-09-22 reminder (`trig_01Rm43Fd2cFQ1wpKo3XTuHv7`) has been rewritten to
+check these specific claims first — is NVDA actually gone, are AAPL and MRK in
+and at what weights, is MU ~8.99% — before recomputing the concentration and
+overlap figures and the rolling beta. Note the rolling beta will be dominated
+by the OLD portfolio for months; it is not a fast read on this change.

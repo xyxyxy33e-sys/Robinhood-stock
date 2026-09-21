@@ -4418,7 +4418,15 @@ business day of February and August — so 2026-08-31, our stored snapshot). The
 holdings published as of 18-Sep are still the PRE-reconstitution book: same 25
 names, zero entries, zero exits, 1.15 pp of pure price drift. Owner confirmed
 these are not the reconstituted numbers and held the check over to 2026-09-22
-(reminder `trig_01Rm43Fd2cFQ1wpKo3XTuHv7`). See
+(reminder `trig_01Rm43Fd2cFQ1wpKo3XTuHv7`). **A third-party report passed on by
+the owner (21 Sep, unverified) says 54 substitutions, ~40% turnover, AAPL and
+MRK the top additions, NVDA DELETED and MU #2 at 8.99%.** Neither data source
+confirms it — Webull's 21-Sep 07:37 ET snapshot still shows NVDA at 9.02% with
+a uniform +28.1% share-count change across every name (fund creations, not a
+rebalance). **If the report holds it cuts AGAINST the concentration concern
+above**: NVDA out removes ~9 pp of Nasdaq-100 overlap, AAPL is far lower-beta
+than NVDA, and MRK is not a Nasdaq name — so the diversification case for SPMO
+would strengthen, not weaken. See
 `research_notes/spmo_sep2026_rebalance.md` for the schedule, why today's price
 action cannot resolve it, and the follow-up steps. Measurement only — SPMO is a
 single ETF and Invesco bears the turnover; no account action is implied.
