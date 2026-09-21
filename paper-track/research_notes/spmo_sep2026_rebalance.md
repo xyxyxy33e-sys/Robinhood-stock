@@ -235,3 +235,87 @@ internally. The strategy holds what it held.
 portfolio for months. If this change is to be measured, it needs either a
 short-window estimate that accepts wide error bars, or patience. Do not re-run
 the core-leg decision on a few weeks of post-rebalance data.
+
+
+## The new book, obtained 21 Sep via the Korean listing
+
+Invesco had not published, but **the same index is tracked by a Korean fund**
+— KIWOOM 미국S&P500모멘텀, **KRX 0137V0**, 100 stocks, 0.12% ER — and Korean
+funds publish a daily constituent file. Its file **as of 2026-09-21** carries
+the post-reconstitution book. Saved as
+`data/spmo_index_top32_2026-09-21_postrebalance.csv`.
+
+**NVDA and AVGO are absent. Confirmed.**
+
+A consistency check that raises confidence: the fund file's weights sit exactly
+where one day of price drift past the rebalance-date weights would put them —
+AMD 4.89% → 5.2% after a +9.92% session, INTC 4.89% → 5.1% after +12.14%, MU
+8.95% → 9.2% after +2.71%. Internally coherent.
+
+### Top 30, before and after
+
+| # | before (18 Sep) | | after (21 Sep) | |
+|---|---|---|---|---|
+| 1 | MU | 10.84% | **AAPL** | 9.2% |
+| 2 | NVDA | 9.05% | MU | 9.2% |
+| 3 | AVGO | 6.43% | AMD | 5.2% |
+| 4 | JNJ | 4.65% | INTC | 5.1% |
+| 5 | GOOGL | 4.39% | GOOGL | 5.0% |
+| 6 | AMD | 3.87% | JNJ | 4.7% |
+| 7 | GOOG | 3.48% | GOOG | 4.0% |
+| 8 | LRCX | 3.43% | XOM | 3.1% |
+| 9 | XOM | 3.15% | SNDK | 2.9% |
+| 10 | CAT | 2.43% | LRCX | 2.7% |
+| 11–20 | INTC, SNDK, CSCO, AMAT, STX, GE, PLTR, RTX, WDC, GS | | AMAT, CSCO, **MRK**, STX, CAT, WDC, **PANW**, **UNH**, KO, **DELL** | |
+| 21–30 | APH, PM, KO, KLAC, NEM, GEV, C, MS, GILD, WELL | | MS, KLAC, RTX, GS, **MRVL**, **VLO**, C, **LITE**, **ADI**, WELL | |
+
+**Out of the top 30:** NVDA (9.05%), AVGO (6.43%), GE, PLTR, APH, PM, NEM, GEV,
+GILD. **In:** AAPL (9.2%), MRK (2.2%), PANW (1.6%), UNH (1.6%), DELL (1.2%),
+MRVL (1.0%), VLO (1.0%), LITE (0.9%), ADI (0.9%).
+
+### The numbers that matter
+
+| | before | after | change |
+|---|---|---|---|
+| top 3 | 26.32% | 23.6% | **−2.7 pp** |
+| top 5 | 35.36% | 33.7% | −1.7 pp |
+| top 10 | 51.72% | 51.1% | −0.6 pp |
+| top 30 | 81.97% | 79.8% | −2.2 pp |
+| semiconductors | 39.13% | 27.6% | **−11.5 pp** |
+| memory / storage | 5.67% | 6.7% | **+1.0 pp** |
+| semis + memory | 44.80% | 34.3% | **−10.5 pp** |
+| **Nasdaq-100 names** | **50.59%** | **49.8%** | **−0.8 pp** |
+| non-tech / defensive | 13.70% | 15.0% | +1.3 pp |
+
+### Two corrections to what I said earlier today
+
+**1. The Nasdaq-100 overlap did NOT fall by ~4.6 pp. It is essentially
+unchanged at ~50%.** I estimated −4.6 pp from the reported moves; measured, it
+is **−0.8 pp**. AMD and INTC were raised further than the rebalance-date figures
+suggested, and PANW, MRVL and ADI came in as additional Nasdaq names, replacing
+almost all of the NVDA+AVGO overlap. **The doubled-up exposure against the
+TQQQ/QLD sleeve is still there.** That concern is not resolved.
+
+**2. Memory concentration went UP, not down.** SNDK 2.33→2.9%, STX 1.81→2.1%,
+WDC 1.53→1.7%, with MU still 9.2%. Semiconductors overall fell 11.5 pp, but the
+memory complex grew. The "SPMO is becoming a memory trade" characterisation has
+support.
+
+### What still holds
+
+The *character* change is real even though the overlap number is not: NVDA and
+AVGO, two of the highest-beta names in the index, are replaced at the top by
+AAPL at roughly market beta, and ~6 pp moved into healthcare (MRK, UNH) and
+energy (VLO, MPC) — sectors with low correlation to the Nasdaq. Top-3
+concentration improved 2.7 pp. **Expected direction on SPMO's beta to QQQ is
+still down, but through lower-beta composition rather than through less
+overlap.** That is a weaker version of this morning's optimistic read, and it
+should be measured, not assumed.
+
+### Caveats
+
+Kiwoom's weights are rounded to one decimal, are one session past the rebalance,
+and come from a Korean fund whose implementation (FX, cash drag, sampling) is
+not identical to SPMO's. **Invesco's own file is still the record** and remains
+the job for tomorrow's check — but the constituent list and the structural
+conclusions above are very unlikely to move.
