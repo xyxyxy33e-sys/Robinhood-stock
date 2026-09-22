@@ -319,3 +319,54 @@ and come from a Korean fund whose implementation (FX, cash drag, sampling) is
 not identical to SPMO's. **Invesco's own file is still the record** and remains
 the job for tomorrow's check — but the constituent list and the structural
 conclusions above are very unlikely to move.
+
+
+## 2026-09-22: Invesco's own site is unreachable, and every US source is stale
+
+Went to the primary source. **Invesco blocks us.** `curl` to their holdings
+download endpoint returns **HTTP 406** on every variant tried (Investor and
+Institutional `audienceType`, the `/main/holdings/0` path, the `us-rest`
+endpoint), with full browser headers; the page fetcher gets only the
+navigation shell, since the site renders holdings client-side. This is not a
+proxy fault — the agent proxy reports healthy with no relay failures. It is
+Invesco's bot protection.
+
+**Every US secondary source carries the pre-reconstitution constituent set,
+four calendar days after the effective date:**
+
+| source | as-of | NVDA | AVGO | AAPL |
+|---|---|---|---|---|
+| alpha_vantage ETF_PROFILE | 2026-09-18 | 9.05% | 6.43% | absent |
+| Webull | 2026-09-22 12:21 UTC | 8.98% | 6.12% | absent |
+| stockanalysis.com | 2026-09-17 | 9.02% | 6.05% | absent |
+| **TipRanks** | **"2026-09-21"** | **8.98%** | **6.12%** | **absent** |
+| Yahoo Finance | intraday | 9.05% | 6.43% | absent |
+
+TipRanks and Webull *date* their data after the rebalance while showing the old
+names — they are re-pricing a stale constituent list, not refreshing it. The
+only source with the new book remains KIWOOM 0137V0.
+
+### The price-action test still cannot discriminate
+
+22 Sep had wide single-name dispersion (SNDK +6.7%, MU +4.0%, STX +3.8% against
+CSCO −5.4%, CAT −1.6%), which should have made the two books separable. It does
+not:
+
+| basket | top-15 coverage | implied top-15 return | tail needed to match SPMO |
+|---|---|---|---|
+| old book | 62.0% | **+1.161%** | −0.16% |
+| new book | 62.2% | **+1.089%** | −0.05% |
+
+SPMO actual **+0.657%**. The two books differ by only 7 bp across their top 15
+because they share most of those names, and both imply an entirely plausible
+tail. **Inconclusive, again, and for a structural reason rather than a bad
+day — this test will not resolve it.**
+
+### Conclusion on sourcing
+
+The composition question is settled by the Korean file and the 54/54
+reconciliation; what is *not* available is US primary confirmation, and it may
+stay unavailable for days. **This is worth remembering as a standing data
+limitation: SPMO's published holdings cannot be relied on to be current after a
+reconstitution, and Invesco's own site is not machine-reachable from here.**
+For future reconstitutions (next: March 2027), go straight to the KRX listing.
