@@ -229,3 +229,51 @@ both-era improvement that costs nothing measurable, but is not statistically
 distinguishable from live; (2) **release** — the latch — buys the largest
 drawdown reduction on record, near-neutral holdout Sharpe, at ~1.2 pp of
 holdout CAGR and painful recent years. Nine arms this round.
+
+## Follow-up 5: vote vs de-leverage (owner: "think as vote vs deleverage")
+
+`paper-track/fall_protection_r7.py`, log `fall_protection_r7_run.log`. A trim
+schedule mixes two things: **how much leverage** each vote removes (nominal
+L = SPMO + 3·TQQQ) and **which leg** supplies it. Separated here.
+
+**A. Which leg, at the live leverage path (2.00 → 1.33 → 0.67 → 0):**
+
+| composition (1 vote / 2 votes) | live release real CAGR / MaxDD / ΔSh | proxy ΔSh F / H | latch real ΔSh | latch proxy edge |
+|---|---|---|---|---|
+| proportional (live) 33/33/33 · 17/17/67 | 37.29% / −18.6% / — | — | +0.139 | +2.23 |
+| TQQQ first 50/28/22 · 50/6/44 | 37.42% / −18.4% / +0.005 | +0.002 / +0.001 | +0.135 | +2.29 |
+| SPMO first 0/44/56 · 0/22/78 | 37.27% / −19.0% / −0.004 | −0.002 / −0.003 | +0.116 | +2.14 |
+| core-heavy 83/17/0 · 67/0/33 | 37.19% / −18.0% / −0.002 | −0.003 / −0.004 | +0.144 | +2.21 |
+
+**At matched leverage, which leg you cut barely matters** — every composition
+is within ±0.005 Sharpe and ±0.15 pp CAGR of live under either release. Two
+small effects pull against each other: less TQQQ saves decay and financing,
+but on vote days the core earns less than cash (`trim_destination_test.md`),
+so replacing cash with core costs. TQQQ-first sits at the small sweet spot
+(proxy P 0.05 live release; P 0.00 under the latch, +0.002 Sharpe — real but
+negligible).
+
+**B. The asymmetric schedule, decomposed.** In leverage terms it is
+2.00 → **1.17 → 0.33 → 0.25**: deeper at 1–2 votes, shallower at 3.
+
+| live release | real ΔSh / ΔCAGR | proxy ΔSh F / H |
+|---|---|---|
+| proportional on AS's leverage path (the *depth* effect) | +0.007 / −0.03 pp | +0.006 / +0.005 |
+| asymmetric (depth + *composition*) | +0.020 / +0.35 pp | +0.012 / +0.010 |
+
+About half of the asymmetric gain is the leverage path, half the composition
+(less TQQQ, less cash, more core at the same leverage). The composition half is
+statistically clean on the proxy (CI [+0.004, +0.009], P 0.00) because it is
+nearly mechanical — at equal leverage, less 3× means less decay — but it is a
+0.006 Sharpe effect. Real P 0.16.
+
+**Ranking of what matters, from all rounds:**
+1. **The release rule** (when a vote is allowed to come off) — the latch moves
+   real Sharpe +0.13 to +0.14 and proxy MaxDD by 3 pp, whatever the composition.
+2. **The leverage path** per vote — ~0.007 Sharpe between reasonable paths
+   (and trim depth, per `extension_step_decision.md`).
+3. **Which leg** — ≤0.006 Sharpe at matched leverage.
+
+So: think of a vote as a **de-leverage instruction**; the question worth an
+owner decision is how long the de-leverage is held, not which ETF is sold.
+Nothing applied.

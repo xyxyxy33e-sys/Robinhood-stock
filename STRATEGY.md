@@ -4599,6 +4599,12 @@ scored against the flat-de-levering null.
   (bootstrap P 0.17 / 0.15). **Latch + asymmetric** is the best drawdown result
   on record (proxy −23.3%, edge +2.74, holdout Sharpe −0.002) at −1.2 pp holdout
   CAGR and weak 2024–26. Neither applied; frozen to 7 December.
+- **Vote vs de-leverage** (`fall_protection_r7.py`): at matched leverage, which
+  leg the trim cuts is worth ≤0.006 Sharpe (TQQQ-first best, core-heavy and
+  SPMO-first slightly worse); half of the asymmetric schedule's gain is its
+  deeper leverage path, half composition. Ranking: release rule (latch, ~+0.13
+  real Sharpe, 3 pp proxy MaxDD) >> leverage path (~0.007) ≈ leg (≤0.006).
+  A vote is a de-leverage instruction; what matters is how long it is held.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
