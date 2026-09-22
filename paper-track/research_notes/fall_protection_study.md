@@ -87,3 +87,37 @@ results, and must be pre-registered and judged on the holdout like everything
 else.
 
 Candidates this line: 12 (+ 7 N-values for smoothness), none adopted.
+
+## Follow-up: "what if we keep the trim til exit A" (owner, same day)
+
+`paper-track/fall_protection_r3.py`, log `fall_protection_r3_run.log`. **Latch:**
+inside effective A the vote count can only rise; it resets when the book leaves
+A (or goes to cash via the D gate / E). No parameter to choose.
+
+| | real CAGR / MaxDD / edge / ΔSharpe | proxy CAGR / MaxDD / edge | proxy ΔSharpe F / S / **H** |
+|---|---|---|---|
+| live | 37.29% / −18.6% / — / — | 25.46% / −27.0% / — | — |
+| **latch until exit A** | 37.64% / −17.8% / **+0.98** / **+0.139** | 24.80% / −23.9% / **+2.23** | +0.043 / +0.129 / **−0.014** |
+| memory 20d | 38.70% / −17.8% / +1.53 / +0.195 | 24.66% / −23.9% / +2.07 | +0.043 / +0.186 / −0.052 |
+| memory 40d | 38.70% / −17.7% / +1.63 / +0.251 | 24.57% / −23.9% / +1.96 | +0.057 / +0.226 / −0.047 |
+
+- **Same protection, better out of sample.** Every worst episode improves exactly
+  as with memory (real 2021–23 −15.5 vs −18.6, COVID −0.1 vs −5.5; proxy 2005
+  −23.2 vs −27.0, dot-com −23.9 vs −26.7, GFC −21.2 vs −25.4). Best proxy edge
+  of the family (+2.23). Holdout Sharpe −0.014 (memory: −0.05); 2008–15 half is
+  slightly **better** than live (1.068 vs 1.059); 2000–07 half worse (0.361 vs
+  0.416). Holdout CAGR still −1.4 pp (16.46% vs 17.84%).
+- **It costs in persistent melt-ups, and recently.** Real years latch minus
+  live: 2018 +19.6, 2021 +19.4, 2020 −14.4, **2024 −10.4, 2025 −6.5, 2026
+  −12.2**; better 5, worse 4. Proxy better 14, worse 8.
+- Trim-on A days rise 477 → 708 (real); exposure 67.2% → 60.7%; rebalances
+  45 → 30/yr.
+- Bootstrap: real P(not better) 0.12, proxy 0.23. Not significant.
+- **Today it would change nothing**: the current A spell began after the last
+  vote (10 Jul), so the latch is at 0.
+
+**Verdict: the cleanest version of the fix — parameter-free, near-neutral
+holdout Sharpe, the largest both-harness drawdown edge on record — but it does
+not meet the both-era bar (holdout CAGR −1.4 pp, Sharpe −0.014), the bootstrap
+is not significant, and it would have cost 29 pp across 2024–26.** An owner
+call on risk appetite, not a research pass. Frozen to 7 December regardless.

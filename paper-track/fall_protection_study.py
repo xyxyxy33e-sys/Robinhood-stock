@@ -68,6 +68,7 @@ def sim(h, arm=None, detail=False):
         info = lambda d: RW[d]; legs = lambda d: DS.PLEG[d]; bp = DS.BP_Q
         keyf = lambda I, v, g: (I['state'], I['agree'])
     held = prev = None; out = []; vhist = []; risky = 0.0; nreb = 0; nflag = 0
+    latch = 0
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
@@ -76,10 +77,12 @@ def sim(h, arm=None, detail=False):
         gate = (st == 'D') and ((b is not None and b < 0.20) or (g200 is not None and g200 < 0.02))
         v = 0; flag = 0
         if gate or st == 'E':
-            row = CASH
+            row = CASH; latch = 0
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             vh = v
+            if arm and arm[0] == 'L':
+                latch = max(latch, v); vh = latch
             if arm and arm[0] == 'M':
                 vh = max([v] + vhist[-(arm[1] - 1):]) if arm[1] > 1 else v
             f = max(0.0, 1.0 - (1.0 / 3.0) * vh)
@@ -93,7 +96,7 @@ def sim(h, arm=None, detail=False):
             row = tuple(a * f for a in w[:4]) + (1 - f * sum(w[:4]),)
             v = (vh, flag)
         else:
-            row = W0[eff]
+            row = W0[eff]; latch = 0
         vhist.append(extension_votes(eff, gaps) if eff == 'A' else 0)
         m = 1.0 if not vol else min(1.0, VOL_TARGET_PA / vol)
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)

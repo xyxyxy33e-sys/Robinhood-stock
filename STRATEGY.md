@@ -4577,6 +4577,11 @@ scored against the flat-de-levering null.
 - Next step, if pursued after the freeze: a pre-registered release rule that
   only lets the trim come off when QQQ is not falling. Untested.
   This line: 12 candidates (+7 smoothness), none adopted.
+- **Follow-up, "keep the trim til exit A" (latch; parameter-free):** real 37.64% /
+  −17.8% (edge +0.98, Sharpe +0.139), proxy 24.80% / −23.9% (edge +2.23, best of
+  the family), holdout Sharpe −0.014 (near neutral) but holdout CAGR −1.4 pp;
+  real years 2024 −10.4, 2025 −6.5, 2026 −12.2 pp; bootstrap P 0.12 / 0.23.
+  Does not meet the both-era bar. Owner call; not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
