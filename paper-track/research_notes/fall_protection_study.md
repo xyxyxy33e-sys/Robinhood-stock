@@ -277,3 +277,43 @@ nearly mechanical — at equal leverage, less 3× means less decay — but it is
 So: think of a vote as a **de-leverage instruction**; the question worth an
 owner decision is how long the de-leverage is held, not which ETF is sold.
 Nothing applied.
+
+## Follow-up 6: latch + asymmetric trim, with the A row at 30/70 (owner)
+
+`paper-track/fall_protection_r8.py`, log `fall_protection_r8_run.log`. Asymmetric
+at any base: TQQQ loses ½ of its base weight per vote, SPMO ⅙, freed weight to
+cash. 30/70 rows: 30/70/0 → 25/35/40 → 20/0/80 → 15/0/85 (leverage 2.40 → 1.30
+→ 0.20 → 0.15).
+
+| arm | real CAGR / MaxDD / exSh | proxy CAGR / MaxDD / edge / exSh | holdout 2000–15 CAGR / MaxDD / Sh |
+|---|---|---|---|
+| live 50/50 | 37.29% / −18.6% / 1.376 | 25.46% / −27.0% / — / 0.990 | 17.84% / −27.0% / 0.754 |
+| 30/70 alone | 41.94% / −23.0% / 1.342 | 28.35% / −31.3% / −0.60 / 0.983 | 19.77% / −31.3% / 0.753 |
+| 50/50 + latch + asym | 37.21% / −17.8% / 1.515 | 24.66% / −23.3% / +2.74 / 1.035 | 16.68% / −23.3% / 0.752 |
+| 40/60 + latch + asym | 39.57% / −18.7% / 1.511 | 26.06% / −24.3% / +3.46 / 1.038 | 17.58% / −24.3% / 0.756 |
+| **30/70 + latch + asym** | **41.88% / −19.6% / 1.500** | **27.41% / −25.5% / +3.95 / 1.038** | **18.41% / −25.5% / 0.755** |
+
+- **The latch pays for the extra leverage.** 30/70 alone buys +4.65 pp real CAGR
+  with 4.4 pp more drawdown; with the latch and the asymmetric trim it keeps
+  +4.59 pp of that CAGR for **1.0 pp** more real drawdown, and on the proxy it
+  is both higher-return (+1.96 pp) and **shallower** (−25.5% vs −27.0%) than live.
+- **First combination today that improves both proxy eras on point estimates**:
+  holdout CAGR +0.57 pp, MaxDD +1.5 pp, Sharpe +0.001; search CAGR +4.25 pp,
+  Sharpe +0.121. Largest drawdown edge on record (+3.95).
+- Dollars (real history): $222k grows ×43.9 vs ×30.8 live; worst drawdown on
+  today's balance $43.5k vs $41.3k.
+- **Costs:** 2020 +36.4% vs +54.9%, **2025 +22.9% vs +37.3%, 2026 +27.7% vs
+  +38.8%** (still above QQQ's 20.2% / 17.3%). 2022 −13.6% vs −10.3%. Worst
+  real episodes: 2021–23 bear −18.1 (live −18.6), Feb–Mar 2025 −19.6 (−17.8),
+  Q4 2018 −16.6 (−15.0) — falls that do not start from an extended market get
+  the full 2.4× hit.
+- **Evidence strength:** bootstrap vs live — Sharpe P(not better) 0.19 real /
+  0.24 proxy, return P 0.17 / 0.18. Not significant. And this combination was
+  **assembled after ~50 arms today**, each piece chosen after seeing results:
+  the both-era pass is a point estimate on a selected configuration, not a
+  pre-registered test.
+
+**Status: the strongest candidate on the record, not applied.** Design frozen to
+7 December. Honest path: pre-register exactly this configuration now, run it as a
+paper shadow beside live until the freeze lifts, and decide then on the combined
+backtest and forward evidence.

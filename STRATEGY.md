@@ -4605,6 +4605,14 @@ scored against the flat-de-levering null.
   deeper leverage path, half composition. Ranking: release rule (latch, ~+0.13
   real Sharpe, 3 pp proxy MaxDD) >> leverage path (~0.007) ≈ leg (≤0.006).
   A vote is a de-leverage instruction; what matters is how long it is held.
+- **30/70 + latch + asymmetric trim** (`fall_protection_r8.py`): real 41.88% /
+  −19.6% / exSh 1.500 (live 37.29% / −18.6% / 1.376); proxy 27.41% / −25.5%
+  (edge +3.95, largest on record); holdout 2000–15 18.41% / −25.5% / 0.755 vs
+  live 17.84% / −27.0% / 0.754 — both proxy eras improve on point estimates.
+  Costs: 2025 +22.9% vs +37.3%, 2026 +27.7% vs +38.8%, 2020 +36.4% vs +54.9%.
+  Bootstrap P 0.17–0.24; assembled after ~50 arms (post hoc). Strongest
+  candidate on the record; NOT applied. Proposed: pre-register and paper-shadow
+  until 7 December.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
