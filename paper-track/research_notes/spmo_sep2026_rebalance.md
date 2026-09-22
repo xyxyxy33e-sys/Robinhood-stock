@@ -179,7 +179,7 @@ tracking the identical S&P 500 Momentum Index. Index-level changes must be the
 same in both funds, so this is genuine corroboration, not an echo.
 
 **Confirmed by both:** 54 substitutions (54 of 99 holdings, ~54.5% of the
-portfolio), **Apple added at 9.23% as the new largest holding**, **NVIDIA
+portfolio), **Apple added at ~9.0–9.2%** (reported as the new largest holding; Invesco's own 21-Sep file actually has MU 9.21% still #1, AAPL 9.04% #2), **NVIDIA
 deleted**, Micron trimmed to ~8.95–8.99% from ~10.84–10.94%.
 
 **The fact the first article omitted: Broadcom was deleted too.** NVDA *and*
@@ -370,3 +370,73 @@ stay unavailable for days. **This is worth remembering as a standing data
 limitation: SPMO's published holdings cannot be relied on to be current after a
 reconstitution, and Invesco's own site is not machine-reachable from here.**
 For future reconstitutions (next: March 2027), go straight to the KRX listing.
+
+
+## 2026-09-22: PRIMARY SOURCE OBTAINED — owner supplied Invesco's complete holdings file
+
+Owner uploaded Invesco's own **Complete Holdings** CSV, as of **2026-09-21**.
+Saved as `data/spmo_complete_holdings_2026-09-21.csv`. This closes the
+verification. 126 line items, 99.96% of TNA.
+
+### The Korean file held up
+
+Comparing my KIWOOM-derived top-30 weights against Invesco's:
+**mean absolute error 0.08 pp, maximum 0.46 pp** (AMD and INTC, which Kiwoom
+had at 5.2/5.1 against Invesco's 5.60/5.56). Structural figures:
+
+| | claimed from Kiwoom | Invesco primary |
+|---|---|---|
+| top 3 | 23.6% | **23.85%** |
+| top 5 | 33.7% | **34.32%** |
+| top 10 | 51.1% | **51.23%** |
+| top 30 | 79.8% | **79.79%** |
+| semis + semicap | 31.2% | **32.09%** |
+| memory complex | 15.9% | **15.84%** |
+| healthcare | 10.7% | **10.53%** |
+| energy | 6.1% | **5.55%** |
+
+**54 true additions / 54 true removals — confirmed exactly** against the
+primary file (names crossing the 0.02% threshold in either direction; added
+30.56%, removed 34.48%).
+
+### TWO CORRECTIONS to what I reported
+
+**1. MU is still #1, at 9.21%. AAPL is #2 at 9.04%.** Both news sources and the
+Kiwoom file put Apple at the top; Invesco's own marks do not. Micron remains
+the largest holding, so the headline "Apple is the new top holding" is wrong at
+SPMO's 21-Sep marks. It is close — 17 bp apart — and could flip on any day's
+prices, but as of the primary file **the fund's biggest position is still
+Micron.**
+
+**2. NVDA and AVGO are not fully gone.** Both are still held at **0.01%** —
+99 shares of NVDA ($22,511) and 3,404 shares of AVGO ($1,234,495). They are
+part of **26 residual stubs totalling 0.05%**: MO, GILD, GEV, GE, RL, COR, NEM,
+JBL, CBOE, PLTR, WMB, ATO, HOOD, ROK, APH, EBAY, FCX, LDOS, PM, ETR, FOXA, TPR,
+DLTR, F and the two above. Functionally deleted, but the wind-down is not
+complete — a detail no secondary source showed and one that explains why a
+simple "is NVDA in the holdings list" test would have given the wrong answer.
+
+### Nasdaq-100 overlap, like-for-like at last
+
+Measured on the **full book both sides** with one fixed membership set:
+
+| | overlap |
+|---|---|
+| before (18-Sep) | 53.81% |
+| after (21-Sep) | **52.58%** |
+| change | **−1.23 pp** |
+
+So the overlap is **essentially unchanged**, confirming the read from the
+Kiwoom file (−0.8 pp on a top-30 basis). AAPL 9.04 + INTC 5.56 + AMD 5.60 +
+PANW 1.60 + MRVL 1.00 almost exactly replace NVDA 9.05 + AVGO 6.43 + PLTR 1.69
++ GILD 0.92 + AEP 0.29. **The doubled-up exposure against the TQQQ/QLD sleeve
+survives the reconstitution.**
+
+### Net
+
+Every structural conclusion drawn from the Korean listing stands. The
+reconstitution cut semiconductors ~11 pp, left the memory complex intact, added
+~6 pp of healthcare and energy, and **did not reduce Nasdaq overlap**. Combined
+with the cycle-beta finding (`spmo_beta_instability.md`), the picture is: a
+book that is less semiconductor-concentrated but no less Nasdaq-correlated,
+entering a cycle whose beta has yet to be observed.

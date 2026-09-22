@@ -4443,7 +4443,7 @@ a uniform +28.1% share-count change across every name (fund creations, not a
 rebalance). **CORROBORATED 21 Sep by a second, independent source** — Seoul Economic
 Daily on Kiwoom's US S&P 500 Momentum ETF, a Korean fund tracking the identical
 index, so index changes must match. Both agree on 54 substitutions (of 99
-holdings), **AAPL added at 9.23% as the new largest holding**, **NVDA deleted**,
+holdings), **AAPL added at ~9.0–9.2%** (Invesco's 21-Sep file has MU still #1 at 9.21%, AAPL #2 at 9.04%), **NVDA deleted**,
 MU trimmed to ~8.95%. The Korean source adds the fact the first omitted:
 **Broadcom was deleted too** — NVDA + AVGO together were 15.48 pp of the old
 book and its two largest high-beta semis. Also reported: INTC and AMD both
