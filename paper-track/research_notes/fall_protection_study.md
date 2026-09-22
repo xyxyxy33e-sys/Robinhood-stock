@@ -317,3 +317,44 @@ cash. 30/70 rows: 30/70/0 → 25/35/40 → 20/0/80 → 15/0/85 (leverage 2.40 �
 7 December. Honest path: pre-register exactly this configuration now, run it as a
 paper shadow beside live until the freeze lifts, and decide then on the combined
 backtest and forward evidence.
+
+## Follow-up 7: at 30/70, should the de-leverage be quicker? (owner)
+
+`paper-track/fall_protection_r9.py`, log `fall_protection_r9_run.log`. Base 30/70,
+latch on. TQQQ cut per vote kt ∈ {⅓, ½ (current), ⅔, 1} × SPMO cut ks ∈ {⅙, ⅓};
+plus a leverage-matched path (same absolute leverage per vote as 50/50 + both)
+and earlier votes (8/10/13% instead of 10/12/15%).
+
+| 30/70 + latch, TQQQ cut per vote | leverage path | real CAGR / MaxDD / exSh | proxy CAGR / MaxDD / exSh | holdout Sh | 2025 / 2026 real |
+|---|---|---|---|---|---|
+| ⅓ | 2.40→1.60→0.80→0 (≈) | 42.72% / −19.8% / 1.492 | 27.55% / −27.5% / 1.026 | 0.738 | 31.2 / 30.5 |
+| ½ (current) | 2.40→1.30→0.20→0.15 | 41.88% / −19.6% / 1.500 | 27.41% / −25.5% / 1.038 | 0.755 | 22.9 / 27.7 |
+| ⅔ | 2.40→0.95→0.20→0.15 | 42.41% / −19.6% / 1.532 | 27.61% / −24.7% / 1.052 | 0.760 | 21.3 / 26.8 |
+| **1 (all TQQQ out at the first vote)** | 2.40→0.25→0.20→0.15 | **43.21% / −19.6% / 1.573** | **27.91% / −24.7% / 1.070** | **0.764** | 18.3 / 25.0 |
+| live 50/50 | 2.00→1.33→0.67→0 | 37.29% / −18.6% / 1.376 | 25.46% / −27.0% / 0.990 | 0.754 | 37.3 / 38.8 |
+
+- **Yes, quicker is better — monotonically in Sharpe, drawdown and holdout.**
+  Cutting all TQQQ at the first vote is best on every summary metric, both eras,
+  and even adds CAGR (+1.3 pp real vs current). Real 2021–23 bear −15.8% (current
+  −18.1%, live −18.6%).
+- **SPMO's cut rate is irrelevant** (⅙ vs ⅓: within ±0.003 Sharpe) — consistent
+  with "which leg ≤0.006". Leverage-matched path sits between ½ and ⅔.
+- **Earlier votes (8/10/13%) are rejected**: real CAGR −6.1 pp vs current (2024
+  +47.4% vs +65.0%), even though the proxy holdout loves it (0.847) — the eras
+  disagree.
+- **Not specific to the higher leverage.** The same rates at 50/50: Sharpe
+  1.507 → 1.515 → 1.537 → 1.574, proxy MaxDD −24.3 → −21.9. The gain from
+  quicker cuts is about the same at either base (+0.06 to +0.07 real Sharpe from
+  ½ to 1). **Vote days are bad days to hold TQQQ at any leverage**; the quicker
+  cut simply removes it sooner.
+- **Costs:** quicker = more cash in melt-ups. 2025 real +18.3% (current +22.9%,
+  live +37.3%); 2026 +25.0% (+27.7%, +38.8%). Bootstrap vs current: ⅔ P 0.06 real
+  / 0.11 proxy; 1 P 0.12 / 0.16. Not significant.
+- **What "TQQQ out at the first vote" means with the latch:** any single vote
+  inside an A spell moves the book to 25% SPMO / 75% cash until the book leaves
+  A. The trim becomes a switch. Exposure 58.9% vs live 67.2%.
+
+Still post hoc (now ~70 arms today), still frozen to 7 December. If a
+configuration is pre-registered for a shadow track, the evidence favours
+**30/70 + latch + TQQQ fully out at the first vote**, with the recent-years cost
+stated alongside it.

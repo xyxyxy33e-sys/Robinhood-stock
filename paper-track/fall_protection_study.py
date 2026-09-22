@@ -91,6 +91,8 @@ def sim(h, arm=None, detail=False):
             row = CASH; latch = 0
         elif eff == 'A':
             v = extension_votes(eff, gaps)
+            if arm and arm[0] == 'X' and len(arm) > 3:   # custom vote thresholds for (100, 150, 200)
+                v = sum(1 for n, th in zip((100, 150, 200), arm[3]) if gaps.get(n) is not None and gaps[n] > th)
             vh = v
             if arm and arm[0] == 'X':
                 # trim SHAPE test: arm = ('X', 'live'|'latch', schedule of (spmo, tqqq, cash) at 0..3 votes)

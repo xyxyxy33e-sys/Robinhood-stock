@@ -4613,6 +4613,13 @@ scored against the flat-de-levering null.
   Bootstrap P 0.17–0.24; assembled after ~50 arms (post hoc). Strongest
   candidate on the record; NOT applied. Proposed: pre-register and paper-shadow
   until 7 December.
+- **Quicker de-leverage at 30/70** (`fall_protection_r9.py`): cutting TQQQ faster
+  per vote is monotonically better (Sharpe, MaxDD, holdout); all TQQQ out at the
+  first vote: real 43.21% / −19.6% / 1.573, proxy 27.91% / −24.7% / 1.070,
+  holdout 0.764. Not specific to the higher base (same gain at 50/50). SPMO cut
+  rate irrelevant; earlier votes rejected (real −6.1 pp). Costs: 2025 +18.3% /
+  2026 +25.0% real vs live +37.3% / +38.8%. Bootstrap P 0.12–0.16; post hoc.
+  Not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
