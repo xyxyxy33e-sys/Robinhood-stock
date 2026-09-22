@@ -170,7 +170,8 @@ includes the live trim; this asks where it acts.
 - **The damaging A days have no votes.** Of the 20 worst A days for the book,
   **19 of 20 real and 20 of 20 proxy had zero votes.**
 - **40/60's whole difference is earned and lost on zero-vote days:** +1.70 of
-  +1.75 pp/yr real, +1.22 of +1.17 pp/yr proxy. On days with a vote the ratio
+  +1.70 pp/yr real (vote days net 0.00), +1.22 of +1.17 pp/yr proxy (vote days
+  net −0.05). On days with a vote the ratio
   difference is ~0.
 - **In the worst real drawdown (18 Nov 21 → 17 Jan 23), 1 of 42 A days in the
   fall carried a vote.** Of the eight deepest real drawdowns, the trim was voting
