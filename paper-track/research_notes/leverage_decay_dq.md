@@ -6,6 +6,14 @@ kills the candidate, and exposes a control I failed to apply.
 
 ## 1. The decay is real and it is large
 
+> **CORRECTION 2026-09-22 (`a_ratio_study.md`):** the table below understates
+> decay. Its "ideal" is a frictionless daily-reset L× fund, which is itself fully
+> decayed, so the "realized drag" column is fees + financing only. Against L × QQQ
+> the total is **TQQQ −20.01%/yr** (carry −5.02, variance −14.99) and **QLD
+> −7.39%/yr** (carry −2.43, variance −4.96); variance decay matches the naive
+> formula, it does not run at half. Per unit of beta: TQQQ 6.67%/yr, QLD 3.70%/yr.
+> The conclusion below is unchanged and stronger.
+
 Realized on actual fund prices, 2015-10 → 2026-09 (2748 sessions, QQQ
 annualised vol 22.16%), against the L × QQQ daily-compounded ideal:
 

@@ -4343,6 +4343,12 @@ WITHDRAWN**; see "Leverage decay: 70% TQQQ vs 100% QLD" below. Cumulative:
 Owner asked what decay does to the `sharpe_study` D-row candidate. It kills it,
 and exposes a missing control. `paper-track/research_notes/leverage_decay_dq.md`.
 
+**CORRECTED 2026-09-22 (see "Is 50/50 the right A row?" below):** the figures in
+the next paragraph are fees + financing only. Total decay vs L × QQQ is TQQQ
+**−20.01%/yr** (variance −14.99, carry −5.02) and QLD **−7.39%/yr** (−4.96,
+−2.43); variance decay matches theory. Per beta TQQQ 6.67%/yr vs QLD 3.70%/yr —
+the conclusion holds, more strongly.
+
 **Decay measured on actual fund prices** (2015-10..2026-09, QQQ vol 22.16%),
 against the L × QQQ daily-compounded ideal: TQQQ realizes **−7.21%/yr** of
 drag, QLD **−3.27%/yr** (naive theory 14.73% / 4.91% — realized runs about half
@@ -4524,6 +4530,31 @@ while removing a weekly scrape, 15 positions and core-side wash-sale tracking.
 information.** A forward paper track also cannot answer this on its own — a few
 weeks of NAV is noise, and the sample will take years to say anything. It is a
 log, not a test.
+
+### Is 50/50 the right A row? — tested 2026-09-22, KEEP (no change)
+
+Owner: "is 50/50 the right ratio? Consider drift decay everything."
+`paper-track/research_notes/a_ratio_study.md`.
+
+- **The ratio is a leverage dial on a flat Sharpe ridge.** Each +10 pp TQQQ adds
+  ~+2.4 pp CAGR real / +1.5 pp proxy almost linearly; excess Sharpe spans 0.028
+  (real) / 0.003 (proxy) from 70/30 to 40/60 and no difference is significant
+  (bootstrap). Return differences are significant: the dial moves risk and
+  return together.
+- **Decay:** TQQQ is only held in A, where QQQ vol is ~16% vs ~31–35% elsewhere,
+  so it pays −12%/yr of drag there vs −37%/yr elsewhere. At 50/50 that costs the
+  book −2.9%/yr real / −2.5% proxy; each +10 pp TQQQ costs ~0.55 pp of decay
+  for ~1.5–2.4 pp of return.
+- **Drift:** the 5% band holds every ratio within ~1.5 pp of target, ~8×/yr
+  fires regardless of ratio.
+- **Beta-matched QLD** (SPMO = TQQQ = c, QLD = 1 − 2c): saves decay but raises
+  measured beta (1.85 → 1.99) and ends at the same return with 2.4 pp deeper
+  MaxDD and −0.044 Sharpe. Live earns the most per unit of beta.
+- Outside 70/30–40/60, MaxDD is worse than simply scaling 50/50.
+  **Verdict: 50/50 stays.** 60/40 (Sharpe) or 40/60 (return) are defensible
+  risk-appetite choices with no efficiency case. Frozen to 7 December.
+  Also corrected the 2026-09-21 decay figures (above). This line: 15 candidates
+  (10 ratios + 5 beta-matched rows), none adopted.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
