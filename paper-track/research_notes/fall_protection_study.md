@@ -176,3 +176,56 @@ vol below the 20% vol target.
 - Rejected. **Price-based holding (latch, new 20d high) beats vol-based release
   because the dangerous falls begin quietly.** The latch remains the best of
   the family.
+
+## Follow-up 4: trim shape — cut TQQQ only, or at different rates (owner)
+
+`paper-track/fall_protection_r6.py`, log `fall_protection_r6_run.log`. Five
+schedules (SPMO / TQQQ / cash at 0/1/2/3 votes), each under the live release and
+the latch; proportional + live release asserted identical to live.
+
+| shape | 1 vote | 2 votes | 3 votes |
+|---|---|---|---|
+| proportional (live) | 33/33/33 | 17/17/67 | 0/0/100 |
+| TQQQ only → cash | 50/33/17 | 50/17/33 | 50/0/50 |
+| TQQQ only → SPMO | 67/33/0 | 83/17/0 | 100/0/0 |
+| TQQQ first, then SPMO | 50/25/25 | 50/0/50 | 0/0/100 |
+| asymmetric (TQQQ ½, SPMO ⅙ per vote) | 42/25/33 | 33/0/67 | 25/0/75 |
+
+| release / shape | real CAGR / MaxDD / edge / ΔSh | proxy CAGR / MaxDD / edge | proxy ΔSh F / S / H | holdout CAGR |
+|---|---|---|---|---|
+| live / proportional | 37.29% / −18.6% / — / — | 25.46% / −27.0% / — | — | 17.84% |
+| live / TQQQ only → cash | 37.26% / −18.5% / +0.03 / −0.019 | 25.14% / −27.4% / −0.80 | −0.023 / −0.027 / −0.020 | 17.50% |
+| live / TQQQ only → SPMO | 36.78% / −18.5% / −0.19 / −0.065 | 24.45% / −28.6% / −2.89 | −0.063 / −0.080 / −0.053 | 16.90% |
+| live / TQQQ first | 37.53% / −18.3% / +0.39 / +0.013 | 25.62% / −26.8% / +0.39 | +0.009 / +0.011 / +0.008 | 17.97% |
+| **live / asymmetric** | **37.65% / −18.3% / +0.43 / +0.020** | **25.63% / −26.6% / +0.57** | **+0.012 / +0.013 / +0.010** | **17.98%** |
+| latch / proportional | 37.64% / −17.8% / +0.98 / +0.139 | 24.80% / −23.9% / +2.23 | +0.043 / +0.129 / −0.014 | 16.46% |
+| latch / TQQQ only → cash | 37.81% / −17.8% / +1.07 / +0.108 | 24.66% / −24.7% / +1.34 | +0.018 / +0.079 / −0.023 | 16.52% |
+| latch / TQQQ only → SPMO | 37.71% / −17.8% / +1.02 / +0.037 | 24.30% / −26.1% / −0.53 | −0.029 / −0.003 / −0.048 | 16.38% |
+| latch / TQQQ first | 37.20% / −17.8% / +0.76 / +0.137 | 24.82% / −23.6% / +2.59 | +0.049 / +0.136 / −0.008 | 16.55% |
+| **latch / asymmetric** | 37.21% / −17.8% / +0.76 / +0.139 | 24.80% / **−23.3% / +2.74** | +0.045 / +0.118 / **−0.002** | 16.68% |
+
+- **Cutting only TQQQ is worse than cutting both.** Keeping SPMO whole leaves
+  the book holding its most market-sensitive non-levered leg through exactly the
+  days the trim fires, when the core does not earn (see
+  `trim_destination_test.md`). To SPMO is clearly worse (proxy edge −2.89,
+  holdout −0.053), confirming the 20 Sep result. To cash is roughly neutral on
+  real and worse on proxy.
+- **Cutting TQQQ faster but still ending mostly in cash is the best shape.**
+  Under the *live* release the asymmetric schedule improves **every** point
+  estimate in **both** eras: real CAGR +0.35 pp, MaxDD −18.3%, Sharpe +0.020;
+  proxy CAGR +0.17 pp, MaxDD −26.6%, Sharpe +0.012 full / +0.013 search /
+  +0.010 holdout; holdout CAGR +0.14 pp. It does not change recent years
+  materially (2024 +0.8, 2025 +0.1, 2026 −2.6 pp). But it is small — the size
+  of the 0.013 "inside noise" band — and the bootstrap is P 0.17 real / 0.15
+  proxy. TQQQ-first is the same story, a little smaller (proxy P 0.03, real 0.23).
+- **Latch + asymmetric is the best drawdown result on record**: proxy −23.3%
+  (edge +2.74), dot-com −23.3, GFC −20.8, 2005 −21.9; holdout Sharpe
+  −0.002 (neutral). It still gives up 1.2 pp of holdout CAGR and the recent
+  years (2025 −13.5, 2026 −12.9 pp).
+
+**Verdict.** Two separable ideas, neither applied (frozen to 7 December):
+(1) **shape** — trim TQQQ faster than SPMO, to cash — is a small, consistent,
+both-era improvement that costs nothing measurable, but is not statistically
+distinguishable from live; (2) **release** — the latch — buys the largest
+drawdown reduction on record, near-neutral holdout Sharpe, at ~1.2 pp of
+holdout CAGR and painful recent years. Nine arms this round.

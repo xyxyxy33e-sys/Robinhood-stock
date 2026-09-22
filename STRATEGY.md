@@ -4591,6 +4591,14 @@ scored against the flat-de-levering null.
   vol < 20%): both below the null on both harnesses (edge −1.20 / −1.92 and
   −0.73 / −1.69), −1.5 to −2.3 pp CAGR, 2021–23 bear untouched — the dangerous
   falls start with vol still low, so the votes release anyway. Rejected.
+- **Trim shape** (cut TQQQ only, or TQQQ faster than SPMO; under live release and
+  the latch): cutting only TQQQ is worse (to SPMO: proxy edge −2.89). **Asymmetric
+  (TQQQ ½ per vote, SPMO ⅙, freed weight to cash)** under the live release
+  improves every point estimate in both eras (real +0.35 pp / −18.3% / +0.020;
+  proxy +0.17 pp / −26.6% / +0.012 F, +0.010 holdout) but is inside noise
+  (bootstrap P 0.17 / 0.15). **Latch + asymmetric** is the best drawdown result
+  on record (proxy −23.3%, edge +2.74, holdout Sharpe −0.002) at −1.2 pp holdout
+  CAGR and weak 2024–26. Neither applied; frozen to 7 December.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 

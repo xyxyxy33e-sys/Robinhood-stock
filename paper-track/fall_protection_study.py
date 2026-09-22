@@ -92,6 +92,10 @@ def sim(h, arm=None, detail=False):
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             vh = v
+            if arm and arm[0] == 'X':
+                # trim SHAPE test: arm = ('X', 'live'|'latch', schedule of (spmo, tqqq, cash) at 0..3 votes)
+                if arm[1] == 'latch':
+                    latch = max(latch, v); vh = latch
             if arm and arm[0] == 'V':
                 # votes rise at once; they may only FALL when volatility says the market is calm
                 v10 = qvol(h, d, 10)
@@ -116,6 +120,9 @@ def sim(h, arm=None, detail=False):
                     flag = 1; mv = w[1] * (0.5 if arm[2] == 'HALF' else 1.0)
                     w[1] -= mv; w[0] += mv
             row = tuple(a * f for a in w[:4]) + (1 - f * sum(w[:4]),)
+            if arm and arm[0] == 'X':
+                sc, tq, ca = arm[2][min(vh, 3)]
+                row = (sc, tq, 0.0, 0.0, ca)
             v = (vh, flag)
         else:
             row = W0[eff]; latch = 0
