@@ -4411,6 +4411,23 @@ finding.
 
 **Conclusion: SPMO stays. Nothing applied.** Cumulative: +1 candidate.
 
+**QUALIFIED 2026-09-22 — the stated mechanism does not hold.**
+`research_notes/spmo_beta_instability.md`. SPMO's beta to QQQ measured *within
+each reconstitution cycle* ranges from **0.045 to 1.255** (spread 1.21; cycle
+mean 0.715 against the 0.771 pooled figure). Trailing windows on the book held
+through 18 Sep: 3yr 0.989, 12m 1.112, **6m 1.239**, 3m 1.291, with SPMO vol up
+from 20.6% to 30.8%. **The March–September 2026 cycle was the most Nasdaq-like
+in the fund's history**, and beta is past 1.0, not merely drifting toward it.
+The historical result above (SPMO dominates QQQ in-design) **stands**; what
+fails is the reason given for it. "It works because it is not the Nasdaq" is
+true of the eleven-year average and false of any particular six months —
+diversification against the leveraged sleeve is an accident of the last
+reconstitution, resets twice a year, and cannot be forecast. **Correct framing:
+SPMO is held because it beat QQQ over eleven years inside this design, NOT
+because it reliably diversifies.** Action: log beta and correlation per
+reconstitution cycle; a cycle beta above ~1.1 means core and satellite are the
+same bet. Do not reverse the core-leg decision on one cycle.
+
 **OPEN ITEM (owner, 2026-09-21): the September reconstitution has not been
 measured yet.** The index rebalanced effective after the 2026-09-18 close
 (semi-annual, third Friday of March and September, reference date the last
