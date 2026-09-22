@@ -161,3 +161,27 @@ Script `paper-track/a_ratio_bear2022.py`, log `a_ratio_bear2022_run.log`.
 Same answer as §1 in miniature: 40/60 is more leverage, paid for with about
 2 pp more drawdown in the worst bear on the real record and repaid in the
 recovery. No change.
+
+## 6. Follow-up: "but the trim will serve as protection" (owner, same day)
+
+Script `paper-track/a_ratio_trim_protection.py`. Every figure in §1–§5 already
+includes the live trim; this asks where it acts.
+
+- **The damaging A days have no votes.** Of the 20 worst A days for the book,
+  **19 of 20 real and 20 of 20 proxy had zero votes.**
+- **40/60's whole difference is earned and lost on zero-vote days:** +1.70 of
+  +1.75 pp/yr real, +1.22 of +1.17 pp/yr proxy. On days with a vote the ratio
+  difference is ~0.
+- **In the worst real drawdown (18 Nov 21 → 17 Jan 23), 1 of 42 A days in the
+  fall carried a vote.** Of the eight deepest real drawdowns, the trim was voting
+  in the 20 sessions before the peak in five, but during the fall the gap shrinks,
+  the votes fall away, and the book is back at full weight while it drops.
+- Mechanism: the trim reads *extension above the averages*. Drawdowns start at
+  or after the extension peak and fall toward the averages, so the trim
+  disengages as the fall proceeds. It trims **into strength** (that is where its
+  +0.14 Sharpe comes from); it is not a stop-loss and does not guard the
+  leverage choice. The classifier (A→D/E/F) and the vol target do that, and
+  they act after the fall has begun.
+
+Verdict unchanged: 40/60 is more leverage on exactly the days the trim does not
+touch.
