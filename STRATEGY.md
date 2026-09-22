@@ -4480,6 +4480,34 @@ Account Routines now: daily regime check 15:50 ET Mon–Thu, weekly rebalance
 15:50 ET Fri, execution watchdog 16:10 ET Mon–Fri, dashboard refresh 16:30 ET
 Mon–Fri.
 
+### Top-N momentum paper track — STARTED 2026-09-22 (owner request), PAPER ONLY
+
+Owner asked for a background paper trail of concentrated momentum baskets.
+`paper-track/topn_momentum_track.py`, log `data/topn_momentum_paper.csv`, state
+`data/topn_momentum_state.json`. Weekly Routine
+`trig_01DMVuvCVQdHdKWEMyLDGsac`, cron `45 20 * * 5` (Fri 16:45 ET), firing into
+this session. **Holds nothing real; must never influence the live account.**
+
+**Construction.** Top 5 / 10 / 15 names of the S&P 500 Momentum Index,
+proportional index weights rescaled to 100%, rebalanced weekly at Friday's
+close, 4 bp one-way cost on traded drift. Benchmarks SPMO, QQQ, SPY.
+**Share classes are combined** — GOOGL and GOOG are one company, held in
+GOOGL — so a top-10 basket is ten businesses, not ten lines. Seeded at the
+2026-09-21 close with the post-reconstitution book, all six series at 1.0000.
+
+Current baskets: **top-5** AAPL/MU/GOOGL 24.4/24.4/23.9%, AMD 13.8%, INTC 13.5%
+(37.7% of the index rescaled); **top-10** adds JNJ, XOM, SNDK, LRCX, AMAT
+(53.5%); **top-15** adds CSCO, MRK, STX, CAT, WDC (63.9%).
+
+**Prior art, recorded so the result is read correctly.** Until 2026-08-31 the
+live core WAS a 15-stock proportionally-weighted mirror of SPMO, dropped because
+the ETF beat it on every axis (Sharpe 1.065 vs 1.043, MaxDD −30.4% vs −33.0%)
+while removing a weekly scrape, 15 positions and core-side wash-sale tracking.
+**So top-15 re-runs a settled question; top-5 and top-10 carry the new
+information.** A forward paper track also cannot answer this on its own — a few
+weeks of NAV is noise, and the sample will take years to say anything. It is a
+log, not a test.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
