@@ -81,6 +81,11 @@ def sim(h, arm=None, detail=False):
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             vh = v
+            if arm and arm[0] == 'R':
+                # votes rise at once; they may only FALL on a close that clears the release test
+                ok = (qfeat(h, d, 'sma', 10) > 0) if arm[1] == 'sma10' else (qfeat(h, d, 'high', 20) >= 0)
+                if v >= latch or ok: latch = v
+                vh = latch
             if arm and arm[0] == 'L':
                 latch = max(latch, v); vh = latch
             if arm and arm[0] == 'M':

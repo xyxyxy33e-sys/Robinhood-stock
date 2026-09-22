@@ -1,0 +1,49 @@
+======================================================================================================================================================
+fall_protection_r4: release votes only on a close above the 10d SMA or at a new 20d high
+======================================================================================================================================================
+
+  REAL
+  arm                       CAGR   dCAGR   MaxDD   EDGE  exSh F      dF      dS      dH   reb    exp  worst live episodes arm/live
+  LIVE                    37.29%   +0.00  -18.6%  +0.00   1.376  +0.000  +0.000      -   45.1  67.2%  2021-23 bear -18.6/-18.6  Feb-Mar 2025 -17.8/-17.8  Sep-Oct 2023 -17.0/-17.0  Q4 2018 -15.0/-15.0  COVID -5.5/-5.5
+  release >10d SMA        35.48%   -1.81  -18.6%  -0.88   1.371  -0.005  -0.005      -   38.0  65.1%  2021-23 bear -18.6/-18.6  Feb-Mar 2025 -17.8/-17.8  Sep-Oct 2023 -16.0/-17.0  Q4 2018 -15.0/-15.0  COVID -0.1/-5.5
+  release new 20d high    37.90%   +0.61  -17.8%  +1.11   1.513  +0.137  +0.137      -   31.4  61.9%  2021-23 bear -15.5/-18.6  Feb-Mar 2025 -17.8/-17.8  Sep-Oct 2023 -14.9/-17.0  Q4 2018 -15.0/-15.0  COVID -0.1/-5.5
+  latch until exit A      37.64%   +0.35  -17.8%  +0.98   1.515  +0.139  +0.139      -   30.5  60.7%  2021-23 bear -15.5/-18.6  Feb-Mar 2025 -17.8/-17.8  Sep-Oct 2023 -14.9/-17.0  Q4 2018 -15.0/-15.0  COVID -0.1/-5.5
+  trim memory 20d         38.70%   +1.41  -17.8%  +1.53   1.571  +0.195  +0.195      -   31.1  60.3%  2021-23 bear -15.5/-18.6  Feb-Mar 2025 -17.8/-17.8  Sep-Oct 2023 -14.7/-17.0  Q4 2018 -15.0/-15.0  COVID -0.1/-5.5
+
+  PROXY
+  arm                       CAGR   dCAGR   MaxDD   EDGE  exSh F      dF      dS      dH   reb    exp  worst live episodes arm/live
+  LIVE                    25.46%   +0.00  -27.0%  +0.00   0.990  +0.000  +0.000  +0.000  47.9  62.2%  2005 -27.0/-27.0  dot-com -26.7/-26.7  GFC -25.4/-25.4  2021-23 bear -25.3/-25.3  COVID -5.6/-5.6
+  release >10d SMA        23.70%   -1.76  -27.5%  -2.61   0.956  -0.034  +0.002  -0.059  42.4  60.5%  2005 -27.5/-27.0  dot-com -26.1/-26.7  GFC -21.2/-25.4  2021-23 bear -25.3/-25.3  COVID -0.1/-5.6
+  release new 20d high    24.54%   -0.92  -23.9%  +1.93   1.017  +0.027  +0.131  -0.044  36.6  57.8%  2005 -23.2/-27.0  dot-com -23.9/-26.7  GFC -21.2/-25.4  2021-23 bear -22.7/-25.3  COVID -0.1/-5.6
+  latch until exit A      24.80%   -0.66  -23.9%  +2.23   1.033  +0.043  +0.129  -0.014  35.5  56.6%  2005 -23.2/-27.0  dot-com -23.9/-26.7  GFC -21.2/-25.4  2021-23 bear -22.7/-25.3  COVID -0.1/-5.6
+  trim memory 20d         24.66%   -0.79  -23.9%  +2.07   1.033  +0.043  +0.186  -0.052  35.8  56.6%  2005 -23.2/-27.0  dot-com -23.9/-26.7  GFC -21.2/-25.4  2021-23 bear -22.7/-25.3  COVID -0.1/-5.6
+
+  PROXY holdout 2000-2015 and its halves (CAGR / MaxDD / exSharpe)
+  holdout  LIVE: 17.84% / -27.0% / 0.754 | release >10d SMA: 15.87% / -27.5% / 0.696 | release new 20d high: 15.83% / -23.9% / 0.710 | latch until exit A: 16.46% / -23.9% / 0.740 | trim memory 20d: 15.52% / -23.9% / 0.702
+  2000-07  LIVE: 10.43% / -27.0% / 0.416 | release >10d SMA: 8.18% / -27.5% / 0.329 | release new 20d high: 7.77% / -23.9% / 0.316 | latch until exit A: 8.72% / -23.9% / 0.361 | trim memory 20d: 7.63% / -23.9% / 0.311
+  2008-15  LIVE: 25.38% / -21.6% / 1.059 | release >10d SMA: 23.72% / -21.2% / 1.022 | release new 20d high: 24.09% / -21.2% / 1.054 | latch until exit A: 24.38% / -21.2% / 1.068 | trim memory 20d: 23.60% / -21.2% / 1.043
+  search   LIVE: 37.12% / -25.3% / 1.305 | release >10d SMA: 35.72% / -25.3% / 1.307 | release new 20d high: 38.04% / -22.7% / 1.436 | latch until exit A: 37.65% / -22.7% / 1.434 | trim memory 20d: 38.88% / -22.7% / 1.491
+
+  CALENDAR YEARS, first two arms minus live (pp)
+  release >10d SMA
+  real: 2015:+0.0  2016:+0.0  2017:-0.6  2018:+9.5  2019:+2.2  2020:-4.9  2021:+1.7  2022:+0.0  2023:+4.5  2024:-15.4  2025:-3.6  2026:-16.1
+        better 4, worse 5
+  proxy: 2000:+0.0  2001:+1.9  2002:+0.0  2003:-30.3  2004:-0.9  2005:+0.0  2006:-2.5  2007:+6.1  2008:+0.4  2009:-5.4  2010:-4.1  2011:-6.5  2012:+3.4  2013:+0.0  2014:+0.0  2015:+0.0  2016:+0.0  2017:-0.3  2018:+9.4  2019:+3.0  2020:-5.5  2021:+0.9  2022:+0.0  2023:+6.7  2024:-12.6  2025:-3.6  2026:-14.9
+        better 8, worse 11
+  release new 20d high
+  real: 2015:+0.0  2016:+0.0  2017:+2.3  2018:+19.6  2019:+1.6  2020:-13.7  2021:+19.4  2022:+0.0  2023:+1.6  2024:-12.2  2025:-2.1  2026:-12.2
+        better 5, worse 4
+  proxy: 2000:+2.4  2001:+1.9  2002:+0.4  2003:-40.0  2004:-1.6  2005:+2.9  2006:+1.2  2007:-0.5  2008:+0.4  2009:-10.1  2010:+3.7  2011:-4.0  2012:+0.3  2013:+0.0  2014:+0.0  2015:+0.0  2016:+0.0  2017:+3.6  2018:+19.3  2019:+2.1  2020:-16.2  2021:+18.5  2022:+0.0  2023:+3.6  2024:-7.5  2025:-2.3  2026:-12.0
+        better 13, worse 9
+
+  PAIRED BLOCK BOOTSTRAP vs live (60-day blocks): excess-Sharpe 95% CI, P(not better); log-return CI
+  release >10d SMA       real Sh [-0.167, +0.160] P 0.49 | ret [-5.37, +2.45]pp   proxy Sh [-0.121, +0.051] P 0.78 | ret [-3.53, +0.61]pp
+  release new 20d high   real Sh [-0.095, +0.368] P 0.13 | ret [-5.08, +5.94]pp   proxy Sh [-0.095, +0.151] P 0.33 | ret [-3.64, +2.16]pp
+  latch until exit A     real Sh [-0.091, +0.376] P 0.12 | ret [-5.26, +5.54]pp   proxy Sh [-0.088, +0.166] P 0.23 | ret [-3.72, +2.37]pp
+  trim memory 20d        real Sh [-0.099, +0.521] P 0.10 | ret [-5.22, +7.69]pp   proxy Sh [-0.097, +0.212] P 0.29 | ret [-3.96, +3.16]pp
+  release >10d SMA       real: A days with the trim on — live 477, arm 553 (of 2725 sessions)
+  release >10d SMA       proxy: A days with the trim on — live 1012, arm 1154 (of 6575 sessions)
+  release new 20d high   real: A days with the trim on — live 477, arm 675 (of 2725 sessions)
+  release new 20d high   proxy: A days with the trim on — live 1012, arm 1359 (of 6575 sessions)
+  latch until exit A     real: A days with the trim on — live 477, arm 708 (of 2725 sessions)
+  latch until exit A     proxy: A days with the trim on — live 1012, arm 1415 (of 6575 sessions)

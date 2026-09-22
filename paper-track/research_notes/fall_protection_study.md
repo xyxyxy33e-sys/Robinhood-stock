@@ -121,3 +121,31 @@ holdout Sharpe, the largest both-harness drawdown edge on record — but it does
 not meet the both-era bar (holdout CAGR −1.4 pp, Sharpe −0.014), the bootstrap
 is not significant, and it would have cost 29 pp across 2024–26.** An owner
 call on risk appetite, not a research pass. Frozen to 7 December regardless.
+
+## Follow-up 2: release rules (owner: "also try this, why not")
+
+`paper-track/fall_protection_r4.py`, log `fall_protection_r4_run.log`. Votes rise
+at once but may only **fall** on a close that passes a release test; reset on
+exit from A. Specified in the owner's words before running (post-hoc relative to
+the first study — stated).
+
+| arm | real CAGR / MaxDD / edge / ΔSh | proxy CAGR / MaxDD / edge | proxy holdout CAGR / Sharpe |
+|---|---|---|---|
+| live | 37.29% / −18.6% / — / — | 25.46% / −27.0% / — | 17.84% / 0.754 |
+| release on close > 10d SMA | 35.48% / −18.6% / **−0.88** / −0.005 | 23.70% / −27.5% / **−2.61** | 15.87% / 0.696 |
+| release on new 20d high | 37.90% / −17.8% / +1.11 / +0.137 | 24.54% / −23.9% / +1.93 | 15.83% / 0.710 |
+| **latch until exit A** | 37.64% / −17.8% / +0.98 / +0.139 | 24.80% / −23.9% / **+2.23** | **16.46% / 0.740** |
+| memory 20d | 38.70% / −17.8% / +1.53 / +0.195 | 24.66% / −23.9% / +2.07 | 15.52% / 0.702 |
+
+- **Release above the 10d SMA is wrong in both directions.** In a real fall
+  the first bounce above the 10-day releases the votes and re-levers into the
+  bear rally (2021–23 bear unchanged at −18.6%); in a bull run a shallow dip
+  below the 10-day holds the trim and misses the rebound (2024 −15.4, 2026
+  −16.1 pp). Worst of the family on every axis. Rejected.
+- **Release at a new 20-day high ≈ the latch.** A falling market rarely makes a
+  new 20-day high before it leaves A, so it holds the trim through the same
+  episodes (identical worst-episode depths). It releases a little earlier in
+  melt-ups (+0.26 pp real CAGR vs the latch) but gives back more in the holdout
+  (Sharpe −0.044 vs −0.014). Bootstrap P 0.13 / 0.33.
+- **The latch remains the best of the family out of sample.** Nothing in this
+  round changes the verdict above: not applied, owner call after the freeze.

@@ -4582,6 +4582,11 @@ scored against the flat-de-levering null.
   the family), holdout Sharpe −0.014 (near neutral) but holdout CAGR −1.4 pp;
   real years 2024 −10.4, 2025 −6.5, 2026 −12.2 pp; bootstrap P 0.12 / 0.23.
   Does not meet the both-era bar. Owner call; not applied.
+- **Release rules** (votes may only fall on a close above the 10d SMA / at a new
+  20d high): 10d SMA is worst of the family (edge −0.88 real, −2.61 proxy: it
+  releases on the first bear-rally bounce and holds through bull-run dips);
+  new-20d-high ≈ the latch (edge +1.11 / +1.93) with a worse holdout (Sharpe
+  −0.044). The latch remains the best of the family. Not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
