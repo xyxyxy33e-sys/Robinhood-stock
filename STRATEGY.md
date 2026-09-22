@@ -4550,7 +4550,8 @@ Owner: "is 50/50 the right ratio? Consider drift decay everything."
 - **Beta-matched QLD** (SPMO = TQQQ = c, QLD = 1 − 2c): saves decay but raises
   measured beta (1.85 → 1.99) and ends at the same return with 2.4 pp deeper
   MaxDD and −0.044 Sharpe. Live earns the most per unit of beta.
-- Outside 70/30–40/60, MaxDD is worse than simply scaling 50/50.
+- Against simply scaling 50/50 to the same CAGR, only 55/45–45/55 stay within
+  ±0.55 pp MaxDD on both eras (60/40 −1.1 pp proxy, 40/60 −1.0 pp real).
   **Verdict: 50/50 stays.** 60/40 (Sharpe) or 40/60 (return) are defensible
   risk-appetite choices with no efficiency case. Frozen to 7 December.
   Also corrected the 2026-09-21 decay figures (above). This line: 15 candidates

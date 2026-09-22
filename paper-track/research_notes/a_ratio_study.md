@@ -35,10 +35,10 @@ margin; the ratio decides how much, and at what drawdown.**
   [+0.11, +3.24]; 60/40 −1.76 [−3.30, −0.17]) — i.e. the dial reliably moves
   return and risk together, and does not reliably move the ratio between them.
 - **Against the flat-leverage null** (the live book scaled to the same CAGR),
-  MaxDD is within ±0.5 pp from 60/40 to 45/55 on real, and within ±0.1 pp from
-  50/50 to 40/60 on proxy. Heavier TQQQ than 40/60 is 1–3 pp deeper than simply
-  levering live on both eras; lighter than 60/40 is 1–3 pp deeper on proxy.
-  50/50 sits inside the region where no ratio beats plain scaling.
+  **only 55/45–45/55 stay within ±0.55 pp on both eras.** Real: 60/40 +0.36,
+  55/45 +0.45, 45/55 −0.50, 40/60 −1.01, 30/70 −1.97. Proxy: 60/40 −1.12, 70/30
+  −2.21, 45/55 +0.07, 40/60 +0.02, 30/70 −0.60. Each era punishes a different
+  side, so 50/50 is the one ratio that is never worse than plain scaling.
 
 ## 2. Decay — measured properly, and why it barely bends the curve
 
@@ -107,8 +107,10 @@ The ratio is a risk-appetite dial, not an efficiency setting:
   from live, costs −2.4 pp CAGR real.
 - Wanting **more return** (the owner's "outperform SPY and QQQ"): 40/60 gives
   +2.3 pp real / +1.5 pp proxy for −2.2 / −1.8 pp MaxDD at Sharpe −0.016 /
-  −0.002 — a legitimate choice, but it is just more leverage, and beyond 40/60
-  the drawdown gets worse than simply levering 50/50.
+  −0.002 — a legitimate choice, but it is just more leverage, and on real its
+  drawdown is already 1.0 pp worse than simply levering 50/50 to the same CAGR.
+- 60/40's Sharpe edge on real comes with a proxy drawdown 1.1 pp worse than
+  scaling; 50/50 is the only ratio neutral on both eras.
 - **Decay does not argue for a different ratio**: in the low-vol A regime it
   costs ~0.55 pp/yr per 10 pp TQQQ against ~1.5–2.4 pp of return bought.
 - **Drift does not argue for a different ratio**: the band holds every ratio
