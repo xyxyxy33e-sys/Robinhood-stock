@@ -4557,6 +4557,27 @@ Owner: "is 50/50 the right ratio? Consider drift decay everything."
   Also corrected the 2026-09-21 decay figures (above). This line: 15 candidates
   (10 ratios + 5 beta-matched rows), none adopted.
 
+### Protection during the fall (state A) — tested 2026-09-22, NOT applied (fails holdout)
+
+Owner: "consider how we can add protection during the fall".
+`paper-track/research_notes/fall_protection_study.md`. 12 pre-registered arms
+scored against the flat-de-levering null.
+
+- **Found a real flaw:** the extension trim releases as an extended market
+  breaks (the gap shrinks, votes fall away), so the live design **re-levers
+  into the fall** — February 2018: cash on 29 Jan, full 50/50 by 1 Feb, then
+  −8.1% and −8.2% days.
+- **Trim memory** (votes = max over the last 20–40 sessions) is the first lever
+  on record to beat flat de-levering materially on both harnesses (edge +1.5 real,
+  +2.1 proxy; real Sharpe +0.20 to +0.25), smooth for N 15–40.
+- **Not applied:** fails the 2000–2015 holdout on return and Sharpe (−2.3 pp,
+  −0.052), rests on a few events (2018 +29.6 pp, 2021 +33.3 vs 2020 −18.4,
+  2024 −14.9, 2026 −12.0), bootstrap P 0.06–0.28. Short-drawdown and 10d-SMA
+  triggers are the null or worse.
+- Next step, if pursued after the freeze: a pre-registered release rule that
+  only lets the trim come off when QQQ is not falling. Untested.
+  This line: 12 candidates (+7 smoothness), none adopted.
+
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
 The owner funds the account EPISODICALLY, not monthly, on exactly two
