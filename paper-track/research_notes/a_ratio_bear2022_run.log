@@ -1,0 +1,42 @@
+
+===== REAL =====
+  calendar 2022
+    50/50: return  -10.30%  maxDD inside  -12.0%  A days  15/251  return earned on A days  -8.80%
+    40/60: return  -11.97%  maxDD inside  -13.0%  A days  15/251  return earned on A days -10.50%
+    QQQ : return  -34.16%  maxDD inside  -35.2%
+  QQQ peak->trough 19 Nov 21 - 28 Dec 22
+    50/50: return  -17.30%  maxDD inside  -18.2%  A days  42/278  return earned on A days -15.81%
+    40/60: return  -19.56%  maxDD inside  -20.4%  A days  42/278  return earned on A days -18.10%
+    QQQ : return  -34.05%  maxDD inside  -35.6%
+  Nov 2021 - end 2023 (bear + recovery)
+    50/50: return  +37.18%  maxDD inside  -18.6%  A days 244/544  return earned on A days +30.69%
+    40/60: return  +42.23%  maxDD inside  -20.8%  A days 244/544  return earned on A days +35.53%
+    QQQ : return   +3.91%  maxDD inside  -35.6%
+  A-row stretches Nov 2021 - Dec 2022 (40/60 minus 50/50):
+    2021-11-01 .. 2021-12-17 ( 34d): 50/50  -4.28%  40/60  -4.39%  diff -0.11pp
+    2021-12-22 .. 2022-01-04 (  9d): 50/50  -3.23%  40/60  -3.93%  diff -0.70pp
+    2022-08-03 .. 2022-08-19 ( 13d): 50/50  -2.86%  40/60  -3.60%  diff -0.74pp
+  2022 occupancy: {'A': 15, 'C': 57, 'E': 27, 'F': 142, 'gated D': 10}
+  full-history worst DD 50/50: -18.6%  peak 2021-11-18 trough 2023-01-17
+  full-history worst DD 40/60: -20.8%  peak 2021-11-18 trough 2023-01-17
+
+===== PROXY =====
+  calendar 2022
+    50/50: return  -18.40%  maxDD inside  -18.5%  A days  15/251  return earned on A days -11.44%
+    40/60: return  -19.45%  maxDD inside  -19.6%  A days  15/251  return earned on A days -12.58%
+    QQQ : return  -34.16%  maxDD inside  -35.2%
+  QQQ peak->trough 19 Nov 21 - 28 Dec 22
+    50/50: return  -24.72%  maxDD inside  -24.8%  A days  42/278  return earned on A days -18.19%
+    40/60: return  -26.35%  maxDD inside  -26.4%  A days  42/278  return earned on A days -19.96%
+    QQQ : return  -34.05%  maxDD inside  -35.6%
+  Nov 2021 - end 2023 (bear + recovery)
+    50/50: return  +42.58%  maxDD inside  -25.3%  A days 244/544  return earned on A days +39.49%
+    40/60: return  +46.13%  maxDD inside  -26.9%  A days 244/544  return earned on A days +42.97%
+    QQQ : return   +3.91%  maxDD inside  -35.6%
+  A-row stretches Nov 2021 - Dec 2022 (40/60 minus 50/50):
+    2021-11-01 .. 2021-12-17 ( 34d): 50/50  -2.82%  40/60  -3.23%  diff -0.41pp
+    2021-12-22 .. 2022-01-04 (  9d): 50/50  -4.28%  40/60  -4.73%  diff -0.44pp
+    2022-08-03 .. 2022-08-19 ( 13d): 50/50  -4.35%  40/60  -4.82%  diff -0.48pp
+  2022 occupancy: {'A': 15, 'C': 57, 'E': 27, 'F': 142, 'gated D': 10}
+  full-history worst DD 50/50: -27.0%  peak 2004-12-13 trough 2005-10-31
+  full-history worst DD 40/60: -28.8%  peak 2000-07-14 trough 2002-08-28

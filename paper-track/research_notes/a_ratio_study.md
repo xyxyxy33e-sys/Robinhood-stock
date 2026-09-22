@@ -136,3 +136,28 @@ Variance decay matches theory almost exactly. The note's **conclusion stands and
 is strengthened**: per unit of beta TQQQ costs 6.67%/yr vs QLD 3.70%/yr, so the
 withdrawn D-row TQQQ candidate stays withdrawn. (Its §2 whole-era table, which
 compared actual rows head to head, is unaffected.)
+
+## 5. Follow-up: 40/60 vs 50/50 in the 2022 bear (owner, same day)
+
+Script `paper-track/a_ratio_bear2022.py`, log `a_ratio_bear2022_run.log`.
+
+| window | real 50/50 | real 40/60 | proxy 50/50 | proxy 40/60 | QQQ |
+|---|---|---|---|---|---|
+| calendar 2022 | −10.30% (DD −12.0%) | −11.97% (−13.0%) | −18.40% (−18.5%) | −19.45% (−19.6%) | −34.16% |
+| QQQ peak→trough 19 Nov 21 – 28 Dec 22 | −17.30% (−18.2%) | −19.56% (−20.4%) | −24.72% (−24.8%) | −26.35% (−26.4%) | −34.05% |
+| Nov 2021 – Dec 2023, bear + recovery | +37.18% | **+42.23%** | +42.58% | **+46.13%** | +3.91% |
+
+- The design spent **236 of 251 days of 2022 outside A** (F 142, C 57, E 27,
+  gated D 10), so the ratio touched only **15 days** of the year. 40/60 cost
+  1.7 pp real / 1.0 pp proxy in calendar 2022 and 2.3 / 1.6 pp peak to trough.
+- The loss is concentrated in **false A stretches**: 22 Dec 21 – 4 Jan 22
+  (−0.70 pp for 40/60) and the August 2022 bear-market rally, 3–19 Aug
+  (−0.74 pp). These are exactly the days extra TQQQ hurts.
+- The 2021-11 → 2023-01 episode is the real harness's worst drawdown on record:
+  **−18.6% at 50/50 vs −20.8% at 40/60.**
+- Through the recovery, 40/60 ends **+5.0 pp real / +3.6 pp proxy ahead** by
+  end-2023, because the 2023 rebound was spent mostly in A.
+
+Same answer as §1 in miniature: 40/60 is more leverage, paid for with about
+2 pp more drawdown in the worst bear on the real record and repaid in the
+recovery. No change.
