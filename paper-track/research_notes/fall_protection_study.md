@@ -149,3 +149,30 @@ the first study — stated).
   (Sharpe −0.044 vs −0.014). Bootstrap P 0.13 / 0.33.
 - **The latch remains the best of the family out of sample.** Nothing in this
   round changes the verdict above: not applied, owner call after the freeze.
+
+## Follow-up 3: release vs volatility (owner: "what about release vs volatility")
+
+`paper-track/fall_protection_r5.py`, log `fall_protection_r5_run.log`. Votes rise
+at once; they may only fall when volatility is calm. Two arms, no new numbers:
+10-day QQQ vol below the live 30-day estimate (vol not expanding), and 10-day
+vol below the 20% vol target.
+
+| arm | real CAGR / MaxDD / edge / ΔSh | proxy CAGR / MaxDD / edge | proxy holdout CAGR / Sharpe |
+|---|---|---|---|
+| live | 37.29% / −18.6% / — / — | 25.46% / −27.0% / — | 17.84% / 0.754 |
+| release: 10d vol < 30d vol | 34.95% / −18.5% / **−1.20** / −0.026 | 24.00% / −27.2% / **−1.92** | 16.72% / 0.731 |
+| release: 10d vol < 20% | 35.78% / −18.6% / **−0.73** / −0.018 | 24.01% / −27.0% / **−1.69** | 16.44% / 0.713 |
+| latch until exit A | 37.64% / −17.8% / +0.98 / +0.139 | 24.80% / −23.9% / +2.23 | 16.46% / 0.740 |
+
+- **Both are worse than simply holding less, on both harnesses.** They cost
+  1.5–2.3 pp CAGR and do not touch the 2021–23 bear (−18.5 / −18.6 vs −18.6).
+- **Why: volatility lags the break.** The falls that matter here start from
+  a calm, extended market — the Nov 2021 top and the Jan 2022 roll-over began
+  with 10-day vol still low, so the votes released and the book re-levered
+  exactly as live does. Volatility only catches the fast, violent breaks
+  (Feb 2018: +14.1 pp for the 10d<30d arm), which the 30-day vol target and the
+  classifier partly handle already. Meanwhile brief vol pops inside melt-ups
+  hold the trim and miss the rebound (2026 −15.6 / −10.8 pp).
+- Rejected. **Price-based holding (latch, new 20d high) beats vol-based release
+  because the dangerous falls begin quietly.** The latch remains the best of
+  the family.

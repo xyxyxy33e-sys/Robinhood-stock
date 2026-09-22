@@ -4587,6 +4587,10 @@ scored against the flat-de-levering null.
   releases on the first bear-rally bounce and holds through bull-run dips);
   new-20d-high ≈ the latch (edge +1.11 / +1.93) with a worse holdout (Sharpe
   −0.044). The latch remains the best of the family. Not applied.
+- **Volatility release** (votes may only fall when 10d vol < 30d vol, or 10d
+  vol < 20%): both below the null on both harnesses (edge −1.20 / −1.92 and
+  −0.73 / −1.69), −1.5 to −2.3 pp CAGR, 2021–23 bear untouched — the dangerous
+  falls start with vol still low, so the votes release anyway. Rejected.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 

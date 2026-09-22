@@ -58,6 +58,17 @@ def qfeat(h, d, kind, n):
     if kind == 'high': return px[d] / max(px[ds[j]] for j in range(max(0, i - n + 1), i + 1)) - 1
     if kind == 'sma':  return px[d] / (sum(px[ds[j]] for j in range(i - n + 1, i + 1)) / n) - 1
 
+_QV = {}
+def qvol(h, d, n):
+    """Annualised sd of QQQ daily log returns over the n sessions ending on close d."""
+    k = (h, d, n)
+    if k not in _QV:
+        ds = PXD[h]; px = PX[h]; i = PXI[h][d]
+        r = [math.log(px[ds[j]] / px[ds[j - 1]]) for j in range(i - n + 1, i + 1)]
+        m = sum(r) / n
+        _QV[k] = (sum((x - m) ** 2 for x in r) / (n - 1)) ** 0.5 * math.sqrt(252)
+    return _QV[k]
+
 def sim(h, arm=None, detail=False):
     """drawdown_study.sim (live design) with one A-state hook. arm = (kind, param, action)."""
     if h == 'real':
@@ -81,6 +92,12 @@ def sim(h, arm=None, detail=False):
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             vh = v
+            if arm and arm[0] == 'V':
+                # votes rise at once; they may only FALL when volatility says the market is calm
+                v10 = qvol(h, d, 10)
+                ok = (v10 < vol) if arm[1] == 'v10<v30' else (v10 < VOL_TARGET_PA)
+                if v >= latch or ok: latch = v
+                vh = latch
             if arm and arm[0] == 'R':
                 # votes rise at once; they may only FALL on a close that clears the release test
                 ok = (qfeat(h, d, 'sma', 10) > 0) if arm[1] == 'sma10' else (qfeat(h, d, 'high', 20) >= 0)
