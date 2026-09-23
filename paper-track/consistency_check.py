@@ -738,3 +738,86 @@ def check_extension_trim_v2():
 
 
 check_extension_trim_v2()
+
+
+def check_shadow_tracker():
+    """Shadow tracks + pre-registered revert rule (fix 1 of the 2026-09-23 critique), and the
+    guard that refuses the live path when a research import has re-pinned TARGET_WEIGHTS."""
+    import os, tempfile
+    import state
+    import shadow_tracker as ST
+    path = os.path.join(tempfile.mkdtemp(), 'shadow.csv')
+    g0 = {100: 0.05, 150: 0.05, 200: 0.08}; g1 = {100: 0.11, 150: 0.05, 200: 0.08}
+    a0 = dict(eff='A', in_a=True, spell_start='2026-10-01', base=(0.5, 0.5), raw=0, held=0)
+    a1 = dict(a0, raw=1, held=1)
+    px = {'SPMO': 100.0, 'TQQQ': 100.0, 'QLD': 100.0, 'XLU': 100.0, 'BOXX': 100.0}
+    ST.update('2026-10-01', px, 600.0, 'A', False, 0.15, 'A', g0, 0.5, a0, path=path)
+    px2 = dict(px, SPMO=101.0, TQQQ=103.0)
+    o = ST.update('2026-10-02', px2, 606.0, 'A', False, 0.15, 'A', g0, 0.5, a0, path=path)
+    assert all(abs(o[t][0] - 0.02) < 1e-12 and o[t][2] == 0 for t in ST.TRACKS), o   # 0.5*1% + 0.5*3%, inside the band
+    o = ST.update('2026-10-05', px2, 606.0, 'A', False, 0.15, 'A', g1, 0.5, a1, path=path)
+    rows = ST.load(path); last = {r['track']: r for r in rows if r['date'] == '2026-10-05'}
+    w = lambda t: tuple(round(float(last[t][f'w_{l}']), 4) for l in ST.LEGS)
+    assert w('v2') == w('fastcut') == (0.4167, 0.0, 0.0, 0.0, 0.5833), (w('v2'), w('fastcut'))
+    assert w('sep19') == (0.3333, 0.3333, 0.0, 0.0, 0.3333), w('sep19')                    # v1: x2/3 at one vote
+    assert all(o[t][2] == 1 for t in ST.TRACKS), "a vote is a key change for every track"
+    n = len(rows)
+    ST.update('2026-10-05', px2, 606.0, 'A', False, 0.15, 'A', g1, 0.5, a1, path=path)
+    assert len(ST.load(path)) == n, "re-running the latest date must replace, not append"
+    try:
+        ST.update('2026-10-02', px2, 606.0, 'A', False, 0.15, 'A', g0, 0.5, a0, path=path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an older date must be refused")
+
+    # the revert rule on hand-built rows: two completed vote spells, then out of A
+    def mk(spec):
+        out = []
+        for i, (in_a, spell, raw, qqq, nav) in enumerate(spec):
+            d = f'2027-01-{i + 1:02d}'
+            for t in ST.TRACKS:
+                out.append(dict(date=d, track=t, nav=nav[t], qqq=qqq, in_a='1' if in_a else '0',
+                                spell_start=spell if in_a else '', raw=raw))
+        return out
+    flat = lambda v2, fc: {'v2': v2, 'fastcut': fc, 'sep19': fc}
+    gap = lambda q, v2, fc: [(False, '', 0, q, flat(v2, fc))] * 4        # 4 sessions out of A: spell completed
+    # v2 flat, fast-cut +12%, same (zero) drawdown -> REVERT
+    rev = ([(True, 's1', 1, 100, flat(100, 100)), (True, 's1', 1, 101, flat(100, 106))] + gap(101, 100, 106)
+           + [(True, 's2', 1, 102, flat(100, 110)), (True, 's2', 0, 103, flat(100, 112))] + gap(103, 100, 112))
+    rc = ST.revert_check(mk(rev))
+    assert rc['verdict'] == 'REVERT', rc
+    # QQQ -13% inside the window, v2 DD -3% vs fast-cut -10% -> AFFIRM
+    aff = ([(True, 's1', 1, 100, flat(100, 100)), (True, 's1', 2, 87, flat(97, 90))] + gap(90, 98, 93)
+           + [(True, 's2', 1, 95, flat(99, 96)), (True, 's2', 0, 99, flat(101, 99))] + gap(99, 101, 99))
+    rc = ST.revert_check(mk(aff))
+    assert rc['verdict'] == 'AFFIRM', rc
+    # v2 trails by 12 points but its drawdown is 5 points shallower -> INCONCLUSIVE, not REVERT
+    inc = ([(True, 's1', 1, 100, flat(100, 100)), (True, 's1', 1, 97, flat(98, 94))] + gap(97, 99, 104)
+           + [(True, 's2', 1, 102, flat(100, 108)), (True, 's2', 0, 103, flat(100, 112))] + gap(103, 100, 112))
+    rc = ST.revert_check(mk(inc))
+    assert rc['verdict'] == 'INCONCLUSIVE', rc
+    assert ST.revert_check(mk(rev[:6]))['verdict'] == 'WAITING'
+    # a 3-session dip out of A does not complete the spell
+    short = rev[:2] + gap(101, 100, 106)[:3] + [(True, 's1', 0, 101, flat(100, 106))] + gap(101, 100, 106)
+    assert ST.revert_check(mk(short))['verdict'] == 'WAITING'
+
+    # the guard: a research import that re-pins E makes the live function refuse
+    at = dict(eff='E', in_a=False, held=0, base=None, raw=0, spell_start=None)
+    gE = {100: -0.1, 150: -0.1, 200: -0.05}
+    saved = state.TARGET_WEIGHTS['E']
+    state.TARGET_WEIGHTS['E'] = (0.0, 0.0, 0.0, 0.5, 0.5)
+    try:
+        state.live_target_weights('E', False, 0.3, 'E', gE, 0.5, at)
+    except state.MissingOverlayInputs:
+        pass
+    else:
+        raise AssertionError("live_target_weights ran with a modified TARGET_WEIGHTS")
+    finally:
+        state.TARGET_WEIGHTS['E'] = saved
+    print("OK: shadow tracks -- v2 / fast-cut / 19 Sep engine, idempotent re-run, older date refused; "
+          "revert rule REVERT / AFFIRM / WAITING on built paths, 3-session dip keeps the spell; "
+          "live path refuses a re-pinned TARGET_WEIGHTS")
+
+
+check_shadow_tracker()

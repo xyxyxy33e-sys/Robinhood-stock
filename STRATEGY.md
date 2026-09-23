@@ -104,6 +104,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-23 | **trim v2 on probation**: paper shadow tracks (v2 / fast-cut / 19 Sep) in `shadow_tracker.py`, pre-registered revert rule ("Trim v2 on probation"); **live-path guard**: `live_target_weights` refuses to run if `TARGET_WEIGHTS` was modified in-process (research modules re-pin state E to 50% XLU on import) | critique fix 1; tracker reproduces the backtest within 0.05% over 2015–2026 on all three tracks |
 | 2026-09-23 | **whipsaw carry**: held trim votes and the A spell start survive a non-A gap of ≤ 3 sessions (`A_SPELL_GAP_CARRY`); a 1-day dip no longer puts TQQQ back in, nor starts a new (30/70) spell | pre-registered no-harm test passed (`fall_protection_r16.py`, follow-up 14); real Sharpe 1.717 → 1.797, proxy MaxDD unchanged; 3 real events |
 | 2026-09-23 | **extension trim v2**: TQQQ out at the first held vote, core ⅙ per vote; held votes step down one per new 15-day closing high, never below raw, reset outside A; **A base 30/70 for A spells starting on/after 2026-09-23** (50/50 kept in the spell in progress); **change freeze removed** | **owner decision**; post hoc, bootstrap P 0.06 / 0.14; "Extension trim v2" and `fall_protection_study.md` |
 | 2026-09-19 | **state E → 100% BOXX** (was 50% XLU / 50% BOXX) | **owner decision**; all E rows within 0.013 Sharpe, cash has the shallowest tail; "State E → 100% cash" |
@@ -126,6 +127,38 @@ hand-maintained until 2026-09-07, when an outside review found the detailed
 table still reading A = 50/50 and the overlay chain still reading 0.25 per
 vote, two days after the code moved to 40/60 and ⅓. Do not hand-edit them;
 regenerate.
+
+## Trim v2 on probation — shadow tracks and the revert rule (2026-09-23)
+
+Trim v2 was an owner decision on post hoc evidence (~93 arms, bootstrap short
+of significance), and its trade-off is structural: the hold buys the drawdown
+protection and costs the melt-ups (`fall_protection_study.md` follow-ups
+12–13). It is therefore judged FORWARD, on market paths nobody has seen, by a
+rule written before any forward data exists. `paper-track/shadow_tracker.py`,
+log `data/shadow_tracks.csv`, updated once per completed session by the daily
+run from the inputs it already computes:
+
+- **v2** — a paper copy of the live rule (engine-for-engine, no fills or deposits);
+- **fast-cut** — v2 without the hold (TQQQ out at the raw vote count, back as
+  soon as the votes clear); same base row, same whipsaw carry;
+- **19 Sep** — the v1 trim design, A 50/50 (information only).
+
+**The rule (pre-registered 2026-09-23; do not edit once forward data exists).**
+A *vote spell* is an A spell in which the raw vote count reached ≥ 1. The
+window runs from the first session of the first vote spell after 2026-09-23 to
+the last session of the **second completed** vote spell.
+
+- **REVERT** (recommend switching to fast-cut-only): v2's return over the window
+  trails fast-cut's by **more than 10 points**, AND v2's max drawdown in the
+  window is **not at least 1 point shallower**.
+- **AFFIRM** (keep v2, stop comparing): QQQ fell **more than 10%** from a
+  running high inside the window, AND v2's max drawdown is **at least 5 points
+  shallower** than fast-cut's.
+- Otherwise **INCONCLUSIVE**: keep v2; extend the window by the next two
+  completed vote spells, cumulatively.
+
+`revert_check()` reports the verdict; it never changes the design. The owner
+decides. The weekly report carries `summary_line()`.
 
 ## Change freeze — REMOVED 2026-09-23 (owner decision)
 

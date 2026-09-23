@@ -333,6 +333,14 @@ TARGET_WEIGHTS = {
 # to slightly better tail, recorded as such. The XLU column stays in the
 # weight tuple (weight 0) so every harness, log and guard keeps its shape;
 # DEFENSIVE_INSTRUMENT is retained for the same reason.
+# Canonical copy, taken at import (2026-09-23). Several research modules
+# (d_substate_fresh and everything that imports it: drawdown_study,
+# fall_protection_*) re-pin TARGET_WEIGHTS['E'] to the old 50% XLU row for
+# their own reproductions. Any process that imports one of them alongside
+# the live path would silently trade the wrong E row, so
+# live_target_weights() refuses to run when the table differs from this.
+_CANONICAL_TARGET_WEIGHTS = dict(TARGET_WEIGHTS)
+
 # Instrument for each column of TARGET_WEIGHTS, in order.
 TARGET_WEIGHT_LEGS = ('core', 'tqqq', 'qld', 'xlu', 'cash')
 
@@ -1303,6 +1311,10 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct,
     a_trim_state(dates, px, as_of=today) dict. Refused when missing or when
     it disagrees with the effective state (a date mix-up), because without it
     a caller would silently trade the v1 trim."""
+    if TARGET_WEIGHTS != _CANONICAL_TARGET_WEIGHTS:
+        raise MissingOverlayInputs(
+            "TARGET_WEIGHTS was modified in this process (a research module re-pins state E); "
+            "run the live path in a process that does not import research harnesses")
     if FAST_REENTRY_ENABLED:
         if fast_state is None:
             raise MissingOverlayInputs(
