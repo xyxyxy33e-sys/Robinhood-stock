@@ -804,3 +804,35 @@ the band, because most of it comes from the regime/vote rebalances the band cann
 skip. **"Regime changes only" is bad**: proxy 20.9% / 0.89 / −30.9% vs 26.1% / 1.19 /
 −21.9% (P 1.00), because the drift trigger is what applies the vol target inside a
 state — without it the book is not de-levered as volatility rises. Keep 5%.
+
+## Follow-up 23: a new 15-day high as a re-lever gate in four other places (owner: "the 15 day high might also work well in other places") — PRE-REGISTERED, none pass
+
+`paper-track/fall_protection_r25.py`, log `fall_protection_r25_run.log`; harness switch
+`HIGHREL` (off by default; the live reproduction is asserted). Grid and pass rule were
+written in the script and committed before the first run. Live design = v2 + carry 3.
+
+| 40/60 | real CAGR / Sharpe / MaxDD | 2023 / 2025 / 2026 | proxy CAGR / Sharpe / MaxDD | holdout CAGR / Sharpe | P1 P2 P3 P4 | bootstrap P (real / proxy) |
+|---|---|---|---|---|---|---|
+| live | 44.18% / 1.804 / −18.7% | 74.6 / 21.8 / 24.5 | 27.78% / 1.199 / −22.6% | 17.54% / 0.834 | ref | — |
+| gate (D stays cash after the gate clears) | 40.65% / 1.739 / −17.8% | 56.7 / 27.5 / 22.4 | 25.12% / 1.131 / −24.5% | 15.36% / 0.765 | – – – – | 0.81 / 0.94 |
+| spell (TQQQ waits at a new A spell) | 41.39% / 1.733 / −18.7% | 61.0 / 23.2 / 20.6 | 27.03% / 1.182 / −23.0% | 17.96% / 0.854 | – – Y Y | 0.97 / 0.75 |
+| overlay (fast re-entry waits) | 43.15% / 1.772 / −18.7% | 74.6 / 21.8 / 24.5 | 26.91% / 1.171 / −24.7% | 16.70% / 0.803 | – – – – | 1.00 / 0.95 |
+| vol (multiplier rises only on a new high) | 42.83% / 1.784 / −18.6% | 72.8 / 18.3 / 22.4 | 27.19% / 1.189 / −21.9% | 17.38% / 0.833 | – – – Y | 0.97 / 0.93 |
+
+50/50 gives the same ordering (every arm below live Sharpe on both histories).
+
+**Result: no arm passes; nothing applied.** Every one lowers Sharpe on both
+histories. The one I rated most promising — holding D in cash after the gate clears
+— is the worst (−3.5 pp real CAGR, holdout Sharpe 0.834 → 0.765, and it cost 18
+points of 2023). Only "spell" improves anything out of sample (holdout Sharpe +0.02,
+inside noise) while losing the real era and 2023.
+
+**Why the new high worked for the trim and not here.** The trim's old release fired
+*inside* a pullback (votes clear as price falls back to its averages), so the release
+signal was anti-informative and a new high fixed it. These four re-levers fire only
+after the classifier has *already* confirmed a recovery (reclaiming the 50-day, the
+gate's breadth or 200-day read clearing, the fast read, vol falling). Adding a new
+high on top is a second confirmation that arrives after the early recovery is gone —
+the part of the cycle where this design earns most (9 Sep recovery study). The
+new-high wait belongs only where the underlying release signal points the wrong way.
+~125 arms today.
