@@ -4645,6 +4645,11 @@ scored against the flat-de-levering null.
   holdout (2000–15 17.51% / 0.721 vs live 0.754, one-step 0.755) by re-entering
   2000–02 bear rallies. No floor: whipsaw, worse everywhere. One-step stays the
   shadow pick. Not applied.
+- **N sweep for graded re-entry** (`fall_protection_r14.py`, N = 5–60): N matters
+  only below ~10 (N = 5 fails both versions). Graded is flat from 10 to 60 (real
+  45.0–45.5%, Sharpe 1.60–1.62) and fails the holdout at every N (0.710–0.721 vs
+  live 0.754) — structural, not a parameter problem. One-step on a 15-day high
+  remains the shadow pick. Not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 

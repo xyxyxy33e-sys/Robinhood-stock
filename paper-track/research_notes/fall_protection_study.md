@@ -504,3 +504,38 @@ one third of the base TQQQ back (0 → 23 → 47 → 70%). F1 keeps the floor (r
 better recent record. The one-step version remains the pick for a pre-registered
 shadow (it is the one that holds up in 2000–15). Nothing applied; frozen to
 7 December.
+
+## Follow-up 12: N sweep under graded re-entry (owner: "the change in days of n will make a difference")
+
+`paper-track/fall_protection_r14.py`, log `fall_protection_r14_run.log`. Graded
+(floor) and one-step re-entry at N = 5 / 10 / 15 / 20 / 30 / 40 / 60.
+
+| N | graded real CAGR / exSh | graded holdout CAGR / Sh | one-step real CAGR / exSh | one-step holdout CAGR / Sh |
+|---|---|---|---|---|
+| live 50/50 | 37.29% / 1.376 | 17.84% / 0.754 | — | — |
+| 5 | 40.80% / 1.438 | 17.30% / 0.710 | 38.57% / 1.362 | 17.52% / 0.725 |
+| 10 | 45.02% / 1.597 | 17.40% / 0.717 | 43.03% / 1.544 | **18.46% / 0.761** |
+| 15 | **45.54% / 1.616** | 17.51% / 0.721 | 45.05% / 1.612 | 18.27% / 0.755 |
+| 20 | 45.34% / 1.612 | 17.27% / 0.713 | 44.83% / 1.606 | 18.08% / 0.749 |
+| 30 | 45.21% / 1.608 | 17.27% / 0.713 | 44.83% / 1.606 | 18.08% / 0.749 |
+| 40 | 45.21% / 1.608 | 17.43% / 0.720 | 44.83% / 1.606 | 18.00% / 0.746 |
+| 60 | 45.25% / 1.610 | 17.43% / 0.720 | 44.83% / 1.606 | 18.00% / 0.746 |
+
+- **N matters only below ~10.** N = 5 fails both versions (a 5-day high comes on
+  any bounce, so TQQQ goes back into falls). From 10 to 60 the graded version is
+  flat: real 45.0–45.5%, Sharpe 1.597–1.616; proxy MaxDD −24.7% at every N;
+  2025 +28.5–28.8%, 2026 +25.3% at every N.
+- **Why flat:** in state A the market sits near its highs, so a new 10-, 20- or
+  even 60-day high arrives within days of the rally resuming, and the floor
+  (raw votes) is what actually sets the pace of re-entry, not N.
+- **The graded holdout failure is structural**: 2000–15 Sharpe 0.710–0.721 at
+  every N, all below live (0.754) and below one-step at the same N. No choice of
+  N rescues it; the dot-com bear rallies are the cause (−24.5% vs −21.3%).
+- Graded vs one-step at the same N: real P(not better) 0.43–0.46 for N ≥ 15,
+  proxy 0.72–0.81. Only at N = 5 is graded clearly better, and both fail there.
+- One-step N = 10 has the best holdout of the sweep (18.46% / 0.761) but misses
+  the 2024 rally (real +67.8%); N = 15 is the balance point.
+
+**Verdict unchanged:** one-step re-entry on a 15-day high remains the shadow
+pick. N is not a sensitive parameter above 10, which is reassuring. Nothing
+applied; frozen to 7 December.
