@@ -549,3 +549,47 @@ shadow (it is the one that holds up in 2000–15). Nothing applied; frozen to
 **Verdict unchanged:** one-step re-entry on a 15-day high remains the shadow
 pick. N is not a sensitive parameter above 10, which is reassuring. Nothing
 applied; frozen to 7 December.
+
+## Follow-up 13: middle version — cap the hold (owner: "test a middle version")
+
+`paper-track/fall_protection_r15.py`, log `fall_protection_r15_run.log`. Base 50/50
+(live). v2 plus a release of the hold to the raw count, either after **K** sessions
+since the last vote rise (K = 20/40/60/90) or once raw votes have been zero for **M**
+sessions (M = 3/5/10/20). 8 arms, grid and pass rule **pre-registered in the script
+docstring before the first run**. Asserted: K = M = 0 reproduces live v2 exactly.
+
+Pass rule (all three): P1 proxy MaxDD ≥ 3 pp shallower than fast-cut-only (≥ −23.6%);
+P2 real 2025+2026 shortfall vs fast-cut-only ≤ half of v2's (≤ 15.5 pp; v2's is
+31.0); P3 proxy 2000–15 CAGR ≥ the 19 Sep design's (≥ 17.84%).
+*Correction logged:* the first run's P1 code compared in the wrong direction
+(`<=` on a negative MaxDD); the code was fixed to match the written rule and re-run.
+The verdict was the same both times.
+
+| arm (50/50) | real CAGR / exSh | 2025 / 2026 | proxy MaxDD | holdout CAGR / Sh | P1 P2 P3 |
+|---|---|---|---|---|---|
+| 19 Sep design | 37.29% / 1.376 | 37.3 / 38.8 | −27.0% | 17.84% / 0.754 | ref |
+| fast-cut only | 37.27% / 1.397 | 32.4 / 38.3 | −26.6% | 18.25% / 0.783 | ref |
+| live v2 | 39.32% / 1.605 | 22.7 / 24.1 | −21.9% | 16.56% / 0.752 | ref |
+| cap K=20 | 38.38% / 1.543 | 26.0 / 26.6 | −21.9% | 17.03% / 0.767 | Y – – |
+| cap K=40 | 39.64% / 1.615 | 22.7 / 26.1 | −21.9% | 16.56% / 0.751 | Y – – |
+| cap K=60, 90 | ≈ v2 | ≈ v2 | −21.9% | ≈ v2 | Y – – |
+| clear M=3 | 34.45% / 1.353 | 22.4 / 21.4 | −26.6% | 15.64% / 0.701 | – – – |
+| clear M=5 | 34.75% / 1.384 | 24.3 / 24.1 | −26.6% | 15.72% / 0.708 | – – – |
+| clear M=10 | 36.67% / 1.474 | 26.3 / 24.1 | −26.5% | 16.01% / 0.726 | – – – |
+| clear M=20 | ≈ v2 | ≈ v2 | −21.9% | 16.76% / 0.759 | Y – – |
+
+**Result: no arm passes. No change; v2 stays.**
+
+- **The session cap does little.** Holds rarely outlast 40 sessions without a
+  step-off, so K ≥ 60 is v2. K = 20 buys back ~3 pp in 2025 and 2026 and +0.5 pp
+  holdout CAGR, at −0.06 real Sharpe, keeping v2's full drawdown protection.
+  Not distinguishable from v2 (bootstrap P 0.88 real / 0.69 proxy).
+- **The clear-days release is worse than both ends.** It re-levers inside
+  pullbacks: raw votes clear when price falls back toward the averages, not when
+  the rally resumes. On the 85 real days where M = 5 held TQQQ and v2 did not, QQQ
+  ran at **−58% annualised**, 2.4% below its 20-day high on average (all A days:
+  +17.7%, −1.0%). This is the v1 flaw the new-high step was built to remove.
+- **The trade-off is structural.** Every arm that keeps v2's drawdown (−21.9%)
+  also keeps most of its 2025–26 cost and its lower holdout CAGR; every arm that
+  drops the cost also drops the protection. There is no free middle on this
+  mechanism. 8 more arms (~93 today), all post hoc.

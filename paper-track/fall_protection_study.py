@@ -79,7 +79,7 @@ def sim(h, arm=None, detail=False):
         info = lambda d: RW[d]; legs = lambda d: DS.PLEG[d]; bp = DS.BP_Q
         keyf = lambda I, v, g: (I['state'], I['agree'])
     held = prev = None; out = []; vhist = []; risky = 0.0; nreb = 0; nflag = 0
-    latch = 0; since = 0; grung = 3; gprev = 0
+    latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
@@ -88,7 +88,7 @@ def sim(h, arm=None, detail=False):
         gate = (st == 'D') and ((b is not None and b < 0.20) or (g200 is not None and g200 < 0.02))
         v = 0; flag = 0
         if gate or st == 'E':
-            row = CASH; latch = 0; since = 0; grung = 3; gprev = 0
+            row = CASH; latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             if arm and arm[0] == 'X' and len(arm) > 3:   # custom vote thresholds for (100, 150, 200)
@@ -108,6 +108,18 @@ def sim(h, arm=None, detail=False):
                     elif grung < 3 and qfeat(h, d, 'high', nh) >= 0:
                         if grung < (3 - v if fl == 'F1' else 3): grung += 1
                     gprev = v; vh = 3 - grung
+                elif arm[1].startswith('stepx'):
+                    # middle version (follow-up 13), arm[1] = 'stepx:N:K:M': as 'stephigh:N', plus the
+                    # hold is released to the raw count after K sessions since the last vote rise (K=0 off)
+                    # or once raw votes have been zero for M consecutive sessions (M=0 off).
+                    _, nh, K, M = arm[1].split(':'); nh, K, M = int(nh), int(K), int(M)
+                    if v > latch: latch = v; age = 0
+                    else:
+                        age += 1
+                        if latch > v and qfeat(h, d, 'high', nh) >= 0: latch -= 1
+                    clr = clr + 1 if v == 0 else 0
+                    if latch > v and ((K and age >= K) or (M and clr >= M)): latch = v
+                    vh = latch
                 elif arm[1].startswith('step'):
                     # stepped re-entry inside A: votes rise at once; held votes come off ONE at a time,
                     # never below the raw count. 'step:N' = one step per N sessions without a change;
@@ -159,7 +171,7 @@ def sim(h, arm=None, detail=False):
                     row = (sc, tq, 0.0, 0.0, ca)
             v = (vh, flag)
         else:
-            row = W0[eff]; latch = 0; since = 0; grung = 3; gprev = 0
+            row = W0[eff]; latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
         vhist.append(extension_votes(eff, gaps) if eff == 'A' else 0)
         m = 1.0 if not vol else min(1.0, VOL_TARGET_PA / vol)
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)
