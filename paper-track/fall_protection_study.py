@@ -114,6 +114,14 @@ def sim(h, arm=None, detail=False):
                     elif grung < 3 and qfeat(h, d, 'high', nh) >= 0:
                         if grung < (3 - v if fl == 'F1' else 3): grung += 1
                     gprev = v; vh = 3 - grung
+                elif arm[1].startswith('fchigh'):
+                    # fast-cut with new-high re-entry (2026-09-23, owner: "make fast cut reenter on a
+                    # new high too"): SPMO follows the RAW votes; TQQQ is out while raw >= 1 and, once
+                    # raw is back to 0, returns only on a new N-session closing high. latch = TQQQ-out flag.
+                    nh = int(arm[1].split(':')[1])
+                    if v >= 1: latch = 1
+                    elif latch and qfeat(h, d, 'high', nh) >= 0: latch = 0
+                    vh = v + 0.5 * latch
                 elif arm[1].startswith('stepx'):
                     # middle version (follow-up 13), arm[1] = 'stepx:N:K:M': as 'stephigh:N', plus the
                     # hold is released to the raw count after K sessions since the last vote rise (K=0 off)
@@ -172,6 +180,10 @@ def sim(h, arm=None, detail=False):
                     else:
                         sc = s0 * (1 - 1 / 6); tq = t0 * grung / 3
                         row = (sc, tq, 0.0, 0.0, 1 - sc - tq)
+                elif arm[1].startswith('fchigh'):
+                    s0, t0 = arm[2][0][0], arm[2][0][1]
+                    sc = s0 * max(0.0, 1 - v / 6); tq = 0.0 if latch else t0
+                    row = (sc, tq, 0.0, 0.0, 1 - sc - tq)
                 else:
                     sc, tq, ca = arm[2][min(vh, 3)]
                     row = (sc, tq, 0.0, 0.0, ca)

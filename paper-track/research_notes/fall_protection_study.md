@@ -618,3 +618,34 @@ under a no-harm rule; the size of the gain is not the argument. `state.py`
 `check_extension_trim_v2` asserts the Feb 2018 carry and every gap in the history
 (13 short gaps carried, 82 new spells). The same rule defines the A spell for the
 30/70 base row, so a 1–3 day whipsaw cannot flip the live 50/50 spell to 30/70.
+
+## Follow-up 15: fast-cut with a new-high re-entry for TQQQ only (owner: "test fast cut with a new-high re-entry for TQQQ only")
+
+`paper-track/fall_protection_r17.py`, log `fall_protection_r17_run.log`; harness arm
+`fchigh:N`. SPMO is cut ⅙ per RAW vote and restored as soon as the votes fall;
+TQQQ is out while raw ≥ 1 and, once raw is back to 0, returns only on a new
+N-session closing high (one high brings all of it back). Base 50/50, whipsaw carry 3.
+
+| arm | real CAGR / Sharpe / MaxDD | reb/yr | 2025 / 2026 | proxy CAGR / Sharpe / MaxDD | holdout CAGR / Sharpe | TQQQ re-entries (real): QQQ next 20d |
+|---|---|---|---|---|---|---|
+| fast-cut | 37.27% / 1.498 / −17.8% | 45 | 32.4 / 38.3 | 25.64% / 1.096 / −26.6% | 18.25% / 0.855 | 50: −0.54% |
+| live v2 | 41.03% / 1.797 / −17.8% | 32 | 22.7 / 24.1 | 26.11% / 1.194 / −21.9% | 16.64% / 0.834 | 5: +1.10% |
+| **fast-cut + high 15** | **40.93% / 1.783 / −17.8%** | 45 | 23.3 / 25.9 | **25.81% / 1.176 / −22.4%** | **16.36% / 0.818** | 5: +1.27% |
+| fast-cut + high 5 / 10 / 20 | 37.12 / 39.55 / 40.74% | 45–46 | ~23 / ~26 | MaxDD −26.6 / −22.4 / −22.4% | 16.49 / 16.18 / 16.81% | 11 / 7 / 5 |
+
+**Result: it is v2 in all but name.** Every number sits within noise of v2
+(bootstrap vs v2 P 0.72 real / 0.86 proxy): the same protection (proxy −22.4% vs
+−21.9%), the same profit cap (2025–26 +23 / +26 vs +23 / +24), the same weaker
+holdout return (16.4% vs 16.6%), and ~13 more rebalances a year because SPMO still
+moves with the raw votes. Against plain fast-cut it is a real Sharpe gain (P 0.03
+real / 0.14 proxy) bought with the same 2025–26 cost.
+
+What it settles: **the new-high test on TQQQ is the whole of v2's effect** — both
+its protection and its cost. Holding SPMO down (⅙ per held vote) adds almost
+nothing. So the trade-off from follow-ups 12–14 is really one question: does
+TQQQ wait for a new high after the votes clear, or not? N = 15 sits on a plateau
+(10–20 alike; 5 re-enters too early: 11 re-entries, 45% followed by a 20-day fall).
+
+Probation consequence: the shadow comparator stays **plain fast-cut**. Fast-cut +
+high is so close to v2 that comparing against it could not tell the two apart.
+Nothing applied. ~98 arms today.
