@@ -470,3 +470,37 @@ out at the first vote; one held vote comes off per new N-session closing high.
   2026 cap (+20.9% / +25.0% vs live +37.3% / +38.8%).
 - Bootstrap vs live: 15d P 0.06 real / 0.14 proxy. Post hoc (~85 arms today).
   Nothing applied; frozen to 7 December.
+
+## Follow-up 11: graded TQQQ re-entry (owner: "try it")
+
+`paper-track/fall_protection_r13.py`, log `fall_protection_r13_run.log`. Exit fast
+(a fresh vote takes all TQQQ out), come back in thirds: each new N-day high puts
+one third of the base TQQQ back (0 → 23 → 47 → 70%). F1 keeps the floor (rung ≤
+3 − raw votes); F0 has none (only a fresh vote takes TQQQ out again).
+
+| arm (30/70) | real CAGR / MaxDD / exSh | up-cap | real 2021 / 2024 / 2025 / 2026 | proxy CAGR / MaxDD / exSh | holdout CAGR / Sh | proxy dot-com |
+|---|---|---|---|---|---|---|
+| live 50/50 | 37.29% / −18.6% / 1.376 | 1.00 | 49.2 / 66.8 / 37.3 / 38.8 | 25.46% / −27.0% / 0.990 | 17.84% / 0.754 | −26.7% |
+| one-step, 15d high | 45.05% / −19.6% / 1.612 | 0.97 | 94.5 / 80.6 / 20.9 / 25.0 | 28.50% / −24.7% / 1.083 | 18.27% / 0.755 | −21.3% |
+| **graded, 15d, floor** | **45.54% / −19.6% / 1.616** | **1.01** | 83.0 / 79.6 / **28.8** / 25.3 | 28.13% / −24.7% / 1.061 | **17.51% / 0.721** | −24.5% |
+| graded, 20d, floor | 45.34% / −19.6% / 1.612 | 1.01 | 83.0 / 79.6 / 28.5 / 25.3 | 27.91% / −24.7% / 1.055 | 17.27% / 0.713 | −24.5% |
+| graded, 15d, no floor | 41.26% / −23.5% / 1.337 | 1.15 | 68.6 / **48.7** / 28.5 / **15.6** | 27.10% / −24.7% / 0.962 | 18.33% / 0.722 | −24.5% |
+
+- **With the floor, graded re-entry is the best real result on record** (45.54% /
+  1.616) and eases the cap a little: up-capture back to 1.01×, 2025 +28.8% vs
+  +20.9% one-step (live +37.3%). 2026 unchanged (+25.3%). Crash protection on
+  the real episodes identical.
+- **But it fails the holdout**, which the one-step version passed: 2000–15
+  17.51% / 0.721 vs live 17.84% / 0.754 and one-step 18.27% / 0.755. The
+  mechanism: in 2000–02 bear rallies set new 15-day highs, and partial re-entry
+  put TQQQ back into them (dot-com −24.5% vs −21.3% one-step). Graded vs one-step:
+  real P(not better) 0.46, proxy 0.78 — no evidence it is better.
+- **Without the floor it is bad everywhere** (real 41.26% / −23.5% / 1.337;
+  2024 +48.7%, 2026 +15.6%): re-entering while the market is still extended
+  puts TQQQ back just before the next vote fires and takes it out again —
+  whipsaw. Rejected. The floor is doing real work.
+
+**Verdict:** graded re-entry trades out-of-sample robustness for a slightly
+better recent record. The one-step version remains the pick for a pre-registered
+shadow (it is the one that holds up in 2000–15). Nothing applied; frozen to
+7 December.

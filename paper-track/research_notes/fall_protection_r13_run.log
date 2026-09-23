@@ -1,0 +1,57 @@
+==========================================================================================================================================================================
+fall_protection_r13: exit fast, re-enter TQQQ in thirds on new highs (base 30/70)
+==========================================================================================================================================================================
+
+  REAL
+  arm                                 CAGR   dCAGR   MaxDD   EDGE   exSh     dSh  upCap  dnCap    exp   reb    2018    2020    2021    2024    2025    2026
+  live 50/50 (today)                37.29%   +0.00  -18.6%  +0.00  1.376  +0.000   1.00   0.87  67.2%  45.1     8.3    54.9    49.2    66.8    37.3    38.8
+  30/70 live trim                   41.94%   +4.65  -23.0%  -1.97  1.342  -0.033   1.18   1.04  67.2%  44.9     7.2    66.6    54.0    73.9    40.0    44.2
+  full cut, live release            41.87%   +4.57  -21.7%  -0.79  1.368  -0.008   1.11   0.96  65.6%  44.6     5.1    52.9    54.7    69.3    34.3    43.8
+  one-step re-entry, 15d high       45.05%   +7.75  -19.6%  +2.78  1.612  +0.236   0.97   0.78  60.0%  31.4    33.2    36.3    94.5    80.6    20.9    25.0
+  GRADED, 15d high, floor           45.54%   +8.25  -19.6%  +2.78  1.616  +0.240   1.01   0.83  63.0%  34.7    32.1    41.4    83.0    79.6    28.8    25.3
+  GRADED, 15d high, no floor        41.26%   +3.96  -23.5%  -2.92  1.337  -0.039   1.15   1.00  68.3%  42.0    32.7    32.8    68.6    48.7    28.5    15.6
+  GRADED, 20d high, floor           45.34%   +8.05  -19.6%  +2.78  1.612  +0.236   1.01   0.82  62.9%  34.7    32.1    40.5    83.0    79.6    28.5    25.3
+  GRADED, 20d high, no floor        41.03%   +3.74  -23.5%  -3.04  1.333  -0.043   1.14   1.00  68.1%  41.8    32.7    31.6    68.6    48.7    28.2    15.6
+  worst episodes:   live 50/50 (to 30/70 live tri full cut, live one-step re-en GRADED, 15d hi GRADED, 15d hi GRADED, 20d hi GRADED, 20d hi
+    2021-23 bear           -18.6%         -23.0%         -21.7%         -15.8%         -15.8%         -15.8%         -15.8%         -15.8%
+    Feb-Mar 2025           -17.8%         -19.6%         -19.6%         -19.6%         -19.6%         -19.6%         -19.6%         -19.6%
+    Sep-Oct 2023           -17.0%         -19.2%         -17.3%         -16.0%         -16.0%         -16.0%         -16.0%         -16.0%
+    Q4 2018                -15.0%         -16.6%         -16.6%         -16.6%         -16.6%         -16.6%         -16.6%         -16.6%
+
+  PROXY
+  arm                                 CAGR   dCAGR   MaxDD   EDGE   exSh     dSh  holdCAGR  holdSh  upCap  dnCap    exp   reb    2018    2020    2021    2024    2025    2026
+  live 50/50 (today)                25.46%   +0.00  -27.0%  +0.00  0.990  +0.000    17.84%   0.754   0.93   0.81  62.2%  47.9     6.7    57.0    53.2    62.7    36.5    39.2
+  30/70 live trim                   28.35%   +2.90  -31.3%  -0.60  0.983  -0.007    19.77%   0.753   1.06   0.93  62.2%  47.7     5.9    67.4    56.6    72.6    40.0    45.8
+  full cut, live release            28.73%   +3.27  -28.0%  +3.21  1.015  +0.024    20.49%   0.792   1.00   0.86  60.5%  47.3     3.8    54.0    57.4    66.3    34.7    45.0
+  one-step re-entry, 15d high       28.50%   +3.04  -24.7%  +6.16  1.083  +0.092    18.27%   0.755   0.89   0.75  56.3%  36.1    31.7    37.0    97.0    78.4    20.7    25.6
+  GRADED, 15d high, floor           28.13%   +2.68  -24.7%  +5.67  1.061  +0.071    17.51%   0.721   0.93   0.79  58.9%  39.4    30.6    42.4    85.9    74.7    28.9    25.6
+  GRADED, 15d high, no floor        27.10%   +1.64  -24.7%  +4.31  0.962  -0.029    18.33%   0.722   1.02   0.90  63.0%  45.2    31.3    33.7    71.6    44.9    28.8    16.1
+  GRADED, 20d high, floor           27.91%   +2.45  -24.7%  +5.36  1.055  +0.065    17.27%   0.713   0.92   0.79  58.7%  39.1    30.6    41.6    85.9    74.7    28.6    25.6
+  GRADED, 20d high, no floor        26.76%   +1.31  -24.7%  +3.89  0.953  -0.037    17.93%   0.709   1.02   0.89  62.8%  44.8    31.3    32.5    71.6    44.9    28.5    16.1
+  worst episodes:   live 50/50 (to 30/70 live tri full cut, live one-step re-en GRADED, 15d hi GRADED, 15d hi GRADED, 20d hi GRADED, 20d hi
+    2005                   -27.0%         -28.2%         -27.7%         -21.5%         -21.7%         -21.7%         -21.7%         -21.7%
+    dot-com                -26.7%         -31.1%         -28.0%         -21.3%         -24.5%         -24.5%         -24.5%         -24.5%
+    GFC                    -25.4%         -28.4%         -24.3%         -18.8%         -18.8%         -18.8%         -18.8%         -18.8%
+    2021-23 bear           -25.3%         -28.5%         -27.4%         -21.9%         -21.9%         -21.9%         -21.9%         -21.9%
+
+  CAP vs SAVE over the latched spells (as in r10/r11; each arm vs 30/70 live trim, pp/yr)
+  real  full cut, live release           caps  -1.84   saves  +1.49   net  -0.35
+  real  one-step re-entry, 15d high      caps  -6.13   saves  +8.68   net  +2.55
+  real  GRADED, 15d high, floor          caps  -5.16   saves  +8.14   net  +2.98
+  real  GRADED, 15d high, no floor       caps  -5.18   saves  +6.80   net  +1.62
+  real  GRADED, 20d high, floor          caps  -5.25   saves  +8.09   net  +2.84
+  real  GRADED, 20d high, no floor       caps  -5.18   saves  +6.64   net  +1.46
+  proxy full cut, live release           caps  -1.50   saves  +1.39   net  -0.10
+  proxy one-step re-entry, 15d high      caps  -5.51   saves  +5.74   net  +0.24
+  proxy GRADED, 15d high, floor          caps  -4.71   saves  +4.75   net  +0.04
+  proxy GRADED, 15d high, no floor       caps  -4.12   saves  +4.19   net  +0.07
+  proxy GRADED, 20d high, floor          caps  -4.91   saves  +4.81   net  -0.11
+  proxy GRADED, 20d high, no floor       caps  -4.31   saves  +4.21   net  -0.09
+
+  PAIRED BLOCK BOOTSTRAP (60-day blocks): excess-Sharpe 95% CI, P(not better)
+  full cut, live release           real vs live: [-0.146, +0.125] P 0.57  real vs one-step: [-0.544, +0.064] P 0.94  proxy vs live: [-0.047, +0.096] P 0.25  proxy vs one-step: [-0.234, +0.091] P 0.79
+  one-step re-entry, 15d high      real vs live: [-0.098, +0.541] P 0.08  proxy vs live: [-0.075, +0.258] P 0.14
+  GRADED, 15d high, floor          real vs live: [-0.049, +0.524] P 0.05  real vs one-step: [-0.078, +0.077] P 0.46  proxy vs live: [-0.074, +0.220] P 0.19  proxy vs one-step: [-0.077, +0.030] P 0.78
+  GRADED, 15d high, no floor       real vs live: [-0.427, +0.313] P 0.58  real vs one-step: [-0.566, -0.025] P 0.98  proxy vs live: [-0.205, +0.148] P 0.61  proxy vs one-step: [-0.253, -0.002] P 0.98
+  GRADED, 20d high, floor          real vs live: [-0.041, +0.532] P 0.05  real vs one-step: [-0.075, +0.072] P 0.50  proxy vs live: [-0.071, +0.201] P 0.19  proxy vs one-step: [-0.085, +0.024] P 0.85
+  GRADED, 20d high, no floor       real vs live: [-0.429, +0.335] P 0.60  real vs one-step: [-0.572, -0.025] P 0.99  proxy vs live: [-0.211, +0.141] P 0.65  proxy vs one-step: [-0.262, -0.005] P 0.98

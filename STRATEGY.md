@@ -4639,6 +4639,12 @@ scored against the flat-de-levering null.
   are a plateau (20 = 30), 15 marginally best: real 45.05% / −19.6% / 1.612,
   proxy 28.50% / −24.7% (edge +6.16), holdout 18.27% / 0.755 vs 17.84% / 0.754.
   2025/2026 cap unchanged. Bootstrap P 0.06 / 0.14; post hoc. Not applied.
+- **Graded TQQQ re-entry** (`fall_protection_r13.py`; exit all TQQQ on a fresh
+  vote, return a third per new 15-day high): with the floor, best real result on
+  record (45.54% / −19.6% / 1.616, up-capture 1.01×, 2025 +28.8%) but FAILS the
+  holdout (2000–15 17.51% / 0.721 vs live 0.754, one-step 0.755) by re-entering
+  2000–02 bear rallies. No floor: whipsaw, worse everywhere. One-step stays the
+  shadow pick. Not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
