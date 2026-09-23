@@ -34,7 +34,7 @@ os.chdir(REPO_ROOT); sys.path.insert(0, 'paper-track')
 os.environ.setdefault('TDT_STAGE', 'none'); os.environ['DDS_STAGE'] = 'none'
 T0 = time.time()
 LOG = 'paper-track/research_notes/fall_protection_study_run.log'
-_lf = open(LOG, 'w')
+_lf = open(LOG if __name__ == '__main__' else os.devnull, 'w')   # importers (r2..r16, checks) must not rewrite the committed log
 def log(*a):
     s = ' '.join(str(x) for x in a); print(s); _lf.write(s + '\n'); _lf.flush()
 
