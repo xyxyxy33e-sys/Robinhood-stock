@@ -440,3 +440,15 @@ reconstitution cut semiconductors ~11 pp, left the memory complex intact, added
 with the cycle-beta finding (`spmo_beta_instability.md`), the picture is: a
 book that is less semiconductor-concentrated but no less Nasdaq-correlated,
 entering a cycle whose beta has yet to be observed.
+
+## 2026-09-23: US vendor feed caught up — item closed
+
+Scheduled third-attempt check (trigger `trig_01LXUcr8SCznB7hSQDA6uw3H`). Its question was
+already answered on 22 Sep by Invesco's own complete-holdings file (above). Webull
+`get_fund_holdings` (update_time 2026-09-23 11:37 UTC) now carries the NEW book and
+matches Invesco's 21-Sep file to the displayed precision: MU 9.21189%, AAPL 9.04854%,
+AMD 5.60101%, INTC 5.56336%, GOOGL 4.90775%, JNJ 4.5381%, GOOG 3.93961%, XOM 2.92664%,
+SNDK 2.76818%, LRCX 2.72788%; NVDA and AVGO absent from the top 10. Lag from the
+18-Sep-close effective date to a US vendor feed: 3 sessions (Webull), for the record.
+Nothing to change; beta NOT re-measured (next meaningful reading is a full cycle,
+around the March 2027 reconstitution). No account action. Not re-armed.
