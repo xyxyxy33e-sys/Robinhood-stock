@@ -358,3 +358,46 @@ Still post hoc (now ~70 arms today), still frozen to 7 December. If a
 configuration is pre-registered for a shadow track, the evidence favours
 **30/70 + latch + TQQQ fully out at the first vote**, with the recent-years cost
 stated alongside it.
+
+## Follow-up 8: "seems this becomes a profit cap" (owner) — measured: yes
+
+`paper-track/fall_protection_r10.py`, log `fall_protection_r10_run.log`. Arm:
+30/70 + latch + all TQQQ out at the first vote. Comparison: 30/70 with the live
+trim (same base, so only the latch + cut differs). Every A spell in which the
+latch engaged, first vote → last A session, split by what QQQ did.
+
+| | real | proxy |
+|---|---|---|
+| latched spells | 17 (1.6/yr) | 41 (1.6/yr) |
+| **CAP** spells (QQQ kept rising >2%) | 6 spells, **473 days**, **−7.2 pp/yr** | 14 spells, 979 days, −5.9 pp/yr |
+| **SAVE** spells (QQQ fell >2%) | 11 spells, 199 days, **+8.7 pp/yr** | 21 spells, 284 days, +5.7 pp/yr |
+| **net over latched spells** | **+0.9 pp/yr** | **−0.4 pp/yr** |
+| median forgone in a cap / saved in a save | 15.6 pp / 8.8 pp | 10.3 pp / 6.4 pp |
+
+Largest caps (real): 19 Dec 2023 – 12 Apr 2024 **−22.0 pp**, 30 Jun – 17 Nov 2025
+**−20.9 pp**, 5 May – 15 Jul 2026 **−15.6 pp**. Largest saves: Apr–May 2021
++12.6, Dec 2024 – Jan 2025 +12.4, Nov–Dec 2021 +11.4. **Three of the last four
+latched spells were caps.**
+
+Up / down capture vs QQQ (mean daily return on QQQ up / down days):
+
+| | real up / down | best-10% QQQ days | proxy up / down |
+|---|---|---|---|
+| live 50/50 | 1.00× / 0.87× | 0.71× | 0.93× / 0.81× |
+| 30/70 live trim | 1.18× / 1.04× | 0.82× | 1.06× / 0.93× |
+| 30/70 latch + full cut | **0.95× / 0.77×** | **0.61×** | 0.88× / 0.74× |
+
+**Reading.** It is a profit cap, by construction: a vote means "the market is
+extended", the latch means "stay out until the trend resets", and in a
+persistent melt-up the trend does not reset for months. It wins more often
+(saves outnumber caps ~2:1) but each save is short and each cap is long.
+Summed over its own spells it is roughly **break-even** (+0.9 real / −0.4 proxy
+pp/yr); what it really buys is **shape** — lower down-capture, lower drawdown,
+higher Sharpe — paid for with up-capture falling below 1.0× QQQ and a third less
+of the best days. The overall CAGR gain of 30/70 + latch over live comes from the
+30/70 base leverage, not from the latch.
+
+Against the standing objective ("outperform SPY and QQQ") this is a mismatch:
+the cost lands in exactly the strong persistent rallies (2024, 2025, 2026) that
+have dominated recently. The asymmetric / TQQQ-first *shape* under the live
+release has no cap (it releases normally) and remains the only free piece.
