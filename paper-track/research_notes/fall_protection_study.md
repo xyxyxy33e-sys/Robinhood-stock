@@ -649,3 +649,24 @@ TQQQ wait for a new high after the votes clear, or not? N = 15 sits on a plateau
 Probation consequence: the shadow comparator stays **plain fast-cut**. Fast-cut +
 high is so close to v2 that comparing against it could not tell the two apart.
 Nothing applied. ~98 arms today.
+
+## Follow-up 16: fast-cut + new-high TQQQ re-entry at 30/70 (owner: "try 30/70 with fast-cut plus new high")
+
+`paper-track/fall_protection_r18.py`, log `fall_protection_r18_run.log`. Same rule as
+follow-up 15 at the 30/70 base scheduled for the next A spell; whipsaw carry 3.
+
+| arm | real CAGR / Sharpe / MaxDD | reb/yr | 2025 / 2026 | proxy CAGR / Sharpe / MaxDD | holdout CAGR / Sharpe |
+|---|---|---|---|---|---|
+| v2 50/50 (live) | 41.03% / 1.797 / −17.8% | 32 | 22.7 / 24.1 | 26.11% / 1.194 / −21.9% | 16.64% / 0.834 |
+| fast-cut 30/70 | 41.87% / 1.455 / −21.7% | 45 | 34.3 / 43.8 | 28.73% / 1.087 / −28.0% | **20.49%** / 0.857 |
+| v2 30/70 | 47.36% / 1.802 / −19.6% | 32 | 20.9 / 25.0 | 29.42% / 1.200 / −24.7% | 18.36% / 0.830 |
+| **fast-cut + high 15, 30/70** | **47.33% / 1.798 / −19.6%** | 44 | 21.7 / 26.0 | **29.03% / 1.183 / −24.7%** | **17.86% / 0.808** |
+| fast-cut + high 10 / 20, 30/70 | 45.31 / 47.06% | 45 / 44 | ~22 / 26 | 28.13 / 29.34%, −24.7% | 17.60 / 18.50% |
+
+Result: the same as at 50/50 — **fast-cut + high is v2 again** (bootstrap vs v2
+30/70 P 0.62 real / 0.84 proxy), with ~12 more rebalances a year and a slightly
+weaker holdout (17.9% vs 18.4%). Moving the base from 50/50 to 30/70 under either
+rule adds ~6.3 pp real / ~3 pp proxy CAGR at the same Sharpe, for ~1.8 pp (real)
+and ~2.8 pp (proxy) more drawdown — the leverage dial found in `a_ratio_study.md`,
+unchanged. Plain fast-cut at 30/70 has the best holdout return of any arm today
+(20.5%) and the worst drawdown (proxy −28.0%, real −21.7%). Nothing applied.
