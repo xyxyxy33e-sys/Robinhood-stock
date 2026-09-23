@@ -698,3 +698,22 @@ because the extra round trips trim, re-enter and trim again. Bootstrap: none bea
 plain fast-cut (P 0.23–0.85) and all lose to the 15-day high (P 0.93–1.00). The
 new-high test works because a new high is a much stricter "the fall is over" read
 than a close above an average. Nothing applied; ~110 arms today.
+
+## Follow-up 18: new 10-day high for re-entry (owner: "try a new 10 day high for re-entry")
+
+`paper-track/fall_protection_r20.py`, log `fall_protection_r20_run.log`. v2 and
+fast-cut + high with N = 10 vs the live N = 15, both bases, whipsaw carry 3.
+
+| | real CAGR / Sharpe / MaxDD | 2024 / 2025 / 2026 | proxy CAGR / MaxDD | holdout CAGR / Sharpe |
+|---|---|---|---|---|
+| v2 15d, 50/50 (live) | 41.03% / 1.797 / −17.8% | 69.6 / 22.7 / 24.1 | 26.11% / −21.9% | 16.64% / 0.834 |
+| v2 10d, 50/50 | 39.61% / 1.739 / −17.8% | 60.7 / 22.7 / 24.1 | 25.64% / −21.9% | 16.75% / 0.838 |
+| v2 15d, 30/70 | 47.36% / 1.802 / −19.6% | 80.6 / 20.9 / 25.0 | 29.42% / −24.7% | 18.36% / 0.830 |
+| v2 10d, 30/70 | 45.31% / 1.731 / −19.6% | 67.8 / 20.9 / 25.0 | 28.77% / −24.7% | 18.54% / 0.835 |
+
+**Result: slightly worse; keep 15.** N = 10 re-enters a little earlier (7 real
+re-entries vs 5; 29% followed by a 20-day fall vs 20%). It costs 1.4–2.1 pp real
+CAGR, almost all in 2024 (one early re-entry into the July–August 2024 fall), leaves
+the drawdowns unchanged, and does NOT reduce the 2025–26 rally cost at all (identical
+years). The holdout is a hair better (+0.1–0.2 pp, noise). Bootstrap vs 15: P(not
+better) 1.00 real / 0.90 proxy. Fast-cut + high behaves the same way. Nothing applied.
