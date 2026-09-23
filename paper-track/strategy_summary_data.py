@@ -10,7 +10,7 @@ TQQQ out at the first held vote, core x (1 - held/6), rest cash), A base 50/50
 (every A spell in this window started before 2026-09-23), D=100% QLD gated to
 cash by breadth pct < 0.20 OR 200d gap < 2%, E=100% cash, 20/100 fast re-entry,
 plain 30d vol. OLD = the 2026-09-19 design (v1 trim: A x2/3 / x1/3 / x0 on the
-raw votes) -- the "before" column. A3070 = NEW with the 30/70 A base that
+raw votes) -- the "before" column. ANEXT = NEW with the A base that
 applies from the next A spell, reported alongside.
 (Until 2026-09-23 NEW was the 09-19 design and OLD the 09-09 design.)
 
@@ -93,7 +93,7 @@ def nav(wfn):
         w=wfn(r); cost=VL.ONE_WAY_SPREAD*sum(abs(w[i]-(prev[i] if prev else 0)) for i in range(5))
         n*=1+sum(w[i]*r['legs'][i] for i in range(5))-cost; out.append(n); prev=w
     return out
-NEW=nav(new_w); OLD=nav(old_w); A3070=nav(v2((0.30,0.70)))
+NEW=nav(new_w); OLD=nav(old_w); ANEXT=nav(v2((0.40,0.60)))   # the next A spell's base: 40/60 since 2026-09-23 (was 30/70 earlier that day)
 spmo=[];q=[];s=[];a=b=c=1.0
 for r in rows:
     a*=1+r['bench_spmo']; b*=1+r['bench_qqq']; spmo.append(a); q.append(b)
@@ -109,15 +109,16 @@ def st(navs):
     n=len(rets); m=sum(rets)/n; v=(sum((x-m)**2 for x in rets)/(n-1))**0.5
     pk=1;mdd=0
     for x in navs: pk=max(pk,x); mdd=min(mdd,x/pk-1)
+    st.vol = v*math.sqrt(52)
     return navs[-1]**(52/n)-1, m*52/(v*math.sqrt(52)), mdd, navs[-1]
 print(f"{len(rows)} weeks {DATA[0]['date']}..{DATA[-1]['date']}")
-for lab,v in (('NEW',NEW),('OLD',OLD),('A3070',A3070),('SPMO',spmo),('QQQ',q),('SPY',s)):
-    c1,s1,m1,t=st(v); print(f"{lab:<5} CAGR {c1*100:6.2f}%  Sharpe {s1:.3f}  MaxDD {m1*100:6.1f}%  {t:.3f}x")
+for lab,v in (('NEW',NEW),('OLD',OLD),('A4060',ANEXT),('SPMO',spmo),('QQQ',q),('SPY',s)):
+    c1,s1,m1,t=st(v); print(f"{lab:<5} CAGR {c1*100:6.2f}%  Sharpe {s1:.3f}  MaxDD {m1*100:6.1f}%  {t:.3f}x  vol {st.vol*100:.1f}%")
 def by(v):
     y={};prev=1.0
     for d,x in zip([r['date'] for r in DATA],v):
         yy=d[:4]; y.setdefault(yy,[prev,x]); y[yy][1]=x; prev=x
     return {k:(b/a-1) for k,(a,b) in y.items()}
-Y={k:by(v) for k,v in (('new',NEW),('old',OLD),('a3070',A3070),('spmo',spmo),('qqq',q),('spy',s))}
+Y={k:by(v) for k,v in (('new',NEW),('old',OLD),('anext',ANEXT),('spmo',spmo),('qqq',q),('spy',s))}
 json.dump({'years':sorted(Y['new']),**{k:[round(Y[k][y],4) for y in sorted(Y['new'])] for k in Y}}, open(out+'byyear.json','w'))
 print(json.load(open(out+'byyear.json')))
