@@ -1,0 +1,29 @@
+========================================================================================================================
+fall_protection_r16: carry held votes across short non-A gaps (G sessions)
+========================================================================================================================
+
+  50/50 REAL
+  G=0   CAGR  39.32%  MaxDD  -17.8%  exSh 1.605  days held differs    0  2018   27.8 2020   34.8 2022  -10.3 2025   22.7 2026   24.1
+  G=3   CAGR  41.03%  MaxDD  -17.8%  exSh 1.683  days held differs    6  2018   40.2 2020   34.8 2022  -10.1 2025   22.7 2026   24.1
+  G=10  CAGR  39.29%  MaxDD  -17.8%  exSh 1.632  days held differs   43  2018   29.8 2020   34.5 2022  -10.1 2025   19.8 2026   24.1
+
+  50/50 PROXY
+  G=0   CAGR  25.41%  MaxDD  -21.9%  exSh 1.072  days held differs    0  holdout 16.56%
+  G=3   CAGR  26.11%  MaxDD  -21.9%  exSh 1.104  days held differs   15  holdout 16.64%
+  G=10  CAGR  25.33%  MaxDD  -21.9%  exSh 1.078  days held differs   62  holdout 16.48%
+
+  30/70 REAL
+  G=0   CAGR  45.05%  MaxDD  -19.6%  exSh 1.612  days held differs    0  2018   33.2 2020   36.3 2022  -13.6 2025   20.9 2026   25.0
+  G=3   CAGR  47.36%  MaxDD  -19.6%  exSh 1.701  days held differs    6  2018   50.8 2020   36.3 2022  -13.4 2025   20.9 2026   25.0
+  G=10  CAGR  44.92%  MaxDD  -19.6%  exSh 1.641  days held differs   43  2018   36.0 2020   36.1 2022  -13.4 2025   17.0 2026   25.0
+
+  30/70 PROXY
+  G=0   CAGR  28.50%  MaxDD  -24.7%  exSh 1.083  days held differs    0  holdout 18.27%
+  G=3   CAGR  29.42%  MaxDD  -24.7%  exSh 1.119  days held differs   15  holdout 18.36%
+  G=10  CAGR  28.40%  MaxDD  -24.7%  exSh 1.089  days held differs   62  holdout 18.20%
+
+  PRE-REGISTERED TEST G=3: real Sh Y  proxy Sh Y  proxy MaxDD Y  holdout Y
+
+  PRE-REGISTERED TEST G=10: real Sh Y  proxy Sh Y  proxy MaxDD Y  holdout Y
+
+  RESULT: adopt carry G=3

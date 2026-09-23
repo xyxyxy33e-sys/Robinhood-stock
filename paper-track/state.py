@@ -1041,7 +1041,8 @@ def is_extended(eff_state, gaps_or_gap200):
 #     one vote at a time, on a session whose close is a new
 #     EXTENSION_REENTRY_HIGH_N-session closing high, and never below the raw
 #     count. TQQQ therefore comes back only when held reaches 0.
-#   * RESET when the effective state leaves A (held -> 0).
+#   * RESET when the effective state has been out of A for > A_SPELL_GAP_CARRY
+#     (3) sessions (held -> 0, new spell); a shorter gap carries both through.
 #   * BASE ROW by spell: an A spell that STARTS on/after 2026-09-23 holds 30/70
 #     SPMO/TQQQ; the spell in progress on 2026-09-23 keeps 50/50 (A_BASE_ROWS).
 # Everything is a pure function of QQQ closes (a_trim_state), so a missed run
@@ -1091,13 +1092,18 @@ def a_trim_series(dates, px):
     fa = compute_fast_states(dates, px)
     gp = compute_extension_gaps(dates, px)
     n = EXTENSION_REENTRY_HIGH_N
-    out = {}; held = 0; start = None
+    out = {}; held = 0; start = None; gapn = 0
     for i, d in enumerate(dates):
         eff = effective_state(st[i], fa[d])
         if eff != 'A':
-            held = 0; start = None
+            # A_SPELL_GAP_CARRY (2026-09-23): a non-A gap of <= 3 sessions does not end the
+            # A spell -- the spell start (so the base row) and the held votes carry through.
+            gapn += 1
+            if gapn > A_SPELL_GAP_CARRY:
+                held = 0; start = None
             out[d] = dict(date=d, eff=eff, in_a=False, spell_start=None, base=None, raw=0, held=0)
             continue
+        gapn = 0
         if start is None:
             start = d
         raw = extension_votes('A', gp[d])
@@ -1108,6 +1114,17 @@ def a_trim_series(dates, px):
         out[d] = dict(date=d, eff='A', in_a=True, spell_start=start, base=a_base_row(start), raw=raw, held=held)
     return out
 
+
+# Whipsaw carry (fix 3 of the 2026-09-23 critique; pre-registered test
+# fall_protection_r16.py, research_notes/fall_protection_study.md follow-up 14):
+# before this, ANY non-A session reset the held votes, so a 1-day dip out of A
+# put TQQQ straight back in (7 Feb 2018: -8.2% vs -1.1% with the carry; 1-2 Mar
+# 2021). Held votes and the spell start now survive a non-A gap of up to this
+# many sessions; the non-A days themselves trade their own state's row as before.
+# Real 50/50: 39.32% / exSh 1.605 -> 41.03% / 1.683, MaxDD unchanged; proxy
+# holdout 16.56% -> 16.64%. A handful of events (3 real, 6 proxy) -- adopted on
+# the mechanism and a pre-registered no-harm rule, not on the size of the gain.
+A_SPELL_GAP_CARRY = 3
 
 A_TRIM_MIN_HISTORY = 400     # sessions of closes needed (classifier converges within 323; see a_trim_state)
 A_TRIM_BACKFILL_CSV = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),

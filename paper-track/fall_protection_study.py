@@ -69,6 +69,8 @@ def qvol(h, d, n):
         _QV[k] = (sum((x - m) ** 2 for x in r) / (n - 1)) ** 0.5 * math.sqrt(252)
     return _QV[k]
 
+CARRY_G = 0   # 0 = held votes reset on any non-A day (live v2 before follow-up 14)
+
 def sim(h, arm=None, detail=False):
     """drawdown_study.sim (live design) with one A-state hook. arm = (kind, param, action)."""
     if h == 'real':
@@ -79,7 +81,7 @@ def sim(h, arm=None, detail=False):
         info = lambda d: RW[d]; legs = lambda d: DS.PLEG[d]; bp = DS.BP_Q
         keyf = lambda I, v, g: (I['state'], I['agree'])
     held = prev = None; out = []; vhist = []; risky = 0.0; nreb = 0; nflag = 0
-    latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
+    latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0; gapn = 0
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
@@ -88,8 +90,12 @@ def sim(h, arm=None, detail=False):
         gate = (st == 'D') and ((b is not None and b < 0.20) or (g200 is not None and g200 < 0.02))
         v = 0; flag = 0
         if gate or st == 'E':
-            row = CASH; latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
+            row = CASH; gapn += 1
+            if not CARRY_G: latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
         elif eff == 'A':
+            if gapn:   # CARRY_G > 0 (follow-up 14): held votes survive a non-A gap of <= CARRY_G sessions
+                if CARRY_G and gapn > CARRY_G: latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
+                gapn = 0
             v = extension_votes(eff, gaps)
             if arm and arm[0] == 'X' and len(arm) > 3:   # custom vote thresholds for (100, 150, 200)
                 v = sum(1 for n, th in zip((100, 150, 200), arm[3]) if gaps.get(n) is not None and gaps[n] > th)
@@ -171,7 +177,8 @@ def sim(h, arm=None, detail=False):
                     row = (sc, tq, 0.0, 0.0, ca)
             v = (vh, flag)
         else:
-            row = W0[eff]; latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
+            row = W0[eff]; gapn += 1
+            if not CARRY_G: latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
         vhist.append(extension_votes(eff, gaps) if eff == 'A' else 0)
         m = 1.0 if not vol else min(1.0, VOL_TARGET_PA / vol)
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)

@@ -35,7 +35,8 @@ A, votes = how many of {close > 10% above the 100d SMA, > 12% above the 150d,
 > 15% above the 200d} are true. The **held** vote count rises at once to the
 raw count, and comes down **one vote at a time, only on a session whose close
 is a new 15-session closing high, never below the raw count**; it resets when
-the book leaves A. At held ≥ 1 **all TQQQ is out**; SPMO is cut ⅙ of its base
+the book leaves A for **more than 3 sessions** (a 1–3 session dip carries the
+held votes and the spell start through — `A_SPELL_GAP_CARRY`, 2026-09-23). At held ≥ 1 **all TQQQ is out**; SPMO is cut ⅙ of its base
 per held vote; the rest is BOXX. At 50/50: 50/50/0 → 41.7/0/58.3 → 33.3/0/66.7
 → 25/0/75 (SPMO/TQQQ/BOXX); at 30/70: 30/70/0 → 25/0/75 → 20/0/80 → 15/0/85.
 `a_trim_state(dates, px, as_of)` computes it from QQQ closes (no stored state);
@@ -63,14 +64,16 @@ half loses −0.045 Sharpe in the 2007–2015 holdout against breadth alone)
 and the bootstrap against breadth; the owner applied it on SPMO-era
 evidence. Section "State D gate" below has the full record.
 
-**Standing figures, design of 2026-09-23** (extension trim v2; E cash; D gate;
-plain 30d vol target; 5% band). With the A base at **50/50** (held today):
-26-year QQQ-core proxy **25.41% / Sharpe 1.161 / max drawdown −21.9%** (search
-1.619, holdout 2000–2015 0.829); real instruments daily Nov 2015–Sep 2026
-**39.32% / 1.717 / −17.8%**; exposure 63.0% real, ~32 rebalances/yr. With the
-A base at **30/70** (from the next A spell): proxy **28.50% / 1.162 / −24.7%**
-(search 1.631, holdout 0.824); real **45.05% / 1.711 / −19.6%**; exposure
-60.0%, ~31 rebalances/yr. Known cost: a partial profit cap in persistent
+**Standing figures, design of 2026-09-23 incl. the whipsaw carry** (extension
+trim v2 + 3-session carry; E cash; D gate; plain 30d vol target; 5% band). With
+the A base at **50/50** (held today): 26-year QQQ-core proxy **26.11% / Sharpe
+1.194 / max drawdown −21.9%** (search 1.694, holdout 2000–2015 0.834); real
+instruments daily Nov 2015–Sep 2026 **41.03% / 1.797 / −17.8%**; exposure 62.8%
+real, ~32 rebalances/yr. With the A base at **30/70** (from the next A spell):
+proxy **29.42% / 1.200 / −24.7%** (search 1.717, holdout 0.830); real **47.36% /
+1.802 / −19.6%**; exposure 59.8%, ~32 rebalances/yr. (v2 without the carry,
+earlier the same day: 50/50 real 39.32% / 1.717 / −17.8%, proxy 25.41% / 1.161 /
+−21.9%; 30/70 real 45.05% / 1.711, proxy 28.50% / 1.162.) Known cost: a partial profit cap in persistent
 melt-ups (real 2025 +20.9% and 2026 +25.0% at 30/70 vs +37.3% / +38.8% under the
 v1 trim), and the configuration was assembled post hoc from ~90 arms
 (bootstrap vs v1: P(not better) 0.06 real / 0.14 proxy). Research:
@@ -101,6 +104,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-23 | **whipsaw carry**: held trim votes and the A spell start survive a non-A gap of ≤ 3 sessions (`A_SPELL_GAP_CARRY`); a 1-day dip no longer puts TQQQ back in, nor starts a new (30/70) spell | pre-registered no-harm test passed (`fall_protection_r16.py`, follow-up 14); real Sharpe 1.717 → 1.797, proxy MaxDD unchanged; 3 real events |
 | 2026-09-23 | **extension trim v2**: TQQQ out at the first held vote, core ⅙ per vote; held votes step down one per new 15-day closing high, never below raw, reset outside A; **A base 30/70 for A spells starting on/after 2026-09-23** (50/50 kept in the spell in progress); **change freeze removed** | **owner decision**; post hoc, bootstrap P 0.06 / 0.14; "Extension trim v2" and `fall_protection_study.md` |
 | 2026-09-19 | **state E → 100% BOXX** (was 50% XLU / 50% BOXX) | **owner decision**; all E rows within 0.013 Sharpe, cash has the shallowest tail; "State E → 100% cash" |
 | 2026-09-19 | **state-D gate**: D row → 100% BOXX when breadth pct < 0.20 OR QQQ < 2% above its 200d SMA | **owner override**; fails holdout and bootstrap vs breadth alone; "State D gate" |
@@ -481,8 +485,11 @@ A days).
   in effective A.
 - **Held votes** rise at once to the raw count; they come down **one vote per
   session whose close is a new 15-session closing high**, never below the raw
-  count; they reset to 0 when the effective state leaves A. The step-down fired
-  25 times on the 1999–2026 history — in most spells the trim is held until
+  count; they reset to 0 when the effective state has been out of A for more
+  than 3 sessions (`A_SPELL_GAP_CARRY`; a 1–3 session gap carries the held votes
+  AND the spell start, so a whipsaw can neither re-lever TQQQ nor start a new
+  30/70 spell; the non-A days trade their own row). The step-down fired
+  27 times on the 1999–2026 history — in most spells the trim is held until
   the book leaves A.
 - **Row** at held votes h: core × (1 − h/6), **TQQQ 0 at h ≥ 1**, rest BOXX.
 - **Base row** by spell start: 50/50 before 2026-09-23 (the spell that began

@@ -593,3 +593,28 @@ The verdict was the same both times.
   also keeps most of its 2025–26 cost and its lower holdout CAGR; every arm that
   drops the cost also drops the protection. There is no free middle on this
   mechanism. 8 more arms (~93 today), all post hoc.
+
+## Follow-up 14: whipsaw carry (fix 3 of the critique) — APPLIED
+
+`paper-track/fall_protection_r16.py`, log `fall_protection_r16_run.log`. v2 reset
+the held votes on ANY non-A session, so a one-day dip out of A put TQQQ straight
+back in. Test: held votes survive a non-A gap of ≤ G sessions (G = 3, 10).
+Pre-registered no-harm rule at 50/50: real and proxy exSharpe ≥ v2 − 0.01, proxy
+MaxDD ≥ v2 − 1 pp, holdout CAGR ≥ v2 − 0.5 pp; adopt the smallest G that passes.
+
+| 50/50 | real CAGR / Sharpe / MaxDD | proxy CAGR / Sharpe / MaxDD | holdout CAGR |
+|---|---|---|---|
+| v2 (G = 0) | 39.32% / 1.717 / −17.8% | 25.41% / 1.161 / −21.9% | 16.56% |
+| **G = 3** | **41.03% / 1.797 / −17.8%** | **26.11% / 1.194 / −21.9%** | **16.64%** |
+| G = 10 | 39.29% / — / −17.8% | 25.33% / — / −21.9% | 16.48% |
+
+Both pass; **G = 3 adopted** (smallest). The gain is a few events, all the same
+mechanism: a 1–2 day D reading, votes reset, TQQQ back in at full weight right
+before the next leg down — real 6–7 Feb 2018 (−1.6% and **−8.2%** vs +0.1% and
+−1.1%), 1–2 Mar 2021 (−3.0%, −4.9% vs −0.5%, −0.6%), Dec 2021; proxy adds Nov
+2002 and Apr–May 2012 (where the carry cost a little). Adopted on the mechanism
+under a no-harm rule; the size of the gain is not the argument. `state.py`
+`A_SPELL_GAP_CARRY = 3` reproduces the harness on all 1,854 real A days;
+`check_extension_trim_v2` asserts the Feb 2018 carry and every gap in the history
+(13 short gaps carried, 82 new spells). The same rule defines the A spell for the
+30/70 base row, so a 1–3 day whipsaw cannot flip the live 50/50 spell to 30/70.

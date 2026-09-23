@@ -697,6 +697,25 @@ def check_extension_trim_v2():
     assert t['in_a'] and t['spell_start'] == '2026-08-04' and t['held'] == 0 and t['base'] == (0.50, 0.50), t
     x = ser['2018-02-02']
     assert x['in_a'] and x['held'] == 3, "Feb 2018: v2 holds the trim through the break (v1 had re-levered)"
+    # whipsaw carry (A_SPELL_GAP_CARRY, 2026-09-23): 5 Feb 2018 was a 1-day D; the spell and the
+    # 3 held votes carry into 6 Feb instead of resetting (the reset put TQQQ back in before -8% on 7 Feb)
+    from state import A_SPELL_GAP_CARRY
+    assert not ser['2018-02-05']['in_a'] and ser['2018-02-06']['held'] == 3 \
+        and ser['2018-02-06']['spell_start'] == ser['2018-02-02']['spell_start'], "Feb 2018 whipsaw carry"
+    ncarry = nnew = 0; last_start = None; gap = 0
+    for d in ds:
+        y = ser[d]
+        if not y['in_a']:
+            gap += 1; continue
+        if gap:
+            if gap <= A_SPELL_GAP_CARRY:
+                assert y['spell_start'] == last_start, f"{d}: a {gap}-session gap must not start a new spell"
+                ncarry += 1
+            else:
+                assert y['spell_start'] == d, f"{d}: a {gap}-session gap must start a new spell"
+                nnew += 1
+        gap = 0; last_start = y['spell_start']
+    assert ncarry >= 3 and nnew >= 20, (ncarry, nnew)
     w = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps={100: 0.0, 150: 0.0, 200: 0.0},
                                       a_trim=dict(t, held=2))
     assert w == a_trim_row((0.50, 0.50), 2), "a_trim overrides the v1 gaps scaling in A"
@@ -714,7 +733,7 @@ def check_extension_trim_v2():
     else:
         raise AssertionError("a_trim_state accepted a series shorter than A_TRIM_MIN_HISTORY")
     print(f"OK: extension trim v2 -- TQQQ out at the first held vote, one-vote steps only on new "
-          f"{EXTENSION_REENTRY_HIGH_N}-day highs ({nsteps} steps since 1999), never below raw, reset outside A, "
+          f"{EXTENSION_REENTRY_HIGH_N}-day highs ({nsteps} steps since 1999), never below raw, reset after a non-A gap > {A_SPELL_GAP_CARRY} sessions ({ncarry} short gaps carried, {nnew} new spells), "
           f"30/70 for A spells from 2026-09-23; 24-month pull + backfill == full history; short series refused")
 
 
