@@ -717,3 +717,23 @@ CAGR, almost all in 2024 (one early re-entry into the July–August 2024 fall), 
 the drawdowns unchanged, and does NOT reduce the 2025–26 rally cost at all (identical
 years). The holdout is a hair better (+0.1–0.2 pp, noise). Bootstrap vs 15: P(not
 better) 1.00 real / 0.90 proxy. Fast-cut + high behaves the same way. Nothing applied.
+
+## Follow-up 19: A base 40/60 under the live rule (owner: "What about 40/60")
+
+`paper-track/fall_protection_r21.py`, log `fall_protection_r21_run.log`. v2 + whipsaw carry.
+
+| A base | real CAGR / Sharpe / MaxDD | 2021 / 2022 / 2025 / 2026 | proxy CAGR / Sharpe / MaxDD | holdout CAGR / Sharpe |
+|---|---|---|---|---|
+| 50/50 (live) | 41.03% / 1.797 / −17.8% | 83.6 / −10.1 / 22.7 / 24.1 | 26.11% / 1.194 / −21.9% | 16.64% / 0.834 |
+| **40/60** | **44.18% / 1.804 / −18.7%** | 93.3 / −11.8 / 21.8 / 24.5 | **27.78% / 1.199 / −22.6%** | **17.54% / 0.834** |
+| 30/70 (next spell) | 47.36% / 1.802 / −19.6% | 103.3 / −13.4 / 20.9 / 25.0 | 29.42% / 1.200 / −24.7% | 18.36% / 0.830 |
+
+Sharpe is flat across all three (bootstrap 40/60 vs 50/50 P 0.27 / 0.16, vs 30/70
+P 0.59 / 0.73): the base is a leverage dial, as in `a_ratio_study.md`. Return is
+linear in the base (+3.2 pp real, +1.7 pp proxy per 10 pp of TQQQ) but the proxy
+drawdown is NOT: 50→40 costs 0.7 pp (−21.9 → −22.6%), 40→30 costs 2.1 pp more
+(→ −24.7%). So **40/60 buys about half of 30/70's extra return for about a quarter
+of its extra long-run drawdown** — the best return-per-drawdown step on the dial.
+The real-era drawdown moves evenly (−17.8 / −18.7 / −19.6%), so the kink rests on
+the proxy's two big bears. The rally cost in 2025–26 is the same at every base.
+An owner choice on the dial; nothing applied (30/70 remains scheduled).
