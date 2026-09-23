@@ -70,6 +70,10 @@ def qvol(h, d, n):
     return _QV[k]
 
 CARRY_G = 0   # 0 = held votes reset on any non-A day (live v2 before follow-up 14)
+HIGHREL = frozenset()   # follow-up 23: where a new HIGHREL_N-session closing high gates a re-lever:
+HIGHREL_N = 15          # 'gate' D stays cash after the gate clears; 'spell' TQQQ waits at a new A spell;
+                        # 'overlay' the fast re-entry upgrade waits; 'vol' the vol multiplier may only rise
+                        # on a new-high day. Empty = the live design, reproduced exactly.
 
 def sim(h, arm=None, detail=False):
     """drawdown_study.sim (live design) with one A-state hook. arm = (kind, param, action)."""
@@ -82,12 +86,28 @@ def sim(h, arm=None, detail=False):
         keyf = lambda I, v, g: (I['state'], I['agree'])
     held = prev = None; out = []; vhist = []; risky = 0.0; nreb = 0; nflag = 0
     latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0; gapn = 0
+    glatch = rlatch = olatch = 0; ovon = False; mprev = None
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
         eff = I['eff']; gaps = I['gaps']; vol = I['vol']
         g200 = gaps.get(200); b = bp.get(d)
         gate = (st == 'D') and ((b is not None and b < 0.20) or (g200 is not None and g200 < 0.02))
+        hrk = ()
+        if HIGHREL:
+            nh = qfeat(h, d, 'high', HIGHREL_N) >= 0
+            if 'overlay' in HIGHREL:
+                ov = eff != st and st in ('B', 'C', 'F')
+                if ov and not ovon: olatch = 1
+                ovon = ov
+                if not ov or nh: olatch = 0
+                if olatch: eff = st          # hold the macro row until a new high
+            if 'gate' in HIGHREL:
+                if gate: glatch = 1
+                elif glatch and nh: glatch = 0
+                if I['eff'] in ('A', 'B', 'C'): glatch = 0
+                if glatch and st == 'D': gate = True   # stay in cash after the gate clears
+            hrk = (glatch, rlatch, olatch)
         v = 0; flag = 0
         if gate or st == 'E':
             row = CASH; gapn += 1
@@ -95,6 +115,7 @@ def sim(h, arm=None, detail=False):
         elif eff == 'A':
             if gapn:   # CARRY_G > 0 (follow-up 14): held votes survive a non-A gap of <= CARRY_G sessions
                 if CARRY_G and gapn > CARRY_G: latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
+                if 'spell' in HIGHREL and gapn > CARRY_G: rlatch = 1
                 gapn = 0
             v = extension_votes(eff, gaps)
             if arm and arm[0] == 'X' and len(arm) > 3:   # custom vote thresholds for (100, 150, 200)
@@ -189,14 +210,21 @@ def sim(h, arm=None, detail=False):
                 else:
                     sc, tq, ca = arm[2][min(vh, 3)]
                     row = (sc, tq, 0.0, 0.0, ca)
+            if 'spell' in HIGHREL:
+                if rlatch and nh: rlatch = 0
+                if rlatch: row = (row[0], 0.0, row[2], row[3], row[4] + row[1])
+                hrk = (glatch, rlatch, olatch)
             v = (vh, flag)
         else:
             row = W0[eff]; gapn += 1
             if not CARRY_G: latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0
         vhist.append(extension_votes(eff, gaps) if eff == 'A' else 0)
         m = 1.0 if not vol else min(1.0, VOL_TARGET_PA / vol)
+        if 'vol' in HIGHREL:
+            if mprev is not None and m > mprev and not nh: m = mprev
+            mprev = m
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)
-        key = keyf(I, v, gate) + ((flag,) if arm else ())
+        key = keyf(I, v, gate) + ((flag,) if arm else ()) + hrk
         cost = 0.0
         if held is None: held = list(t); nreb += 1
         else:
