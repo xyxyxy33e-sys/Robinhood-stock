@@ -1,0 +1,52 @@
+======================================================================================================================================================
+fall_protection_r19: fast-cut with TQQQ re-entry on a close above the 5/10/15-day SMA vs the 15-day high, whipsaw carry 3
+======================================================================================================================================================
+
+  REAL  base 50/50
+  arm                CAGR  Sharpe   MaxDD   reb re-entries  QQQ+20d  bad%   2018   2021   2022   2025   2026
+  fast-cut         37.27%   1.498  -17.8%  45.3         50   -0.54%   54%    6.7   49.2  -10.3   32.4   38.3
+  fc + 5d SMA      35.30%   1.496  -17.8%  46.5         23   -0.41%   61%   27.2   45.9  -10.3   18.2   23.8
+  fc + 10d SMA     37.77%   1.588  -17.8%  45.6         19   -1.22%   68%   27.2   57.2  -10.3   24.3   26.2
+  fc + 15d SMA     36.47%   1.515  -17.8%  45.9         30   -0.14%   57%    6.7   57.2  -10.3   24.7   23.8
+  fc + 15d high    40.93%   1.783  -17.8%  45.1          5   +1.27%   20%   36.2   79.1  -10.1   23.3   25.9
+  v2               41.03%   1.797  -17.8%  32.1          5   +1.10%   20%   40.2   83.6  -10.1   22.7   24.1
+
+  REAL  base 30/70
+  arm                CAGR  Sharpe   MaxDD   reb re-entries  QQQ+20d  bad%   2018   2021   2022   2025   2026
+  fast-cut         41.87%   1.455  -21.7%  44.6         50   -0.54%   54%    5.1   54.7  -13.6   34.3   43.8
+  fc + 5d SMA      39.04%   1.446  -21.7%  45.6         23   -0.41%   61%   34.8   49.5  -13.6   14.6   23.0
+  fc + 10d SMA     42.67%   1.559  -21.7%  44.9         19   -1.22%   68%   34.8   66.5  -13.6   23.0   26.4
+  fc + 15d SMA     40.74%   1.473  -21.7%  45.1         30   -0.14%   57%    5.1   66.5  -13.6   23.6   23.0
+  fc + 15d high    47.33%   1.798  -19.6%  44.4          5   +1.27%   20%   48.2   99.9  -13.4   21.7   26.0
+  v2               47.36%   1.802  -19.6%  31.5          5   +1.10%   20%   50.8  103.3  -13.4   20.9   25.0
+
+  PROXY  base 50/50
+  arm                CAGR  Sharpe   MaxDD   reb re-entries  QQQ+20d  bad%  holdCAGR  holdSh
+  fast-cut         25.64%   1.096  -26.6%  47.9        101   -0.02%   50%    18.25%   0.855
+  fc + 5d SMA      23.31%   1.048  -26.6%  48.7         39   -0.54%   56%    15.72%   0.779
+  fc + 10d SMA     24.58%   1.093  -26.7%  48.3         47   -1.05%   57%    16.24%   0.796
+  fc + 15d SMA     24.50%   1.081  -26.7%  48.3         62   -0.41%   52%    16.91%   0.821
+  fc + 15d high    25.81%   1.176  -22.4%  48.0          9   +0.40%   33%    16.36%   0.818
+  v2               26.11%   1.194  -21.9%  36.9          8   +1.35%   25%    16.64%   0.834
+
+  PROXY  base 30/70
+  arm                CAGR  Sharpe   MaxDD   reb re-entries  QQQ+20d  bad%  holdCAGR  holdSh
+  fast-cut         28.73%   1.087  -28.0%  47.3        101   -0.02%   50%    20.49%   0.857
+  fc + 5d SMA      25.43%   1.025  -28.6%  48.0         39   -0.54%   56%    16.93%   0.760
+  fc + 10d SMA     27.24%   1.081  -28.0%  47.6         47   -1.05%   57%    17.66%   0.782
+  fc + 15d SMA     27.11%   1.067  -28.0%  47.7         62   -0.41%   52%    18.60%   0.812
+  fc + 15d high    29.03%   1.183  -24.7%  47.2          9   +0.40%   33%    17.86%   0.808
+  v2               29.42%   1.200  -24.7%  36.1          8   +1.35%   25%    18.36%   0.830
+
+  50/50 bootstrap fc + 5d SMA   vs fc + 15d high P(Sharpe not better) real 1.00  proxy 1.00
+  50/50 bootstrap fc + 5d SMA   vs fast-cut      P(Sharpe not better) real 0.54  proxy 0.84
+  50/50 bootstrap fc + 10d SMA  vs fc + 15d high P(Sharpe not better) real 0.99  proxy 0.96
+  50/50 bootstrap fc + 10d SMA  vs fast-cut      P(Sharpe not better) real 0.23  proxy 0.57
+  50/50 bootstrap fc + 15d SMA  vs fc + 15d high P(Sharpe not better) real 0.98  proxy 0.93
+  50/50 bootstrap fc + 15d SMA  vs fast-cut      P(Sharpe not better) real 0.42  proxy 0.68
+  30/70 bootstrap fc + 5d SMA   vs fc + 15d high P(Sharpe not better) real 1.00  proxy 1.00
+  30/70 bootstrap fc + 5d SMA   vs fast-cut      P(Sharpe not better) real 0.56  proxy 0.85
+  30/70 bootstrap fc + 10d SMA  vs fc + 15d high P(Sharpe not better) real 0.98  proxy 0.95
+  30/70 bootstrap fc + 10d SMA  vs fast-cut      P(Sharpe not better) real 0.25  proxy 0.58
+  30/70 bootstrap fc + 15d SMA  vs fc + 15d high P(Sharpe not better) real 0.98  proxy 0.93
+  30/70 bootstrap fc + 15d SMA  vs fast-cut      P(Sharpe not better) real 0.43  proxy 0.69

@@ -670,3 +670,31 @@ rule adds ~6.3 pp real / ~3 pp proxy CAGR at the same Sharpe, for ~1.8 pp (real)
 and ~2.8 pp (proxy) more drawdown — the leverage dial found in `a_ratio_study.md`,
 unchanged. Plain fast-cut at 30/70 has the best holdout return of any arm today
 (20.5%) and the worst drawdown (proxy −28.0%, real −21.7%). Nothing applied.
+
+## Follow-up 17: TQQQ re-entry on a close above the 5 / 10 / 15-day SMA (owner: "what about the 5, 10, 15 dma")
+
+`paper-track/fall_protection_r19.py`, log `fall_protection_r19_run.log`; harness arm
+`fcsma:N`. Fast-cut, but once the raw votes are back to 0 TQQQ returns on a close
+above QQQ's N-day SMA instead of a new 15-day high. Bases 50/50 and 30/70, carry 3.
+
+| 50/50 | real CAGR / Sharpe | 2025 / 2026 | proxy CAGR / MaxDD | holdout CAGR | real re-entries: QQQ next 20d, % followed by a fall |
+|---|---|---|---|---|---|
+| fast-cut | 37.27% / 1.498 | 32.4 / 38.3 | 25.64% / −26.6% | 18.25% | 50: −0.54%, 54% |
+| fc + 5d SMA | 35.30% / 1.496 | 18.2 / 23.8 | 23.31% / −26.6% | 15.72% | 23: −0.41%, 61% |
+| fc + 10d SMA | 37.77% / 1.588 | 24.3 / 26.2 | 24.58% / −26.7% | 16.24% | 19: −1.22%, 68% |
+| fc + 15d SMA | 36.47% / 1.515 | 24.7 / 23.8 | 24.50% / −26.7% | 16.91% | 30: −0.14%, 57% |
+| fc + 15d high | 40.93% / 1.783 | 23.3 / 25.9 | 25.81% / −22.4% | 16.36% | 5: +1.27%, 20% |
+| v2 | 41.03% / 1.797 | 22.7 / 24.1 | 26.11% / −21.9% | 16.64% | 5: +1.10%, 20% |
+
+30/70 is the same picture (SMA arms 39.0–42.7% real, Sharpe 1.45–1.56, proxy MaxDD
+−28.0 to −28.6%, holdout 16.9–18.6%; fc + 15d high 47.3% / 1.80 / −24.7%).
+
+**Result: worst of both.** A close above a short SMA happens routinely inside a
+pullback (a bounce day), so the SMA arms put TQQQ back into falls — QQQ is lower
+20 days later on average after every one of them, and 57–68% of re-entries are
+followed by a fall — and they lose the proxy protection (−26.6 to −28.6%, same as
+plain fast-cut). Yet they still pay most of the rally cost (2025 +15 to +25%),
+because the extra round trips trim, re-enter and trim again. Bootstrap: none beats
+plain fast-cut (P 0.23–0.85) and all lose to the 15-day high (P 0.93–1.00). The
+new-high test works because a new high is a much stricter "the fall is over" read
+than a close above an average. Nothing applied; ~110 arms today.
