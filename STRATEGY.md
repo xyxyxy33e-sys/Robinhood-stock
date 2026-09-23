@@ -4634,6 +4634,11 @@ scored against the flat-de-levering null.
   +37.3% / +38.8%) and holdout Sharpe 0.749 vs 0.754. Time steps unstable in N.
   Full cut with the live release has the best holdout (20.49% / 0.792).
   Bootstrap P 0.08 / 0.15; post hoc. Not applied.
+- **Step on an N-day high, N = 5/10/15/20/30** (`fall_protection_r12.py`): 5 is bad
+  (steps off into falls on every bounce); 10 misses the 2024 recovery; 15/20/30
+  are a plateau (20 = 30), 15 marginally best: real 45.05% / −19.6% / 1.612,
+  proxy 28.50% / −24.7% (edge +6.16), holdout 18.27% / 0.755 vs 17.84% / 0.754.
+  2025/2026 cap unchanged. Bootstrap P 0.06 / 0.14; post hoc. Not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 

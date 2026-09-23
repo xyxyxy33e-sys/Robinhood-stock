@@ -106,7 +106,11 @@ def sim(h, arm=None, detail=False):
                     else:
                         since += 1
                         if latch > v:
-                            go = (since >= int(arm[1].split(':')[1])) if ':' in arm[1] else (qfeat(h, d, 'high', 20) >= 0)
+                            if arm[1].startswith('stephigh'):   # 'stephigh' = 20-session high; 'stephigh:N' = N-session high
+                                nh = int(arm[1].split(':')[1]) if ':' in arm[1] else 20
+                                go = qfeat(h, d, 'high', nh) >= 0
+                            else:
+                                go = since >= int(arm[1].split(':')[1])
                             if go: latch -= 1; since = 0
                     vh = latch
             if arm and arm[0] == 'V':

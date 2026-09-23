@@ -442,3 +442,31 @@ Cap vs save over the latched spells (vs 30/70 live trim, pp/yr): latch −7.24 /
   speed carries out of sample better than any hold rule.
 - Bootstrap vs live: step-on-high P 0.08 real / 0.15 proxy. ~80 arms today, all
   post hoc. Nothing applied; frozen to 7 December.
+
+## Follow-up 10: step on a 5 / 10 / 15 / 20 / 30-day high (owner: "5 day and 15 day high")
+
+`paper-track/fall_protection_r12.py`, log `fall_protection_r12_run.log`
+(`stephigh:20` asserted identical to follow-up 9's `stephigh`). Base 30/70, TQQQ
+out at the first vote; one held vote comes off per new N-session closing high.
+
+| N | real CAGR / MaxDD / exSh | real 2024 / 2025 / 2026 | proxy CAGR / MaxDD / edge / exSh | holdout CAGR / Sh | cap/save net real / proxy |
+|---|---|---|---|---|---|
+| live 50/50 | 37.29% / −18.6% / 1.376 | 66.8 / 37.3 / 38.8 | 25.46% / −27.0% / — / 0.990 | 17.84% / 0.754 | — |
+| 5 | 38.57% / −21.7% / 1.362 | 53.9 / 21.5 / 24.7 | 25.63% / −29.6% / −2.46 / 0.970 | 17.52% / 0.725 | −2.02 / −1.53 |
+| 10 | 43.03% / −19.6% / 1.544 | 67.8 / 20.9 / 25.0 | 27.87% / −24.7% / +5.30 / 1.059 | 18.46% / 0.761 | +1.15 / −0.25 |
+| **15** | **45.05% / −19.6% / 1.612** | **80.6** / 20.9 / 25.0 | **28.50% / −24.7% / +6.16 / 1.083** | **18.27% / 0.755** | **+2.55 / +0.24** |
+| 20 | 44.83% / −19.6% / 1.606 | 80.6 / 20.7 / 25.0 | 28.31% / −24.7% / +5.90 / 1.077 | 18.08% / 0.749 | +2.40 / +0.09 |
+| 30 | 44.83% / −19.6% / 1.606 | 80.6 / 20.7 / 25.0 | 28.31% / −24.7% / +5.90 / 1.077 | 18.08% / 0.749 | +2.40 / +0.09 |
+
+- **5-day is bad on every axis**: in a fall, any short bounce makes a 5-day
+  high, so the votes step off into the decline (real 2021–23 bear −21.7% vs
+  −15.8%; proxy edge −2.46; holdout 0.725). Rejected.
+- **10-day** keeps the crash protection but does not recover the 2024 rally.
+- **15 / 20 / 30 form a plateau** — 20 and 30 are identical and 15 is a hair
+  better (real 45.05% / 1.612; proxy edge +6.16; holdout 18.27% / 0.755 vs live
+  17.84% / 0.754). A plateau rather than a spike is the good sign here: the rule
+  is not balanced on one number.
+- Unchanged by N ≥ 10: the same worst-episode protection and the same 2025 /
+  2026 cap (+20.9% / +25.0% vs live +37.3% / +38.8%).
+- Bootstrap vs live: 15d P 0.06 real / 0.14 proxy. Post hoc (~85 arms today).
+  Nothing applied; frozen to 7 December.
