@@ -755,3 +755,25 @@ Still the leverage dial: Sharpe flat everywhere (bootstrap 25/75 vs 30/70 P 0.64
 trade as 40→30 (≈2 pp of proxy drawdown per 10 pp of TQQQ), and 2022 gets worse
 (−14.2%). Return per unit of drawdown is best at the 50→40 step and roughly constant
 beyond it. Nothing applied (30/70 remains scheduled).
+
+## Follow-up 21: stepped TQQQ cut per vote at 25/75 (owner: "With 75 tqqq try vote step down")
+
+`paper-track/fall_protection_r23.py`, log `fall_protection_r23_run.log`. 25/75 base, v2
+hold (held votes, one off per new 15-day high), whipsaw carry 3; TQQQ cut per held
+vote by 1 (live: all out), 2/3 (75→25→0), 1/2 (75→37.5→0) or 1/3 (75→50→25→0).
+
+| 25/75, TQQQ cut per vote | real CAGR / Sharpe / MaxDD | 2024 / 2025 / 2026 | proxy CAGR / Sharpe / MaxDD | proxy episodes 2005 / dot-com / GFC | holdout CAGR / Sharpe |
+|---|---|---|---|---|---|
+| all out (live rule) | 48.88% / 1.796 / −20.0% | 83.4 / 20.4 / 25.0 | 30.24% / 1.199 / −25.8% | −21.4 / −21.6 / −18.8% | 18.76% / 0.827 |
+| 2/3 | 47.66% / 1.742 / −20.0% | 72.4 / 27.9 / 26.9 | 29.93% / 1.179 / −25.8% | −21.4 / −24.6 / −21.0% | 18.99% / 0.830 |
+| 1/2 | 46.91% / 1.701 / −20.6% | 66.8 / 31.7 / 27.9 | 29.74% / 1.164 / −26.4% | −21.4 / −26.0 / −22.0% | 19.09% / 0.828 |
+| 1/3 | 47.27% / 1.672 / −21.9% | 65.9 / 37.9 / 30.9 | 29.22% / 1.126 / −28.4% | −24.2 / −28.4 / −23.1% | 18.08% / 0.782 |
+
+**Result: the same trade-off, not a free lunch.** Stepping TQQQ down instead of
+cutting it all at once gives back much of the 2025–26 rally cost (1/3 step: 2025
++37.9% vs +20.4%, back to the 19 Sep design's level) but costs Sharpe (1.80 → 1.67
+real, 1.20 → 1.13 proxy), deepens every big bear (dot-com −21.6 → −28.4%, GFC −18.8
+→ −23.1%) and loses 2024 (83 → 66%) — a stepped cut still holds TQQQ into the first
+leg of a break. Total CAGR is slightly LOWER at every step speed. Bootstrap vs
+all-out: P(not better) 0.80–0.93. Same finding as follow-up 5 at 30/70 ("vote days
+are bad days to hold TQQQ at any leverage"), now confirmed at 75%. Nothing applied.
