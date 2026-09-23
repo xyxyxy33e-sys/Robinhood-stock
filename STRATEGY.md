@@ -26,8 +26,9 @@ C row when the fast read is A/B/C.
 | F | 100% BOXX | 0.00x |
 
 **A row base: 50/50 in the A spell in progress on 2026-09-23 (began
-2026-08-04); 30/70 SPMO/TQQQ in every A spell that starts on or after
-2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A").
+2026-08-04); 40/60 SPMO/TQQQ in every A spell that starts on or after
+2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A",
+then "make it 40/60" the same day — it was set to 30/70 first).
 The tables below show the 50/50 row that is held today.
 
 **Extension trim v2 (APPLIED 2026-09-23, owner decision):** inside effective
@@ -38,7 +39,7 @@ is a new 15-session closing high, never below the raw count**; it resets when
 the book leaves A for **more than 3 sessions** (a 1–3 session dip carries the
 held votes and the spell start through — `A_SPELL_GAP_CARRY`, 2026-09-23). At held ≥ 1 **all TQQQ is out**; SPMO is cut ⅙ of its base
 per held vote; the rest is BOXX. At 50/50: 50/50/0 → 41.7/0/58.3 → 33.3/0/66.7
-→ 25/0/75 (SPMO/TQQQ/BOXX); at 30/70: 30/70/0 → 25/0/75 → 20/0/80 → 15/0/85.
+→ 25/0/75 (SPMO/TQQQ/BOXX); at 40/60: 40/60/0 → 33.3/0/66.7 → 26.7/0/73.3 → 20/0/80.
 `a_trim_state(dates, px, as_of)` computes it from QQQ closes (no stored state);
 `live_target_weights` now REQUIRES it. It replaced the v1 trim (×⅔ / ×⅓ / ×0 on
 the raw votes), which re-levered into falls as the votes fell away. Then the four risky legs are scaled by
@@ -69,13 +70,18 @@ trim v2 + 3-session carry; E cash; D gate; plain 30d vol target; 5% band). With
 the A base at **50/50** (held today): 26-year QQQ-core proxy **26.11% / Sharpe
 1.194 / max drawdown −21.9%** (search 1.694, holdout 2000–2015 0.834); real
 instruments daily Nov 2015–Sep 2026 **41.03% / 1.797 / −17.8%**; exposure 62.8%
-real, ~32 rebalances/yr. With the A base at **30/70** (from the next A spell):
-proxy **29.42% / 1.200 / −24.7%** (search 1.717, holdout 0.830); real **47.36% /
-1.802 / −19.6%**; exposure 59.8%, ~32 rebalances/yr. (v2 without the carry,
-earlier the same day: 50/50 real 39.32% / 1.717 / −17.8%, proxy 25.41% / 1.161 /
-−21.9%; 30/70 real 45.05% / 1.711, proxy 28.50% / 1.162.) Known cost: a partial profit cap in persistent
-melt-ups (real 2025 +20.9% and 2026 +25.0% at 30/70 vs +37.3% / +38.8% under the
-v1 trim), and the configuration was assembled post hoc from ~90 arms
+real, ~32 rebalances/yr. With the A base at **40/60** (from the next A spell):
+proxy **27.78% / 1.199 / −22.6%** (search 1.709, holdout 0.834); real **44.18% /
+1.804 / −18.7%**; exposure 61.3%, ~32 rebalances/yr. Why 40/60 and not 30/70
+(owner, 2026-09-23, follow-ups 19–22): Sharpe is flat across the splits (1.80
+real at 50/50 through 25/75), so the split is a leverage dial; 50→40 costs 0.7 pp
+of proxy drawdown for +3.2 pp real / +1.7 pp proxy CAGR, 40→30 costs another
+2.1 pp for the same gain again, and a crash from calm (a 1987-style −20% QQQ day,
+before the vol target reacts) costs ~−43% at 40/60 vs ~−47% at 30/70. (30/70 for
+reference: proxy 29.42% / 1.200 / −24.7%, real 47.36% / 1.802 / −19.6%. v2 without
+the carry, earlier the same day: 50/50 real 39.32% / 1.717 / −17.8%, proxy 25.41% /
+1.161 / −21.9%.) Known cost: a partial profit cap in persistent melt-ups (real
+2025 +21.8% and 2026 +24.5% at 40/60 vs +37.3% / +38.8% under the v1 trim), and the configuration was assembled post hoc from ~90 arms
 (bootstrap vs v1: P(not better) 0.06 real / 0.14 proxy). Research:
 `paper-track/research_notes/fall_protection_study.md`.
 
@@ -104,8 +110,9 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-23 | **A base for the next spell 30/70 → 40/60** (`A_BASE_ROWS`) | owner decision; Sharpe flat across splits, 40/60 the cheapest step in long-run drawdown (`fall_protection_study.md` follow-ups 19–22) |
 | 2026-09-23 | **trim v2 on probation**: paper shadow tracks (v2 / fast-cut / 19 Sep) in `shadow_tracker.py`, pre-registered revert rule ("Trim v2 on probation"); **live-path guard**: `live_target_weights` refuses to run if `TARGET_WEIGHTS` was modified in-process (research modules re-pin state E to 50% XLU on import) | critique fix 1; tracker reproduces the backtest within 0.05% over 2015–2026 on all three tracks |
-| 2026-09-23 | **whipsaw carry**: held trim votes and the A spell start survive a non-A gap of ≤ 3 sessions (`A_SPELL_GAP_CARRY`); a 1-day dip no longer puts TQQQ back in, nor starts a new (30/70) spell | pre-registered no-harm test passed (`fall_protection_r16.py`, follow-up 14); real Sharpe 1.717 → 1.797, proxy MaxDD unchanged; 3 real events |
+| 2026-09-23 | **whipsaw carry**: held trim votes and the A spell start survive a non-A gap of ≤ 3 sessions (`A_SPELL_GAP_CARRY`); a 1-day dip no longer puts TQQQ back in, nor starts a new (40/60) spell | pre-registered no-harm test passed (`fall_protection_r16.py`, follow-up 14); real Sharpe 1.717 → 1.797, proxy MaxDD unchanged; 3 real events |
 | 2026-09-23 | **extension trim v2**: TQQQ out at the first held vote, core ⅙ per vote; held votes step down one per new 15-day closing high, never below raw, reset outside A; **A base 30/70 for A spells starting on/after 2026-09-23** (50/50 kept in the spell in progress); **change freeze removed** | **owner decision**; post hoc, bootstrap P 0.06 / 0.14; "Extension trim v2" and `fall_protection_study.md` |
 | 2026-09-19 | **state E → 100% BOXX** (was 50% XLU / 50% BOXX) | **owner decision**; all E rows within 0.013 Sharpe, cash has the shallowest tail; "State E → 100% cash" |
 | 2026-09-19 | **state-D gate**: D row → 100% BOXX when breadth pct < 0.20 OR QQQ < 2% above its 200d SMA | **owner override**; fails holdout and bootstrap vs breadth alone; "State D gate" |
@@ -521,12 +528,13 @@ A days).
   count; they reset to 0 when the effective state has been out of A for more
   than 3 sessions (`A_SPELL_GAP_CARRY`; a 1–3 session gap carries the held votes
   AND the spell start, so a whipsaw can neither re-lever TQQQ nor start a new
-  30/70 spell; the non-A days trade their own row). The step-down fired
+  40/60 spell; the non-A days trade their own row). The step-down fired
   27 times on the 1999–2026 history — in most spells the trim is held until
   the book leaves A.
 - **Row** at held votes h: core × (1 − h/6), **TQQQ 0 at h ≥ 1**, rest BOXX.
 - **Base row** by spell start: 50/50 before 2026-09-23 (the spell that began
-  2026-08-04 keeps it), **30/70 for A spells starting on/after 2026-09-23**.
+  2026-08-04 keeps it), **40/60 for A spells starting on/after 2026-09-23**
+  (set to 30/70 first; moved to 40/60 the same day, owner decision).
 - A change in held votes is a regime change for `needs_rebalance()`.
 - **History length** (review, 2026-09-23): the regime classifier is path-dependent
   (1% hysteresis) and needs up to 323 sessions to converge on a short series, so

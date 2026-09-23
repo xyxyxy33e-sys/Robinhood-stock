@@ -662,14 +662,14 @@ def check_extension_trim_v2():
     at the first held vote, core x (1 - held/6), held votes rise at once and come
     off one at a time only on a new 15-session closing high and never below the
     raw count, reset on leaving A; A spells starting on/after 2026-09-23 hold
-    30/70. Checked on the real QQQ history (a pure function of closes)."""
+    40/60. Checked on the real QQQ history (a pure function of closes)."""
     import csv, os
     from state import (EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, EXTENSION_CORE_CUT_PER_VOTE,
                        A_BASE_ROWS, a_base_row, a_trim_row, a_trim_series, a_trim_state, validate_weights,
                        target_weights_with_voltarget, live_target_weights)
     assert EXTENSION_TRIM_V2_ENABLED and EXTENSION_REENTRY_HIGH_N == 15 and abs(EXTENSION_CORE_CUT_PER_VOTE - 1 / 6) < 1e-12
-    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.30, 0.70) and a_base_row('2027-01-04') == (0.30, 0.70)
-    for base in ((0.50, 0.50), (0.30, 0.70)):
+    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2027-01-04') == (0.40, 0.60)
+    for base in ((0.50, 0.50), (0.40, 0.60)):
         for held in range(4):
             r = a_trim_row(base, held)
             validate_weights('A', *r)
@@ -734,7 +734,7 @@ def check_extension_trim_v2():
         raise AssertionError("a_trim_state accepted a series shorter than A_TRIM_MIN_HISTORY")
     print(f"OK: extension trim v2 -- TQQQ out at the first held vote, one-vote steps only on new "
           f"{EXTENSION_REENTRY_HIGH_N}-day highs ({nsteps} steps since 1999), never below raw, reset after a non-A gap > {A_SPELL_GAP_CARRY} sessions ({ncarry} short gaps carried, {nnew} new spells), "
-          f"30/70 for A spells from 2026-09-23; 24-month pull + backfill == full history; short series refused")
+          f"40/60 for A spells from 2026-09-23; 24-month pull + backfill == full history; short series refused")
 
 
 check_extension_trim_v2()

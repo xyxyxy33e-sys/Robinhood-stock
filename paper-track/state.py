@@ -1051,8 +1051,11 @@ def is_extended(eff_state, gaps_or_gap200):
 #     count. TQQQ therefore comes back only when held reaches 0.
 #   * RESET when the effective state has been out of A for > A_SPELL_GAP_CARRY
 #     (3) sessions (held -> 0, new spell); a shorter gap carries both through.
-#   * BASE ROW by spell: an A spell that STARTS on/after 2026-09-23 holds 30/70
-#     SPMO/TQQQ; the spell in progress on 2026-09-23 keeps 50/50 (A_BASE_ROWS).
+#   * BASE ROW by spell: an A spell that STARTS on/after 2026-09-23 holds 40/60
+#     SPMO/TQQQ (set to 30/70 first, moved to 40/60 the same day by the owner:
+#     fall_protection_study.md follow-ups 19-22 -- Sharpe is flat across the
+#     splits and 40/60 is the cheapest step in long-run drawdown); the spell in
+#     progress on 2026-09-23 keeps 50/50 (A_BASE_ROWS).
 # Everything is a pure function of QQQ closes (a_trim_state), so a missed run
 # or a restart reconstructs it exactly -- there is no stored state.
 #
@@ -1065,11 +1068,14 @@ def is_extended(eff_state, gaps_or_gap200):
 # real 2025 +20.9% and 2026 +25.0% at 30/70 vs +37.3% / +38.8% under v1 -- and
 # the whole configuration was assembled post hoc from ~90 arms; bootstrap vs v1
 # P(not better) 0.06 real / 0.14 proxy. An owner decision, not a research pass.
+# With the whipsaw carry (standing figures): 50/50 real 41.03% / 1.797 / -17.8%,
+# proxy 26.11% / 1.194 / -21.9% (S 1.694, H 0.834); 40/60 real 44.18% / 1.804 /
+# -18.7%, proxy 27.78% / 1.199 / -22.6% (S 1.709, H 0.834).
 EXTENSION_TRIM_V2_ENABLED = True
 EXTENSION_REENTRY_HIGH_N = 15
 EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
 A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
-               ('2026-09-23', (0.30, 0.70)))
+               ('2026-09-23', (0.40, 0.60)))   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
 
 
 def a_base_row(spell_start):
