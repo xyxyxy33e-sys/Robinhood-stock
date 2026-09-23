@@ -79,7 +79,7 @@ def sim(h, arm=None, detail=False):
         info = lambda d: RW[d]; legs = lambda d: DS.PLEG[d]; bp = DS.BP_Q
         keyf = lambda I, v, g: (I['state'], I['agree'])
     held = prev = None; out = []; vhist = []; risky = 0.0; nreb = 0; nflag = 0
-    latch = 0
+    latch = 0; since = 0
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
@@ -88,7 +88,7 @@ def sim(h, arm=None, detail=False):
         gate = (st == 'D') and ((b is not None and b < 0.20) or (g200 is not None and g200 < 0.02))
         v = 0; flag = 0
         if gate or st == 'E':
-            row = CASH; latch = 0
+            row = CASH; latch = 0; since = 0
         elif eff == 'A':
             v = extension_votes(eff, gaps)
             if arm and arm[0] == 'X' and len(arm) > 3:   # custom vote thresholds for (100, 150, 200)
@@ -98,6 +98,17 @@ def sim(h, arm=None, detail=False):
                 # trim SHAPE test: arm = ('X', 'live'|'latch', schedule of (spmo, tqqq, cash) at 0..3 votes)
                 if arm[1] == 'latch':
                     latch = max(latch, v); vh = latch
+                elif arm[1].startswith('step'):
+                    # stepped re-entry inside A: votes rise at once; held votes come off ONE at a time,
+                    # never below the raw count. 'step:N' = one step per N sessions without a change;
+                    # 'stephigh' = one step on each new 20-session closing high.
+                    if v > latch: latch = v; since = 0
+                    else:
+                        since += 1
+                        if latch > v:
+                            go = (since >= int(arm[1].split(':')[1])) if ':' in arm[1] else (qfeat(h, d, 'high', 20) >= 0)
+                            if go: latch -= 1; since = 0
+                    vh = latch
             if arm and arm[0] == 'V':
                 # votes rise at once; they may only FALL when volatility says the market is calm
                 v10 = qvol(h, d, 10)
@@ -127,7 +138,7 @@ def sim(h, arm=None, detail=False):
                 row = (sc, tq, 0.0, 0.0, ca)
             v = (vh, flag)
         else:
-            row = W0[eff]; latch = 0
+            row = W0[eff]; latch = 0; since = 0
         vhist.append(extension_votes(eff, gaps) if eff == 'A' else 0)
         m = 1.0 if not vol else min(1.0, VOL_TARGET_PA / vol)
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)

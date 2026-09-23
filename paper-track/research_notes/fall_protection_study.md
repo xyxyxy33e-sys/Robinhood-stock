@@ -401,3 +401,44 @@ Against the standing objective ("outperform SPY and QQQ") this is a mismatch:
 the cost lands in exactly the strong persistent rallies (2024, 2025, 2026) that
 have dominated recently. The asymmetric / TQQQ-first *shape* under the live
 release has no cap (it releases normally) and remains the only free piece.
+
+## Follow-up 9: stepped re-entry inside A (owner: "remove the vote in steps")
+
+`paper-track/fall_protection_r11.py`, log `fall_protection_r11_run.log`. Base
+30/70, TQQQ fully out at the first vote. Votes rise at once; held votes come off
+**one at a time**, never below the raw count: one step per 5 / 10 / 20 sessions
+without a change, or one step per new 20-session closing high. Controls: same
+schedule with the live release (no latch) and with the full latch.
+
+| 30/70, TQQQ out at first vote | real CAGR / MaxDD / exSh | up / down capture | proxy CAGR / MaxDD / edge / exSh | holdout CAGR / Sh | real 2024 / 2025 / 2026 |
+|---|---|---|---|---|---|
+| live 50/50 | 37.29% / −18.6% / 1.376 | 1.00 / 0.87 | 25.46% / −27.0% / — / 0.990 | 17.84% / 0.754 | 66.8 / 37.3 / 38.8 |
+| 30/70 live trim | 41.94% / −23.0% / 1.342 | 1.18 / 1.04 | 28.35% / −31.3% / −0.60 / 0.983 | 19.77% / 0.753 | 73.9 / 40.0 / 44.2 |
+| live release (no latch) | 41.87% / −21.7% / 1.368 | 1.11 / 0.96 | 28.73% / −28.0% / +3.21 / 1.015 | 20.49% / 0.792 | 69.3 / 34.3 / 43.8 |
+| latch | 43.21% / −19.6% / 1.573 | 0.95 / 0.77 | 27.91% / −24.7% / +5.37 / 1.070 | 18.43% / 0.764 | 65.9 / 18.3 / 25.0 |
+| step 5d | 39.47% / −21.7% / 1.376 | 1.02 / 0.88 | 27.32% / −27.8% / +1.48 / 1.016 | 19.74% / 0.798 | 66.8 / 26.0 / 25.2 |
+| step 10d | 43.62% / −21.2% / 1.527 | 1.00 / 0.82 | 28.35% / −26.9% / +3.75 / 1.064 | 18.88% / 0.775 | 79.5 / 23.0 / 25.3 |
+| step 20d | 42.77% / −19.6% / 1.545 | 0.96 / 0.78 | 27.63% / −24.7% / +4.99 / 1.056 | 18.26% / 0.757 | 65.6 / 22.8 / 25.1 |
+| **step on each new 20d high** | **44.83% / −19.6% / 1.606** | 0.97 / 0.78 | **28.31% / −24.7% / +5.90 / 1.077** | 18.08% / 0.749 | **80.6** / 20.7 / 25.0 |
+
+Cap vs save over the latched spells (vs 30/70 live trim, pp/yr): latch −7.24 /
++8.67 (net +1.42 real; −0.17 proxy); **step on 20d high −6.28 / +8.68 (net
++2.40 real; +0.09 proxy)**; step 10d −5.33 / +7.05 (+1.72; +0.24).
+
+- **Stepping on new highs is the best of the latch family.** Same crash
+  protection as the full latch (identical worst episodes: real 2021–23 −15.8%,
+  proxy GFC −18.8%, dot-com −21.3%), with part of the cap given back: the
+  Dec 2023 – Apr 2024 rally is recovered (2024 +80.6% vs latch +65.9%, live
+  +66.8%). Highest real Sharpe (1.606) and largest proxy edge (+5.90) on record.
+- **It does not remove the cap.** 2025 +20.7% and 2026 +25.0% (live +37.3% /
+  +38.8%); up-capture 0.97× vs 30/70-live-trim 1.18×. Those rallies stayed
+  extended — raw votes stayed on — so stepping down to the raw count still left
+  TQQQ out. Holdout Sharpe 0.749 vs live 0.754 (not confirmed out of sample).
+- **Time-based steps are unstable in N**: 5d is poor, 10d good, 20d ≈ latch.
+  Step 10d is the only arm beating live in both proxy eras on CAGR *and* Sharpe
+  (holdout 18.88% / 0.775) but leaves the real 2021–23 bear at −21.2%.
+- **Decomposition surprise:** the full cut *with the live release* (no latch)
+  has the best holdout of all (20.49% / 0.792) at up-capture 1.11× — the cut
+  speed carries out of sample better than any hold rule.
+- Bootstrap vs live: step-on-high P 0.08 real / 0.15 proxy. ~80 arms today, all
+  post hoc. Nothing applied; frozen to 7 December.

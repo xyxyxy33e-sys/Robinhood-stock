@@ -4626,6 +4626,14 @@ scored against the flat-de-levering null.
   −0.4). Largest caps: Dec 23–Apr 24 −22.0, Jun–Nov 25 −20.9, May–Jul 26 −15.6 pp.
   Up-capture falls to 0.95× QQQ (30/70 live trim 1.18×). Break-even on its own
   spells; it buys drawdown shape, not return — misaligned with "outperform".
+- **Stepped re-entry inside A** (`fall_protection_r11.py`; 30/70, TQQQ out at the
+  first vote, held votes step down one at a time): stepping on each new 20-day
+  high is the best of the latch family — real 44.83% / −19.6% / exSh 1.606,
+  proxy 28.31% / −24.7% (edge +5.90), same crash protection as the latch, 2024
+  recovered (+80.6%) — but 2025/2026 still capped (+20.7% / +25.0% vs live
+  +37.3% / +38.8%) and holdout Sharpe 0.749 vs 0.754. Time steps unstable in N.
+  Full cut with the live release has the best holdout (20.49% / 0.792).
+  Bootstrap P 0.08 / 0.15; post hoc. Not applied.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
