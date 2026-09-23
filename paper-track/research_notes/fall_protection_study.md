@@ -737,3 +737,21 @@ of its extra long-run drawdown** — the best return-per-drawdown step on the di
 The real-era drawdown moves evenly (−17.8 / −18.7 / −19.6%), so the kink rests on
 the proxy's two big bears. The rally cost in 2025–26 is the same at every base.
 An owner choice on the dial; nothing applied (30/70 remains scheduled).
+
+## Follow-up 20: A base 25/75 under the live rule (owner: "25/75")
+
+`paper-track/fall_protection_r22.py`, log `fall_protection_r22_run.log`. v2 + whipsaw carry.
+
+| A base | real CAGR / Sharpe / MaxDD | 2022 / 2025 / 2026 | proxy CAGR / Sharpe / MaxDD | holdout CAGR / Sharpe |
+|---|---|---|---|---|
+| 50/50 (live) | 41.03% / 1.797 / −17.8% | −10.1 / 22.7 / 24.1 | 26.11% / 1.194 / −21.9% | 16.64% / 0.834 |
+| 40/60 | 44.18% / 1.804 / −18.7% | −11.8 / 21.8 / 24.5 | 27.78% / 1.199 / −22.6% | 17.54% / 0.834 |
+| 30/70 (next spell) | 47.36% / 1.802 / −19.6% | −13.4 / 20.9 / 25.0 | 29.42% / 1.200 / −24.7% | 18.36% / 0.830 |
+| **25/75** | **48.88% / 1.796 / −20.0%** | −14.2 / 20.4 / 25.0 | **30.24% / 1.199 / −25.8%** | **18.76% / 0.827** |
+
+Still the leverage dial: Sharpe flat everywhere (bootstrap 25/75 vs 30/70 P 0.64 /
+0.34, vs 50/50 P 0.40 / 0.22). From 30/70 the last 5 pp of TQQQ adds +1.5 pp real /
++0.8 pp proxy CAGR for −0.4 pp real / −1.1 pp proxy drawdown — the same per-step
+trade as 40→30 (≈2 pp of proxy drawdown per 10 pp of TQQQ), and 2022 gets worse
+(−14.2%). Return per unit of drawdown is best at the 50→40 step and roughly constant
+beyond it. Nothing applied (30/70 remains scheduled).
