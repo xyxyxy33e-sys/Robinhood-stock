@@ -777,3 +777,30 @@ real, 1.20 → 1.13 proxy), deepens every big bear (dot-com −21.6 → −28.4%
 leg of a break. Total CAGR is slightly LOWER at every step speed. Bootstrap vs
 all-out: P(not better) 0.80–0.93. Same finding as follow-up 5 at 30/70 ("vote days
 are bad days to hold TQQQ at any leverage"), now confirmed at 75%. Nothing applied.
+
+## Follow-up 22: rebalancing across the A splits, and the drift band re-tested (owner: "What about rebalancing times" / "I mean between different weights")
+
+**By split** (real, live rule v2 + carry, 5% band; decomposition script in the session scratchpad):
+
+| A split | rebalances/yr | from a regime/vote/gate change | from drift | of which drift in A | median sessions apart | turnover per rebalance | cost drag/yr at 4 bp |
+|---|---|---|---|---|---|---|---|
+| 50/50 | 29.8 | 17.3 | 12.5 | 8.3 | 4 | 84% | 1.00% |
+| 40/60 | 29.6 | 17.3 | 12.3 | 8.1 | 4 | 86% | 1.01% |
+| 30/70 | 29.2 | 17.3 | 11.9 | 7.8 | 4 | 88% | 1.03% |
+| 25/75 | 28.5 | 17.3 | 11.2 | 7.0 | 4 | 91% | 1.03% |
+
+The split barely changes trading. Regime/vote/gate rebalances are identical (the
+signal does not depend on the split); drift rebalances FALL slightly as TQQQ rises,
+because a lopsided two-asset mix drifts less for the same relative move (L1 drift ≈
+2·w(1−w)·Δ: 0.25 at 50/50, 0.19 at 25/75). Each trade is a little larger, so the
+cost drag is ~1.0% a year at every split. A drift-triggered rebalance fires at ~10%
+average L1 drift (one-day jumps past the 5% band, mostly vol-target moves).
+
+**Band sweep** (`paper-track/fall_protection_r24.py`, log `fall_protection_r24_run.log`):
+2 / 3 / 5 / 7.5 / 10 / 15% all land within ~1 pp CAGR and 0.03 Sharpe of each
+other on both histories and both splits (proxy flat to ±0.1 pp; real drifts up
++0.9 pp at 15%, not significant: P 0.06–0.54 vs 5%). Cost is ~1% a year whatever
+the band, because most of it comes from the regime/vote rebalances the band cannot
+skip. **"Regime changes only" is bad**: proxy 20.9% / 0.89 / −30.9% vs 26.1% / 1.19 /
+−21.9% (P 1.00), because the drift trigger is what applies the vol target inside a
+state — without it the book is not de-levered as volatility rises. Keep 5%.
