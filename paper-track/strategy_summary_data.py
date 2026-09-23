@@ -4,11 +4,15 @@ from state.py's CURRENT design, plus the by-year table. Writes DATA.js, COMPARE.
 and byyear.json to the scratchpad path below; splice them into the artifact's
 script block in place of the existing constants.
 
-NEW = the live design as of 2026-09-19 (A=50/50, D=100% QLD gated to cash
-by breadth pct < 0.20 OR 200d gap < 2%, E=100% cash, 20/100 fast re-entry
-overlay on B/C/F, graded extension trim on A, plain 30d vol). OLD = the
-2026-09-09 design (E = 50% XLU / 50% cash, no state-D gate) -- the prior comparison baseline,
-kept as the "before" column so the gate's effect is visible on its own.
+NEW = the live design as of 2026-09-23: extension trim v2 (held votes from
+state.a_trim_series on the daily QQQ closes, sampled on each weekly signal date;
+TQQQ out at the first held vote, core x (1 - held/6), rest cash), A base 50/50
+(every A spell in this window started before 2026-09-23), D=100% QLD gated to
+cash by breadth pct < 0.20 OR 200d gap < 2%, E=100% cash, 20/100 fast re-entry,
+plain 30d vol. OLD = the 2026-09-19 design (v1 trim: A x2/3 / x1/3 / x0 on the
+raw votes) -- the "before" column. A3070 = NEW with the 30/70 A base that
+applies from the next A spell, reported alongside.
+(Until 2026-09-23 NEW was the 09-19 design and OLD the 09-09 design.)
 
 Data shim (2026-09-19): voltarget_live_backtest hard-codes a path that does
 not exist here, so the same symlink farm d_substate_fresh.py builds is used
@@ -27,7 +31,7 @@ import backtest_overlay_etf as BOE
 import voltarget_live_backtest as VL
 BOE.ROBINHOOD_REPO=_TMP; VL.REPO=_TMP
 from state import (TARGET_WEIGHTS, VOL_TARGET_PA, MICRO_OVERLAY_ENABLED, compute_fast_states, effective_state,
-                   compute_extension_gaps, extension_scale, d_gate_active)
+                   compute_extension_gaps, extension_scale, d_gate_active, a_trim_series, a_trim_row)
 from long_history_backtest import load_px, load_tbill_long, make_rate_lookup, cash_index
 from four_leg_overlay import last_trading_day_per_week
 import breadth_tracker as BT
@@ -61,26 +65,35 @@ for r in rows:
     k=d0_to_key[r['d0']]; nk=keys[keys.index(k)+1]; end_date[r['d0']]=wkq[nk]
 def vt(w,v):
     m=1.0 if not v else min(1.0,VOL_TARGET_PA/v); risky=sum(w[:4]); return tuple(x*m for x in w[:4])+(1-risky*m,)
-OLD_W=dict(TARGET_WEIGHTS); OLD_W['E']=(0.0,0.0,0.0,0.50,0.50)   # the 2026-09-09 design: E still 50% XLU, no D gate
+ATRIM=a_trim_series(qd,qqq)
 def _row(r, W):
     st=effective_state(r['state'], fast[r['d0']])
     w=W[st]; f=extension_scale(st, gaps[r['d0']])
     if f<1: w=tuple(x*f for x in w[:4])+(1-f*sum(w[:4]),)
     return vt(w, r['vol'])
-def old_w(r):
-    return _row(r, OLD_W)
-def new_w(r):
-    # 2026-09-19: the state-D gate, decided on the weekly signal date d0; E = 100% cash via TARGET_WEIGHTS
+def w919(r):
+    # the 2026-09-19 design: D gate, E = 100% cash, v1 trim on the raw votes
     if d_gate_active(r['state'], BP.get(r['d0']), gaps[r['d0']][200]):
         return (0.0,0.0,0.0,0.0,1.0)
     return _row(r, TARGET_WEIGHTS)
+def v2(base_override=None):
+    def f(r):
+        if d_gate_active(r['state'], BP.get(r['d0']), gaps[r['d0']][200]):
+            return (0.0,0.0,0.0,0.0,1.0)
+        st=effective_state(r['state'], fast[r['d0']])
+        if st=='A':
+            at=ATRIM[r['d0']]; assert at['in_a']
+            return vt(a_trim_row(base_override or at['base'], at['held']), r['vol'])
+        return vt(TARGET_WEIGHTS[st], r['vol'])
+    return f
+new_w=v2(); old_w=w919
 def nav(wfn):
     prev=None; out=[]; n=1.0
     for r in rows:
         w=wfn(r); cost=VL.ONE_WAY_SPREAD*sum(abs(w[i]-(prev[i] if prev else 0)) for i in range(5))
         n*=1+sum(w[i]*r['legs'][i] for i in range(5))-cost; out.append(n); prev=w
     return out
-NEW=nav(new_w); OLD=nav(old_w)
+NEW=nav(new_w); OLD=nav(old_w); A3070=nav(v2((0.30,0.70)))
 spmo=[];q=[];s=[];a=b=c=1.0
 for r in rows:
     a*=1+r['bench_spmo']; b*=1+r['bench_qqq']; spmo.append(a); q.append(b)
@@ -98,13 +111,13 @@ def st(navs):
     for x in navs: pk=max(pk,x); mdd=min(mdd,x/pk-1)
     return navs[-1]**(52/n)-1, m*52/(v*math.sqrt(52)), mdd, navs[-1]
 print(f"{len(rows)} weeks {DATA[0]['date']}..{DATA[-1]['date']}")
-for lab,v in (('NEW',NEW),('OLD',OLD),('SPMO',spmo),('QQQ',q),('SPY',s)):
+for lab,v in (('NEW',NEW),('OLD',OLD),('A3070',A3070),('SPMO',spmo),('QQQ',q),('SPY',s)):
     c1,s1,m1,t=st(v); print(f"{lab:<5} CAGR {c1*100:6.2f}%  Sharpe {s1:.3f}  MaxDD {m1*100:6.1f}%  {t:.3f}x")
 def by(v):
     y={};prev=1.0
     for d,x in zip([r['date'] for r in DATA],v):
         yy=d[:4]; y.setdefault(yy,[prev,x]); y[yy][1]=x; prev=x
     return {k:(b/a-1) for k,(a,b) in y.items()}
-Y={k:by(v) for k,v in (('new',NEW),('old',OLD),('spmo',spmo),('qqq',q),('spy',s))}
+Y={k:by(v) for k,v in (('new',NEW),('old',OLD),('a3070',A3070),('spmo',spmo),('qqq',q),('spy',s))}
 json.dump({'years':sorted(Y['new']),**{k:[round(Y[k][y],4) for y in sorted(Y['new'])] for k in Y}}, open(out+'byyear.json','w'))
 print(json.load(open(out+'byyear.json')))
