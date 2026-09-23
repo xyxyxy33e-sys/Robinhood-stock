@@ -700,9 +700,22 @@ def check_extension_trim_v2():
     w = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps={100: 0.0, 150: 0.0, 200: 0.0},
                                       a_trim=dict(t, held=2))
     assert w == a_trim_row((0.50, 0.50), 2), "a_trim overrides the v1 gaps scaling in A"
+    # history-length safety (review 2026-09-23): a 24-month pull + backfill equals the full history;
+    # without backfill a short series is REFUSED rather than read wrongly
+    from state import A_TRIM_MIN_HISTORY, MissingOverlayInputs
+    tail = ds[-504:]; sub = {d: px[d] for d in tail}
+    for d in tail[-40:]:
+        assert a_trim_state(tail, sub, as_of=d) == ser[d], f"{d}: 24-month pull + backfill disagrees with full history"
+    short = ds[-(A_TRIM_MIN_HISTORY - 10):]
+    try:
+        a_trim_state(short, {d: px[d] for d in short}, backfill=False)
+    except MissingOverlayInputs:
+        pass
+    else:
+        raise AssertionError("a_trim_state accepted a series shorter than A_TRIM_MIN_HISTORY")
     print(f"OK: extension trim v2 -- TQQQ out at the first held vote, one-vote steps only on new "
           f"{EXTENSION_REENTRY_HIGH_N}-day highs ({nsteps} steps since 1999), never below raw, reset outside A, "
-          f"30/70 for A spells from 2026-09-23")
+          f"30/70 for A spells from 2026-09-23; 24-month pull + backfill == full history; short series refused")
 
 
 check_extension_trim_v2()

@@ -488,6 +488,12 @@ A days).
 - **Base row** by spell start: 50/50 before 2026-09-23 (the spell that began
   2026-08-04 keeps it), **30/70 for A spells starting on/after 2026-09-23**.
 - A change in held votes is a regime change for `needs_rebalance()`.
+- **History length** (review, 2026-09-23): the regime classifier is path-dependent
+  (1% hysteresis) and needs up to 323 sessions to converge on a short series, so
+  `a_trim_state()` backfills older QQQ closes from `data/qqq_long_history.csv`
+  (the caller's closes win where both exist) and REFUSES (`MissingOverlayInputs`)
+  when as-of or the spell start sits fewer than 400 sessions into the series.
+  Verified: a 24-month pull + backfill equals the full history on every session.
 
 **Why.** The v1 trim read distance above the averages, so when an extended
 market broke, the gaps shrank, the votes fell away and the book re-levered

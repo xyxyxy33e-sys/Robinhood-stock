@@ -6,6 +6,7 @@ Six-state classifier on QQQ (market signal, per the study's finding 3),
 1% hysteresis buffer, 50/200-day SMAs.
 """
 import csv
+import os
 
 def load_csv(path):
     out = {}
@@ -1108,18 +1109,53 @@ def a_trim_series(dates, px):
     return out
 
 
-def a_trim_state(dates, px, as_of=None):
+A_TRIM_MIN_HISTORY = 400     # sessions of closes needed (classifier converges within 323; see a_trim_state)
+A_TRIM_BACKFILL_CSV = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                   'data', 'qqq_long_history.csv')
+
+
+def a_trim_state(dates, px, as_of=None, backfill=True):
     """THE live input for the v2 trim: today's dict from a_trim_series().
     Pass it to live_target_weights(..., a_trim). as_of defaults to the last
     date. A change in `held` (or entering/leaving A) is a regime change for
-    needs_rebalance()."""
+    needs_rebalance().
+
+    History length matters (found in review, 2026-09-23): compute_states() is
+    path-dependent (1% hysteresis), so on a short series its readings -- and
+    therefore the A spell start, the held votes and the base row -- only
+    converge after up to 323 sessions (120 random windows: median 209, p90
+    272, max 323). A 24-month pull (~500 sessions) was measured to disagree
+    with the full history on 44-60 sessions of 2025. So:
+      * backfill=True (default) prepends split-adjusted QQQ closes from
+        data/qqq_long_history.csv for every date EARLIER than the caller's
+        first date (the caller's own closes always win where both exist);
+      * both as_of and the spell start must sit at least A_TRIM_MIN_HISTORY
+        sessions into the series used, else MissingOverlayInputs."""
     dates = list(dates)
     if as_of is None:
         as_of = dates[-1]
     if as_of not in px:
         raise MissingOverlayInputs(f"a_trim_state: no close for {as_of}")
-    upto = [d for d in dates if d <= as_of]
-    return a_trim_series(upto, px)[as_of]
+    px2 = dict(px)
+    if backfill and dates and os.path.exists(A_TRIM_BACKFILL_CSV):
+        first = min(dates)
+        with open(A_TRIM_BACKFILL_CSV) as fh:
+            for r in csv.DictReader(fh):
+                if r['d'] < first:
+                    px2[r['d']] = float(r['c'])
+    upto = sorted(d for d in px2 if d <= as_of)
+    if len(upto) - 1 < A_TRIM_MIN_HISTORY:
+        raise MissingOverlayInputs(
+            f"a_trim_state: only {len(upto) - 1} sessions before {as_of}; need >= {A_TRIM_MIN_HISTORY} "
+            f"for the regime classifier to converge -- pull more history")
+    out = a_trim_series(upto, px2)[as_of]
+    if out['in_a']:
+        k = upto.index(out['spell_start'])
+        if k < A_TRIM_MIN_HISTORY:
+            raise MissingOverlayInputs(
+                f"a_trim_state: the A spell starting {out['spell_start']} is only {k} sessions into the "
+                f"series; need >= {A_TRIM_MIN_HISTORY} for the regime classifier to converge -- pull more history")
+    return out
 
 
 # ---------------------------------------------------------------------------
