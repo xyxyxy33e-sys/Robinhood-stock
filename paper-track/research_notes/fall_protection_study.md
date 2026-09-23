@@ -836,3 +836,23 @@ high on top is a second confirmation that arrives after the early recovery is go
 the part of the cycle where this design earns most (9 Sep recovery study). The
 new-high wait belongs only where the underlying release signal points the wrong way.
 ~125 arms today.
+
+## Note 2026-09-23: the A split against the owner's return expectation — decision deferred
+
+Owner: "My expectations is to align with average spy performance, this went way beyond
+that" → "keep 40/60 for now we will discuss later". Live rule (v2 + carry), by A split:
+
+| A split | real CAGR / Sharpe / MaxDD | 2022 | proxy CAGR / MaxDD | 2000–15 CAGR | A-row loss on a −20% QQQ day from calm |
+|---|---|---|---|---|---|
+| 40/60 (scheduled) | 44.2% / 1.80 / −18.7% | −11.8% | 27.8% / −22.6% | 17.5% | ≈ −43% |
+| 50/50 (current spell) | 41.0% / 1.80 / −17.8% | −10.1% | 26.1% / −21.9% | 16.6% | ≈ −39% |
+| 70/30 | 34.8% / 1.74 / −15.9% | −6.7% | 22.7% / −22.5% | 14.8% | ≈ −31% |
+| 85/15 | 30.1% / 1.63 / −14.5% | −4.2% | 20.2% / −22.9% | 13.5% | ≈ −24% |
+| 100/0 | 25.3% / 1.45 / −13.2% | −1.5% | 17.5% / −23.3% | 12.0% | ≈ −18% |
+| SPY (price only) | 12.8% / 0.77 / −34% | −19.5% | 6.6% / −55% | 2.1% | −20% |
+
+Every split clears the SPY bar by a wide margin, in and out of sample. The long-run
+MaxDD barely moves with the split (it is set by state D's 100% QLD); what the split
+changes is the exposure to a sudden crash inside A, which the vol target cannot catch.
+Suggested for later discussion: ~70/30 fits an "SPY-plus" goal with more margin for
+error. Decision: 40/60 stays scheduled for the next A spell until the owner revisits it.
