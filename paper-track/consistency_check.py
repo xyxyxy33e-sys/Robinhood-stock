@@ -345,6 +345,13 @@ def check_strategy_md_matches_code():
     print("OK: STRATEGY.md Part I weight tables match state.py")
 
 
+def _at(eff, held=0, base=(0.50, 0.50)):
+    """A minimal a_trim dict (extension trim v2) for unit checks."""
+    if eff == 'A':
+        return dict(date='x', eff='A', in_a=True, spell_start='2026-08-04', base=base, raw=0, held=held)
+    return dict(date='x', eff=eff, in_a=False, spell_start=None, base=None, raw=0, held=0)
+
+
 def check_live_target_weights_strict():
     """live_target_weights() must REFUSE missing overlay inputs (2026-09-07).
 
@@ -361,15 +368,28 @@ def check_live_target_weights_strict():
                                     ('A', None, 'gaps None'),
                                     ('A', {100: 0.0}, 'gaps missing windows')):
         try:
-            live_target_weights('A', False, 0.15, bad_fast, bad_gaps, 0.5)
+            live_target_weights('A', False, 0.15, bad_fast, bad_gaps, 0.5, _at('A'))
         except MissingOverlayInputs:
             pass
         else:
             raise AssertionError(f"live_target_weights accepted {why}")
-    a = live_target_weights('A', False, 0.15, 'A', good, 0.5)
-    b = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=good)
+    for bad_at, why in ((None, 'a_trim None'), ({}, 'a_trim empty'), (_at('C'), 'a_trim not in A on an A day')):
+        try:
+            live_target_weights('A', False, 0.15, 'A', good, 0.5, bad_at)
+        except MissingOverlayInputs:
+            pass
+        else:
+            raise AssertionError(f"live_target_weights accepted {why}")
+    try:
+        live_target_weights('C', False, 0.15, 'C', good, 0.5, _at('A'))
+    except MissingOverlayInputs:
+        pass
+    else:
+        raise AssertionError("live_target_weights accepted an in-A a_trim on a C day")
+    a = live_target_weights('A', False, 0.15, 'A', good, 0.5, _at('A'))
+    b = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps=good, a_trim=_at('A'))
     assert a == b, "live_target_weights must not change the maths"
-    assert live_target_weights('A', False, None, 'A', good, 0.5)  # vol=None still allowed
+    assert live_target_weights('A', False, None, 'A', good, 0.5, _at('A'))  # vol=None still allowed
     print("OK: live_target_weights rejects missing/!invalid overlay inputs, maths unchanged")
 
 
@@ -395,18 +415,20 @@ def check_d_gate():
     for st in STATE_LABEL:
         assert d_gate_active(st, 0.1, 0.0) == (st == 'D'), f"gate must only act in D, not {st}"
         if st != 'D':
-            assert live_target_weights(st, False, 0.15, st, hot, 0.1) == \
-                target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=hot), f"gate moved state {st}"
+            from state import effective_state as _eff
+            at = _at(_eff(st, st))
+            assert live_target_weights(st, False, 0.15, st, hot, 0.1, at) == \
+                target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=hot, a_trim=at), f"gate moved state {st}"
     cash = (0.0, 0.0, 0.0, 0.0, 1.0)
-    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5) == (0.0, 0.0, 1.0, 0.0, 0.0), "ungated D is 100% QLD"
-    assert live_target_weights('D', False, 0.15, 'D', hot, 0.5) == cash, "gap200 half must gate"
-    assert live_target_weights('D', False, 0.15, 'D', cold, 0.1) == cash, "breadth half must gate"
-    assert live_target_weights('D', False, 0.50, 'D', cold, 0.1) == cash, "gate ignores the vol multiplier"
+    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5, _at('D')) == (0.0, 0.0, 1.0, 0.0, 0.0), "ungated D is 100% QLD"
+    assert live_target_weights('D', False, 0.15, 'D', hot, 0.5, _at('D')) == cash, "gap200 half must gate"
+    assert live_target_weights('D', False, 0.15, 'D', cold, 0.1, _at('D')) == cash, "breadth half must gate"
+    assert live_target_weights('D', False, 0.50, 'D', cold, 0.1, _at('D')) == cash, "gate ignores the vol multiplier"
     assert target_weights_with_voltarget('D', False, 0.15, fast_state='D', gaps=hot) == (0.0, 0.0, 1.0, 0.0, 0.0), \
         "d_gate=None must be the pre-gate design (research harnesses depend on this)"
     for bad in (None, 'x', 1.5, -0.1, True):
         try:
-            live_target_weights('D', False, 0.15, 'D', cold, bad)
+            live_target_weights('D', False, 0.15, 'D', cold, bad, _at('D'))
         except MissingOverlayInputs:
             pass
         else:
@@ -633,3 +655,54 @@ def check_funding_policy():
 
 
 check_funding_policy()
+
+
+def check_extension_trim_v2():
+    """Extension trim v2 (APPLIED 2026-09-23, owner decision): TQQQ out entirely
+    at the first held vote, core x (1 - held/6), held votes rise at once and come
+    off one at a time only on a new 15-session closing high and never below the
+    raw count, reset on leaving A; A spells starting on/after 2026-09-23 hold
+    30/70. Checked on the real QQQ history (a pure function of closes)."""
+    import csv, os
+    from state import (EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, EXTENSION_CORE_CUT_PER_VOTE,
+                       A_BASE_ROWS, a_base_row, a_trim_row, a_trim_series, a_trim_state, validate_weights,
+                       target_weights_with_voltarget, live_target_weights)
+    assert EXTENSION_TRIM_V2_ENABLED and EXTENSION_REENTRY_HIGH_N == 15 and abs(EXTENSION_CORE_CUT_PER_VOTE - 1 / 6) < 1e-12
+    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.30, 0.70) and a_base_row('2027-01-04') == (0.30, 0.70)
+    for base in ((0.50, 0.50), (0.30, 0.70)):
+        for held in range(4):
+            r = a_trim_row(base, held)
+            validate_weights('A', *r)
+            assert (r[1] == base[1]) if held == 0 else (r[1] == 0.0), "TQQQ is all-in at 0 held votes, all-out otherwise"
+            assert abs(r[0] - base[0] * (1 - held / 6)) < 1e-12
+    assert a_trim_row((0.5, 0.5), 3) == (0.25, 0.0, 0.0, 0.0, 0.75)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    px = {r['d']: float(r['c']) for r in csv.DictReader(open(os.path.join(root, 'data', 'qqq_long_history.csv')))}
+    ds = sorted(px); ser = a_trim_series(ds, px); closes = [px[d] for d in ds]
+    prev = None; nsteps = 0
+    for i, d in enumerate(ds):
+        x = ser[d]
+        if not x['in_a']:
+            assert x['held'] == 0 and x['base'] is None
+        else:
+            assert x['held'] >= x['raw'], f"{d}: held below raw"
+            assert x['base'] == a_base_row(x['spell_start'])
+            if prev is not None and prev['in_a'] and x['held'] < prev['held']:
+                assert prev['held'] - x['held'] == 1, f"{d}: stepped more than one vote"
+                assert closes[i] >= max(closes[max(0, i - EXTENSION_REENTRY_HIGH_N + 1):i + 1]), f"{d}: stepped without a 15-session high"
+                nsteps += 1
+        prev = x
+    assert nsteps >= 20, "the step-down rule fires (25 times on the 1999-2026 history)"
+    t = a_trim_state(ds, px, as_of='2026-09-04')
+    assert t['in_a'] and t['spell_start'] == '2026-08-04' and t['held'] == 0 and t['base'] == (0.50, 0.50), t
+    x = ser['2018-02-02']
+    assert x['in_a'] and x['held'] == 3, "Feb 2018: v2 holds the trim through the break (v1 had re-levered)"
+    w = target_weights_with_voltarget('A', False, 0.15, fast_state='A', gaps={100: 0.0, 150: 0.0, 200: 0.0},
+                                      a_trim=dict(t, held=2))
+    assert w == a_trim_row((0.50, 0.50), 2), "a_trim overrides the v1 gaps scaling in A"
+    print(f"OK: extension trim v2 -- TQQQ out at the first held vote, one-vote steps only on new "
+          f"{EXTENSION_REENTRY_HIGH_N}-day highs ({nsteps} steps since 1999), never below raw, reset outside A, "
+          f"30/70 for A spells from 2026-09-23")
+
+
+check_extension_trim_v2()

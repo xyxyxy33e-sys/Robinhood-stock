@@ -1,4 +1,14 @@
-# Protection during the fall, inside state A — 2026-09-22. **One real finding; NOT applied (fails the holdout).**
+# Protection during the fall, inside state A — 2026-09-22/23.
+
+> **APPLIED 2026-09-23 by owner decision** (freeze removed): extension trim v2 —
+> TQQQ out at the first held vote, core ⅙ per vote, held votes step down one per
+> new 15-session closing high and never below the raw count, reset outside A;
+> A base 30/70 for A spells starting on/after 2026-09-23 (the spell in progress
+> keeps 50/50). `state.py` "EXTENSION TRIM v2"; STRATEGY.md Part I. Standing
+> figures: 50/50 real 39.32% / 1.717 / −17.8%, proxy 25.41% / 1.161 / −21.9%
+> (S 1.619, H 0.829); 30/70 real 45.05% / 1.711 / −19.6%, proxy 28.50% / 1.162 /
+> −24.7% (S 1.631, H 0.824). The sections below are the research as written,
+> including their "not applied" verdicts at the time.
 
 Owner: *"consider how we can add protection during the fall"*, after
 `a_ratio_study.md` §6 showed the extension trim is off on 19 of the 20 worst A

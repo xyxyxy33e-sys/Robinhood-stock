@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-19)
+## Current design at a glance (2026-09-23)
 
 **What the account holds, by effective state** — see the tables under
 "Target weights"; effective state = macro 50/200 state, except that macro
@@ -25,14 +25,26 @@ C row when the fast read is A/B/C.
 | E | 100% BOXX | 0.00x |
 | F | 100% BOXX | 0.00x |
 
-**Extension trim (graded):** when the effective state is A, count how many
-of {close > 10% above the 100d SMA, > 12% above the 150d, > 15% above the
-200d} are true and scale the A row's risky legs by 1 − ⅓ × votes
-(×⅔ / ×⅓ / ×0 — three votes is 100% cash). Then the four risky legs are scaled by
+**A row base: 50/50 in the A spell in progress on 2026-09-23 (began
+2026-08-04); 30/70 SPMO/TQQQ in every A spell that starts on or after
+2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A").
+The tables below show the 50/50 row that is held today.
+
+**Extension trim v2 (APPLIED 2026-09-23, owner decision):** inside effective
+A, votes = how many of {close > 10% above the 100d SMA, > 12% above the 150d,
+> 15% above the 200d} are true. The **held** vote count rises at once to the
+raw count, and comes down **one vote at a time, only on a session whose close
+is a new 15-session closing high, never below the raw count**; it resets when
+the book leaves A. At held ≥ 1 **all TQQQ is out**; SPMO is cut ⅙ of its base
+per held vote; the rest is BOXX. At 50/50: 50/50/0 → 41.7/0/58.3 → 33.3/0/66.7
+→ 25/0/75 (SPMO/TQQQ/BOXX); at 30/70: 30/70/0 → 25/0/75 → 20/0/80 → 15/0/85.
+`a_trim_state(dates, px, as_of)` computes it from QQQ closes (no stored state);
+`live_target_weights` now REQUIRES it. It replaced the v1 trim (×⅔ / ×⅓ / ×0 on
+the raw votes), which re-levered into falls as the votes fell away. Then the four risky legs are scaled by
 `min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX (the max(10d, 30d)
 estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
-state, on L1 drift > 5% (3% until 2026-09-09), on a zero-target leg still held above 0.10%,
-or on the state-D gate switching.
+state, on a change in HELD trim votes (v2), on L1 drift > 5% (3% until 2026-09-09), on a
+zero-target leg still held above 0.10%, or on the state-D gate switching.
 
 **State E → 100% BOXX (2026-09-19, owner decision):** the 50% XLU leg was
 dropped after the E pair/union study showed every feasible E row (all cash,
@@ -51,7 +63,20 @@ half loses −0.045 Sharpe in the 2007–2015 holdout against breadth alone)
 and the bootstrap against breadth; the owner applied it on SPMO-era
 evidence. Section "State D gate" below has the full record.
 
-**Standing figures** (design of 2026-09-19: A 50/50, trim step ⅓, plain
+**Standing figures, design of 2026-09-23** (extension trim v2; E cash; D gate;
+plain 30d vol target; 5% band). With the A base at **50/50** (held today):
+26-year QQQ-core proxy **25.41% / Sharpe 1.161 / max drawdown −21.9%** (search
+1.619, holdout 2000–2015 0.829); real instruments daily Nov 2015–Sep 2026
+**39.32% / 1.717 / −17.8%**; exposure 63.0% real, ~32 rebalances/yr. With the
+A base at **30/70** (from the next A spell): proxy **28.50% / 1.162 / −24.7%**
+(search 1.631, holdout 0.824); real **45.05% / 1.711 / −19.6%**; exposure
+60.0%, ~31 rebalances/yr. Known cost: a partial profit cap in persistent
+melt-ups (real 2025 +20.9% and 2026 +25.0% at 30/70 vs +37.3% / +38.8% under the
+v1 trim), and the configuration was assembled post hoc from ~90 arms
+(bootstrap vs v1: P(not better) 0.06 real / 0.14 proxy). Research:
+`paper-track/research_notes/fall_protection_study.md`.
+
+**Previous standing figures** (design of 2026-09-19: A 50/50, trim step ⅓, plain
 30-day vol estimator, 5% drift band, state-D gate, E = 100% cash). 26-year
 QQQ-core proxy 2000–2026: **25.46% CAGR / Sharpe 1.071 / max drawdown
 −27.0%** (QQQ buy-and-hold 8.7% / 0.45 / −80%). Real instruments, DAILY
@@ -76,6 +101,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-23 | **extension trim v2**: TQQQ out at the first held vote, core ⅙ per vote; held votes step down one per new 15-day closing high, never below raw, reset outside A; **A base 30/70 for A spells starting on/after 2026-09-23** (50/50 kept in the spell in progress); **change freeze removed** | **owner decision**; post hoc, bootstrap P 0.06 / 0.14; "Extension trim v2" and `fall_protection_study.md` |
 | 2026-09-19 | **state E → 100% BOXX** (was 50% XLU / 50% BOXX) | **owner decision**; all E rows within 0.013 Sharpe, cash has the shallowest tail; "State E → 100% cash" |
 | 2026-09-19 | **state-D gate**: D row → 100% BOXX when breadth pct < 0.20 OR QQQ < 2% above its 200d SMA | **owner override**; fails holdout and bootstrap vs breadth alone; "State D gate" |
 | 2026-09-09 | drift band 3% → 5%; Routines 15:55 → 15:50 ET; 16:10 watchdog + missed-run fallback; `session_lag` in fill log | "Execution improvements" |
@@ -97,60 +123,12 @@ table still reading A = 50/50 and the overlay chain still reading 0.25 per
 vote, two days after the code moved to 40/60 and ⅓. Do not hand-edit them;
 regenerate.
 
-## Change freeze (2026-09-07) — LIFTED 2026-09-09 by owner decision for one change; its discipline still binds
+## Change freeze — REMOVED 2026-09-23 (owner decision)
 
-> **Status 2026-09-19.** The owner overrode the discipline a second time and
-> applied the state-D gate (breadth OR gap200 → cash on D days) on the
-> strength of the SPMO-era figures, knowing it fails the holdout and the
-> bootstrap against the breadth rule alone. That is recorded as an owner
-> decision, not as a research result, in "State D gate" below. The standard
-> below still binds everything else and the forward log keeps running so the
-> gate can be judged on live D episodes.
-
-> **Status 2026-09-09.** The owner lifted the freeze after nine independent
-> research lines on 09-08/09 (see the sections dated 2026-09-08/09 near the
-> end of this file) and applied exactly one change: the max(10d, 30d) vol
-> estimator was reverted to the plain 30-day reading. Nothing else changed.
-> The text below is kept as written because its reasoning is the standard
-> any future change has to meet: both-era improvement, exposure/beta-matched
-> controls, a block bootstrap, and an owner decision — not a better backtest.
-
-**No design changes until 2026-12-07, or until the strategy actually fails.**
-Owner-approved. This binds future sessions, including whichever model reads
-this next. If you are about to propose a weight change, a new overlay, a
-parameter tweak or a "small free option", the answer is no — record it in the
-research log as a candidate and leave the live design alone.
-
-**Why.** Between 2026-09-05 and 2026-09-07 the design changed five times:
-A 70/30 → 50/50, D 85% → 100% QLD, trim step 0.25 → ⅓, A 50/50 → 40/60 →
-50/50, and vol30 → max(10d, 30d). Live trading began 2026-08-17, so the
-design changed five times in the first three weeks of live operation and we
-have essentially no live evidence about any of it. When those changes were
-finally tested against a persistence-respecting null (circular block
-bootstrap, same day), only the extension trim cleared 5%: the fast re-entry
-overlay came in at P = 0.080 and the volatility estimator at P = 0.097.
-Between this work and an outside report, well over a hundred configurations
-have now been scored on the same 26 years of data. **The search itself has
-become the dominant risk** — each additional test raises the chance the next
-"winner" is noise, and the iteration was fast enough that this was not
-noticed until it was pointed out.
-
-**What is allowed during the freeze.**
-- Measurement, monitoring and reporting (e.g. `fill_quality.py`).
-- Bug fixes, and doc/code consistency fixes.
-- Research that is RECORDED but NOT applied.
-- Acting on a genuine failure: a guard tripping, a fill failing, a drawdown
-  tier breaching, or live behaviour diverging from the backtest.
-
-**What ends the freeze.** Either the date, or a real failure. "The backtest
-says something better exists" is NOT a reason — that was true every day this
-week and is exactly the condition the freeze exists to interrupt.
-
-**Standing candidates, deliberately NOT applied** (revisit after the freeze,
-with live data in hand): ~~the 5% drift band~~ (APPLIED 2026-09-09 under
-"Execution improvements" — re-tested on the full design, neutral, ~14%
-fewer trades); a floor on the extension trim's bottom rung (tested
-negative 09-07); extension-threshold hysteresis (tested negative 09-07).
+The freeze of 2026-09-07 (no design changes until 2026-12-07) was removed by the
+owner on 2026-09-23 ("delete the whole December freeze thing"). No freeze is
+in force. The research record in Part II keeps the dated mentions of it as they
+were written.
 
 ## Execution improvements (2026-09-09, owner: "apply all 5")
 
@@ -298,10 +276,11 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 reference for each state's RELATIVE risk posture. A live trigger never calls
 it directly: two overlays apply on top, and the function that applies both is
 
-    live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct)
+    live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
 
 which wraps `target_weights_with_voltarget(state, micro_agrees, vol,
-fast_state=, gaps=, d_gate=)` and refuses a missing input.
+fast_state=, gaps=, d_gate=, a_trim=)` and refuses a missing input.
+`a_trim = a_trim_state(dates, px, as_of=<date>)` (2026-09-23).
 
 0. **State-D gate** (2026-09-19, owner override): if the macro state is D and
    `d_gate_active('D', breadth_pct, gaps[200])` — breadth pct < 0.20 OR
@@ -311,16 +290,17 @@ fast_state=, gaps=, d_gate=)` and refuses a missing input.
    may swap the row — macro B/C with a 20/100 read of A/B holds the **A**
    row; macro F with a 20/100 read of A/B/C holds the **C** row. Nothing
    else changes. Section "Fast re-entry overlay" below.
-2. **Extension trim** (2026-09-06, graded): if the effective state is A,
-   the four risky legs are scaled by `extension_scale(eff, gaps)` =
-   max(0, 1 − ⅓ × votes) over `EXTENSION_RULES` (×⅔ / ×⅓ / ×0; the floor is
-   a 2026-09-20 safety fix and a no-op at the live step). Section "Extension
-   trim" below.
+2. **Extension trim v2** (2026-09-23): if the effective state is A, the whole
+   A row is `a_trim_row(a_trim['base'], a_trim['held'])` — TQQQ out at held
+   ≥ 1, core × (1 − held/6), rest cash; `held` steps down one vote per new
+   15-session closing high, never below the raw vote count. (The v1 path,
+   max(0, 1 − ⅓ × votes) on the raw votes, is kept for research when a_trim
+   is None.) Section "Extension trim" below.
 3. **Volatility targeting** (2026-09-01; estimator changed 2026-09-07): the
    four risky legs of that row are scaled by
-   `min(1, 0.20 / realized_vol_live)` where `realized_vol_live` is
-   **max(10-day, 30-day)** annualized realized QQQ vol, and the freed weight goes to
-   cash. Section "Volatility targeting" below.
+   `min(1, 0.20 / realized_vol_live)` where `realized_vol_live` is the
+   plain **30-day** annualized realized QQQ vol (max(10d, 30d) was live only
+   2026-09-07..09), and the freed weight goes to cash. Section "Volatility targeting" below.
 
 `micro_agrees` is still passed (the signature needs it) but the 30/150 micro
 overlay is DISABLED (2026-09-02) and it moves no weight. `validate_weights(state,
@@ -486,7 +466,41 @@ holdout) and stays disabled.
 New standing figures: worst case about **−35%** (proxy), 2022-type year
 about **−17%** real / −27% proxy.
 
-## Extension trim (added 2026-09-06)
+## Extension trim (added 2026-09-06; v2 APPLIED 2026-09-23)
+
+### v2 — the live rule since 2026-09-23 (owner decision)
+
+`EXTENSION_TRIM_V2_ENABLED`, `EXTENSION_REENTRY_HIGH_N = 15`,
+`EXTENSION_CORE_CUT_PER_VOTE = 1/6`, `A_BASE_ROWS`, `a_trim_series()`,
+`a_trim_state()`, `a_trim_row()` in `state.py`; asserted by
+`check_extension_trim_v2` in `consistency_check.py`, and reproduced exactly by
+the research harness (held votes identical on all 1,854 real and 3,909 proxy
+A days).
+
+- **Votes** are the v1 votes (100d > 10%, 150d > 12%, 200d > 15%), counted only
+  in effective A.
+- **Held votes** rise at once to the raw count; they come down **one vote per
+  session whose close is a new 15-session closing high**, never below the raw
+  count; they reset to 0 when the effective state leaves A. The step-down fired
+  25 times on the 1999–2026 history — in most spells the trim is held until
+  the book leaves A.
+- **Row** at held votes h: core × (1 − h/6), **TQQQ 0 at h ≥ 1**, rest BOXX.
+- **Base row** by spell start: 50/50 before 2026-09-23 (the spell that began
+  2026-08-04 keeps it), **30/70 for A spells starting on/after 2026-09-23**.
+- A change in held votes is a regime change for `needs_rebalance()`.
+
+**Why.** The v1 trim read distance above the averages, so when an extended
+market broke, the gaps shrank, the votes fell away and the book re-levered
+into the fall (Feb 2018: cash on 29 Jan, full 50/50 on 1 Feb, then −8.1% and
+−8.2% days); 19 of the 20 worst A days carried zero votes. **Costs, stated:**
+it is a partial profit cap in persistent melt-ups — every stretch where QQQ
+kept rising after a vote is sat out (real 2024 cap recovered by the step-down,
+2025 and 2026 not); up-day capture 0.97× QQQ at 30/70. The whole
+configuration was assembled post hoc from ~90 arms on 2026-09-22/23; bootstrap
+vs v1 P(not better) 0.06 real / 0.14 proxy. Recorded as an owner decision.
+Full record: `paper-track/research_notes/fall_protection_study.md`.
+
+### v1 — 2026-09-06 to 2026-09-22 (kept for the record and for research)
 
 `EXTENSION_TRIM_ENABLED`, `EXTENSION_GAP = 0.15`, `EXTENSION_SCALE = 0.5`,
 `compute_gap200()`, `is_extended()` in `state.py`; applied inside
@@ -4557,7 +4571,7 @@ Owner: "is 50/50 the right ratio? Consider drift decay everything."
   Also corrected the 2026-09-21 decay figures (above). This line: 15 candidates
   (10 ratios + 5 beta-matched rows), none adopted.
 
-### Protection during the fall (state A) — tested 2026-09-22, NOT applied (fails holdout)
+### Protection during the fall (state A) — tested 2026-09-22/23; **APPLIED 2026-09-23 as extension trim v2 (owner decision)**
 
 Owner: "consider how we can add protection during the fall".
 `paper-track/research_notes/fall_protection_study.md`. 12 pre-registered arms

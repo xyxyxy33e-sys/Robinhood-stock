@@ -10,7 +10,8 @@ import sys
 sys.path.insert(0, 'paper-track')
 from state import (TARGET_WEIGHTS, EXTENSION_RULES, EXTENSION_STEP, STATE_LABEL,
                    VOL_TARGET_PA, VOL_LOOKBACK_DAYS, VOL_FAST_LOOKBACK_DAYS,
-                   VOL_ESTIMATOR_MAX_ENABLED, FAST_SHORT_N, FAST_LONG_N)
+                   VOL_ESTIMATOR_MAX_ENABLED, FAST_SHORT_N, FAST_LONG_N,
+                   EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, A_BASE_ROWS, a_trim_row)
 
 LEV = (1.0, 3.0, 2.0, 0.5, 0.0)   # core, TQQQ, QLD, XLU, cash
 
@@ -48,12 +49,21 @@ def full_table():
 
 
 def overlay_chain():
-    steps = ' / '.join(f"x{round(1 - EXTENSION_STEP * v, 4):g}"
-                       for v in range(1, len(EXTENSION_RULES) + 1))
     rules = ', '.join(f"{n}d > {t * 100:.0f}%" for n, t in EXTENSION_RULES)
-    return (f"extension trim: votes over ({rules}); risky legs of the A row scaled by "
-            f"1 - {EXTENSION_STEP:.4g} x votes ({steps}); "
-            f"fast re-entry {FAST_SHORT_N}/{FAST_LONG_N}; "
+    if EXTENSION_TRIM_V2_ENABLED:
+        rows = '; '.join(
+            (f"A spells starting on/after {since}: " if since != A_BASE_ROWS[0][0] else f"A spells starting before {A_BASE_ROWS[1][0]}: ") + ' -> '.join(
+                '/'.join(f"{x * 100:.1f}".rstrip('0').rstrip('.') for x in (r[0], r[1], r[4]))
+                for r in (a_trim_row(base, h) for h in range(4)))
+            for since, base in A_BASE_ROWS)
+        trim = (f"extension trim v2: votes over ({rules}); held votes rise at once, come off one at a time "
+                f"on a new {EXTENSION_REENTRY_HIGH_N}-session closing high, never below the raw count, reset "
+                f"outside A; A row SPMO/TQQQ/BOXX at 0/1/2/3 held votes ({rows})")
+    else:
+        steps = ' / '.join(f"x{round(1 - EXTENSION_STEP * v, 4):g}" for v in range(1, len(EXTENSION_RULES) + 1))
+        trim = (f"extension trim: votes over ({rules}); risky legs of the A row scaled by "
+                f"1 - {EXTENSION_STEP:.4g} x votes ({steps})")
+    return (trim + f"; fast re-entry {FAST_SHORT_N}/{FAST_LONG_N}; "
             f"vol target {VOL_TARGET_PA:.0%} on "
             + (f"max({VOL_FAST_LOOKBACK_DAYS}d, {VOL_LOOKBACK_DAYS}d)" if VOL_ESTIMATOR_MAX_ENABLED
                else f"{VOL_LOOKBACK_DAYS}d")

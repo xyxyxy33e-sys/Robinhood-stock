@@ -1021,6 +1021,108 @@ def is_extended(eff_state, gaps_or_gap200):
 
 
 # ---------------------------------------------------------------------------
+# EXTENSION TRIM v2 -- APPLIED 2026-09-23, OWNER DECISION ("apply everything we
+# talked about today, but not the 30/70 -- leave that to the next time we enter
+# A"). Research: paper-track/research_notes/fall_protection_study.md, follow-ups
+# 1-12; STRATEGY.md "Extension trim v2". The 2026-09-07 change freeze is lifted.
+#
+# Why: the v1 trim (x2/3 / x1/3 / x0 per vote) RE-LEVERED INTO FALLS -- its votes
+# read distance above the averages, so when an extended market breaks the gap
+# shrinks, the votes fall away and the book went from trimmed back to full
+# 50/50 within days (Feb 2018: cash on 29 Jan, full on 1 Feb, then -8.1% and
+# -8.2% days). 19 of the 20 worst A days carried zero votes.
+#
+# v2, inside effective state A only (B/C remapped to A weights included):
+#   * EXIT FAST. The A row at `held` votes is core x (1 - held/6), TQQQ out
+#     entirely at held >= 1, freed weight to cash (BOXX). At 50/50:
+#     50/50/0 -> 41.7/0/58.3 -> 33.3/0/66.7 -> 25/0/75.
+#   * HOLD. `held` rises at once to the raw vote count, but may only come DOWN
+#     one vote at a time, on a session whose close is a new
+#     EXTENSION_REENTRY_HIGH_N-session closing high, and never below the raw
+#     count. TQQQ therefore comes back only when held reaches 0.
+#   * RESET when the effective state leaves A (held -> 0).
+#   * BASE ROW by spell: an A spell that STARTS on/after 2026-09-23 holds 30/70
+#     SPMO/TQQQ; the spell in progress on 2026-09-23 keeps 50/50 (A_BASE_ROWS).
+# Everything is a pure function of QQQ closes (a_trim_state), so a missed run
+# or a restart reconstructs it exactly -- there is no stored state.
+#
+# Evidence (fall_protection_r11-r14; real = SPMO era daily with band and 4bp,
+# proxy = 26y QQQ-core): 50/50 real 37.30% / 1.475 / -18.6% -> 39.32% / 1.717 /
+# -17.8%; proxy 25.46% / 1.071 / -27.0% (S 1.398, H 0.825) -> 25.41% / 1.161 /
+# -21.9% (S 1.619, H 0.829). 30/70: real 45.05% / 1.711 / -19.6%; proxy 28.50% /
+# 1.162 / -24.7% (S 1.631, H 0.824). N = 15 sits on a plateau (10-60 alike;
+# 5 fails). Costs, stated: it is a partial PROFIT CAP in persistent melt-ups --
+# real 2025 +20.9% and 2026 +25.0% at 30/70 vs +37.3% / +38.8% under v1 -- and
+# the whole configuration was assembled post hoc from ~90 arms; bootstrap vs v1
+# P(not better) 0.06 real / 0.14 proxy. An owner decision, not a research pass.
+EXTENSION_TRIM_V2_ENABLED = True
+EXTENSION_REENTRY_HIGH_N = 15
+EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
+A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
+               ('2026-09-23', (0.30, 0.70)))
+
+
+def a_base_row(spell_start):
+    """(core, tqqq) base row for an A spell that started on spell_start."""
+    base = A_BASE_ROWS[0][1]
+    for since, row in A_BASE_ROWS:
+        if spell_start is not None and spell_start >= since:
+            base = row
+    return base
+
+
+def a_trim_row(base, held):
+    """5-leg A row (core, tqqq, qld, xlu, cash) at `held` trim votes, before the
+    vol target. TQQQ is out entirely at held >= 1."""
+    c0, t0 = base
+    held = max(0, min(3, int(held)))
+    core = c0 * max(0.0, 1.0 - EXTENSION_CORE_CUT_PER_VOTE * held)
+    tqqq = t0 if held == 0 else 0.0
+    return (core, tqqq, 0.0, 0.0, 1.0 - core - tqqq)
+
+
+def a_trim_series(dates, px):
+    """Per-date trim-v2 state over the whole history: {date: dict(eff, in_a,
+    spell_start, base, raw, held)}. Pure function of the closes."""
+    dates = list(dates)
+    closes = [px[d] for d in dates]
+    st = compute_states(dates, px)
+    fa = compute_fast_states(dates, px)
+    gp = compute_extension_gaps(dates, px)
+    n = EXTENSION_REENTRY_HIGH_N
+    out = {}; held = 0; start = None
+    for i, d in enumerate(dates):
+        eff = effective_state(st[i], fa[d])
+        if eff != 'A':
+            held = 0; start = None
+            out[d] = dict(date=d, eff=eff, in_a=False, spell_start=None, base=None, raw=0, held=0)
+            continue
+        if start is None:
+            start = d
+        raw = extension_votes('A', gp[d])
+        if raw > held:
+            held = raw
+        elif held > raw and closes[i] >= max(closes[max(0, i - n + 1):i + 1]):
+            held -= 1
+        out[d] = dict(date=d, eff='A', in_a=True, spell_start=start, base=a_base_row(start), raw=raw, held=held)
+    return out
+
+
+def a_trim_state(dates, px, as_of=None):
+    """THE live input for the v2 trim: today's dict from a_trim_series().
+    Pass it to live_target_weights(..., a_trim). as_of defaults to the last
+    date. A change in `held` (or entering/leaving A) is a regime change for
+    needs_rebalance()."""
+    dates = list(dates)
+    if as_of is None:
+        as_of = dates[-1]
+    if as_of not in px:
+        raise MissingOverlayInputs(f"a_trim_state: no close for {as_of}")
+    upto = [d for d in dates if d <= as_of]
+    return a_trim_series(upto, px)[as_of]
+
+
+# ---------------------------------------------------------------------------
 # STATE-D GATE -- APPLIED 2026-09-19 by OWNER OVERRIDE of the change
 # discipline (STRATEGY.md "State D gate"). On a macro state-D day the whole
 # row goes to cash (BOXX) when EITHER
@@ -1067,7 +1169,7 @@ def d_gate_active(state, breadth_pct, gap200):
 
 
 def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None,
-                                  d_gate=None):
+                                  d_gate=None, a_trim=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -1090,6 +1192,11 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
     (2026-09-06). Live triggers MUST pass it. gap200 (a bare 200d gap) is the
     legacy single-window trim, honoured only when gaps is None.
 
+    a_trim: the v2 trim state for the same date from a_trim_state()
+    (2026-09-23). When given and the effective state is A, the A row is
+    a_trim_row(base, held) and the v1 gaps scaling is NOT applied. None keeps
+    the v1 path, which is what every pre-2026-09-23 backtest gets.
+
     d_gate: the state-D gate reading for the same date from d_gate_active()
     (2026-09-19). True on a macro-D day sends the WHOLE row to cash (the vol
     multiplier is irrelevant to a cash row). None/False leaves D at its
@@ -1098,7 +1205,13 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
     if d_gate and D_GATE_ENABLED and state == D_GATE_STATE:
         return (0.0, 0.0, 0.0, 0.0, 1.0)
     core, tqqq, qld, xlu, cash = target_weights_with_micro(eff, micro_agrees)
-    if gaps is not None:
+    if a_trim is not None and EXTENSION_TRIM_V2_ENABLED and eff == 'A':
+        # v2 trim (2026-09-23): the whole A row comes from the held-vote state.
+        if not a_trim.get('in_a'):
+            raise MissingOverlayInputs(
+                f"a_trim says the book is not in A ({a_trim.get('eff')!r}) but the effective state is A")
+        core, tqqq, qld, xlu, cash = a_trim_row(a_trim['base'], a_trim['held'])
+    elif gaps is not None:
         f = extension_scale(eff, gaps)
         core, tqqq, qld, xlu = (x * f for x in (core, tqqq, qld, xlu))
     elif is_extended(eff, gap200):
@@ -1112,7 +1225,7 @@ class MissingOverlayInputs(ValueError):
     """A live weight call omitted a mandatory overlay input."""
 
 
-def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct):
+def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim):
     """THE function live triggers must call (added 2026-09-07).
 
     Identical maths to target_weights_with_voltarget(), but `fast_state` and
@@ -1131,7 +1244,12 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct)
     breadth_tracker.breadth_reading(dates, qqew, qqq, as_of=today)['pct'],
     a float in [0, 1]. None is REFUSED: the live reading needs >= 312 common
     QQEW/QQQ sessions, so None means too little history was pulled, not a
-    market condition. The gap200 half of the gate is read from gaps[200]."""
+    market condition. The gap200 half of the gate is read from gaps[200].
+
+    a_trim (REQUIRED since 2026-09-23, extension trim v2): today's
+    a_trim_state(dates, px, as_of=today) dict. Refused when missing or when
+    it disagrees with the effective state (a date mix-up), because without it
+    a caller would silently trade the v1 trim."""
     if FAST_REENTRY_ENABLED:
         if fast_state is None:
             raise MissingOverlayInputs(
@@ -1155,8 +1273,18 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct)
         if not isinstance(gaps, dict) or 200 not in gaps:
             raise MissingOverlayInputs("gaps[200] is required for the state-D gate")
         gate = d_gate_active(state, breadth_pct, gaps[200])
+    if EXTENSION_TRIM_V2_ENABLED:
+        need = ('eff', 'in_a', 'held', 'base', 'raw', 'spell_start')
+        if not isinstance(a_trim, dict) or any(k not in a_trim for k in need):
+            raise MissingOverlayInputs(
+                "a_trim is required: pass a_trim_state(dates, px, as_of=<date>) (extension trim v2)")
+        eff = effective_state(state, fast_state)
+        if bool(a_trim['in_a']) != (eff == 'A') or (eff == 'A' and a_trim['base'] is None):
+            raise MissingOverlayInputs(
+                f"a_trim (eff {a_trim['eff']!r}, in_a {a_trim['in_a']}) disagrees with the effective state "
+                f"{eff!r} -- was it computed for the same date?")
     return target_weights_with_voltarget(
-        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate)
+        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate, a_trim=a_trim)
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
