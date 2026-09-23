@@ -4620,6 +4620,12 @@ scored against the flat-de-levering null.
   rate irrelevant; earlier votes rejected (real −6.1 pp). Costs: 2025 +18.3% /
   2026 +25.0% real vs live +37.3% / +38.8%. Bootstrap P 0.12–0.16; post hoc.
   Not applied.
+- **"Seems this becomes a profit cap" — yes** (`fall_protection_r10.py`). Over the
+  A spells where the latch engages: CAP spells (QQQ kept rising) real 6 / 473
+  days / −7.2 pp/yr, SAVE spells 11 / 199 days / +8.7 pp/yr, net +0.9 (proxy
+  −0.4). Largest caps: Dec 23–Apr 24 −22.0, Jun–Nov 25 −20.9, May–Jul 26 −15.6 pp.
+  Up-capture falls to 0.95× QQQ (30/70 live trim 1.18×). Break-even on its own
+  spells; it buys drawdown shape, not return — misaligned with "outperform".
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
