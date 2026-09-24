@@ -1,0 +1,11 @@
+{
+  "name": "2026-09 deposit, $400k in 4 weekly tranches",
+  "decided": "2026-09-24",
+  "planned_total": 400000,
+  "tranches": 4,
+  "every_sessions": 5,
+  "status": "awaiting_deposit",
+  "arrived": [],
+  "start_date": null,
+  "released": []
+}

@@ -821,3 +821,70 @@ def check_shadow_tracker():
 
 
 check_shadow_tracker()
+
+
+def check_deposit_plan():
+    """Staged deposit (2026-09-24): reserve arithmetic, the tranche calendar,
+    idempotent arrivals, the oversize refusal, and that with no plan every
+    formula is the normal one."""
+    import copy, deposit_plan as DP
+    from state import needs_rebalance
+    base = dict(name='t', planned_total=400000, tranches=4, every_sessions=5,
+                status='awaiting_deposit', arrived=[], start_date=None, released=[])
+    days = [f'2026-10-{d:02d}' for d in (1, 2, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 26)]
+    # no plan / completed plan -> reserve 0, weights are the plain ones
+    assert DP.reserve(None, days, days[0]) == 0.0
+    vals = dict(SPMO=100.0, TQQQ=100.0, QLD=0.0, XLU=0.0, BOXX=0.0)
+    assert DP.held_weights(vals, 0.0, 200.0, 0.0) == (0.5, 0.5, 0.0, 0.0, 0.0)
+    # awaiting: a partial arrival is all reserve; the clock has not started
+    p = copy.deepcopy(base)
+    DP.record_arrival(p, days[0], 250000)
+    DP.record_arrival(p, days[0], 250000)          # same-date re-run replaces, not adds
+    assert DP.arrived_total(p) == 250000 and p['start_date'] is None
+    assert DP.reserve(p, days, days[3]) == 250000 and DP.next_release(p, days, days[3]) == (1, None)
+    # second piece reaches 95% -> session 0 releases tranche 1
+    DP.record_arrival(p, days[2], 150000)
+    assert p['status'] == 'deploying' and p['start_date'] == days[2]
+    want = {2: 300000, 6: 300000, 7: 200000, 11: 200000, 12: 100000, 16: 100000, 17: 0}
+    for i, r in want.items():
+        assert DP.reserve(p, days[:i + 1], days[i]) == r, (i, DP.reserve(p, days[:i + 1], days[i]))
+    assert DP.next_release(p, days[:3], days[2]) == (2, 5)
+    try:
+        DP.record_arrival(p, days[3], 1000)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("arrival after the clock started must be refused")
+    DP.mark_complete_if_done(p, days, days[-1])
+    assert p['status'] == 'complete' and DP.reserve(p, days, days[-1]) == 0.0
+    # oversize money is not this plan's
+    q = copy.deepcopy(base)
+    try:
+        DP.record_arrival(q, days[0], 450000)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("arrival above 1.10 x planned must be refused")
+    # reserve in BOXX is invisible to the strategy: a $218k account at target plus
+    # $300k parked reads as zero drift; releasing $100k reads as a cash-heavy drift
+    tv, res = 218000 + 400000, 300000
+    tgt = (0.5, 0.5, 0.0, 0.0, 0.0)
+    vals = dict(SPMO=159000.0, TQQQ=159000.0, QLD=0.0, XLU=0.0, BOXX=300000.0)
+    h = DP.held_weights(vals, 0.0, tv, res)
+    assert abs(sum(h) - 1) < 1e-12 and h == (0.5, 0.5, 0.0, 0.0, 0.0)
+    assert not needs_rebalance(tgt, h, False)[0]
+    h2 = DP.held_weights(vals, 0.0, tv, 200000)
+    do, drift, _ = needs_rebalance(tgt, h2, False)
+    assert do and abs(drift - 2 * 100000 / 418000) < 1e-9
+    dt = DP.dollar_targets(tgt, tv, 200000)
+    assert abs(sum(dt.values()) - tv) < 1e-6 and dt['BOXX'] == 200000 and dt['SPMO'] == 209000
+    # the committed plan file parses and is in a legal state
+    live = DP.load()
+    if live is not None:
+        assert live['status'] in ('awaiting_deposit', 'deploying', 'complete')
+        assert live['tranches'] == 4 and live['every_sessions'] == 5
+    print("OK: deposit plan -- partial arrivals held as reserve, clock starts at 95%, tranches release on "
+          "sessions 0/5/10/15, oversize and late cash refused, reserve invisible to the drift band")
+
+
+check_deposit_plan()

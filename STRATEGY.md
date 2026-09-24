@@ -110,6 +110,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-24 | **staged $400k deposit**: 4 equal tranches, one every 5 sessions from the session the money lands; the unreleased reserve is parked in BOXX outside the strategy (`deposit_plan.py`, `data/deposit_plan.json`); weights unchanged, 40/60 kept | owner decision; lump beats 4 × weekly 68% (real) / 62% (proxy) of 6-month windows for a $3.6k / $1.4k median cost; the staged worst case is $6k / $13k better — less regret, not more return. "Staged deposit (2026-09-24)" |
 | 2026-09-23 | **A base for the next spell 30/70 → 40/60** (`A_BASE_ROWS`) | owner decision; Sharpe flat across splits, 40/60 the cheapest step in long-run drawdown (`fall_protection_study.md` follow-ups 19–22) |
 | 2026-09-23 | **trim v2 on probation**: paper shadow tracks (v2 / fast-cut / 19 Sep) in `shadow_tracker.py`, pre-registered revert rule ("Trim v2 on probation"); **live-path guard**: `live_target_weights` refuses to run if `TARGET_WEIGHTS` was modified in-process (research modules re-pin state E to 50% XLU on import) | critique fix 1; tracker reproduces the backtest within 0.05% over 2015–2026 on all three tracks |
 | 2026-09-23 | **whipsaw carry**: held trim votes and the A spell start survive a non-A gap of ≤ 3 sessions (`A_SPELL_GAP_CARRY`); a 1-day dip no longer puts TQQQ back in, nor starts a new (40/60) spell | pre-registered no-harm test passed (`fall_protection_r16.py`, follow-up 14); real Sharpe 1.717 → 1.797, proxy MaxDD unchanged; 3 real events |
@@ -4718,6 +4719,47 @@ scored against the flat-de-levering null.
   45.0–45.5%, Sharpe 1.60–1.62) and fails the holdout at every N (0.710–0.721 vs
   live 0.754) — structural, not a parameter problem. One-step on a 15-day high
   remains the shadow pick. Not applied.
+
+## Staged deposit (2026-09-24) — owner: "keep 40/60, do 4 weekly tranches"
+
+The owner is adding **$400k** to a ~$218k account (→ ~$618k). The weights do
+not change; `paper-track/deposit_plan.py` only decides how much of the account
+the weights apply to while the money is fed in, and `data/deposit_plan.json`
+holds the plan and its progress.
+
+- **Arrival.** The routine recognises the deposit as idle cash above $1,000
+  while the plan is `awaiting_deposit`; it may land in pieces, and each piece
+  is parked in BOXX as reserve. Money beyond 1.10 × planned, or cash arriving
+  after the clock starts, is not covered and goes through the usual
+  "ask the owner above 20%" rule.
+- **Clock.** The session on which 95% of the planned total has arrived is
+  session 0 and releases tranche 1 at once; tranches 2–4 release on sessions
+  5, 10 and 15 (counted on QQQ bar dates, so holidays count). Each tranche is
+  a quarter of what actually arrived.
+- **Arithmetic.** investable = total − reserve; held weights and dollar
+  targets are of the investable account, with the reserve on top of BOXX. The
+  reserve is therefore never drift; a release shows up as cash-heavy drift and
+  the band fires by itself. No market timing: a tranche that lands while the
+  strategy is in cash stays in cash, like the rest of the book.
+- **Records.** The NAV index is flow-blind and needs no adjustment; the
+  monthly reconciliation takes the reserve out of the live series.
+
+**Why stage.** `paper-track/deposit_staging_backtest.py` (every start day, $400k, valued 126
+sessions later, live design):
+
+| plan | real 2015–2026 median / worst | lump wins | proxy 2000–2026 median / worst | lump wins |
+|---|---|---|---|---|
+| lump, day 0 | $478k / $350k | — | $445k / $300k | — |
+| **4 × weekly** | **$473k / $356k** | 68% | **$443k / $313k** | 62% |
+| 4 × every 2 weeks | $471k / $365k | 69% | $441k / $313k | 62% |
+| 6 × every 2 weeks | $464k / $364k | 74% | $439k / $315k | 63% |
+
+A lump wins about two times in three; staging over four weeks costs a few
+thousand dollars at the median and buys a better worst case. It is a regret
+choice, which is the owner's to make. Worst single days on record, for the
+same account at 50/50: 16 Mar 2020 (QQQ −12.0%, TQQQ −34.5%, SPMO −15.4%)
+≈ −25%, about −$154k on $618k; 3–4 Apr 2025 ≈ −22% over two days. QQQ has
+never fallen 20% in a day (Nasdaq-100 worst: −15.1%, 19 Oct 1987).
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
