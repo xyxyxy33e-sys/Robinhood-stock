@@ -3,18 +3,53 @@
   "set": "2026-09-24",
   "note": "Buy-and-hold 80/20 VTI/VXUS. Dip levels are anchored to the ORIGINAL entry below and do not move when more shares are bought. Margin buys at each level are the owner's call; this file only drives reminders.",
   "entries": {
-    "VTI":  {"entry": 376.16, "shares": 293.291711, "date": "2026-09-24"},
-    "VXUS": {"entry": 85.26,  "shares": 323.483172, "date": "2026-09-24"}
+    "VTI": {
+      "entry": 376.16,
+      "shares": 293.291711,
+      "date": "2026-09-24"
+    },
+    "VXUS": {
+      "entry": 85.26,
+      "shares": 323.483172,
+      "date": "2026-09-24"
+    }
   },
   "levels": [
-    {"drop": 0.10, "VTI": 338.54, "VXUS": 76.73, "suggested_margin": 20000},
-    {"drop": 0.20, "VTI": 300.93, "VXUS": 68.21, "suggested_margin": 30000},
-    {"drop": 0.30, "VTI": 263.31, "VXUS": 59.68, "suggested_margin": 30000}
+    {
+      "drop": 0.1,
+      "VTI": 338.54,
+      "VXUS": 76.73,
+      "suggested_margin": 20000
+    },
+    {
+      "drop": 0.2,
+      "VTI": 300.93,
+      "VXUS": 68.21,
+      "suggested_margin": 30000
+    },
+    {
+      "drop": 0.3,
+      "VTI": 263.31,
+      "VXUS": 59.68,
+      "suggested_margin": 30000
+    }
   ],
-  "split": {"VTI": 0.80, "VXUS": 0.20},
-  "robinhood_alerts": {
-    "VTI":  ["34eb0093-8494-4c50-943c-311fc2e05493", "e8a74b0a-21e9-4ce0-bf37-bf1133faae9e", "5a8f1f19-2e2d-4ac5-be02-a6a51c472e68"],
-    "VXUS": ["96cf4a7b-9a27-416d-ad4d-47cb2489e98b", "c77bf3f1-a402-430d-baad-b499d7c925ee", "b6612405-ae9d-4c89-b4cd-dd34b107b48b"]
+  "split": {
+    "VTI": 0.8,
+    "VXUS": 0.2
   },
-  "reached": []
+  "robinhood_alerts": {
+    "VTI": [
+      "34eb0093-8494-4c50-943c-311fc2e05493",
+      "e8a74b0a-21e9-4ce0-bf37-bf1133faae9e",
+      "5a8f1f19-2e2d-4ac5-be02-a6a51c472e68"
+    ],
+    "VXUS": [
+      "96cf4a7b-9a27-416d-ad4d-47cb2489e98b",
+      "c77bf3f1-a402-430d-baad-b499d7c925ee",
+      "b6612405-ae9d-4c89-b4cd-dd34b107b48b"
+    ]
+  },
+  "reached": [],
+  "other_holdings": "The rest of the ~$170k is crypto in the same account's crypto wallet (BTC 0.1708, ETH 7.469, SOL 39.94; ~$39k on 2026-09-24). Crypto is not margin collateral, so the margin-call arithmetic uses the VTI/VXUS stake only. No cash is set aside for dip buys: every level is a margin buy."
 }
