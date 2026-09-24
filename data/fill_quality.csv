@@ -4,3 +4,5 @@ date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,no
 2026-09-08,SPMO,buy,193,150.6259,149.72,signal_session_close,60.51,29070.8,one-time Tue open rebalance; $100k deposit deployed,1
 2026-09-17,SPMO,buy,3.465873,146.6499,146.6499,signal_session_close,0.0,508.27,one-time market-open cash sweep; ref_price is the fill itself (no signal-session close for an off-cycle sweep) -- 0bp is by construction not a slippage claim,0
 2026-09-17,TQQQ,buy,21.876089,70.535,70.535,signal_session_close,0.0,1543.03,one-time market-open cash sweep; ref_price is the fill itself (no signal-session close for an off-cycle sweep) -- 0bp is by construction not a slippage claim,0
+2026-09-24,SPMO,buy,353.381514,152.2173,152.13,signal_session_close,5.74,53790.78,tranche 1 of the staged $300k deposit; ref = last regular-session trade,0
+2026-09-24,TQQQ,buy,587.561347,78.65,78.59,signal_session_close,7.63,46211.7,tranche 1 of the staged $300k deposit; ref = last regular-session trade,0
