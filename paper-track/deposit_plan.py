@@ -14,14 +14,15 @@ With no active plan (the file is missing, or status 'complete') reserve = 0 and
 every formula collapses to the normal one, so the routines stay correct
 whether or not a plan is running.
 
-Schedule. The deposit is recognised when it lands (idle cash above
-ARRIVAL_MIN while the plan is 'awaiting_deposit'); it may arrive in pieces.
-Nothing is released until at least ARRIVED_FRACTION of the planned total has
-arrived -- until then the whole arrived amount is reserve. The session on
-which that happens is session 0 and releases tranche 1; tranche k releases on
-session 5(k-1). Sessions are counted on the QQQ daily-bar dates the routine
-already has, so holidays count correctly. Each tranche is 1/n of the amount
-that actually arrived.
+Schedule (owner, 2026-09-24: "stage from today" -- the first $100k landed
+before the plan was wired). The deposit is recognised when it lands (idle
+cash above ARRIVAL_MIN while the plan is active); it may arrive in pieces.
+The session of the FIRST arrival is session 0 and releases tranche 1;
+tranche k releases on session 5(k-1). Sessions are counted on the QQQ
+daily-bar dates the routine already has, so holidays count correctly. Each
+tranche is planned_total / tranches ($100k), capped by what has actually
+arrived: money that lands after its tranche date is released at once, and
+money that lands early waits in the reserve for its date.
 
 Why staged at all (deposit_staging_backtest.py, 2026-09-24, every start day,
 value 126 sessions later, $400k): lump on day 0 beats 4 x weekly 68% of the
@@ -36,7 +37,7 @@ import os
 
 PLAN_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'deposit_plan.json')
 ARRIVAL_MIN = 1000.0       # idle cash below this is rounding / dividends, not the deposit
-ARRIVED_FRACTION = 0.95    # the clock starts once this share of the planned total has landed
+ARRIVED_FRACTION = 0.95    # the plan completes once all tranches are out and this share has landed
 OVERSIZE = 1.10            # arrivals beyond this x planned are NOT this plan -- ask the owner
 
 
@@ -64,14 +65,14 @@ def arrived_total(plan):
 
 def record_arrival(plan, date, amount):
     """Log money that landed on `date`. Idempotent for a date: a re-run replaces
-    that date's figure instead of adding it twice. Starts the clock once
-    ARRIVED_FRACTION of the planned total is in. Returns the plan (mutated).
-    Raises ValueError if the total would exceed OVERSIZE x planned -- that is
-    not this plan's money and the normal 'ask the owner' rule applies."""
+    that date's figure instead of adding it twice. The first arrival starts
+    the tranche clock. Returns the plan (mutated). Raises ValueError if the
+    total would exceed OVERSIZE x planned -- that is not this plan's money and
+    the normal 'ask the owner' rule applies."""
     if plan.get('status') not in ('awaiting_deposit', 'deploying'):
         raise ValueError(f"plan is {plan.get('status')}; no arrivals expected")
-    if plan.get('start_date'):
-        raise ValueError("the tranche clock has started; later cash is not part of this plan")
+    if plan.get('start_date') and date < plan['start_date']:
+        raise ValueError("arrival dated before the tranche clock started")
     arr = [a for a in plan.setdefault('arrived', []) if a['date'] != date]
     arr.append({'date': date, 'amount': round(float(amount), 2)})
     arr.sort(key=lambda a: a['date'])
@@ -80,8 +81,8 @@ def record_arrival(plan, date, amount):
         raise ValueError(f"arrivals ${total:,.0f} exceed {OVERSIZE:.2f} x the planned "
                          f"${plan['planned_total']:,.0f}; ask the owner")
     plan['arrived'] = arr
-    if total >= plan['planned_total'] * ARRIVED_FRACTION:
-        plan['start_date'] = date
+    if not plan.get('start_date'):
+        plan['start_date'] = arr[0]['date']
         plan['status'] = 'deploying'
     return plan
 
@@ -108,7 +109,11 @@ def reserve(plan, session_dates, today):
         return 0.0
     pool = arrived_total(plan)
     k = tranches_released(plan, session_dates, today)
-    return round(pool * (plan['tranches'] - k) / plan['tranches'], 2)
+    return round(max(0.0, pool - k * tranche_size(plan)), 2)
+
+
+def tranche_size(plan):
+    return plan['planned_total'] / plan['tranches']
 
 
 def next_release(plan, session_dates, today):
@@ -148,10 +153,13 @@ def dollar_targets(weights, total_value, res):
 
 
 def mark_complete_if_done(plan, session_dates, today):
-    """Flip status to 'complete' once the last tranche has been released. The
-    routine calls this after trading and commits the file."""
+    """Flip status to 'complete' once the last tranche date has passed AND at
+    least ARRIVED_FRACTION of the planned total has landed (until then a late
+    piece is still this plan's money, released at once). The routine calls
+    this after trading and commits the file."""
     if plan and plan.get('status') == 'deploying' and \
-            tranches_released(plan, session_dates, today) >= plan['tranches']:
+            tranches_released(plan, session_dates, today) >= plan['tranches'] and \
+            arrived_total(plan) >= plan['planned_total'] * ARRIVED_FRACTION:
         plan['status'] = 'complete'
         plan['completed'] = today
     return plan
@@ -174,8 +182,8 @@ def summary_line(plan, session_dates, today):
     k = tranches_released(plan, session_dates, today)
     nxt = next_release(plan, session_dates, today)
     if plan.get('start_date') is None:
-        got = arrived_total(plan)
-        return (f"deposit plan: awaiting deposit (${got:,.0f} of ${plan['planned_total']:,.0f} arrived, "
-                f"all held in BOXX reserve)")
+        return f"deposit plan: awaiting the first deposit (${plan['planned_total']:,.0f} planned)"
+    got = arrived_total(plan)
     tail = f"; tranche {nxt[0]} in {nxt[1]} session(s)" if nxt else ""
-    return (f"deposit plan: {k}/{plan['tranches']} tranches released, reserve ${res:,.0f} in BOXX{tail}")
+    return (f"deposit plan: {k}/{plan['tranches']} tranche dates passed, ${got:,.0f} of "
+            f"${plan['planned_total']:,.0f} arrived, ${got - res:,.0f} deployed, reserve ${res:,.0f} in BOXX{tail}")

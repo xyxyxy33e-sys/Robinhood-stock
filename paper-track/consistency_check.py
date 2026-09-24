@@ -836,27 +836,36 @@ def check_deposit_plan():
     assert DP.reserve(None, days, days[0]) == 0.0
     vals = dict(SPMO=100.0, TQQQ=100.0, QLD=0.0, XLU=0.0, BOXX=0.0)
     assert DP.held_weights(vals, 0.0, 200.0, 0.0) == (0.5, 0.5, 0.0, 0.0, 0.0)
-    # awaiting: a partial arrival is all reserve; the clock has not started
+    # "stage from today": the first arrival starts the clock and is tranche 1
     p = copy.deepcopy(base)
-    DP.record_arrival(p, days[0], 250000)
-    DP.record_arrival(p, days[0], 250000)          # same-date re-run replaces, not adds
-    assert DP.arrived_total(p) == 250000 and p['start_date'] is None
-    assert DP.reserve(p, days, days[3]) == 250000 and DP.next_release(p, days, days[3]) == (1, None)
-    # second piece reaches 95% -> session 0 releases tranche 1
-    DP.record_arrival(p, days[2], 150000)
-    assert p['status'] == 'deploying' and p['start_date'] == days[2]
-    want = {2: 300000, 6: 300000, 7: 200000, 11: 200000, 12: 100000, 16: 100000, 17: 0}
-    for i, r in want.items():
-        assert DP.reserve(p, days[:i + 1], days[i]) == r, (i, DP.reserve(p, days[:i + 1], days[i]))
-    assert DP.next_release(p, days[:3], days[2]) == (2, 5)
+    assert DP.next_release(p, days, days[0]) == (1, None)
+    DP.record_arrival(p, days[0], 100007)
+    DP.record_arrival(p, days[0], 100007)          # same-date re-run replaces, not adds
+    assert DP.arrived_total(p) == 100007 and p['start_date'] == days[0] and p['status'] == 'deploying'
+    assert DP.reserve(p, days[:1], days[0]) == 7.0          # $100k out, the $7 waits for tranche 2
+    assert DP.next_release(p, days[:1], days[0]) == (2, 5)
+    # $200k lands on session 2: it waits; session 5 releases one $100k
+    DP.record_arrival(p, days[2], 200000)
+    assert DP.reserve(p, days[:3], days[2]) == 200007
+    assert DP.reserve(p, days[:6], days[5]) == 100007
+    # the last $100k is late (session 12, after tranche 3's date): released at once
+    assert DP.reserve(p, days[:11], days[10]) == 7.0
+    DP.record_arrival(p, days[12], 99993)
+    assert DP.reserve(p, days[:13], days[12]) == 100000
+    assert DP.reserve(p, days[:16], days[15]) == 0.0
+    DP.mark_complete_if_done(p, days[:16], days[15])
+    assert p['status'] == 'complete' and DP.reserve(p, days, days[-1]) == 0.0
+    # all tranche dates passed but money still missing -> stays open, reserve 0
+    r = copy.deepcopy(base)
+    DP.record_arrival(r, days[0], 100000)
+    DP.mark_complete_if_done(r, days[:17], days[16])
+    assert r['status'] == 'deploying' and DP.reserve(r, days[:17], days[16]) == 0.0
     try:
-        DP.record_arrival(p, days[3], 1000)
+        DP.record_arrival(r, '2026-09-30', 1000)
     except ValueError:
         pass
     else:
-        raise AssertionError("arrival after the clock started must be refused")
-    DP.mark_complete_if_done(p, days, days[-1])
-    assert p['status'] == 'complete' and DP.reserve(p, days, days[-1]) == 0.0
+        raise AssertionError("an arrival dated before the clock must be refused")
     # oversize money is not this plan's
     q = copy.deepcopy(base)
     try:
@@ -883,8 +892,8 @@ def check_deposit_plan():
     if live is not None:
         assert live['status'] in ('awaiting_deposit', 'deploying', 'complete')
         assert live['tranches'] == 4 and live['every_sessions'] == 5
-    print("OK: deposit plan -- partial arrivals held as reserve, clock starts at 95%, tranches release on "
-          "sessions 0/5/10/15, oversize and late cash refused, reserve invisible to the drift band")
+    print("OK: deposit plan -- first arrival starts the clock, $100k tranches on sessions 0/5/10/15 capped by "
+          "what has arrived, early money waits, late money goes at once, oversize refused, reserve invisible to the band")
 
 
 check_deposit_plan()

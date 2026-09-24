@@ -110,7 +110,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
-| 2026-09-24 | **staged $400k deposit**: 4 equal tranches, one every 5 sessions from the session the money lands; the unreleased reserve is parked in BOXX outside the strategy (`deposit_plan.py`, `data/deposit_plan.json`); weights unchanged, 40/60 kept | owner decision; lump beats 4 × weekly 68% (real) / 62% (proxy) of 6-month windows for a $3.6k / $1.4k median cost; the staged worst case is $6k / $13k better — less regret, not more return. "Staged deposit (2026-09-24)" |
+| 2026-09-24 | **staged $400k deposit**: 4 × $100k tranches, one every 5 sessions from the first arrival (24 Sep, "stage from today"), capped by what has arrived; the unreleased reserve is parked in BOXX outside the strategy (`deposit_plan.py`, `data/deposit_plan.json`); weights unchanged, 40/60 kept | owner decision; lump beats 4 × weekly 68% (real) / 62% (proxy) of 6-month windows for a $3.6k / $1.4k median cost; the staged worst case is $6k / $13k better — less regret, not more return. "Staged deposit (2026-09-24)" |
 | 2026-09-23 | **A base for the next spell 30/70 → 40/60** (`A_BASE_ROWS`) | owner decision; Sharpe flat across splits, 40/60 the cheapest step in long-run drawdown (`fall_protection_study.md` follow-ups 19–22) |
 | 2026-09-23 | **trim v2 on probation**: paper shadow tracks (v2 / fast-cut / 19 Sep) in `shadow_tracker.py`, pre-registered revert rule ("Trim v2 on probation"); **live-path guard**: `live_target_weights` refuses to run if `TARGET_WEIGHTS` was modified in-process (research modules re-pin state E to 50% XLU on import) | critique fix 1; tracker reproduces the backtest within 0.05% over 2015–2026 on all three tracks |
 | 2026-09-23 | **whipsaw carry**: held trim votes and the A spell start survive a non-A gap of ≤ 3 sessions (`A_SPELL_GAP_CARRY`); a 1-day dip no longer puts TQQQ back in, nor starts a new (40/60) spell | pre-registered no-harm test passed (`fall_protection_r16.py`, follow-up 14); real Sharpe 1.717 → 1.797, proxy MaxDD unchanged; 3 real events |
@@ -4727,15 +4727,16 @@ not change; `paper-track/deposit_plan.py` only decides how much of the account
 the weights apply to while the money is fed in, and `data/deposit_plan.json`
 holds the plan and its progress.
 
-- **Arrival.** The routine recognises the deposit as idle cash above $1,000
-  while the plan is `awaiting_deposit`; it may land in pieces, and each piece
-  is parked in BOXX as reserve. Money beyond 1.10 × planned, or cash arriving
-  after the clock starts, is not covered and goes through the usual
-  "ask the owner above 20%" rule.
-- **Clock.** The session on which 95% of the planned total has arrived is
+- **Arrival.** The routine recognises deposit money as idle cash above
+  $1,000 while the plan is active; it lands in pieces (the first $100,007 on
+  2026-09-24, before the plan was wired). Money beyond 1.10 × planned is not
+  covered and goes through the usual "ask the owner above 20%" rule.
+- **Clock** (owner: "stage from today"). The session of the first arrival is
   session 0 and releases tranche 1 at once; tranches 2–4 release on sessions
   5, 10 and 15 (counted on QQQ bar dates, so holidays count). Each tranche is
-  a quarter of what actually arrived.
+  $100k, capped by what has arrived: money that lands early waits in the
+  reserve for its date, money that lands late is released at once. The plan
+  closes once the last date has passed and 95% of the $400k is in.
 - **Arithmetic.** investable = total − reserve; held weights and dollar
   targets are of the investable account, with the reserve on top of BOXX. The
   reserve is therefore never drift; a release shows up as cash-heavy drift and
