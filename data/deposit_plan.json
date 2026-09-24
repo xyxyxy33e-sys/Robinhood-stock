@@ -19,5 +19,5 @@
       "amount": 100002.48
     }
   ],
-  "note_2026_09_24": "All $300,007 arrived before the first run. Tranche 1 ($53,790.78 SPMO + $46,211.70 TQQQ) filled 15:51 ET. The $200,007 reserve could NOT be parked in BOXX: the BOXX buy was blocked by the session's permission classifier; it sits as idle cash pending the owner. Reserve bookkeeping is unaffected (idle cash counts toward the cash leg)."
+  "note_2026_09_24": "All $300,007 arrived before the first run. Tranche 1 ($53,790.78 SPMO + $46,211.70 TQQQ) filled 15:51 ET by the daily run. The $200,007 reserve was parked in BOXX by the OWNER at 15:5x ET (1,690.512974 sh at $118.31) after the agent's BOXX order was blocked by the session's permission classifier. Cash now $0."
 }
