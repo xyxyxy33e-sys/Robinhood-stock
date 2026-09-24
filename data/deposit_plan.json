@@ -4,8 +4,20 @@
   "planned_total": 300000,
   "tranches": 3,
   "every_sessions": 5,
-  "status": "awaiting_deposit",
-  "arrived": [],
-  "start_date": null,
-  "released": []
+  "status": "deploying",
+  "arrived": [
+    {
+      "date": "2026-09-24",
+      "amount": 300007.07
+    }
+  ],
+  "start_date": "2026-09-24",
+  "released": [
+    {
+      "tranche": 1,
+      "date": "2026-09-24",
+      "amount": 100002.48
+    }
+  ],
+  "note_2026_09_24": "All $300,007 arrived before the first run. Tranche 1 ($53,790.78 SPMO + $46,211.70 TQQQ) filled 15:51 ET. The $200,007 reserve could NOT be parked in BOXX: the BOXX buy was blocked by the session's permission classifier; it sits as idle cash pending the owner. Reserve bookkeeping is unaffected (idle cash counts toward the cash leg)."
 }
