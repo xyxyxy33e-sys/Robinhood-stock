@@ -891,7 +891,7 @@ def check_deposit_plan():
     live = DP.load()
     if live is not None:
         assert live['status'] in ('awaiting_deposit', 'deploying', 'complete')
-        assert live['tranches'] == 4 and live['every_sessions'] == 5
+        assert live['tranches'] >= 1 and live['every_sessions'] == 5 and live['planned_total'] > 0
     print("OK: deposit plan -- first arrival starts the clock, $100k tranches on sessions 0/5/10/15 capped by "
           "what has arrived, early money waits, late money goes at once, oversize refused, reserve invisible to the band")
 

@@ -1,8 +1,8 @@
 {
-  "name": "2026-09 deposit, $400k in 4 weekly tranches",
+  "name": "2026-09 deposit, $300k in 3 weekly tranches (was $400k / 4; owner 2026-09-24)",
   "decided": "2026-09-24",
-  "planned_total": 400000,
-  "tranches": 4,
+  "planned_total": 300000,
+  "tranches": 3,
   "every_sessions": 5,
   "status": "awaiting_deposit",
   "arrived": [],

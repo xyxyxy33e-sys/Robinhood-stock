@@ -110,6 +110,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-24 | **deposit cut to $300k, 3 × $100k tranches** (24 Sep, 1 Oct, 8 Oct), same rules | owner: ~$170k stays in the individual account for a transfer bonus |
 | 2026-09-24 | **daily account push**: the 16:30 ET dashboard Routine, last in the day's chain, sends one summary notification every trading day after checking the day's records are committed (value, day's move, state/split, drift, trades, deposit progress, drawdown, recording status; action items first) | owner request; reporting only — the 15:50 runs keep their three event pushes |
 | 2026-09-24 | **staged $400k deposit**: 4 × $100k tranches, one every 5 sessions from the first arrival (24 Sep, "stage from today"), capped by what has arrived; the unreleased reserve is parked in BOXX outside the strategy (`deposit_plan.py`, `data/deposit_plan.json`); weights unchanged, 40/60 kept | owner decision; lump beats 4 × weekly 68% (real) / 62% (proxy) of 6-month windows for a $3.6k / $1.4k median cost; the staged worst case is $6k / $13k better — less regret, not more return. "Staged deposit (2026-09-24)" |
 | 2026-09-23 | **A base for the next spell 30/70 → 40/60** (`A_BASE_ROWS`) | owner decision; Sharpe flat across splits, 40/60 the cheapest step in long-run drawdown (`fall_protection_study.md` follow-ups 19–22) |
@@ -4721,9 +4722,9 @@ scored against the flat-de-levering null.
   live 0.754) — structural, not a parameter problem. One-step on a 15-day high
   remains the shadow pick. Not applied.
 
-## Staged deposit (2026-09-24) — owner: "keep 40/60, do 4 weekly tranches"
+## Staged deposit (2026-09-24) — owner: "keep 40/60, do 4 weekly tranches"; cut to $300k / 3 tranches the same day
 
-The owner is adding **$400k** to a ~$218k account (→ ~$618k). The weights do
+The owner is adding **$300k** to a ~$218k account (→ ~$518k); it was $400k until later the same day, when the owner kept ~$170k in a separate individual account. The weights do
 not change; `paper-track/deposit_plan.py` only decides how much of the account
 the weights apply to while the money is fed in, and `data/deposit_plan.json`
 holds the plan and its progress.
@@ -4733,11 +4734,12 @@ holds the plan and its progress.
   2026-09-24, before the plan was wired). Money beyond 1.10 × planned is not
   covered and goes through the usual "ask the owner above 20%" rule.
 - **Clock** (owner: "stage from today"). The session of the first arrival is
-  session 0 and releases tranche 1 at once; tranches 2–4 release on sessions
-  5, 10 and 15 (counted on QQQ bar dates, so holidays count). Each tranche is
+  session 0 and releases tranche 1 at once; later tranches release on sessions
+  5 and 10 (counted on QQQ bar dates, so holidays count). Each tranche is
   $100k, capped by what has arrived: money that lands early waits in the
   reserve for its date, money that lands late is released at once. The plan
-  closes once the last date has passed and 95% of the $400k is in.
+  closes once the last date has passed and 95% of the $300k is in. With the
+  first $100k on 24 Sep, the dates are 24 Sep, 1 Oct and 8 Oct.
 - **Arithmetic.** investable = total − reserve; held weights and dollar
   targets are of the investable account, with the reserve on top of BOXX. The
   reserve is therefore never drift; a release shows up as cash-heavy drift and
