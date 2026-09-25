@@ -110,6 +110,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-25 | **deposit plan closed early**: the remaining $200,007 is deployed in one go at the Mon 28 Sep run instead of tranches on 1 and 8 Oct | owner decision; a lump beat staging in about two of three historical windows (`deposit_staging_backtest.py`) |
 | 2026-09-24 | **deposit cut to $300k, 3 × $100k tranches** (24 Sep, 1 Oct, 8 Oct), same rules | owner: ~$170k stays in the individual account for a transfer bonus |
 | 2026-09-24 | **daily account push**: the 16:30 ET dashboard Routine, last in the day's chain, sends one summary notification every trading day after checking the day's records are committed (value, day's move, state/split, drift, trades, deposit progress, drawdown, recording status; action items first) | owner request; reporting only — the 15:50 runs keep their three event pushes |
 | 2026-09-24 | **staged $400k deposit**: 4 × $100k tranches, one every 5 sessions from the first arrival (24 Sep, "stage from today"), capped by what has arrived; the unreleased reserve is parked in BOXX outside the strategy (`deposit_plan.py`, `data/deposit_plan.json`); weights unchanged, 40/60 kept | owner decision; lump beats 4 × weekly 68% (real) / 62% (proxy) of 6-month windows for a $3.6k / $1.4k median cost; the staged worst case is $6k / $13k better — less regret, not more return. "Staged deposit (2026-09-24)" |

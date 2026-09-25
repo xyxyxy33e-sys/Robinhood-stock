@@ -4,7 +4,7 @@
   "planned_total": 300000,
   "tranches": 3,
   "every_sessions": 5,
-  "status": "deploying",
+  "status": "complete",
   "arrived": [
     {
       "date": "2026-09-24",
@@ -19,5 +19,7 @@
       "amount": 100002.48
     }
   ],
-  "note_2026_09_24": "All $300,007 arrived before the first run. Tranche 1 ($53,790.78 SPMO + $46,211.70 TQQQ) filled 15:51 ET by the daily run. The $200,007 reserve was parked in BOXX by the OWNER at 15:5x ET (1,690.512974 sh at $118.31) after the agent's BOXX order was blocked by the session's permission classifier. Cash now $0."
+  "note_2026_09_24": "All $300,007 arrived before the first run. Tranche 1 ($53,790.78 SPMO + $46,211.70 TQQQ) filled 15:51 ET by the daily run. The $200,007 reserve was parked in BOXX by the OWNER at 15:5x ET (1,690.512974 sh at $118.31) after the agent's BOXX order was blocked by the session's permission classifier. Cash now $0.",
+  "completed": "2026-09-25",
+  "note_2026_09_25": "Owner: deploy the remaining $200,007 in one go instead of the 1 Oct / 8 Oct tranches. Plan closed early; with reserve 0 the Mon 28 Sep 15:50 run sees the BOXX as cash-leg drift (~38%) and trades it to the 50/50 target through the normal band."
 }
