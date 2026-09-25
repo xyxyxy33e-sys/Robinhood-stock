@@ -5,3 +5,9 @@ date,basket,nav,week_return,turnover,cost_bp,n_names,note
 2026-09-21,SPMO,1.000000,,,,1,seed; seed prices corrected 2026-09-22
 2026-09-21,QQQ,1.000000,,,,1,seed; seed prices corrected 2026-09-22
 2026-09-21,SPY,1.000000,,,,1,seed; seed prices corrected 2026-09-22
+2026-09-25,top5,1.007444,0.007444,0.0191,0.1,5,weekly mark; last regular-session trades
+2026-09-25,top10,1.011151,0.011151,0.0175,0.1,10,weekly mark; last regular-session trades
+2026-09-25,top15,1.009696,0.009696,0.0184,0.1,15,weekly mark; last regular-session trades
+2026-09-25,SPMO,1.005258,0.005258,0,0,1,benchmark
+2026-09-25,QQQ,1.004006,0.004006,0,0,1,benchmark
+2026-09-25,SPY,0.997156,-0.002844,0,0,1,benchmark
