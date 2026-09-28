@@ -17,9 +17,15 @@
       "tranche": 1,
       "date": "2026-09-24",
       "amount": 100002.48
+    },
+    {
+      "tranche": 2,
+      "date": "2026-09-28",
+      "amount": 200007.07
     }
   ],
   "note_2026_09_24": "All $300,007 arrived before the first run. Tranche 1 ($53,790.78 SPMO + $46,211.70 TQQQ) filled 15:51 ET by the daily run. The $200,007 reserve was parked in BOXX by the OWNER at 15:5x ET (1,690.512974 sh at $118.31) after the agent's BOXX order was blocked by the session's permission classifier. Cash now $0.",
   "completed": "2026-09-25",
-  "note_2026_09_25": "Owner: deploy the remaining $200,007 in one go instead of the 1 Oct / 8 Oct tranches. Plan closed early; with reserve 0 the Mon 28 Sep 15:50 run sees the BOXX as cash-leg drift (~38%) and trades it to the 50/50 target through the normal band."
+  "note_2026_09_25": "Owner: deploy the remaining $200,007 in one go instead of the 1 Oct / 8 Oct tranches. Plan closed early; with reserve 0 the Mon 28 Sep 15:50 run sees the BOXX as cash-leg drift (~38%) and trades it to the 50/50 target through the normal band.",
+  "note_2026_09_28": "Reserve deployed at the 15:50 run: BOXX 1,690.512974 sh sold at 118.3301; SPMO +$98,955.74, TQQQ +$101,150.00, then TQQQ +$96.71 (owner: use all buying power)."
 }
