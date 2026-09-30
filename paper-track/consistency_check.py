@@ -823,6 +823,35 @@ def check_shadow_tracker():
 check_shadow_tracker()
 
 
+def check_cash_sweep():
+    """Idle-cash sweep (2026-09-30): small cash waits, dividend-sized cash fills
+    the under-target legs, a zero-target leg never gets any, E/F cash goes
+    to BOXX, and the deposit plan / 20% rule take precedence."""
+    import os, tempfile, csv, cash_sweep as CS
+    vals = dict(SPMO=257183.20, TQQQ=258563.37, QLD=0.0, XLU=0.0, BOXX=0.0)
+    tv = sum(vals.values()) + 224.06
+    o, why = CS.plan_sweep((0.5, 0.5, 0, 0, 0), vals, 224.06, tv)
+    assert set(o) == {'SPMO'} and abs(o['SPMO'] - 224.06) < 0.01, (o, why)  # SPMO is the short leg
+    assert sum(o.values()) <= 224.06
+    o, _ = CS.plan_sweep((0.5, 0.5, 0, 0, 0), dict(SPMO=1000.0, TQQQ=1000.0), 150.0, 2150.0)
+    assert o == {'SPMO': 75.0, 'TQQQ': 75.0}, o
+    assert CS.plan_sweep((0.5, 0.5, 0, 0, 0), vals, 99.0, tv)[0] == {}
+    # trim held: TQQQ target 0 -> a TQQQ dividend is not reinvested into TQQQ
+    o, _ = CS.plan_sweep((0.4167, 0, 0, 0, 0.5833), dict(SPMO=41000.0, TQQQ=500.0, BOXX=58000.0), 500.0, 100000.0)
+    assert 'TQQQ' not in o and abs(sum(o.values()) - 500.0) < 0.02, o
+    o, _ = CS.plan_sweep((0, 0, 0, 0, 1.0), dict(BOXX=99000.0), 1000.0, 100000.0)
+    assert o == {'BOXX': 1000.0}, o
+    assert CS.plan_sweep((0.5, 0.5, 0, 0, 0), vals, 224.06, tv, plan_active=True)[0] == {}
+    assert CS.plan_sweep((0.5, 0.5, 0, 0, 0), dict(SPMO=40.0, TQQQ=40.0), 30.0 * 1000, 30080.0)[0] == {}
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, 's.csv')
+        CS.log_sweep('2026-09-30', 224.06, tv, {'SPMO': 224.06}, path=path)
+        CS.log_sweep('2026-09-30', 224.06, tv, {'SPMO': 224.06}, path=path)
+        assert len(list(csv.DictReader(open(path)))) == 1
+    print("OK: cash sweep -- under $100 waits, dividend cash fills under-target legs by shortfall, "
+          "zero-target legs get nothing, E/F cash to BOXX, deposit plan and the 20% rule take precedence")
+
+
 def check_deposit_plan():
     """Staged deposit (2026-09-24): reserve arithmetic, the tranche calendar,
     idempotent arrivals, the oversize refusal, and that with no plan every
@@ -897,3 +926,4 @@ def check_deposit_plan():
 
 
 check_deposit_plan()
+check_cash_sweep()

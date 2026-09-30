@@ -110,6 +110,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-09-30 | **idle-cash sweep**: on a no-trade day, idle cash of $100 or more (dividends, interest, leftovers) buys the legs below their dollar target in proportion to the shortfall; zero-target legs get nothing; skipped while a deposit plan is active or above 20% of the account (ask the owner). DRIP stays OFF in this account (`cash_sweep.py`, `data/cash_sweeps.csv`) | owner, after TQQQ paid $224: "you should have a plan for it"; a housekeeping rule, not a design change — the band never fires on dividend-sized cash |
 | 2026-09-25 | **deposit plan closed early**: the remaining $200,007 is deployed in one go at the Mon 28 Sep run instead of tranches on 1 and 8 Oct | owner decision; a lump beat staging in about two of three historical windows (`deposit_staging_backtest.py`) |
 | 2026-09-24 | **deposit cut to $300k, 3 × $100k tranches** (24 Sep, 1 Oct, 8 Oct), same rules | owner: ~$170k stays in the individual account for a transfer bonus |
 | 2026-09-24 | **daily account push**: the 16:30 ET dashboard Routine, last in the day's chain, sends one summary notification every trading day after checking the day's records are committed (value, day's move, state/split, drift, trades, deposit progress, drawdown, recording status; action items first) | owner request; reporting only — the 15:50 runs keep their three event pushes |
@@ -4765,6 +4766,32 @@ choice, which is the owner's to make. Worst single days on record, for the
 same account at 50/50: 16 Mar 2020 (QQQ −12.0%, TQQQ −34.5%, SPMO −15.4%)
 ≈ −25%, about −$154k on $618k; 3–4 Apr 2025 ≈ −22% over two days. QQQ has
 never fallen 20% in a day (Nasdaq-100 worst: −15.1%, 19 Oct 1987).
+
+## Idle-cash sweep and dividends (2026-09-30)
+
+SPMO and TQQQ pay small cash dividends (TQQQ paid $224.06 on 2026-09-29,
+0.04% of the account). **DRIP is off in this account on purpose**: it would
+reinvest into the leg that paid, even when the strategy has that leg at 0%
+(a TQQQ dividend while trim v2 holds TQQQ out), leaving a stub below the
+0.10% zero-leg sweep. Instead `paper-track/cash_sweep.py`:
+
+- runs in the 15:50 routines on a **no-trade day only** (a band or regime
+  trade already takes every leg, cash included, to target);
+- leaves idle cash under **$100** alone;
+- otherwise buys the legs **below their dollar target**, in proportion to
+  each leg's shortfall (the positive shortfalls always add up to at least
+  the idle cash, so the sweep only ever moves the book toward target); legs
+  with a 0% target get nothing; in E/F the cash goes to BOXX;
+- stands aside while a staged deposit plan is active, and above 20% of the
+  account (the "ask the owner" rule for unexpected cash);
+- logs each sweep to `data/cash_sweeps.csv` and each fill to
+  `fill_quality.csv` (note "cash sweep").
+
+The NAV index stays **price-return**: it never counted dividends, and neither
+do the split-adjusted backtests it is compared with, so it understates total
+return by roughly the two legs' yield (under 1%/yr). DRIP stays on in the
+owner's buy-and-hold accounts (the Roth IRA's VGT; VTI/VXUS in the
+individual account), which the agent does not trade.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 
