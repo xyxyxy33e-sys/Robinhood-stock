@@ -75,6 +75,10 @@ HIGHREL_N = 15          # 'gate' D stays cash after the gate clears; 'spell' TQQ
                         # 'overlay' the fast re-entry upgrade waits; 'vol' the vol multiplier may only rise
                         # on a new-high day. Empty = the live design, reproduced exactly.
 
+GATE_G_EXIT = None   # dgate_buffer_study (2026-09-30): the gap200 half of the D gate turns ON below 2%
+GATE_B_EXIT = None   # and OFF only at/above GATE_G_EXIT (breadth: on below 0.20, off at/above GATE_B_EXIT).
+                     # None = the live gate, reproduced exactly.
+
 def sim(h, arm=None, detail=False):
     """drawdown_study.sim (live design) with one A-state hook. arm = (kind, param, action)."""
     if h == 'real':
@@ -87,12 +91,21 @@ def sim(h, arm=None, detail=False):
     held = prev = None; out = []; vhist = []; risky = 0.0; nreb = 0; nflag = 0
     latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0; gapn = 0
     glatch = rlatch = olatch = 0; ovon = False; mprev = None
+    gfl = bfl = False
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
         eff = I['eff']; gaps = I['gaps']; vol = I['vol']
         g200 = gaps.get(200); b = bp.get(d)
-        gate = (st == 'D') and ((b is not None and b < 0.20) or (g200 is not None and g200 < 0.02))
+        if GATE_G_EXIT is None: gfl = g200 is not None and g200 < 0.02
+        elif g200 is None: gfl = False
+        elif g200 < 0.02: gfl = True
+        elif g200 >= GATE_G_EXIT: gfl = False
+        if GATE_B_EXIT is None: bfl = b is not None and b < 0.20
+        elif b is None: bfl = False
+        elif b < 0.20: bfl = True
+        elif b >= GATE_B_EXIT: bfl = False
+        gate = (st == 'D') and (bfl or gfl)
         hrk = ()
         if HIGHREL:
             nh = qfeat(h, d, 'high', HIGHREL_N) >= 0
