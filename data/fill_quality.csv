@@ -10,3 +10,4 @@ date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,no
 2026-09-28,SPMO,buy,654.772315,151.13,151.21,signal_session_close,-5.29,98955.74,deposit plan closed early: remaining $200k reserve deployed in one go (owner); ref = last regular-session trade,0
 2026-09-28,TQQQ,buy,1313.465783,77.01,77.03,signal_session_close,-2.6,101150.0,deposit plan closed early: remaining $200k reserve deployed in one go (owner); ref = last regular-session trade,0
 2026-09-28,TQQQ,buy,1.257118,76.9299,77.03,signal_session_close,-12.99,96.71,owner: use all buying power ($96.71 idle cash),0
+2026-09-30,SPMO,buy,1.475641,151.839,151.47,signal_session_close,24.36,224.06,cash sweep: TQQQ dividend,0
