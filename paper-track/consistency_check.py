@@ -1033,8 +1033,17 @@ def check_live_run_orders():
     assert abs(bought - tv) < 1.0, (bought, tv)
     assert L.plan_orders((0.5, 0.5, 0, 0, 0, 0), {'SPMO': 50.0, 'TQQQ': 50.0}, {}, q, 100.0) == [], \
         "no order below $1"
+    # cent rounding must not push a limit off the touch: 152.33*100 is 15233.000000000002 in floats
+    for bid in (152.33, 118.29, 0.57, 1.1, 88.37):
+        assert L.cents_up(bid) == bid and L.cents_down(bid) == bid, bid
+    q2 = {s: dict(last=152.34, bid=152.33, ask=152.35) for s in L.LEGS6}
+    q2['BOXX'] = dict(last=118.49, bid=118.48, ask=118.50)
+    o2 = L.plan_orders((0.4, 0, 0, 0, 0, 0.6), {'SPMO': 100 * 152.34}, {'SPMO': 100.0}, q2, 100 * 152.34)
+    s2 = [x for x in o2 if x['symbol'] == 'SPMO' and x['kind'] == 'limit'][0]
+    b2 = [x for x in o2 if x['symbol'] == 'BOXX' and x['kind'] == 'limit'][0]
+    assert s2['limit'] == 152.33 and b2['limit'] == 118.50, (s2, b2)
     print("OK: live_run orders -- sells first, 0% legs = whole-share limit + fractional market stub, "
-          "limits capped 0.3% through the last, buys sum to the account")
+          "limits at the touch to the cent, capped 0.3% through the last, buys sum to the account")
 
 
 check_live_run_orders()

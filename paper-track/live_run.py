@@ -166,6 +166,16 @@ def vixm_pair(dates, qqq, today, prev, vix_now, notes):
 
 
 # ------------------------------------------------------------------ orders
+def cents_up(x):
+    """Round a price up to the cent. round() first, so a quote like 152.33 (152.33*100 =
+    15233.000000000002 in floating point) stays 152.33 instead of becoming 152.34."""
+    return math.ceil(round(x * 100, 6)) / 100
+
+
+def cents_down(x):
+    return math.floor(round(x * 100, 6)) / 100
+
+
 def plan_orders(target, values, qty, quotes, tv, res=0.0):
     """Dollar targets -> concrete orders, sells first. Whole shares as marketable
     limits (sell at the bid, buy at the ask, capped 0.3% through the last), the
@@ -180,7 +190,7 @@ def plan_orders(target, values, qty, quotes, tv, res=0.0):
         q = quotes[sym]
         last = q['last']
         if delta < 0:
-            px = math.ceil(max(q.get('bid') or last, last * (1 - LIMIT_BAND)) * 100) / 100   # never below the cap
+            px = cents_up(max(q.get('bid') or last, last * (1 - LIMIT_BAND)))   # never below the cap
             if tgt[sym] < 1.0:          # leg to 0%: whole shares as a limit, the fractional stub at market
                 held_q = qty.get(sym, 0.0)
                 sh = math.floor(held_q)
@@ -200,7 +210,7 @@ def plan_orders(target, values, qty, quotes, tv, res=0.0):
             if rest >= 1.0:
                 sells.append(dict(symbol=sym, side='sell', kind='market_dollars', dollars=round(rest, 2)))
         else:
-            px = math.floor(min(q.get('ask') or last, last * (1 + LIMIT_BAND)) * 100) / 100  # never above the cap
+            px = cents_down(min(q.get('ask') or last, last * (1 + LIMIT_BAND)))  # never above the cap
             sh = math.floor(delta / px)
             if sh:
                 buys.append(dict(symbol=sym, side='buy', kind='limit', quantity=sh, limit=px,
