@@ -1,0 +1,15 @@
+Weekly mark for the top-5 / top-10 / top-15 momentum paper track.
+
+PAPER ONLY. This track holds nothing real. Never place an order from this run, never touch state.py, STRATEGY.md or the live trigger prompts, and never let this influence the live strategy.
+
+STEP 1 — market-day guard. Pull the QQQ quote. If today was not a trading day, say "market closed, no mark" and stop.
+
+STEP 2 — read `data/topn_momentum_state.json` for the previous mark's date, prices and held weights, and `paper-track/topn_momentum_track.py` for the construction.
+
+STEP 3 — check whether the index book has changed since the last mark. The S&P 500 Momentum Index reconstitutes semi-annually, effective after the close of the third Friday of March and September. If a reconstitution has happened, refresh `INDEX_WEIGHTS` in the script from the current constituent file (Invesco's SPMO holdings; if Invesco has not published yet, KIWOOM 0137V0 on the KRX tracks the same index and publishes daily — see research_notes/spmo_sep2026_rebalance.md). Keep share classes COMBINED: GOOGL and GOOG are one company, held in GOOGL. Otherwise leave the weights alone — normal weekly marks rebalance back to the SAME target weights, and drift-vs-target is the only turnover.
+
+STEP 4 — pull official closes for every name in the top 15 plus SPMO, QQQ and SPY (use the last regular-session trade; the `close` field may still show the prior session). Call `mark()` and the benchmark rows, append to `data/topn_momentum_paper.csv`, and rewrite `data/topn_momentum_state.json`.
+
+STEP 5 — report a short table: each basket's week return, NAV and cumulative return, against SPMO / QQQ / SPY, plus turnover and cost in bp. Then commit the two data files with a one-line message. No artifact edit, no push notification.
+
+CONTEXT WORTH REMEMBERING when you interpret results: until 2026-08-31 the live core WAS a 15-stock proportionally-weighted mirror of SPMO, and it was dropped because the ETF beat it on every axis (Sharpe 1.065 vs 1.043, MaxDD -30.4% vs -33.0%). So top-15 is re-running a settled question; top-5 and top-10 are the new information. A few weeks of NAV proves nothing either way — do not draw conclusions from a short sample, and do not propose applying any of this to the live account.

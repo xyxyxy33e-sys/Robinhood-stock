@@ -1,0 +1,709 @@
+Weekly rebalance for the Robinhood Agentic account (576391551) — SPMO core +
+TQQQ/QLD satellite + BOXX cash gate (XLU dropped from state E 2026-09-19), with volatility targeting
+on top. (The micro overlay was DISABLED 2026-09-02 -- see below.) Runs Friday at 15:50 ET, ten minutes before the
+close (moved from 15:55 on 2026-09-09 -- see section 0b). `STRATEGY.md` in the repo is the single source of truth for what the
+strategy is and why; this prompt is only the when-and-how. If the two ever
+disagree, STRATEGY.md wins — do not re-derive strategy rationale here.
+
+This is the FULL weekly routine: check the drift band, rebalance if it fires,
+then report either way. Note the Mon–Thu trigger uses the SAME drift-band gate,
+so by Friday the portfolio is often already within band — in that case trade
+nothing and still produce the weekly report. The weekly report is unconditional;
+the weekly TRADE is not.
+
+## DESIGN STATUS (2026-09-23) -- change freeze REMOVED; extension trim v2 APPLIED
+
+The owner REMOVED the December change freeze on 2026-09-23 and the same day
+applied **EXTENSION TRIM v2** (STRATEGY.md "Extension trim v2"; research in
+`paper-track/research_notes/fall_protection_study.md`). It replaces the v1
+trim, which scaled the A row by 1 − ⅓ × votes on the RAW vote count and
+therefore re-levered into falls as the votes fell away. v2, inside the
+effective state A only:
+  - **Held votes** rise at once to the raw vote count, and come down ONE vote
+    at a time, only on a session whose close is a new 15-session closing
+    high, never below the raw count; they reset to 0 only after the effective
+    state has been out of A for MORE than 3 sessions (whipsaw carry,
+    `A_SPELL_GAP_CARRY`, 2026-09-23): a 1–3 session dip carries the held votes
+    AND the spell start (so it cannot start a new 40/60 spell either); the
+    non-A days themselves trade their own state's row as usual.
+  - **Row**: at held ≥ 1 ALL TQQQ is out; SPMO is cut ⅙ of its base per held
+    vote; the rest is BOXX. Base 50/50: 50/50/0 → 41.7/0/58.3 → 33.3/0/66.7 →
+    25/0/75 (SPMO/TQQQ/BOXX).
+  - **Base row by spell**: the A spell in progress on 2026-09-23 (began
+    2026-08-04) keeps **50/50**; every A spell that STARTS on or after
+    2026-09-23 holds **40/60** SPMO/TQQQ (40/60/0 → 33.3/0/66.7 →
+    26.7/0/73.3 → 20/0/80; set to 30/70 first, moved to 40/60 the same day by
+    the owner). This switch is automatic — `a_trim_state()` returns the base.
+  - `a_trim_state(dates, px, as_of=<date>)` computes all of it from QQQ
+    closes (no stored state; a missed run reconstructs it exactly), and
+    `live_target_weights(...)` now REQUIRES it as its 7th argument.
+**Trim v2 is ON PROBATION** (STRATEGY.md "Trim v2 on probation"): three paper
+shadow tracks (v2, v2 without the hold = "fast-cut", and the 19 Sep design)
+run beside the book in `paper-track/shadow_tracker.py`, and a revert rule
+written on 2026-09-23 decides after two completed vote spells. The rule only
+REPORTS; never change the design from a trigger run.
+**Process hygiene (2026-09-23):** `live_target_weights` now REFUSES to run if
+`state.TARGET_WEIGHTS` was modified in the process — several research modules
+(`d_substate_fresh`, `drawdown_study`, `fall_protection_*`) re-pin state E to
+the old 50% XLU row on import. Never import a research harness in the live run.
+The 2026-09-19 owner decisions stand unchanged: the state-D gate (breadth OR
+gap200 → cash on D days) and state E = 100% BOXX (was 50% XLU / 50% BOXX).
+Trade what the code returns.
+
+## DESIGN STATUS (2026-10-08) -- VIXM sleeve in the cash leg APPLIED
+
+**FIRST STEP of every run, before anything else: `git pull --ff-only`** in
+the repo (the VIXM code landed from another session; a stale checkout would
+trade the old design). If the pull fails, say so and continue on the current
+checkout only if `state.live_target_weights_with_vixm` exists; otherwise
+report and stop -- the 16:10 watchdog picks it up.
+
+The owner applied the **VIXM sleeve** on 2026-10-08 (STRATEGY.md "VIXM sleeve
+in the cash leg"; research `paper-track/research_notes/vixm_cash_sleeve.md`).
+Every weight row and overlay below is unchanged; it only decides what the
+CASH leg holds. A latch turns ON when VIX closes below 18 with VIX <= VIX3M,
+and OFF when VIX closes above VIX3M (curve inverted). While it is ON **and**
+QQQ's 30-day realized vol is >= 20% ("stress"), 75% of the cash leg is held
+as **VIXM** instead of BOXX ("allowed"); VIXM is sold early when VIX falls
+25% below its high since entry ("faded") and stays out until stress resets.
+The live call becomes `live_target_weights_with_vixm(..., vx)` (6 legs:
+core, tqqq, qld, xlu, vixm, cash). VIXM is held on ~9-12% of days, so most
+runs read allowed=False and nothing about the trade changes. Kill switch:
+`state.VIXM_OVERLAY_ENABLED` -- never flip it from a run.
+
+## 0. Execution convention — what the signal is computed on
+
+This trigger fires at 15:50 ET (15:55 until 2026-09-09) and trades immediately, using the SAME
+session's prices for both the signal and the fills. The backtest convention
+is "decide on the close of session d0, hold the d0 -> d1 return", i.e. the
+trade happens at d0's close. The 15:5x snapshot is a few-minutes-early PROXY
+for that close: the last daily bar returned by `get_equity_historicals` is
+not final at 15:5x, so the SMA, state, gaps and realized-vol readings are all
+computed on a nearly-complete bar. That is the intended alignment, and the
+approximation is deliberate -- do NOT "fix" it by switching to the prior
+completed close, which would add a full session of lag. Added 2026-09-07
+after an outside review flagged the ambiguity; measured on real instruments,
+one EXTRA session of lag costs about 1.4pp of CAGR (31.9% -> 30.5%) and
+0.04 of Sharpe (about 2.2pp under the max(10,30) estimator that was live
+09-07..09-09, which reacted faster and was more lag-sensitive). The
+same lag is also the ENTIRE explanation for an outside replay's -39% to -40%
+proxy drawdown against our -34.7% (see the limitations note in section 7).
+So the five-minute gap is far smaller than that but is not zero, and
+execution discipline is worth more than most design changes. Two
+consequences to respect:
+  - Report readings as "15:5x snapshot", never as "the close".
+  - If a run happens outside 15:45-16:00 ET, say so in the report: the
+    further from the close, the worse the proxy.
+
+## 0a. Market-holiday guard
+
+Before doing anything else, confirm the US equity market actually traded
+today. The cron fires every Friday regardless of the exchange calendar, and
+on 2026-09-07 the daily trigger fired on Labor Day and was only caught
+because the run checked. Cheapest reliable check: pull the QQQ quote and
+compare `previous_close_date` and the last daily bar's date against today.
+If today is a market holiday, report "market closed, no action" and STOP —
+do not compute a reading, do not trade, do not edit the artifact.
+
+## 0b. Timing, pre-staging and the missed-run fallback (2026-09-09)
+
+**Fire time is now 15:50 ET (was 15:55).** The extra five minutes are for
+computing, not waiting: the style-attribution study measured the design's
+timing value at 10.6 / 8.0 / 6.6 pp/yr for 0 / 1 / 2 sessions of execution
+delay, so the single most valuable thing this run can do is FINISH before the
+close. Sequence, and do not reorder it:
+  1. 15:50-15:54: `git pull --ff-only`, holiday guard, pull data (VIX too), compute the reading, run BOTH
+     guards, build the held weights, call `needs_rebalance`. Nothing else.
+  2. If it fires: place the orders IMMEDIATELY -- target 15:54-15:57, never
+     after 15:59. Report readings as the "15:5x snapshot"; the bar is not
+     final and that is the intended proxy (section 0).
+  3. Only after fills are confirmed (or no trade): fill-quality recording,
+     NAV row, drawdown watch, notifications, artifact, commit. All of that
+     can run after 16:00 without cost; an order cannot.
+Do not spend the window on commentary, research, or reading STRATEGY.md.
+
+**Fill-quality recording now takes `session_lag`.** A same-session fill is
+`session_lag=0` (the normal case). If the fill happened the session AFTER the
+signal (the fallback below, or any delayed run), pass `session_lag=1`.
+`summarize()` counts only lag-0 fills toward the 25bp alarm and the 4bp cost
+comparison -- on a lagged fill the number is mostly the overnight gap, not
+execution (overnight_intraday.md) -- and reports lagged fills separately.
+
+**If THIS run cannot complete by 16:00** (tools down, data missing, guard
+tripped for a data reason, anything): do NOT wait for the next scheduled run.
+Say so plainly and stop; the 16:10 ET watchdog Routine will pick it up. The
+fallback it applies, measured in overnight_intraday.md: execute the CLOSE's
+signal at the next opportunity -- extended-hours whole-share limit orders if
+the reading is available by 16:10, otherwise the next open. That costs about
+-0.8 pp/yr and is not statistically distinguishable from zero; letting the
+SIGNAL slip a whole session instead costs -2.6 pp/yr proxy / -1.8 real at
+every cost level. Lose the overnight, never the signal.
+
+## 1. Compute this week's reading
+
+Pull QQQ AND QQEW daily closes via `get_equity_historicals`
+(adjustment_type='split'; QQEW is the equal-weight Nasdaq-100 ETF). Pull
+**24 months**: the breadth reading needs >= 312 common QQEW/QQQ sessions
+(60-session change inside a 252-session percentile window) on top of the
+200-day SMA and 30-day vol windows. Then, using `paper-track/state.py`'s OWN
+functions — never a reimplementation:
+
+  - `compute_states(dates, px)` → macro state (A–F). NOTE this returns a LIST
+    aligned to `dates`, not a dict — zip it with `dates` or index by position.
+    `compute_fast_states` and `compute_extension_gaps` DO return dicts keyed
+    by date.
+  - `compute_micro_agreement(dates, px)` → `micro_agrees` bool. INERT since
+    2026-09-02 (`MICRO_OVERLAY_ENABLED = False`): still passed through because
+    the signature needs it, but it changes no weight and is not a regime change.
+  - `realized_vol_live(dates, px, as_of=<today>)` → **the live volatility
+    estimate: the plain 30-day annualized realized vol** (REVERTED to this
+    2026-09-09 by owner decision; between 09-07 and 09-09 it was
+    max(10-day, 30-day), which three studies then found inside noise,
+    COVID-dependent and +13 rebalances/yr -- `VOL_ESTIMATOR_MAX_ENABLED` is
+    now False and the function returns the 30-day figure). Still call THIS
+    function, never `realized_vol()` directly, so a future flag change flows
+    through. Returns None on insufficient history → multiplier 1.0. Report
+    the 30-day reading; you may also report the 10-day for information, but
+    it moves no weight.
+  - `compute_fast_states(dates, px)[<today>]` → today's FAST (20/100) reading
+    of the same six-state machine. Added 2026-09-06: the fast re-entry
+    overlay. It is NOT a state of its own -- it only decides whether a macro
+    B/C day holds A weights (fast in A/B) or a macro F day holds C weights
+    (fast in A/B/C). See `effective_state()`.
+  - `breadth_reading(dates, qqew, qqq, as_of=<today>)` from
+    `paper-track/breadth_tracker.py` -> dict with `x60`, `pct`, `gate`.
+    Since 2026-09-19 this is a LIVE INPUT, not a measurement: `pct` feeds the
+    state-D gate below. `pct` None means too little history was pulled — pull
+    more; never pass None through and never substitute a guess.
+  - `a_trim_state(dates, px, as_of=<today>)` → today's extension-trim-v2
+    dict: `eff`, `in_a`, `spell_start`, `base` (core, tqqq), `raw` (today's
+    raw vote count), `held` (the held vote count that sets the A row). Added
+    2026-09-23. Compute it on the SAME QQQ series (with today appended) and
+    also for the prior session (`as_of=<yesterday>`) — the held-vote change
+    is a regime change (section 3). Report raw votes, held votes, the spell
+    start and the base row EVERY run.
+  - `live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)`
+    -> the 5 live weights (core, tqqq, qld, xlu, cash). **Since 2026-10-08
+    call it only through `live_target_weights_with_vixm` (below); never
+    `target_weights_with_voltarget`.** Added 2026-09-23: `a_trim` (the dict
+    above) is REQUIRED and is checked against the effective state; a missing
+    or mismatched one raises `MissingOverlayInputs`. Added 2026-09-07: `fast_state` and
+    `gaps` are REQUIRED positional arguments and are validated, raising
+    `MissingOverlayInputs`. Added 2026-09-19: `breadth_pct` (the reading's
+    `pct`, a float in [0, 1]) is REQUIRED too and None is refused. The older
+    function accepts these as None so pre-overlay backtests still run, which
+    meant a live call that forgot one silently traded the PRE-OVERLAY design
+    and looked fine doing it. `vol=None` is still accepted and still degrades
+    the multiplier to 1.0.
+  - **State-D gate (APPLIED 2026-09-19, owner override).** On a MACRO state-D
+    day the whole row is 100% BOXX when EITHER `breadth_pct < 0.20` OR the
+    200d gap `gaps[200] < 0.02` (QQQ less than 2% above its 200-day SMA);
+    otherwise D holds 100% QLD. `d_gate_flags(breadth_pct, gaps[200])` gives
+    the two flags and `d_gate_active(state, breadth_pct, gaps[200])` the
+    result; `live_target_weights` applies it itself. Report the breadth pct,
+    the 200d gap and both flags EVERY run, and on a D day say explicitly
+    "D gate ON (breadth)", "D gate ON (gap200)", "D gate ON (both)" or
+    "D gate off". The gate acts in D only; in A/B/C/E/F the flags are
+    informational.
+  - **VIXM sleeve inputs (APPLIED 2026-10-08).** Right after the QQQ/QQEW
+    pull, read VIX with `get_index_quotes` (index id
+    3b912aa2-88f9-4682-8ae3-e39520bdf4db), then
+        vix, vix3m, note = vol_curve.load_vix_inputs(today, vix_now=<VIX>)
+        vx = vixm_state(dates, px, vix, vix3m, as_of=today)
+        vx_prev = vixm_state(dates, px, vix, vix3m, as_of=<prior session>)
+    (`paper-track/vol_curve.py`: VIX/VIX3M history from CBOE, else FRED;
+    today's VIX3M = median of the fresh CBOE/Google/Yahoo quotes, else the
+    1.32 x SMA63(VIX) proxy; `note` names every source -- report it
+    verbatim. The replay stops at `as_of`, so `vx_prev` reads the histories
+    without today's rows.) If `load_vix_inputs` or `vixm_state` raises (no
+    index data), pass `vx = vx_prev = vixm_unavailable(<error>)` (VIXM 0%,
+    the cash leg all BOXX) and REPORT the error -- never guess a VIX3M. Then
+        target = live_target_weights_with_vixm(state, micro_agrees, vol,
+                     fast_state, gaps, breadth_pct, a_trim, vx)
+    -> 6 legs (core, tqqq, qld, xlu, vixm, cash). It calls
+    `live_target_weights` itself (every guard in this list unchanged) and
+    moves 75% of the cash leg into VIXM while `vx['allowed']`. In EVERY
+    run's output, even a no-trade one-liner, report: VIX, VIX3M (+ source and
+    quote age), ratio, latch on, stress, allowed, faded, and the VIX high
+    since entry.
+  - `effective_state(state, fast_state)` → the state whose weight row is
+    actually held. Report BOTH the macro state and the effective state
+    whenever they differ.
+  - `compute_extension_gaps(dates, px)[<today>]` → today's {100: gap, 150:
+    gap, 200: gap} (close / SMA − 1). Raw votes = how many of {100d > 10%,
+    150d > 12%, 200d > 15%} are true (`extension_votes(effective_state,
+    gaps)`). Pass the dict as `gaps=<gaps>` (never the legacy `gap200=`); it
+    still feeds the D gate's gap200 half and the reporting. **Since
+    2026-09-23 the A row is set by the HELD votes in `a_trim` (v2), not by
+    scaling on the raw votes** — the v1 ×⅔ / ×⅓ / ×0 rule is retired.
+    Report the three gaps, the raw vote count and the held vote count every
+    run. NOTE the three windows are ~0.9 correlated — they are ONE signal
+    read three ways, not three independent confirmations.
+
+`live_target_weights_with_vixm()` is THE live weight function as of
+2026-10-08; it wraps `live_target_weights()` (live as of 2026-09-07;
+that wraps `target_weights_with_voltarget()`, live since 2026-09-01): it applies the (now inert) micro overlay and then scales the four risky legs
+by `min(1.0, VOL_TARGET_PA / realized_vol)`, routing the freed weight to cash.
+Do not call `target_weights()`, `target_weights_with_micro()`, or
+`target_weights_with_gold()` for live weights — they all omit the volatility
+overlay. If `realized_vol_live` returns None, pass it through: the multiplier
+degrades to 1.0, the correct fallback. Report both vol legs, which binds, and the
+resulting multiplier every week, even when nothing trades — it is the main new
+moving part and should be visible.
+
+**Trade what the code returns, never a number written in prose** — here, in
+STRATEGY.md, or in any past report. `state.py`'s `TARGET_WEIGHTS` is
+authoritative.
+
+## 2. Safety guards — before any order, every run
+
+  - `validate_weights_live(state, core, tqqq, qld, xlu, vixm, cash)` (6 legs,
+    2026-10-08; was `validate_weights` on 5) immediately after
+    computing weights. `WeightSanityError` → abort, report, DO NOT TRADE.
+  - `circuit_breaker_check(actual_total_value, implied_total_value)` before
+    placing any order. `implied` = sum of each position's quantity × live
+    quote, rebuilt independently from `get_equity_positions` +
+    `get_equity_quotes`, PLUS the account's cash; `actual` =
+    `get_portfolio`'s own `total_value`. A gap beyond 2% means a data error
+    or bad fill, not market volatility. `CircuitBreakerTripped` → abort,
+    report, DO NOT TRADE. Note this guard reconciles two views of the SAME
+    balance — it does NOT detect a deposit, and a deposit is not a failure.
+  - `MissingOverlayInputs` from `live_target_weights` → abort, report, DO NOT
+    TRADE. It means an overlay input (fast state, gaps, since 2026-09-19 the
+    breadth pct, since 2026-09-23 the a_trim dict, since 2026-10-08 the vx
+    dict) was missing or computed for
+    the wrong date; never fall back to
+    `target_weights_with_voltarget` to get past it.
+
+Optionally run `python3 paper-track/consistency_check.py` — it asserts every
+`TARGET_WEIGHTS` row, the (disabled) micro overlay, the (inert) gold overlay, and the
+volatility overlay are internally consistent. Cheap, and it catches a bad edit
+to `state.py` before that edit reaches an order.
+
+## 2a. Unexpected cash — deposits and withdrawals
+
+If the account's cash differs materially from what the last run left behind
+(a deposit or withdrawal you did not place), the target weights still apply
+to the FULL `total_value` — new money is deployed to target, not held aside
+(except the planned deposit in section 2b, which has its own schedule).
+But a large unannounced balance change is worth one question before acting:
+if the change exceeds 20% of the prior account value, report the reading and
+the trades it implies and ASK the owner before placing them, rather than
+deploying silently. Below that threshold, deploy to target and note the
+change in the report. A deposit is not a circuit-breaker event.
+
+## 2b. Staged deposit plan (2026-09-24) — owner: "keep 40/60, do 4 weekly tranches"; total cut to $300k / 3 tranches the same day
+
+`paper-track/deposit_plan.py` + `data/deposit_plan.json`. The owner is sending
+$300k (`planned_total`; cut from $400k on 2026-09-24) to be fed in as 3 × $100k
+tranches (`tranches`), one every 5 sessions — the FILE is authoritative for
+both numbers. The WEIGHTS are unchanged; the plan only sets how much of the
+account the weights apply to. The money not yet released (the RESERVE) is
+parked in BOXX, outside the strategy. Every run:
+
+  1. `plan = deposit_plan.load()`. If `deposit_plan.active(plan)` is False
+     (no file, or status 'complete'), reserve = 0 and every step below is the
+     normal procedure.
+  2. ARRIVAL. If the plan is active and the account's idle uninvested cash
+     (NOT BOXX) is above `ARRIVAL_MIN` ($1,000), that cash is part of the
+     planned deposit: `record_arrival(plan, today, idle_cash)`. This is NOT an
+     unexpected balance change — do not ask under 2a. It arrives in pieces
+     (the first $100,007 landed 2026-09-24, before the plan was wired). If
+     `record_arrival` raises ValueError (the running total would pass 1.10 ×
+     planned, i.e. $330k), the plan does not cover that cash: fall back to 2a
+     for it.
+     On a same-day re-run, today's arrival row already exists: call again
+     only if idle cash is still above $1,000, passing the recorded amount PLUS
+     that idle cash (the call replaces the day's figure; it does not add).
+  3. `sess` = the QQQ daily-bar dates you built in section 1, with today
+     appended. `res = deposit_plan.reserve(plan, sess, today)`,
+     `k = deposit_plan.tranches_released(plan, sess, today)`,
+     `k_prev = deposit_plan.tranches_released(plan, sess[:-1], sess[-2])`.
+     Owner, 2026-09-24: "stage from today". The session of the FIRST arrival
+     is session 0 and releases tranche 1 at once; later tranches release
+     every 5 sessions (now: sessions 5 and 10). Each tranche is
+     planned_total / tranches ($100k), capped by
+     what has arrived: money that lands before its tranche date waits in the
+     reserve, money that lands after it is released the same run.
+  4. Held weights (section 3) come from `deposit_plan.held_weights(values,
+     idle_cash, total_value, res)`, and dollar targets from
+     `deposit_plan.dollar_targets(target, total_value, res)` — NOT from
+     weight × total_value. The reserve therefore never shows up as drift. A
+     release day shows up as a large cash-heavy drift and the band fires on
+     its own; trade it like any band trade (the buys are funded by selling
+     BOXX). On an arrival day, buy BOXX with the arrived cash even if the band
+     does not fire — the reserve is never left as idle buying power.
+  5. After trading: if `k > k_prev`, `log_release(plan, today, k,
+     <dollars actually released today>)`; then
+     `mark_complete_if_done(plan, sess, today)`, `save(plan)`, and commit
+     `data/deposit_plan.json` with the run's other data files.
+  6. While the plan is active, every report carries
+     `deposit_plan.summary_line(plan, sess, today)`; on an arrival day or a
+     release day a report entry is REQUIRED even if nothing else traded. No
+     new push events — the three in section 5 are unchanged.
+
+The NAV index (section 4) is already flow-blind; do not adjust it for the
+deposit. The funding-policy amounts (5a) use the full account value, reserve
+included.
+
+## 3. Check the drift band, then rebalance if it fires
+
+Build the account's CURRENT held weights: for each of SPMO / TQQQ / QLD / XLU /
+VIXM / BOXX, quantity × live quote, divided by `get_portfolio`'s `total_value`. Idle
+uninvested cash counts toward the cash leg. (While a deposit plan is active use
+`deposit_plan.held_weights`, section 2b — the reserve is removed from the
+cash leg and from the total.) Since 2026-10-08 build the 6-leg tuple to
+match the target: `deposit_plan.held_weights(values, idle_cash, total_value,
+res, with_vixm=True)` (res = 0 when no plan is active). Then call `state.py`'s own gate:
+
+    do_trade, drift, reason = needs_rebalance(target, held, regime_changed)
+
+  - **regime changed → always rebalance**, whatever the drift. Regime =
+    the EFFECTIVE state (`effective_state(macro, fast)`) plus the HELD
+    extension-trim vote count (`a_trim_state(...)['held']`, v2 since
+    2026-09-23; compare with the prior session's) plus the state-D gate flag
+    (`d_gate_active(...)`, 2026-09-19) plus the VIXM permission
+    (`vx['allowed'] != vx_prev['allowed']`, 2026-10-08), so the fast re-entry overlay
+    switching, the trim changing by a step, or the D gate switching
+    (100% QLD <-> 100% BOXX) counts.
+  - **otherwise rebalance only if L1 drift > `REBALANCE_DRIFT_BAND`** (0.05; raised from 0.03 on 2026-09-09 -- performance-neutral, ~14% fewer trades: ~47/yr vs ~55),
+    i.e. roughly "2.5 percentage points of the portfolio is in the wrong leg".
+  - **a leg whose target is EXACTLY 0% but is still held above 0.10%
+    (`ZERO_LEG_EPS`) → rebalance**, whatever the total drift. Added
+    2026-09-04 — when vol drops below target the cash target becomes exactly
+    zero, and a leftover BOXX stub would otherwise sit inside the band
+    indefinitely. `needs_rebalance()` applies this itself.
+  - **within band → trade nothing** (except the idle-cash sweep, section
+    3a), but still do steps 4-7 and publish the weekly report. Report the drift figure so a long quiet stretch is visible
+    rather than looking like a trigger that failed to run.
+
+Known behaviour, not a bug (v2, 2026-09-23): the held vote count changes far
+less often than the raw count did — it rises with the raw votes but steps down
+only on new 15-session highs (27 step-downs on the 1999–2026 history), so the
+trim is usually held until the book leaves A. Expect ~31–32 rebalances/yr
+(v1 was ~45). In a market that keeps rising after a vote, TQQQ stays out:
+that is the stated cost of the rule (a partial profit cap), not a fault.
+Do not add hysteresis or override the held count.
+
+When it does fire:
+
+  - Dollar target per leg = weight × `get_portfolio`'s `total_value` (all 6
+    legs incl. VIXM).
+    While a deposit plan is active use `deposit_plan.dollar_targets`
+    (section 2b): the reserve stays in BOXX on top of its weight.
+  - **No per-leg minimum** — every leg goes to target, however small its
+    trade. The old "$100 or 0.3%" per-leg skip was REMOVED 2026-09-01: the
+    band gates on whether the portfolio as a whole is meaningfully wrong,
+    which is the better control, and a per-leg gate on top of it would leave
+    small legs permanently adrift. Do not reintroduce one.
+  - Sell before buy so proceeds are available. Check this explicitly when the
+    buy side exceeds available buying power — a leg being liquidated to zero
+    is what funds the buys.
+  - Marketable limit orders: at/through the bid for sells, the ask for buys.
+    Do not chase more than 0.3% through the touch. At 15:5x ET regular-hours
+    rules apply, so fractional/dollar-based orders are fine. If anything slips
+    to extended hours it must be a WHOLE-SHARE limit order with
+    `market_hours='extended_hours'` — fractional and dollar-based orders are
+    rejected outside regular hours. Note a LIMIT order cannot be fractional in
+    any session; to liquidate a fractional stub completely, use a market order
+    in regular hours.
+  - The cash leg is held as **BOXX**, never as idle buying power. If the
+    account is holding uninvested cash that the target says should be in BOXX,
+    buy BOXX with it.
+  - XLU is no longer a target leg (state E went to 100% BOXX on 2026-09-19).
+    If any XLU is still held, sell it when the band fires -- its target is 0%
+    and the zero-leg sweep will fire on anything above 0.10%. It is
+    fractional-tradable in regular hours only.
+  - **VIXM (2026-10-08)** is fractional-tradable in REGULAR HOURS ONLY: it
+    must fill inside this 15:5x window -- one extra session of lag erases
+    most of the sleeve's measured gain, so it is never left for "tomorrow".
+    Marketable limit, at most 0.3% through the touch. It trades only ~$3.5M
+    a day: a large order (or a fractional stub) may need a MARKET order in
+    regular hours rather than miss the window. `record_fill` VIXM like any
+    other leg.
+  - If any residual **IAU** is found, sell it — gold was removed from the
+    design 2026-09-01 and any remaining position is dust to be cleared.
+  - After filling, re-verify holdings against target and report the resulting
+    L1 drift; it should be near zero. Anything above the band after a
+    completed rebalance means a fill failed — investigate, do not ignore.
+  - **Record execution quality for EVERY filled leg** (added 2026-09-07).
+    After fills, call `paper-track/fill_quality.py`'s
+    `record_fill(date, symbol, side, quantity, fill_price, ref_price,
+    session_lag=0)` once per leg (session_lag=1 for a next-session fill), where `ref_price` is the OFFICIAL CLOSE of the signal session
+    (pass `ref_kind` if you had to use anything else). Then report
+    `summarize()`'s notional-weighted slippage in bps against the **4bp
+    one-way cost model the backtests assume**. This gates nothing and must
+    never block or delay a trade -- it is measurement only. It exists because
+    one session of execution lag costs 3.1pp of CAGR and 4.8pp of drawdown,
+    larger than any design change made this week, and until now nothing
+    checked it. Flag any single leg worse than 25bp; persistent
+    notional-weighted slippage worse than 4bp means the live design is not
+    the backtested one and is worth more attention than any parameter.
+    IMPORTANT when interpreting a flag: on a same-session 15:5x run the
+    reference IS effectively the fill session, so a large number is genuine
+    execution slippage. On any run where the signal session and the fill
+    session differ, most of the number is the overnight GAP, not broker
+    execution — say which it is rather than reporting a gap as bad execution.
+
+## 3a. Idle-cash sweep — dividends and small cash (added 2026-09-30)
+
+Owner, 2026-09-30, after TQQQ paid a $224 dividend: "you should have a plan
+for it". DRIP is OFF in this account on purpose (it would reinvest into a leg
+the strategy may hold at 0%). On a NO-TRADE day only — right after
+`needs_rebalance` says no, still inside the regular session — run
+`paper-track/cash_sweep.py`:
+
+    orders, why = cash_sweep.plan_sweep(target, values, idle_cash,
+                                        total_value, plan_active=deposit_plan.active(plan))
+
+where `target` is the 6-tuple and `values` the six legs' market values
+(VIXM included since 2026-10-08; idle cash NOT included) and
+`idle_cash` is the account's uninvested cash. It returns {} (and a reason)
+when idle cash is under $100, while a deposit plan is active, or above 20% of
+the account (section 2a then applies: ask the owner). Otherwise place one
+DOLLAR-BASED market BUY per leg in `orders`, regular hours (the amounts are
+already rounded down to cents so they never exceed the cash). Legs with a 0%
+target never get anything; in E/F the cash goes to BOXX. Then
+`cash_sweep.log_sweep(today, idle_cash, total_value, orders, note=<source if
+known, e.g. 'TQQQ dividend'>)` and `record_fill(..., note='cash sweep')` per
+filled leg. Commit `data/cash_sweeps.csv` with the run's other data files.
+A sweep is housekeeping: it is NOT a rebalance, needs no report entry and no
+push, and does not change the NAV index (price-return by design). On a day
+the band or a regime change fires, skip this section — the rebalance already
+takes the cash to target.
+
+## 4. Drawdown-from-high watch (informational only — never gates a trade)
+
+Same as the daily trigger: compute the strategy's own daily return from
+yesterday's confirmed state's weights — from **`live_target_weights`** (with
+yesterday's breadth pct and gaps), i.e. the weights actually held, WITH every
+overlay including the D gate and the volatility overlay (changed
+2026-09-01; the un-vol-targeted series would alert on drawdowns the real
+account never had) — dotted with today's official-close-to-close leg returns
+for SPMO/TQQQ/QLD/XLU/VIXM/BOXX (since 2026-10-08 the 6-leg
+`live_target_weights_with_vixm` weights, with `vx_prev`), append via
+`paper-track/drawdown_tracker.py`'s `record_return()`, then
+`current_drawdown()` and `newly_crossed()` for the -5/-10/-15/-20% tiers.
+`current_drawdown()` returns a TUPLE (drawdown, peak_date, peak_value,
+current_date, current_value) — take element 0 for the drawdown itself.
+
+Record the return only ONCE per session, and only for a completed session.
+If the daily trigger already recorded today's row, do not append a second.
+
+## 5. Push notifications — exactly three events, nothing else
+
+Call the `PushNotification` tool (a real interrupt to the user's phone) ONLY
+for these three, and nothing else:
+
+  1. **A regime shift** — a MACRO state change. (Micro flips have not counted
+     since 2026-09-02.)
+  2. **A newly crossed drawdown tier** (-5 / -10 / -15 / -20% from the
+     rolling 252-day high, via `newly_crossed()`). **This is also a FUNDING
+     TRIGGER** — see below.
+  3. **The EFFECTIVE state shifting from D/E/F into A/B/C** — the turn.
+     **This is a FUNDING TRIGGER.** Added 2026-09-07. Note this one DOES fire
+     when the shift is driven by the fast re-entry overlay alone, which is a
+     deliberate exception to the rule that overlay switches are not push
+     events: the owner funds on this signal, so they need to see it.
+
+**For events 2 and 3, the push notification text itself must state the
+suggested deposit amount** (added 2026-09-16) — compute it with
+`paper-track/funding_policy.py`'s `tier_funding_amount(account_value, tier)`
+or `turn_funding_amount(account_value)` (see section 5a) and put it in the
+notification body, e.g. "QQQ crossed -10% drawdown tier from the 252-day
+high; suggested deposit $5,940." Do not send a bare tier/turn alert and defer
+the dollar figure to the weekly report — the owner acts on the push
+notification directly and should not have to open the report to know how
+much to send.
+
+REMOVED 2026-09-07: the old event (3), "any single day at -2% or worse in the
+strategy's own daily return". It fired ~10x/year as an explicit low-conviction
+FYI and was never actionable. The owner's funding policy uses drawdown TIERS
+and the turn instead, both of which are above. Do not reinstate a single-day
+return alert.
+
+If a macro shift into A/B/C happens, events 1 and 3 are the same event — send
+ONE notification, and say it is a funding trigger.
+
+The state-D gate switching (2026-09-19) is NOT a fourth push event: it is an
+overlay move inside state D, reported in the rebalance entry like a trim
+step. Do not add it.
+
+## 5a. Funding triggers — what to tell the owner
+
+The owner funds the account episodically, not monthly, at exactly two
+signals (2026-09-07; amount formula ADOPTED 2026-09-16, replacing the flat
+$5,000/event — see `research_notes/funding_pct_backtest.md`):
+
+  - **each newly crossed drawdown tier** (-5/-10/-15/-20% from the rolling
+    252-day high, ~5.2x/yr historically), and
+  - **each shift of the effective state from D/E/F into A/B/C** (~4.1x/yr).
+
+**The dollar amount is 2% of the CURRENT account value, escalated by tier
+depth** (1x / 1.5x / 2x / 2.5x at -5/-10/-15/-20%; the turn is 1x, a
+confirmation signal, not severity-scaled). ALWAYS compute it with
+`paper-track/funding_policy.py`'s `tier_funding_amount(account_value, tier)`
+or `turn_funding_amount(account_value)` — never hand-add it in prose, the
+same rule as any other figure combining two numbers. `schedule_table
+(account_value)` gives all five at once for a report line. At the account's
+current value the four tiers plus the turn are five DIFFERENT dollar
+figures, not one -- do not repeat a single number for all of them.
+
+When either signal fires, say so explicitly: which one, the tier or the
+prior/new state, the account value, and the computed dollar figure. Do NOT
+hand-compute a different amount, do not net the two against each other, and
+do not invent additional funding signals — funding on a -3% day, on any
+state change, or on entry into F were all tested 2026-09-07 and rejected
+(entering F is the worst of them: the strategy is 100% BOXX there, so new
+money would land in cash). This is a REPORTING duty only. Never move money,
+and never treat a funding trigger as a reason to deviate from the computed
+target weights.
+
+The computed figure is the standing policy, not a cap on what the owner may
+choose to send. If a deposit larger than the policy amount arrives, deploy it
+to target under section 2a — do not hold the excess back to match the policy.
+
+## 6. Realized P&L and wash sales
+
+Pull the strategy-era trade list (`get_pnl_trade_history`, span 'all',
+paginate) and run `paper-track/wash_sale.py`'s `flag_wash_sales()` +
+`summarize()` whenever there was a loss-sale. Split realized losses into
+usable vs. wash-sale-deferred and NEVER report a deferred loss as reducing
+this year's tax liability.
+
+**`get_pnl_trade_history` IS NOT ENOUGH ON ITS OWN.** It returns only CLOSING
+trades, so a list built from it alone has no buy records, and `flag_wash_sales`
+then reports every loss as usable — a confidently wrong tax figure that looks
+like a clean result. Also pull BUYS from `get_equity_orders` (state='filled',
+`created_at_gte` at least 30 days before the earliest loss-sale), append them
+as `{date, symbol, side:'buy', realized_gain:0}` rows, and call
+`flag_wash_sales(trades, require_buys=True)` so the mistake raises
+`MissingBuyRecords` instead of returning a silent $0 deferred. This is not
+hypothetical: the 2026-09-04 run reported $0 deferred on the first pass and
+$1,532.59 deferred of $1,610.66 in losses once the buys were added.
+
+One more caveat to carry when reporting: a buy on the SAME DATE as the
+loss-sale is not matched (`SAME_DAY_MATCHES = False`), so a same-day round
+trip reads as "usable". Call that out rather than presenting it as settled —
+if a week's entire usable total comes from same-day round trips, say so.
+
+TQQQ resizes and BOXX buy/sell cycles make wash sales closer to the norm than
+the exception (and since 2026-10-08 VIXM in/out cycles: include VIXM in the
+wash-sale check), and volatility targeting adds more BOXX cycling, so expect this
+to matter more than it used to.
+
+Any figure combining two or more numbers (a weekly total, a new cumulative)
+must be computed in code from the raw records, never hand-added in prose. Use
+`paper-track/consistency_check.py`'s `check_pnl_sum(trade_pnls,
+expected_total)` to assert the raw sum matches the account's own reported
+aggregate BEFORE reporting either figure — a real double-counting incident on
+2026-08-31 is why this rule exists.
+
+Never reproduce a standing performance figure by reimplementing the backtest
+loop — call `improvement_search.run()` (or the harness that owns the figure).
+A hand-rolled loop silently rebalances costlessly every day and produces
+numbers that look right and are not.
+
+## 7. Report
+
+To edit the artifact you must FIRST call the Artifact tool with
+`action: "read"` and its URL, then build your edit on the version that comes
+back and diff local against live before republishing — a publish to an
+artifact this session has not read is refused.
+
+Update the weekly report artifact
+(https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14),
+newest week at top: macro state and label, fast (20/100) reading and the
+effective state if it differs, the three extension gaps, the raw and HELD vote counts, the A spell start and base row (v2),
+the breadth pct and the D-gate flags/status (2026-09-19), the VIXM line (VIX,
+VIX3M + source, ratio, latch on / stress / allowed / faded, VIX high since
+entry; 2026-10-08), `micro_agrees`, both realized-vol legs with the binding one
+and resulting multiplier, target vs. actual weights per leg, trades placed and
+fills, realized P&L with the wash-sale split, current drawdown-from-high, and
+the notional-weighted slippage from the fill-quality tracker, and
+`shadow_tracker.summary_line()` verbatim (the trim-v2 probation: the three
+paper tracks and the revert-rule verdict — WAITING until two vote spells have
+completed; the shadow tracks are UNCHANGED by the VIXM sleeve -- still
+5-leg, no `vx` -- say so in one line). The daily run covers Mon–Thu; THIS run records Friday's session:
+once, after trading, reporting and the NAV row (never inside 15:50–16:00), in
+the same process as step 1 and with the SAME step-1 inputs, call
+`shadow_tracker.update(date, closes, qqq_close, state, micro_agrees, vol,
+fast_state, gaps, breadth_pct, a_trim)` with the official closes of SPMO,
+TQQQ, QLD, XLU and BOXX and the official QQQ close, and commit
+`data/shadow_tracks.csv` with the NAV row (idempotent for the latest date; an
+older date is refused). Then take `summary_line()` for the entry. If the
+verdict is REVERT or AFFIRM, put it near the top of the entry and state that
+the owner decides; never change the design from this run.
+
+If a FUNDING TRIGGER fired this week — a newly crossed 5% drawdown tier, or
+the effective state shifting from D/E/F into A/B/C — put it at the TOP of the
+entry: which trigger, the tier or the prior/new state, the account value, and
+the computed dollar figure from `funding_policy.py` (not a flat number — see
+section 5a). Also list any funding triggers that fired
+earlier in the week on a Mon-Thu run, so the weekly entry is a complete record
+of the week's funding events even when the Friday run itself trades nothing.
+
+Carry the standing limitations into any commentary, without re-litigating
+them: every parameter is fit on the ~11-year SPMO window with one real bear
+market in it; the strategy's true max drawdown on the 2000-2026 stress test
+is about **-22%** with the A base at 50/50 and about **-23%** at 40/60 under
+the 2026-09-23 design (extension trim v2; real SPMO era -17.8% / -18.7%); it
+was about -27% under the 2026-09-19 design (A=50/50 core/TQQQ, B=75/25,
+D=100% QLD gated to cash when breadth pct < 0.20 OR QQQ < 2% above its 200d,
+E=100% cash (was 50% XLU until 2026-09-19), F=cash, 20/100 fast re-entry overlay on B/C/F, graded extension
+trim (A scaled x2/3 / x1/3 / x0 as QQQ clears 10%/12%/15% above its
+100/150/200-day SMAs), micro off, vol target 20% on plain 30d realized vol);
+it was -28.5% with 50% XLU in E (09-19, earlier the same day), -33.6% before the D gate (09-09..09-19) and the gate's own holdout-era
+Sharpe is BELOW the breadth-only rule's (owner override, see STRATEGY.md);
+it was -34.7% during the one day the A row sat at 40/60 on 09-06, -32% under the
+2026-09-02 design, -42% before that reweight and -65 to -70% before vol
+targeting; QQQ buy-and-hold is -80%), NOT the -25% to -31% figures the
+SPMO-era window shows -- never quote those as the worst case. An outside
+replay reaching -39% to -40% was RECONCILED 2026-09-07: it is not a data,
+fee or proxy difference (core proxy, financing spread and expense ratios move
+it by <=0.5pp), it is EXECUTION LAG. One extra session between signal and fill
+took the A=40/60 design from -34.7% to -39.5%, two sessions to -40.3%, and one
+session also costs 3.1pp of CAGR. So -33% is the figure for trading AT the
+signal close, which is what this trigger does; -40% is the figure if execution
+routinely slips a day (measured at A=40/60; A=50/50 is ~2pp better throughout). Neither is a loss ceiling. This is why the 15:5x
+convention in section 0 matters operationally, not just pedantically.
+Also carry the VIXM limitations: it rests on ONE
+~10-year window (VIXM starts 2011; never tested on the 26-year proxy), about
+a third of its gain comes from August 2024, one extra session of execution
+lag erases most of it, and VIXM itself decays ~15-19%/yr while held -- it is
+an owner decision on thin evidence, like the D gate, not a proven edge.
+And:
+the 2026-09-06 reweight is the SECOND deliberate step up the return frontier,
+so live-era stress events are larger than before (COVID-shaped drawdowns about
+-25% to -33%, a 2022-type year about -19% real / -27% proxy) -- that is by design, not a fault.
+
+Evidence discipline when commenting on the overlays: a circular BLOCK
+bootstrap (2026-09-07) downgraded two claims that earlier day-shuffled tests
+overstated. The graded extension trim survives (Sharpe 95% CI [+0.025,
++0.266], P(<=0) = 0.007); the fast re-entry overlay (P = 0.080) and the
+max(10,30) volatility estimator (P = 0.097; reverted 09-09) do NOT clear 5% on their own.
+Do not quote "p = 0.00" for any of them. Leave-one-major-regime-out keeps
+every sign in every drop, including dropping the whole SPMO fitting window.
+
+## 8. Breadth forward log — still recorded, now for a LIVE rule (changed 2026-09-19)
+
+Until 2026-09-19 the breadth rule was measurement only. It is now HALF of the
+applied state-D gate (step 1), by owner override. Keep the log running so the
+gate can be judged on live D episodes that did not exist when it was found:
+  - The reading itself is already computed in step 1 (`breadth_reading`);
+    do not pull it twice. EVERY session, one line: "breadth pct 0.84, 200d gap
+    +8.9%, D gate off" (or "ON (breadth / gap200 / both)" on a gated D day).
+  - On a session whose MACRO state is D: `record_d_day(date, 'D', x60, pct,
+    gate, note='gap200=+1.2% gap_flag=True applied=True')` — put the 200d gap
+    and whether the row was actually held in cash in the note; on the NEXT
+    session `fill_next_returns(<that date>, qld_next, qqq_next)` with
+    official close-to-close returns. In any report entry for a D day add ONE
+    informational line: the breadth bucket, `bucket_base_rate(pct)` (P(next
+    state E/F); unconditional D-episode base rate 0.16) and the 200d gap.
+  - `summarize()` is the running tally. Do not change GATE_PCT, LOOKBACK,
+    WINDOW or the 2% gap threshold. Commit the log row with the NAV row.
+  - This logging runs AFTER trading and reporting, never inside 15:50-16:00;
+    only the step-1 reading is time-critical.
+
+If Robinhood MCP tools are unavailable, report that and stop — do not guess
+prices or place orders on stale data.

@@ -1009,3 +1009,32 @@ def check_vixm_overlay():
 
 
 check_vixm_overlay()
+
+
+def check_live_run_orders():
+    """live_run.plan_orders (2026-10-08): sells before buys; a 0% leg is whole
+    shares at a limit plus the fractional stub at market; limits never more
+    than 0.3% through the last; dollar targets sum to the account."""
+    import live_run as L
+    q = {s: dict(last=100.0, bid=99.9, ask=100.1) for s in L.LEGS6}
+    q['VIXM'] = dict(last=12.0, bid=11.0, ask=13.0)          # wide quote: the 0.3% cap must bind
+    qty = dict(SPMO=500.25, TQQQ=500.0)
+    vals = {s: qty.get(s, 0.0) * q[s]['last'] for s in L.LEGS6}
+    tv = sum(vals.values())
+    o = L.plan_orders((0, 0, 0, 0, 0.75, 0.25), vals, qty, q, tv)
+    sides = [x['side'] for x in o]
+    assert sides == sorted(sides, key=lambda s: s != 'sell'), "sells must come first"
+    spmo = [x for x in o if x['symbol'] == 'SPMO']
+    assert spmo[0]['kind'] == 'limit' and spmo[0]['quantity'] == 500 and spmo[1]['kind'] == 'market_qty' \
+        and abs(spmo[1]['quantity'] - 0.25) < 1e-9, spmo
+    v = [x for x in o if x['symbol'] == 'VIXM' and x['kind'] == 'limit'][0]
+    assert v['limit'] <= 12.0 * 1.003 + 1e-9, v
+    bought = sum(x['dollars'] for x in o if x['side'] == 'buy')
+    assert abs(bought - tv) < 1.0, (bought, tv)
+    assert L.plan_orders((0.5, 0.5, 0, 0, 0, 0), {'SPMO': 50.0, 'TQQQ': 50.0}, {}, q, 100.0) == [], \
+        "no order below $1"
+    print("OK: live_run orders -- sells first, 0% legs = whole-share limit + fractional market stub, "
+          "limits capped 0.3% through the last, buys sum to the account")
+
+
+check_live_run_orders()

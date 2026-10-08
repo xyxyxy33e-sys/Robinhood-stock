@@ -1,3 +1,6 @@
+> **Live operation (2026-10-08):** see `RUNBOOK.md` (procedure) and `paper-track/live_run.py` (every live
+> calculation). `STRATEGY.md` is the design. The notes below describe the research harness and may be dated.
+
 # paper-track script index
 
 This directory has accumulated a lot of one-off research scripts across the

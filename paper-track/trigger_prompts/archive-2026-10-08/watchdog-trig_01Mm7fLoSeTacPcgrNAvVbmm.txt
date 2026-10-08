@@ -1,0 +1,99 @@
+Execution watchdog for the Robinhood Agentic account (576391551), 16:10 ET,
+Mon–Fri. Added 2026-09-09 (owner: "apply all 5" execution improvements). Its
+only job is to make sure today's 15:50 ET run (daily Mon–Thu, weekly Fri)
+actually completed, and to apply the measured fallback if it did not. It
+never changes the design and never trades when the scheduled run already did.
+
+STEP 0 — `git pull --ff-only` in the repo first (VIXM sleeve code,
+2026-10-08).
+
+STEP 1 — market day? Pull the QQQ quote (`get_equity_quotes`). If today is
+not a trading day, say "market closed, nothing to verify" and stop.
+
+STEP 2 — did the scheduled run finish? Evidence, in order:
+  a. `data/live_nav_index.csv` has a row dated today (the run records it
+     after trading). Also check `git log --since='6 hours ago' --oneline`.
+  b. `get_equity_orders(account_number='576391551', created_at_gte=<today
+     00:00 UTC>, placed_agent='agentic')` — any orders today, and their
+     states (filled / partially_filled / cancelled / rejected).
+  c. Recompute the reading on the OFFICIAL close using
+     `paper-track/state.py`'s own functions exactly as the daily prompt
+     describes (compute_states LIST, compute_fast_states/compute_extension_gaps
+     dicts, realized_vol_live = plain 30d, a_trim_state (extension trim v2,
+     2026-09-23: held votes; required 7th argument of live_target_weights),
+     live_target_weights, validate_weights,
+     -- since 2026-10-08 the VIXM path: VIX via `get_index_quotes` (index id
+     3b912aa2-88f9-4682-8ae3-e39520bdf4db), `vix, vix3m, note =
+     vol_curve.load_vix_inputs(today, vix_now)`, `vx = vixm_state(dates,
+     px, vix, vix3m, as_of=today)` and `vx_prev` (as_of=<prior session>),
+     or `vixm_unavailable(err)` on a data error (report it);
+     `live_target_weights_with_vixm(..., vx)` -> 6 legs and
+     `validate_weights_live` --
+     circuit_breaker_check with cash on the implied side), build held weights
+     from `get_equity_positions` + `get_equity_quotes` + cash — while
+     `data/deposit_plan.json` is active (staged $300k deposit, 2026-09-24) use
+     `deposit_plan.held_weights(values, idle_cash, total_value, res,
+     with_vixm=True)` (6 legs incl. VIXM; res = 0 with no plan) with
+     `res = deposit_plan.reserve(plan, sess, today)`, and on a fallback trade
+     `deposit_plan.dollar_targets(...)`: the reserve stays in BOXX and is not
+     drift. If deposit money sits as idle cash while the plan is active and
+     the 15:50 run did not record it, apply daily-prompt section 2b steps 2–4
+     yourself (record the arrival; release what is due, park the rest in
+     BOXX) — and call
+     `needs_rebalance(target, held, regime_changed)` with regime_changed
+     computed against the prior session's effective state, HELD trim votes
+     (a_trim_state(..., as_of=<prior session>)['held']), D-gate flag and the
+     VIXM `allowed` flag (vx vs vx_prev).
+
+STEP 3 — decide.
+  - Run completed AND account is within band (or a regime change was already
+    traded today): report one line ("15:50 run verified: <state>, drift x%,
+    n orders filled") and stop. No artifact edit. No notification.
+    Small dollar-based BUY orders on a no-trade day are the idle-cash sweep
+    (daily prompt section 3a, 2026-09-30: dividends and other cash of $100+
+    into the legs below target) — expected, not a failed rebalance. Do not
+    run the sweep from here; if one was due and did not happen, leave it for
+    the next 15:50 run.
+  - Run completed but an order is partially filled / rejected / a leg is
+    still off target beyond the band: finish the rebalance now. Extended
+    hours: WHOLE-SHARE limit orders only, `market_hours='extended_hours'`,
+    marketable at/through the touch, never more than 0.3% through it; a
+    fractional stub cannot be cleared until the next regular session — say so.
+    Record every fill with `record_fill(..., session_lag=0)` (same session).
+  - Run did NOT complete (no NAV row, no orders, no commit, or the daily
+    prompt's own report says it aborted for a non-guard reason) AND
+    `needs_rebalance` says trade: apply the FALLBACK. Execute the close's
+    signal now with extended-hours whole-share limit orders as above; if
+    extended-hours liquidity is absent for a leg, leave that leg for the next
+    open and say exactly which. VIXM CANNOT trade extended hours (regular
+    hours only, 2026-10-08): leave the VIXM leg for the next regular open
+    and say so in the report AND in the push. Record fills with `record_fill(...,
+    session_lag=0)` if placed today after the close on today's signal (the
+    signal did not slip; only the fill did) — note "post-close fallback" in
+    the note field. Then record today's NAV row via `drawdown_tracker.
+    record_return` ONLY if the scheduled run did not, and push ONE
+    `PushNotification`: "15:50 run missed; fallback executed: <legs>" (or
+    "fallback needed but could not execute: <reason>").
+  - Run did NOT complete and `needs_rebalance` says no trade: record the NAV
+    row if missing, report "15:50 run missed, no trade was due", and push
+    ONE notification saying the run was missed so the owner knows the
+    Routine failed. Do not trade.
+  - If a GUARD tripped in the scheduled run (WeightSanityError,
+    CircuitBreakerTripped, MissingOverlayInputs) do NOT override it here —
+    report it and push one notification.
+
+Why this exists and what it is worth (measured, overnight_intraday.md and
+style_attribution.md): the design's timing value is 10.6 / 8.0 / 6.6 pp/yr
+at 0 / 1 / 2 sessions of execution delay. Filling the close's signal after
+the close or at the next open costs about -0.8 pp/yr and is not
+distinguishable from zero; letting the signal itself slip a full session
+costs -2.6 pp/yr proxy / -1.8 real. So: lose the overnight if you must,
+never the signal. Every failure mode seen so far (a holiday fire, MCP
+disconnects, session rate limits, a deposit needing a human answer) turns a
+same-session trade into a next-session one; this Routine is the catch.
+
+Never edit state.py, STRATEGY.md or the trigger prompts from here. Commit
+only data/ rows you wrote (NAV, fill_quality, deposit_plan.json) with a
+one-line message. If
+Robinhood MCP tools are unavailable, push one notification saying the
+watchdog itself could not run, and stop.

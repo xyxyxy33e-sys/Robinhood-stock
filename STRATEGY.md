@@ -998,35 +998,167 @@ crossed drawdown-from-high tier (-5/-10/-15/-20%), (3) any single day at
 reports) stays as in-session/artifact reporting only — pushing for those
 would defeat the purpose by making the signal-to-noise ratio worse.
 
-## Cadence
+## Cadence and reports (2026-10-08: RUNBOOK.md + live_run.py)
 
-- **Monday–Friday, 15:50 ET** (15:55 until 2026-09-09) — every session computes the macro state, the
-  20/100 fast read, realized vol and the live weights, then calls
-  `needs_rebalance(target, held, regime_changed)`: rebalance on a change of
-  EFFECTIVE state, on L1 drift > 5%, or on a zero-target leg still held
-  above 0.10%; otherwise no trade. ~47 rebalances/year expected.
-- **Every session, after the close** — the breadth forward test logs the
-  QQEW/QQQ relative-strength percentile and, on effective-state-D days, a row
-  in `data/dgate_forward_log.csv` (`breadth_tracker.py`; measurement only,
-  changes no weight).
-- **Monday–Friday, 16:10 ET** — the Execution Watchdog
-  (`trig_01Mm7fLoSeTacPcgrNAvVbmm`) verifies the 15:50 run completed and,
-  if it did not, executes the close's signal at the next opportunity
-  ("lose the overnight, never the signal"). It never re-decides.
-- **Friday** additionally produces the weekly report (state, fast read, vol
-  and multiplier, weights, fills, realized P&L with the wash-sale split,
-  drawdown from high) whether or not it traded.
-- Both triggers use the SAME `state.py` functions and safety guards. If the
-  daily check already moved the book to target mid-week, Friday finds it
-  there and trades nothing extra.
+Procedure: **RUNBOOK.md**. Every calculation: **`paper-track/live_run.py`**
+(the same `state.py` functions and guards the prompts used to recite).
+- **15:50 ET Mon–Fri — trade run.** Three data calls, `live_run.py signal`,
+  place the printed orders. Rebalance on a change of effective state, held
+  trim votes, the D gate or VIXM in/out, on L1 drift > 5%, or on a zero-target
+  leg above 0.10%; otherwise nothing.
+- **16:10 ET Mon–Fri — post-close run.** Verify (fallback if the trade run
+  missed: lose the overnight, never the signal), `live_run.py record` (fills,
+  NAV/drawdown, shadow tracks, breadth log), dashboard, ONE push. Fridays add
+  the weekly report entry and the Top-N paper mark.
+- **1st of the month, 10:00 ET — reconciliation** (diagnostic only).
+- Schedules are `CRON_TZ=America/New_York` (DST-proof).
 
-## Reports
+Reports: dashboard https://claude.ai/artifact/HoxQpURsWcALzFG7hGr5ck (daily);
+weekly report https://claude.ai/artifact/65u1kZeRoYha2Amps9mESw (Fridays);
+evaluation https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2.
+Run records: `data/runs/<date>.json` (inputs, readings, decision, orders, fills).
 
-- **Weekly report artifact**: https://claude.ai/code/artifact/292cb8f5-b3ad-4a07-a522-91f8d8049c14
-  — running log, newest week at top, updated by every trigger that trades.
-- **Evaluation artifact**: https://claude.ai/code/artifact/e6cb7682-974a-442e-8efc-8de75a41a2d2
-  — full backtests, per-state sensitivity, search/holdout checks, the joint
-  grid search failure, calendar-year tables.
+## Staged deposit (2026-09-24) — COMPLETE (data/deposit_plan.json status 'complete'); kept for the next staged deposit
+
+Owner: "keep 40/60, do 4 weekly tranches", cut the same day to $300k in 3 × $100k tranches every 5 sessions (the plan FILE is authoritative). `live_run.py` honours an active plan's reserve; an arrival of idle cash while a plan is active is a guard (handled by hand).
+
+The owner is adding **$300k** to a ~$218k account (→ ~$518k); it was $400k until later the same day, when the owner kept ~$170k in a separate individual account. The weights do
+not change; `paper-track/deposit_plan.py` only decides how much of the account
+the weights apply to while the money is fed in, and `data/deposit_plan.json`
+holds the plan and its progress.
+
+- **Arrival.** The routine recognises deposit money as idle cash above
+  $1,000 while the plan is active; it lands in pieces (the first $100,007 on
+  2026-09-24, before the plan was wired). Money beyond 1.10 × planned is not
+  covered and goes through the usual "ask the owner above 20%" rule.
+- **Clock** (owner: "stage from today"). The session of the first arrival is
+  session 0 and releases tranche 1 at once; later tranches release on sessions
+  5 and 10 (counted on QQQ bar dates, so holidays count). Each tranche is
+  $100k, capped by what has arrived: money that lands early waits in the
+  reserve for its date, money that lands late is released at once. The plan
+  closes once the last date has passed and 95% of the $300k is in. With the
+  first $100k on 24 Sep, the dates are 24 Sep, 1 Oct and 8 Oct.
+- **Arithmetic.** investable = total − reserve; held weights and dollar
+  targets are of the investable account, with the reserve on top of BOXX. The
+  reserve is therefore never drift; a release shows up as cash-heavy drift and
+  the band fires by itself. No market timing: a tranche that lands while the
+  strategy is in cash stays in cash, like the rest of the book.
+- **Records.** The NAV index is flow-blind and needs no adjustment; the
+  monthly reconciliation takes the reserve out of the live series.
+
+**Why stage.** `paper-track/deposit_staging_backtest.py` (every start day, $400k, valued 126
+sessions later, live design):
+
+| plan | real 2015–2026 median / worst | lump wins | proxy 2000–2026 median / worst | lump wins |
+|---|---|---|---|---|
+| lump, day 0 | $478k / $350k | — | $445k / $300k | — |
+| **4 × weekly** | **$473k / $356k** | 68% | **$443k / $313k** | 62% |
+| 4 × every 2 weeks | $471k / $365k | 69% | $441k / $313k | 62% |
+| 6 × every 2 weeks | $464k / $364k | 74% | $439k / $315k | 63% |
+
+A lump wins about two times in three; staging over four weeks costs a few
+thousand dollars at the median and buys a better worst case. It is a regret
+choice, which is the owner's to make. Worst single days on record, for the
+same account at 50/50: 16 Mar 2020 (QQQ −12.0%, TQQQ −34.5%, SPMO −15.4%)
+≈ −25%, about −$154k on $618k; 3–4 Apr 2025 ≈ −22% over two days. QQQ has
+never fallen 20% in a day (Nasdaq-100 worst: −15.1%, 19 Oct 1987).
+
+## Idle-cash sweep and dividends (2026-09-30)
+
+SPMO and TQQQ pay small cash dividends (TQQQ paid $224.06 on 2026-09-29,
+0.04% of the account). **DRIP is off in this account on purpose**: it would
+reinvest into the leg that paid, even when the strategy has that leg at 0%
+(a TQQQ dividend while trim v2 holds TQQQ out), leaving a stub below the
+0.10% zero-leg sweep. Instead `paper-track/cash_sweep.py`:
+
+- runs in the 15:50 routines on a **no-trade day only** (a band or regime
+  trade already takes every leg, cash included, to target);
+- leaves idle cash under **$100** alone;
+- otherwise buys the legs **below their dollar target**, in proportion to
+  each leg's shortfall (the positive shortfalls always add up to at least
+  the idle cash, so the sweep only ever moves the book toward target); legs
+  with a 0% target get nothing; in E/F the cash goes to BOXX;
+- stands aside while a staged deposit plan is active, and above 20% of the
+  account (the "ask the owner" rule for unexpected cash);
+- logs each sweep to `data/cash_sweeps.csv` and each fill to
+  `fill_quality.csv` (note "cash sweep").
+
+The NAV index stays **price-return**: it never counted dividends, and neither
+do the split-adjusted backtests it is compared with, so it understates total
+return by roughly the two legs' yield (under 1%/yr). DRIP stays on in the
+owner's buy-and-hold accounts (the Roth IRA's VGT; VTI/VXUS in the
+individual account), which the agent does not trade.
+
+## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
+
+The owner funds the account EPISODICALLY, not monthly, on exactly two
+triggers (unchanged since 2026-09-07). The AMOUNT changed 2026-09-16: a flat
+$5,000/event was replaced with **2% of current account value, escalated by
+drawdown-tier depth** (`paper-track/funding_policy.py`), because a fixed
+dollar figure quietly shrinks as a share of a compounding account (it was
+~5% of the ~$100k account when set on 09-07; ~2.5% of the ~$198k account by
+09-16) and did not scale with how severe a drawdown actually was.
+
+  1. **Each newly crossed 5% drawdown tier** (−5 / −10 / −15 / −20 / −25%
+     from the rolling 252-day high). ~5.2x/yr; historically 28 / 15 / 8 / 4 /
+     1 crossings by tier, worst quarter 5 (2018Q4).
+  2. **Each shift of the EFFECTIVE state from D/E/F into A/B/C** — the turn.
+     ~4.1x/yr, worst quarter 2.
+
+Together ~9 events/yr, ~$45k/yr, worst historical quarter $30k. Both are now
+push events in the triggers, and the single-day "−2% or worse" alert was
+REMOVED to make room (it fired ~10x/yr and was explicitly low-conviction).
+The triggers only REPORT these; they never move money.
+
+**2026-09-16 amount formula.** `tier_funding_amount(account_value, tier)` /
+`turn_funding_amount(account_value)`: 2% of account value at the moment of
+the event, times a mild escalation multiplier by tier (1x / 1.5x / 2x / 2.5x
+at -5/-10/-15/-20%; the turn is always 1x, since it is a confirmation
+signal, not a severity one). At today's ~$198k that is $3,960 / $5,940 /
+$7,920 / $9,900 by tier, $3,960 for the turn — replacing the single flat
+$5,000 the daily/weekly prompts used to quote for every one of these.
+
+Backtested in `funding_pct_backtest.py` /
+`research_notes/funding_pct_backtest.md` on both the real 11-year window and
+the 26-year proxy: the IRR-vs-per-dollar-multiple tradeoff is smooth and
+monotonic on both histories — there is **no interior optimum**, so escalating
+shape (mild beat steep/linear: ≤1pp more IRR for 2-3x the dollar ask at the
+deepest tier) was the one choice the data supported; the base rate (2% vs.
+the shortlisted 1.5%) was a genuine owner preference the backtest could not
+resolve further, the same "idle cash beats a lump sum, loses to a fully-
+invested lump" tradeoff the original 09-07 analysis found. Caveats carried
+over: single 11-year real-instrument history with one real bear (2022); the
+26-year proxy is QQQ-core, structurally blind to SPMO specifics, used only
+to confirm the monotonic shape holds outside the SPMO-fitted window; very
+long-horizon dollar totals at high percentages are compounding artifacts,
+not projections.
+
+**Why these two and not the alternatives** (all measured 2026-09-07,
+`scratchpad dipfund.py` / `statefund.py`, $5k/event, 2015-11 → 2026-08):
+
+| trigger set | /yr | total | final | IRR | per $ |
+|---|---|---|---|---|---|
+| shift into A/B/C only | 4.1 | $220k | $3.21M | 31.3% | 10.05x |
+| drawdown tiers only | 5.2 | $280k | $3.05M | 30.6% | 8.03x |
+| **both (adopted)** | **9.0** | **$485k** | **$4.58M** | **31.5%** | 7.84x |
+| every strategy day < −3% | 9.3 | $500k | $4.52M | 31.3% | 7.53x |
+| annual lump each January | 1.1 | $60k | $2.17M | 30.2% | 13.56x |
+
+REJECTED and not to be reinvented: **entering F** (1.1x/yr) — the deployed
+sleeve on that day is **0.0%**, because F is 100% BOXX, so new money lands in
+cash; with a $2k/mo budget it left $235k of $260k uninvested and returned
+26.1%. **Any state change** (11.5x/yr) — no edge, up to $50k a quarter.
+**A −3% day** — most frequent, worst per-dollar efficiency, worst clustering
+($35k in a quarter).
+
+**Two honest caveats.** (a) Per-dollar efficiency FALLS as triggers are added
+— the annual lump is 13.56x — but that reflects less money working for
+longer, not better timing; the adopted pair ends at $4.58M against $2.17M.
+(b) Against a monthly schedule with the SAME budget, every trigger tested lost
+(deploy-immediately 31.2% vs 31.1% for the shift, 30.4% for tiers), because
+cash waiting out of a ~30% strategy is expensive. The owner does not want
+monthly contributions, so the schedule is not the live alternative — but if
+that ever changes, the schedule wins on the arithmetic.
 
 ## Known limitations (carry these into every report, don't re-litigate them)
 
@@ -4780,143 +4912,3 @@ scored against the flat-de-levering null.
   45.0–45.5%, Sharpe 1.60–1.62) and fails the holdout at every N (0.710–0.721 vs
   live 0.754) — structural, not a parameter problem. One-step on a 15-day high
   remains the shadow pick. Not applied.
-
-## Staged deposit (2026-09-24) — owner: "keep 40/60, do 4 weekly tranches"; cut to $300k / 3 tranches the same day
-
-The owner is adding **$300k** to a ~$218k account (→ ~$518k); it was $400k until later the same day, when the owner kept ~$170k in a separate individual account. The weights do
-not change; `paper-track/deposit_plan.py` only decides how much of the account
-the weights apply to while the money is fed in, and `data/deposit_plan.json`
-holds the plan and its progress.
-
-- **Arrival.** The routine recognises deposit money as idle cash above
-  $1,000 while the plan is active; it lands in pieces (the first $100,007 on
-  2026-09-24, before the plan was wired). Money beyond 1.10 × planned is not
-  covered and goes through the usual "ask the owner above 20%" rule.
-- **Clock** (owner: "stage from today"). The session of the first arrival is
-  session 0 and releases tranche 1 at once; later tranches release on sessions
-  5 and 10 (counted on QQQ bar dates, so holidays count). Each tranche is
-  $100k, capped by what has arrived: money that lands early waits in the
-  reserve for its date, money that lands late is released at once. The plan
-  closes once the last date has passed and 95% of the $300k is in. With the
-  first $100k on 24 Sep, the dates are 24 Sep, 1 Oct and 8 Oct.
-- **Arithmetic.** investable = total − reserve; held weights and dollar
-  targets are of the investable account, with the reserve on top of BOXX. The
-  reserve is therefore never drift; a release shows up as cash-heavy drift and
-  the band fires by itself. No market timing: a tranche that lands while the
-  strategy is in cash stays in cash, like the rest of the book.
-- **Records.** The NAV index is flow-blind and needs no adjustment; the
-  monthly reconciliation takes the reserve out of the live series.
-
-**Why stage.** `paper-track/deposit_staging_backtest.py` (every start day, $400k, valued 126
-sessions later, live design):
-
-| plan | real 2015–2026 median / worst | lump wins | proxy 2000–2026 median / worst | lump wins |
-|---|---|---|---|---|
-| lump, day 0 | $478k / $350k | — | $445k / $300k | — |
-| **4 × weekly** | **$473k / $356k** | 68% | **$443k / $313k** | 62% |
-| 4 × every 2 weeks | $471k / $365k | 69% | $441k / $313k | 62% |
-| 6 × every 2 weeks | $464k / $364k | 74% | $439k / $315k | 63% |
-
-A lump wins about two times in three; staging over four weeks costs a few
-thousand dollars at the median and buys a better worst case. It is a regret
-choice, which is the owner's to make. Worst single days on record, for the
-same account at 50/50: 16 Mar 2020 (QQQ −12.0%, TQQQ −34.5%, SPMO −15.4%)
-≈ −25%, about −$154k on $618k; 3–4 Apr 2025 ≈ −22% over two days. QQQ has
-never fallen 20% in a day (Nasdaq-100 worst: −15.1%, 19 Oct 1987).
-
-## Idle-cash sweep and dividends (2026-09-30)
-
-SPMO and TQQQ pay small cash dividends (TQQQ paid $224.06 on 2026-09-29,
-0.04% of the account). **DRIP is off in this account on purpose**: it would
-reinvest into the leg that paid, even when the strategy has that leg at 0%
-(a TQQQ dividend while trim v2 holds TQQQ out), leaving a stub below the
-0.10% zero-leg sweep. Instead `paper-track/cash_sweep.py`:
-
-- runs in the 15:50 routines on a **no-trade day only** (a band or regime
-  trade already takes every leg, cash included, to target);
-- leaves idle cash under **$100** alone;
-- otherwise buys the legs **below their dollar target**, in proportion to
-  each leg's shortfall (the positive shortfalls always add up to at least
-  the idle cash, so the sweep only ever moves the book toward target); legs
-  with a 0% target get nothing; in E/F the cash goes to BOXX;
-- stands aside while a staged deposit plan is active, and above 20% of the
-  account (the "ask the owner" rule for unexpected cash);
-- logs each sweep to `data/cash_sweeps.csv` and each fill to
-  `fill_quality.csv` (note "cash sweep").
-
-The NAV index stays **price-return**: it never counted dividends, and neither
-do the split-adjusted backtests it is compared with, so it understates total
-return by roughly the two legs' yield (under 1%/yr). DRIP stays on in the
-owner's buy-and-hold accounts (the Roth IRA's VGT; VTI/VXUS in the
-individual account), which the agent does not trade.
-
-## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
-
-The owner funds the account EPISODICALLY, not monthly, on exactly two
-triggers (unchanged since 2026-09-07). The AMOUNT changed 2026-09-16: a flat
-$5,000/event was replaced with **2% of current account value, escalated by
-drawdown-tier depth** (`paper-track/funding_policy.py`), because a fixed
-dollar figure quietly shrinks as a share of a compounding account (it was
-~5% of the ~$100k account when set on 09-07; ~2.5% of the ~$198k account by
-09-16) and did not scale with how severe a drawdown actually was.
-
-  1. **Each newly crossed 5% drawdown tier** (−5 / −10 / −15 / −20 / −25%
-     from the rolling 252-day high). ~5.2x/yr; historically 28 / 15 / 8 / 4 /
-     1 crossings by tier, worst quarter 5 (2018Q4).
-  2. **Each shift of the EFFECTIVE state from D/E/F into A/B/C** — the turn.
-     ~4.1x/yr, worst quarter 2.
-
-Together ~9 events/yr, ~$45k/yr, worst historical quarter $30k. Both are now
-push events in the triggers, and the single-day "−2% or worse" alert was
-REMOVED to make room (it fired ~10x/yr and was explicitly low-conviction).
-The triggers only REPORT these; they never move money.
-
-**2026-09-16 amount formula.** `tier_funding_amount(account_value, tier)` /
-`turn_funding_amount(account_value)`: 2% of account value at the moment of
-the event, times a mild escalation multiplier by tier (1x / 1.5x / 2x / 2.5x
-at -5/-10/-15/-20%; the turn is always 1x, since it is a confirmation
-signal, not a severity one). At today's ~$198k that is $3,960 / $5,940 /
-$7,920 / $9,900 by tier, $3,960 for the turn — replacing the single flat
-$5,000 the daily/weekly prompts used to quote for every one of these.
-
-Backtested in `funding_pct_backtest.py` /
-`research_notes/funding_pct_backtest.md` on both the real 11-year window and
-the 26-year proxy: the IRR-vs-per-dollar-multiple tradeoff is smooth and
-monotonic on both histories — there is **no interior optimum**, so escalating
-shape (mild beat steep/linear: ≤1pp more IRR for 2-3x the dollar ask at the
-deepest tier) was the one choice the data supported; the base rate (2% vs.
-the shortlisted 1.5%) was a genuine owner preference the backtest could not
-resolve further, the same "idle cash beats a lump sum, loses to a fully-
-invested lump" tradeoff the original 09-07 analysis found. Caveats carried
-over: single 11-year real-instrument history with one real bear (2022); the
-26-year proxy is QQQ-core, structurally blind to SPMO specifics, used only
-to confirm the monotonic shape holds outside the SPMO-fitted window; very
-long-horizon dollar totals at high percentages are compounding artifacts,
-not projections.
-
-**Why these two and not the alternatives** (all measured 2026-09-07,
-`scratchpad dipfund.py` / `statefund.py`, $5k/event, 2015-11 → 2026-08):
-
-| trigger set | /yr | total | final | IRR | per $ |
-|---|---|---|---|---|---|
-| shift into A/B/C only | 4.1 | $220k | $3.21M | 31.3% | 10.05x |
-| drawdown tiers only | 5.2 | $280k | $3.05M | 30.6% | 8.03x |
-| **both (adopted)** | **9.0** | **$485k** | **$4.58M** | **31.5%** | 7.84x |
-| every strategy day < −3% | 9.3 | $500k | $4.52M | 31.3% | 7.53x |
-| annual lump each January | 1.1 | $60k | $2.17M | 30.2% | 13.56x |
-
-REJECTED and not to be reinvented: **entering F** (1.1x/yr) — the deployed
-sleeve on that day is **0.0%**, because F is 100% BOXX, so new money lands in
-cash; with a $2k/mo budget it left $235k of $260k uninvested and returned
-26.1%. **Any state change** (11.5x/yr) — no edge, up to $50k a quarter.
-**A −3% day** — most frequent, worst per-dollar efficiency, worst clustering
-($35k in a quarter).
-
-**Two honest caveats.** (a) Per-dollar efficiency FALLS as triggers are added
-— the annual lump is 13.56x — but that reflects less money working for
-longer, not better timing; the adopted pair ends at $4.58M against $2.17M.
-(b) Against a monthly schedule with the SAME budget, every trigger tested lost
-(deploy-immediately 31.2% vs 31.1% for the shift, 30.4% for tiers), because
-cash waiting out of a ~30% strategy is expensive. The owner does not want
-monthly contributions, so the schedule is not the live alternative — but if
-that ever changes, the schedule wins on the arithmetic.
