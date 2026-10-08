@@ -77,6 +77,11 @@ HIGHREL_N = 15          # 'gate' D stays cash after the gate clears; 'spell' TQQ
 
 GATE_G_EXIT = None   # dgate_buffer_study (2026-09-30): the gap200 half of the D gate turns ON below 2%
 GATE_B_EXIT = None   # and OFF only at/above GATE_G_EXIT (breadth: on below 0.20, off at/above GATE_B_EXIT).
+NAV_BRAKE = None     # nav_brake_study (2026-10-08): (depth, mult, release). When the strategy's own NAV closes more
+                     # than `depth` below its peak the risky legs are scaled by `mult` (0 = cash). release: 'nav' =
+                     # off once NAV is back above the line; 'high20' = off on a new 20-session QQQ closing high;
+                     # 'roll252' = as 'nav' but the peak is the rolling 252-session high (the funding-tier peak).
+LEV_SCALE = 1.0      # nav_brake_study: flat de-levering of the risky legs (the null frontier for this design)
                      # None = the live gate, reproduced exactly.
 
 def sim(h, arm=None, detail=False):
@@ -92,6 +97,7 @@ def sim(h, arm=None, detail=False):
     latch = 0; since = 0; age = 0; clr = 0; grung = 3; gprev = 0; gapn = 0
     glatch = rlatch = olatch = 0; ovon = False; mprev = None
     gfl = bfl = False
+    nav = npk = 1.0; navs = []; brk = False
     for d in days:
         I = info(d)
         st = I['st'] if h == 'real' else I['state']
@@ -236,8 +242,18 @@ def sim(h, arm=None, detail=False):
         if 'vol' in HIGHREL:
             if mprev is not None and m > mprev and not nh: m = mprev
             mprev = m
+        if NAV_BRAKE is not None:
+            dep, mul, rel = NAV_BRAKE
+            pk = max(navs[-252:] + ([1.0] if len(navs) < 252 else [])) if rel == 'roll252' else npk
+            under = nav < pk * (1.0 - dep)
+            if rel == 'high20':
+                if under: brk = True
+                elif brk and qfeat(h, d, 'high', 20) >= 0: brk = False
+            else: brk = under
+            if brk: m *= mul
+        m *= LEV_SCALE
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)
-        key = keyf(I, v, gate) + ((flag,) if arm else ()) + hrk
+        key = keyf(I, v, gate) + ((flag,) if arm else ()) + hrk + ((brk,) if NAV_BRAKE is not None else ())
         cost = 0.0
         if held is None: held = list(t); nreb += 1
         else:
@@ -248,6 +264,7 @@ def sim(h, arm=None, detail=False):
         gg = sum(held[j] * lr[j] for j in range(5)); net = gg - cost
         risky += sum(held[:4]); nflag += flag
         out.append(dict(d=d, net=net, eff=eff, st=st, gate=gate, flag=flag, held=list(held), lr=lr, v=v, t=t) if detail else net)
+        nav *= 1 + net; navs.append(nav); npk = max(npk, nav)
         dn = 1 + gg
         if dn > 0: held = [held[j] * (1 + lr[j]) / dn for j in range(5)]
         prev = key
