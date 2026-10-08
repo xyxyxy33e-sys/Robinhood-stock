@@ -655,11 +655,16 @@ cash. This layer decides what the cash leg holds:
 | size | VIXM = 75% of the cash leg while ON and stressed; the rest BOXX | `VIXM_CASH_SHARE` |
 
 `vixm_state(dates, px, vix, vix3m, as_of)` replays the whole VIX/VIX3M history
-every run (no stored state). VIX comes from Robinhood (real time); VIX3M and
-both histories from CBOE via `vol_curve.load_vix_inputs` (VIX3M ~15 min
-delayed at 15:5x; Yahoo fallback). If the index data cannot be had the run
-passes `vixm_unavailable(reason)` — VIXM 0%, the pre-2026-10-08 design — and
-reports it. A change in `allowed` is a regime change (always trade).
+every run (no stored state). VIX comes from Robinhood (real time). VIX3M
+(Robinhood has none) via `vol_curve.load_vix_inputs`: the MEDIAN of the fresh
+live quotes from CBOE, Google Finance and Yahoo (all republish CBOE's index;
+fresh = stamped within 30 min), histories from CBOE then FRED; if no live quote
+is fresh, the PROXY 1.32 x SMA63(VIX) (agrees with the real inversion flag on
+96% of days 2011-2026, Sharpe 1.95 vs 1.90 in the rule, but its 1.32 was fitted
+on that window — fallback only; its LEVEL differs from VIX3M, only the
+VIX > VIX3M flag is calibrated). The returned note names every source and is
+reported verbatim. If even VIX history cannot be had the run passes
+`vixm_unavailable(reason)` — VIXM 0%, the pre-2026-10-08 design — and reports it. A change in `allowed` is a regime change (always trade).
 
 **Why.** VIXM (VIX futures months 4-7) gains in fast volatility spikes that
 start from calm, and decays otherwise. Bought cheap and held until the curve
