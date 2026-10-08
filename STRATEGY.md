@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08)
 
 **What the account holds, by effective state** — see the tables under
 "Target weights"; effective state = macro 50/200 state, except that macro
@@ -47,6 +47,15 @@ the raw votes), which re-levered into falls as the votes fell away. Then the fou
 estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
 state, on a change in HELD trim votes (v2), on L1 drift > 5% (3% until 2026-09-09), on a
 zero-target leg still held above 0.10%, or on the state-D gate switching.
+
+**VIXM sleeve in the cash leg (APPLIED 2026-10-08, owner decision):** the
+rows above are unchanged; this only decides what the cash (BOXX) leg holds.
+A latch turns ON when VIX closes below 18 and OFF when VIX closes above VIX3M
+(curve inverted). While it is ON **and** QQQ's 30-day realized vol is >= 20%,
+**75% of the cash leg is held as VIXM** instead of BOXX; VIXM is sold early
+when VIX falls 25% below its high since entry. `live_target_weights_with_vixm`
+(6 legs: core, tqqq, qld, xlu, vixm, cash) is the live call; section "VIXM
+sleeve in the cash leg" below.
 
 **State E → 100% BOXX (2026-09-19, owner decision):** the 50% XLU leg was
 dropped after the E pair/union study showed every feasible E row (all cash,
@@ -630,6 +639,49 @@ eight extension regimes (2003, 2009–10, 2011, 2020–21, 2023, 2024, 2025,
 2026). Trim size is monotone — ×0.75 through ×0.0 all improve — so 0.5 was
 a deliberately non-corner pick and step ⅓ is the graded equivalent; do not
 push it toward full cash at one vote on the strength of that monotonicity.
+
+## VIXM sleeve in the cash leg (APPLIED 2026-10-08, owner decision)
+
+**What it does.** Nothing above changes: states, rows, the trim, the D gate
+and the vol target still set how much of the book is risky and how much is
+cash. This layer decides what the cash leg holds:
+
+| | rule | constant |
+|---|---|---|
+| latch ON | VIX closes below 18 and VIX <= VIX3M | `VIXM_ENTRY_VIX` |
+| latch OFF | VIX closes above VIX3M (the spike has arrived) | `VIXM_EXIT_RATIO` |
+| stress | QQQ `realized_vol_live` >= 20% (== the vol target) | `VIXM_MIN_VOL` |
+| fade | VIX 25% below its high since entry -> sell, no re-buy until stress dips and returns | `VIXM_FADE` |
+| size | VIXM = 75% of the cash leg while ON and stressed; the rest BOXX | `VIXM_CASH_SHARE` |
+
+`vixm_state(dates, px, vix, vix3m, as_of)` replays the whole VIX/VIX3M history
+every run (no stored state). VIX comes from Robinhood (real time); VIX3M and
+both histories from CBOE via `vol_curve.load_vix_inputs` (VIX3M ~15 min
+delayed at 15:5x; Yahoo fallback). If the index data cannot be had the run
+passes `vixm_unavailable(reason)` — VIXM 0%, the pre-2026-10-08 design — and
+reports it. A change in `allowed` is a regime change (always trade).
+
+**Why.** VIXM (VIX futures months 4-7) gains in fast volatility spikes that
+start from calm, and decays otherwise. Bought cheap and held until the curve
+inverts, it pays in exactly the episodes where the book is already in BOXX
+because the vol target has cut: Feb/Nov 2018, Jan 2022, Feb 2023, Aug 2024,
+Mar 2025. The stress filter stops it from sitting in the large BOXX slot the
+extension trim creates in calm, extended markets (June 2023: -7.4pp in a
+month without the filter).
+
+**Evidence** (`research_notes/vixm_cash_sleeve.md`; 2016-08..2026-08 on the
+Regime Tape weights, real instruments, same-session signal as run live):
+44.8% / -17.7% / Sharpe 1.79 -> **47.9% / -17.7% / 1.90**, worst 12 months
+-11.7% -> -9.7%, both halves up (2.20 -> 2.26, 1.40 -> 1.56). 86 of 108
+neighbouring parameter sets beat live on both halves; robust to 30bp VIXM cost.
+
+**Limitations (carry them).** One ~10-year window — VIXM starts 2011, so the
+26y proxy cannot test it; this is an owner decision on SPMO-era evidence, like
+the D gate. About a third of the gain is August 2024. **One extra session of
+lag erases most of it** (Sharpe 1.80, recent half == live), and VIXM has no
+extended-hours tradability: its leg must fill in the 15:5x window. VIXM decays
+~15-19%/yr while held. Kill switch: `VIXM_OVERLAY_ENABLED = False` returns the
+cash leg to 100% BOXX with no other change.
 
 ## Volatility targeting (added 2026-09-01) — the outermost overlay
 

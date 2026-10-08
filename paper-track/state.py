@@ -834,7 +834,8 @@ def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND,
         stubs = [i for i, (t, h) in enumerate(zip(target, held))
                  if t == 0.0 and h > zero_leg_eps]
         if stubs:
-            names = ', '.join(f'{TARGET_WEIGHT_LEGS[i]} {held[i]*100:.2f}%' for i in stubs)
+            legs = LIVE_LEGS if len(target) == 6 else TARGET_WEIGHT_LEGS
+            names = ', '.join(f'{legs[i]} {held[i]*100:.2f}%' for i in stubs)
             return True, drift, (f'zero-target leg held: {names} '
                                  f'(drift {drift*100:.1f}% was within band)')
     return False, drift, f'drift {drift*100:.1f}% within band {band*100:.0f}%'
@@ -1450,3 +1451,177 @@ def circuit_breaker_check(actual_total_value, implied_total_value, tol=0.02):
             "reconciliation failed, do not trade"
         )
     return pct
+
+
+# ---------------------------------------------------------------------------
+# VIXM SLEEVE IN THE CASH LEG -- APPLIED 2026-10-08 (owner decision; STRATEGY.md
+# "VIXM sleeve in the cash leg"; research_notes/vixm_cash_sleeve.md).
+#
+# Everything above is unchanged: states, rows, trims, D gate and the vol target
+# still decide how much of the book is risky and how much is "cash". This layer
+# only decides what the cash leg HOLDS. While the signal below is on, a fixed
+# share of the cash leg is held as VIXM (ProShares VIX Mid-Term Futures, months
+# 4-7) instead of BOXX:
+#
+#   latch  ON  when VIX closes below VIXM_ENTRY_VIX (18) and VIX <= VIX3M;
+#          OFF when VIX closes above VIX3M (the futures curve has inverted:
+#          the spike has arrived -- take it). Stays ON in between, even with
+#          VIX above 18: insurance bought cheap is kept until the spike pays.
+#   stress QQQ's live realized vol >= VIXM_MIN_VOL (0.20, the vol target).
+#          The cash only holds VIXM when the BOXX is there because of real
+#          stress (the vol target cutting), not because the trim moved an
+#          extended, calm market to BOXX -- that case (June 2023) is where
+#          an unfiltered rule bled -7.4pp in a month.
+#   fade   sell VIXM early when VIX is VIXM_FADE (25%) below its highest close
+#          since VIXM was bought in the current stress stretch; no re-buy
+#          until QQQ vol has dipped below 0.20 and come back (or the latch
+#          resets). The spike is over and VIXM is pure decay from there.
+#   size   VIXM = VIXM_CASH_SHARE (0.75) x the cash leg; the rest stays BOXX.
+#
+# Evidence (2016-08..2026-08, the Regime Tape weights, real instruments, 4bp):
+# 44.8% / -17.7% / Sharpe 1.79 -> 50.4% / -17.7% / 1.93 with BOTH halves up
+# (2.20 -> 2.29, 1.40 -> 1.61); same-session signal (how this runs) 47.9% /
+# 1.90 / halves 2.26 & 1.56; 86 of 108 neighbouring parameter sets beat live
+# on both halves; robust to 30bp VIXM cost (1.90). NOT tested on the 26y proxy:
+# VIXM starts 2011 and the CBOE futures files 2013, so this rests on one
+# ~10-year window -- the same class of evidence as the D gate, adopted as an
+# owner decision. Gains are concentrated (Aug 2024 is about a third), VIXM is
+# held ~9-12% of days, and ONE EXTRA SESSION OF LAG erases most of it
+# (Sharpe 1.80, recent half 1.40 == live): the VIXM leg must trade in the
+# same 15:5x window as everything else, never "tomorrow".
+VIXM_OVERLAY_ENABLED = True
+VIXM_INSTRUMENT = 'VIXM'
+VIXM_ENTRY_VIX = 18.0
+VIXM_EXIT_RATIO = 1.0
+VIXM_MIN_VOL = 0.20          # == VOL_TARGET_PA; frozen
+VIXM_CASH_SHARE = 0.75
+VIXM_FADE = 0.25
+LIVE_LEGS = ('core', 'tqqq', 'qld', 'xlu', 'vixm', 'cash')
+
+
+def vixm_series(dates, vix, vix3m, qqq_vol):
+    """Replay the VIXM latch over `dates` (ascending ISO strings).
+    vix, vix3m: {date: close}; qqq_vol: {date: realized_vol_live as of that
+    date, or None}. Dates missing either index level are skipped (they neither
+    set nor clear anything). Returns {date: dict(on, stress, allowed, faded,
+    vix, vix3m, ratio, vol, vix_high)}: `allowed` is the only field that moves
+    weight."""
+    on = killed = False
+    hi = None
+    out = {}
+    for d in dates:
+        v, v3 = vix.get(d), vix3m.get(d)
+        if v is None or v3 is None or v3 <= 0:
+            continue
+        ratio = v / v3
+        if not on and v < VIXM_ENTRY_VIX and ratio <= VIXM_EXIT_RATIO:
+            on, killed, hi = True, False, None
+        elif on and ratio > VIXM_EXIT_RATIO:
+            on = False
+        rv = qqq_vol.get(d)
+        stress = rv is not None and rv >= VIXM_MIN_VOL
+        if not stress:
+            killed, hi = False, None
+        allowed = on and not killed and stress
+        faded = False
+        if allowed:
+            hi = v if hi is None else max(hi, v)
+            if v <= hi * (1 - VIXM_FADE):
+                killed, allowed, faded = True, False, True
+        out[d] = dict(on=on, stress=stress, allowed=allowed, faded=faded or killed,
+                      vix=v, vix3m=v3, ratio=ratio, vol=rv, vix_high=hi)
+    return out
+
+
+VIXM_MIN_HISTORY = 250       # sessions of index history the latch must replay
+
+
+def vixm_state(dates, px, vix, vix3m, as_of=None, backfill=True):
+    """THE live input for the VIXM sleeve: today's dict from vixm_series().
+
+    dates/px: the SAME QQQ series (today's 15:5x snapshot appended) passed to
+    compute_states(); QQQ realized vol per date is computed here with
+    realized_vol_live(), backfilled from data/qqq_long_history.csv like
+    a_trim_state. vix/vix3m: {date: close} with today's 15:5x readings
+    appended (vol_curve.load_vix_inputs builds both). The latch is path
+    dependent, so the whole index history is replayed every run -- no stored
+    state, and a missed run reconstructs it exactly.
+
+    Raises MissingOverlayInputs when today's VIX/VIX3M/QQQ reading is absent
+    or the replay is too short; callers that cannot get the data must pass
+    vixm_unavailable(reason) instead (VIXM 0%, reported), never guess."""
+    dates = list(dates)
+    if as_of is None:
+        as_of = dates[-1]
+    if as_of not in px:
+        raise MissingOverlayInputs(f"vixm_state: no QQQ close for {as_of}")
+    if as_of not in vix or as_of not in vix3m:
+        raise MissingOverlayInputs(f"vixm_state: no VIX/VIX3M reading for {as_of}")
+    px2 = dict(px)
+    if backfill and dates and os.path.exists(A_TRIM_BACKFILL_CSV):
+        first = min(dates)
+        with open(A_TRIM_BACKFILL_CSV) as fh:
+            for r in csv.DictReader(fh):
+                if r['d'] < first:
+                    px2[r['d']] = float(r['c'])
+    qd = sorted(d for d in px2 if d <= as_of)
+    idx_dates = sorted(d for d in vix if d <= as_of and d in vix3m)
+    if len(idx_dates) < VIXM_MIN_HISTORY:
+        raise MissingOverlayInputs(
+            f"vixm_state: only {len(idx_dates)} VIX/VIX3M sessions up to {as_of}; need >= {VIXM_MIN_HISTORY}")
+    qset = set(qd)
+    vols = {}
+    for d in idx_dates:
+        if d in qset:
+            vols[d] = realized_vol_live(qd, px2, as_of=d)
+    out = vixm_series(idx_dates, vix, vix3m, vols)
+    if as_of not in out:
+        raise MissingOverlayInputs(f"vixm_state: replay produced no reading for {as_of}")
+    res = dict(out[as_of])
+    res['as_of'] = as_of
+    res['available'] = True
+    return res
+
+
+def vixm_unavailable(reason):
+    """Explicit 'no VIXM today' input: the cash leg stays 100% BOXX (the
+    pre-2026-10-08 design). Use ONLY when the index data cannot be fetched;
+    the run must report `reason`."""
+    return dict(available=False, allowed=False, reason=str(reason))
+
+
+def apply_vixm(weights5, vixm):
+    """5-leg (core, tqqq, qld, xlu, cash) -> 6-leg LIVE_LEGS tuple."""
+    core, tqqq, qld, xlu, cash = weights5
+    v = cash * VIXM_CASH_SHARE if (VIXM_OVERLAY_ENABLED and vixm.get('allowed')) else 0.0
+    return (core, tqqq, qld, xlu, v, cash - v)
+
+
+def live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm):
+    """THE live weight function from 2026-10-08: live_target_weights() (every
+    existing guard and overlay, unchanged) followed by apply_vixm(). Returns
+    6 legs in LIVE_LEGS order. `vixm` is REQUIRED: vixm_state(...) or, when
+    the index data cannot be had, vixm_unavailable(reason)."""
+    if not isinstance(vixm, dict) or 'allowed' not in vixm or 'available' not in vixm:
+        raise MissingOverlayInputs(
+            "vixm is required: pass vixm_state(dates, px, vix, vix3m, as_of=<date>) "
+            "or vixm_unavailable(<reason>)")
+    w5 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
+    return apply_vixm(w5, vixm)
+
+
+def validate_weights_live(state, core, tqqq, qld, xlu, vixm, cash, tol=0.005):
+    """6-leg validator for live_target_weights_with_vixm()'s output."""
+    if state not in STATE_LABEL:
+        raise WeightSanityError(f"state {state!r} is not one of {sorted(STATE_LABEL)}")
+    legs = (('core', core), ('tqqq', tqqq), ('qld', qld), ('xlu', xlu), ('vixm', vixm), ('cash', cash))
+    for name, w in legs:
+        if not (-tol <= w <= 1.0 + tol):
+            raise WeightSanityError(f"{name}_weight={w!r} out of [0,1] range for state {state}")
+    total = core + tqqq + qld + xlu + vixm + cash
+    if abs(total - 1.0) > tol:
+        raise WeightSanityError(
+            f"weights for state {state} sum to {total:.4f}, expected 1.0 +/- {tol} "
+            f"(core={core}, tqqq={tqqq}, qld={qld}, xlu={xlu}, vixm={vixm}, cash={cash})")
+    if vixm > tol and vixm > (vixm + cash) * VIXM_CASH_SHARE + tol:
+        raise WeightSanityError(f"vixm {vixm:.4f} exceeds {VIXM_CASH_SHARE:.0%} of the cash leg {vixm + cash:.4f}")

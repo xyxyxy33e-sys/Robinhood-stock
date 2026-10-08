@@ -927,3 +927,85 @@ def check_deposit_plan():
 
 check_deposit_plan()
 check_cash_sweep()
+
+
+def check_vixm_overlay():
+    """VIXM sleeve in the cash leg (2026-10-08): the latch, the stress filter,
+    the fade exit, the 75% split, the strict live entry point, the 6-leg
+    validator, and the 6-leg paths in needs_rebalance / deposit_plan /
+    cash_sweep."""
+    import state as S
+    import deposit_plan as DP, cash_sweep as CS
+    assert S.VIXM_OVERLAY_ENABLED and S.VIXM_MIN_VOL == S.VOL_TARGET_PA
+    # --- latch / stress / fade on a synthetic path
+    days = [f"d{i:02d}" for i in range(14)]
+    vix = dict(zip(days, [19, 16, 17, 17, 22, 26, 30, 22, 21, 21, 31, 17, 17, 17]))
+    v3 = dict(zip(days, [20, 19, 19, 19, 21, 25, 26, 25, 25, 25, 28, 20, 20, 20]))
+    vol = dict(zip(days, [.25, .15, .15, .22, .25, .30, .35, .33, .19, .21, .40, .25, .15, .25]))
+    s = S.vixm_series(days, vix, v3, vol)
+    st = [(s[d]['on'], s[d]['allowed']) for d in days]
+    assert st[0] == (False, False), "VIX 19 >= 18: the latch must not start"
+    assert st[1] == (True, False) and st[2] == (True, False), "on, but QQQ vol < 20%: no VIXM"
+    assert st[3] == (True, True), "on + stress: VIXM"
+    assert st[4] == (False, False), "VIX 22 > VIX3M 21: inversion turns the latch off (and VIXM with it)"
+    assert not any(s[d]['on'] for d in ('d05', 'd06', 'd07', 'd08', 'd09', 'd10')), \
+        "no re-entry while VIX >= 18, even once the curve is back in contango (d07-d09)"
+    assert s['d11']['on'] and s['d11']['allowed'], "VIX 17 < 18 and not inverted: on again, stress -> VIXM"
+    assert s['d12']['on'] and not s['d12']['allowed'], "stress gone: no VIXM"
+    assert s['d13']['allowed'], "stress back: VIXM again"
+    # fade: highest VIX since entry 30, then 22 (-26.7%) -> blocked until stress dips and returns
+    days = [f"f{i}" for i in range(6)]
+    vix = dict(zip(days, [17, 24, 30, 22, 21, 23]))
+    v3 = dict(zip(days, [20, 26, 31, 26, 26, 26]))
+    vol = dict(zip(days, [.22, .25, .30, .28, .19, .24]))
+    s = S.vixm_series(days, vix, v3, vol)
+    assert [s[d]['allowed'] for d in days] == [True, True, True, False, False, True], \
+        [s[d]['allowed'] for d in days]
+    assert s['f3']['faded'], "a 25% fade from the high must block VIXM"
+    # --- the split
+    assert S.apply_vixm((0.25, 0, 0, 0, 0.75), dict(allowed=True, available=True)) == (0.25, 0, 0, 0, 0.5625, 0.1875)
+    assert S.apply_vixm((0.25, 0, 0, 0, 0.75), dict(allowed=False, available=True))[4] == 0.0
+    assert S.apply_vixm((0.5, 0.5, 0, 0, 0.0), dict(allowed=True, available=True))[4] == 0.0, "no cash, no VIXM"
+    assert S.apply_vixm((0, 0, 0, 0, 1.0), S.vixm_unavailable('test'))[4] == 0.0
+    # --- strict live entry point: vixm required, maths otherwise unchanged
+    good = {100: 0.0, 150: 0.0, 200: 0.0}
+    for bad in (None, {}, dict(allowed=True)):
+        try:
+            S.live_target_weights_with_vixm('E', False, 0.30, 'E', good, 0.5, _at('E'), bad)
+        except S.MissingOverlayInputs:
+            pass
+        else:
+            raise AssertionError(f"live_target_weights_with_vixm accepted vixm={bad!r}")
+    on = dict(allowed=True, available=True)
+    w6 = S.live_target_weights_with_vixm('E', False, 0.30, 'E', good, 0.5, _at('E'), on)
+    assert w6 == (0, 0, 0, 0, 0.75, 0.25), w6
+    w5 = S.live_target_weights('A', False, 0.30, 'A', good, 0.5, _at('A'))
+    w6 = S.live_target_weights_with_vixm('A', False, 0.30, 'A', good, 0.5, _at('A'), on)
+    assert w6[:4] == w5[:4] and abs(w6[4] + w6[5] - w5[4]) < 1e-12 and abs(w6[4] - 0.75 * w5[4]) < 1e-12
+    S.validate_weights_live('A', *w6)
+    try:
+        S.validate_weights_live('E', 0, 0, 0, 0, 0.9, 0.1)
+    except S.WeightSanityError:
+        pass
+    else:
+        raise AssertionError("validate_weights_live accepted VIXM above 75% of the cash leg")
+    try:
+        S.vixm_state(['2026-01-02'], {'2026-01-02': 1.0}, {}, {}, as_of='2026-01-02')
+    except S.MissingOverlayInputs:
+        pass
+    else:
+        raise AssertionError("vixm_state accepted a missing VIX reading")
+    # --- 6-leg plumbing: rebalance on a VIXM exit (zero-target leg), held weights, dollar targets, sweep
+    do, _, why = S.needs_rebalance((0, 0, 0, 0, 0.0, 1.0), (0, 0, 0, 0, 0.002, 0.998), False)
+    assert do and 'vixm' in why, why
+    vals = dict(SPMO=0.0, TQQQ=0.0, QLD=0.0, XLU=0.0, VIXM=75000.0, BOXX=25000.0)
+    assert DP.held_weights(vals, 0.0, 100000.0, 0.0, with_vixm=True) == (0, 0, 0, 0, 0.75, 0.25)
+    dt = DP.dollar_targets((0, 0, 0, 0, 0.75, 0.25), 100000.0, 0.0)
+    assert dt['VIXM'] == 75000.0 and dt['BOXX'] == 25000.0
+    o, _ = CS.plan_sweep((0, 0, 0, 0, 0.75, 0.25), dict(VIXM=74000.0, BOXX=25000.0), 1000.0, 100000.0)
+    assert set(o) == {'VIXM'} and abs(o['VIXM'] - 1000.0) < 0.01, o
+    print("OK: VIXM sleeve -- latch on VIX<18 / off on VIX>VIX3M, only with QQQ vol >= 20%, 25% fade blocks "
+          "until stress resets, 75% of cash, strict live entry point, 6-leg validator/rebalance/deposit/sweep paths")
+
+
+check_vixm_overlay()
