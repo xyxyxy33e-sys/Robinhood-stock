@@ -41,4 +41,4 @@ The VIXM sleeve is not in the harness (its data start 2011).
   already do the de-risking; the drawdown tiers stay funding (buy) signals.
 
 Nothing applied. The only lever that buys drawdown cleanly is less leverage throughout
-(~0.4–0.5 pp MaxDD per pp CAGR on the frontier above, Sharpe-neutral).
+(on the frontier above, about 0.4 pp of MaxDD per pp of CAGR real and 0.8 pp proxy).
