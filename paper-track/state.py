@@ -1078,10 +1078,10 @@ EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
 A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
                ('2026-09-23', (0.40, 0.60)),   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
                ('2026-10-09', (0.25, 0.75)))   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
-# 2026-10-09, later the same day (owner: "actually change to 75/25 tomorrow when market open"):
+# 2026-10-08 evening ET (owner: "actually change to 75/25 tomorrow when market open"):
 # from this SESSION on, every A session holds this base whatever its spell start -- the spell
-# running since 2026-08-04 moves 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-12 run (next session).
-A_BASE_FROM_SESSION = ('2026-10-12', (0.25, 0.75))
+# running since 2026-08-04 moves 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-09 session (the open, by a one-time rebalance).
+A_BASE_FROM_SESSION = ('2026-10-09', (0.25, 0.75))
 
 
 def a_base_row(spell_start):

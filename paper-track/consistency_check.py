@@ -491,14 +491,14 @@ def check_d_ladder():
     assert a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2026-10-08') == (0.40, 0.60)
     assert a_base_row('2026-10-09') == (0.25, 0.75) and a_base_row('2027-01-04') == (0.25, 0.75)
     from state import a_base_for, A_BASE_FROM_SESSION
-    assert A_BASE_FROM_SESSION == ('2026-10-12', (0.25, 0.75)), "owner: the running spell moves to 25/75 on 2026-10-12"
-    assert a_base_for('2026-08-04', '2026-10-09') == (0.50, 0.50) and a_base_for('2026-08-04', '2026-10-12') == (0.25, 0.75)
-    assert a_base_for('2026-09-25', '2026-10-09') == (0.40, 0.60) and a_base_for('2026-11-02', '2026-11-02') == (0.25, 0.75)
+    assert A_BASE_FROM_SESSION == ('2026-10-09', (0.25, 0.75)), "owner: the running spell moves to 25/75 on 2026-10-09"
+    assert a_base_for('2026-08-04', '2026-10-08') == (0.50, 0.50) and a_base_for('2026-08-04', '2026-10-09') == (0.25, 0.75)
+    assert a_base_for('2026-09-25', '2026-10-08') == (0.40, 0.60) and a_base_for('2026-11-02', '2026-11-02') == (0.25, 0.75)
     w = live_target_weights('A', False, 0.15, 'A', {100: 0.0, 150: 0.0, 200: 0.0}, 0.5,
                             _at('A', base=a_base_row('2026-10-12')))
     assert w == (0.25, 0.75, 0.0, 0.0, 0.0), w
     print("OK: D ladder -- D1 above the 100d 50/0/50, D2 100-150d 0/50/50, D3 below the 150d 25/75/0 "
-          "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A at 25/75 from the 2026-10-12 session (running spell included)")
+          "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A at 25/75 from the 2026-10-09 session (running spell included)")
 
 
 check_d_ladder()
