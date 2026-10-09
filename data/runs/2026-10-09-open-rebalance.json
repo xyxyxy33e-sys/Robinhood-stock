@@ -1,0 +1,148 @@
+{
+ "date": "2026-10-09",
+ "kind": "one-time open rebalance (outside the 15:50 run)",
+ "reason": "owner, 2026-10-08 evening ET: \"actually change to 75/25 tomorrow when market open\" -> \"Do a one time rebalance for the new rule\". Code: A_BASE_FROM_SESSION = (2026-10-09, (0.25, 0.75)) in state.py (c2af0d4); the A spell running since 2026-08-04 moves 50/50 -> 25/75 SPMO/TQQQ.",
+ "check_input": {
+  "date": "2026-10-09",
+  "time": "09:37",
+  "quotes": {
+   "QQQ": {
+    "last": 750.6515,
+    "bid": 750.64,
+    "ask": 750.68,
+    "close": 747.58,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "QQEW": {
+    "last": 164.2,
+    "bid": 163.39,
+    "ask": 163.68,
+    "close": 162.8709,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "SPMO": {
+    "last": 151.29,
+    "bid": 151.3,
+    "ask": 151.35,
+    "close": 150.84,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "TQQQ": {
+    "last": 81.105,
+    "bid": 81.09,
+    "ask": 81.1,
+    "close": 80.23,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "QLD": {
+    "last": 98.3,
+    "bid": 98.26,
+    "ask": 98.28,
+    "close": 97.54,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "XLU": {
+    "last": 41.23,
+    "bid": 41.22,
+    "ask": 41.23,
+    "close": 41.07,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "BOXX": {
+    "last": 118.53,
+    "bid": 118.53,
+    "ask": 118.54,
+    "close": 118.48,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   },
+   "VIXM": {
+    "last": 12.7701,
+    "bid": 12.78,
+    "ask": 12.79,
+    "close": 12.83,
+    "close_date": "2026-10-08",
+    "last_trade_date": "2026-10-09"
+   }
+  },
+  "vix": 15.07,
+  "positions": {
+   "TQQQ": 3338.455427,
+   "SPMO": 1702.029079
+  },
+  "idle_cash": 0.0,
+  "total_value": 528248.71
+ },
+ "check_output": "(check mode: nothing written)\n=== 2026-10-09 09:37 ET snapshot (15:5x proxy for the close) ===\nmacro A (established uptrend), fast A, effective A\ngaps 100/150/200: +4.3% / +8.6% / +11.7%; trim votes raw 0 held 0 (prev 0); A spell from 2026-08-04, base (0.25, 0.75)\nbreadth pct 0.66, 200d gap +11.7%, D gate off (informational outside D)\nQQQ 30d vol 14.5% -> multiplier 1.000\nVIXM: VIX 15.07 (Robinhood; history CBOE); VIX3M history CBOE; VIX3M 18.08 = median of CBOE 18.08 (1m), Google 18.08 (0m); stale ignored: Yahoo; ratio 0.834\n      latch ON, stress no, allowed no\n\naccount $528,248.71 (positions+cash $528,265.41, breaker ok)\ntarget: SPMO 25.0% / TQQQ 75.0% / QLD 0.0% / XLU 0.0% / VIXM 0.0% / BOXX 0.0%\nheld:   SPMO 48.7% / TQQQ 51.3% / QLD 0.0% / XLU 0.0% / VIXM 0.0% / BOXX 0.0%\nL1 drift 47.49%; regime change: A base (0.5, 0.5)->(0.25, 0.75)\n\nDECISION: TRADE (regime change). Place in this order, sells first:\n  SELL SPMO       829 sh  LIMIT 151.30  (~$125,427.70)\n  SELL SPMO  $10.10  MARKET dollar-based (regular hours)\n  BUY  TQQQ      1546 sh  LIMIT 81.10  (~$125,380.60)\n  BUY  TQQQ  $40.51  MARKET dollar-based (regular hours)\n",
+ "orders": [
+  {
+   "id": "6ac8ee22-ef64-4874-8691-51c6a9beb6bd",
+   "symbol": "SPMO",
+   "side": "sell",
+   "kind": "limit",
+   "quantity": 829,
+   "limit": 151.3,
+   "state": "filled",
+   "avg_price": 151.3301,
+   "fees": 2.59,
+   "time": "13:37:38Z"
+  },
+  {
+   "id": "6ac8ee23-ed15-45e2-91f9-115690a505fc",
+   "symbol": "SPMO",
+   "side": "sell",
+   "kind": "market_dollars",
+   "dollars": 10.1,
+   "quantity": 0.066721,
+   "state": "filled",
+   "avg_price": 151.3751,
+   "time": "13:37:39Z"
+  },
+  {
+   "id": "6ac8ee2f-db5b-455f-a5cf-b81fa03f2780",
+   "symbol": "TQQQ",
+   "side": "buy",
+   "kind": "limit",
+   "quantity": 1546,
+   "limit": 81.14,
+   "state": "filled",
+   "avg_price": 81.14,
+   "fees": 0.0,
+   "time": "13:37:58Z",
+   "note": "re-priced from the check plan 81.10 to the ask at placement 81.14 (the touch moved); within the 0.3% cap"
+  },
+  {
+   "id": "6ac8ee40-3c78-4822-a7a8-78f4959d8324",
+   "symbol": "TQQQ",
+   "side": "buy",
+   "kind": "market_dollars",
+   "dollars": 17.0,
+   "quantity": 0.20954,
+   "state": "filled",
+   "avg_price": 81.1299,
+   "time": "13:38:08Z"
+  }
+ ],
+ "slippage_bps": {
+  "SPMO_sell_vs_bid_151_30": 2.0,
+  "TQQQ_buy_vs_check_ask_81_10": -4.9,
+  "TQQQ_buy_vs_ask_at_placement": 0.0
+ },
+ "final_positions": {
+  "TQQQ": 4884.664967,
+  "SPMO": 872.962358,
+  "cash": 0.72
+ },
+ "final_weights_at_fill_prices": {
+  "TQQQ": 0.75,
+  "SPMO": 0.25
+ },
+ "nav_note": "The 2026-10-09 NAV row (live_run record) uses the 2026-10-08 target (50/50) for the day return, so it misstates the day by 25% x (TQQQ return - SPMO return) measured from the 09:37 fills; the next run onward uses the 25/75 target.",
+ "expected_1550_run": "target 25/75 vs held ~25/75: no trade unless the reading changes (trim vote, state change, VIXM)."
+}
