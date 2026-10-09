@@ -17,6 +17,14 @@
       "mcp__robinhood__get_pnl_trade_history",
       "mcp__robinhood__place_equity_order",
       "mcp__robinhood__cancel_equity_order",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__get_equity_quotes",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__get_index_quotes",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__get_equity_positions",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__get_portfolio",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__get_equity_orders",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__get_pnl_trade_history",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__place_equity_order",
+      "mcp__61743e88-b422-4cfe-9837-67c54c881b23__cancel_equity_order",
       "Artifact",
       "PushNotification"
     ]
