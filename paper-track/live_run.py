@@ -323,6 +323,8 @@ def cmd_signal(inp, write=True):
             changed.append(f"effective state {rp['eff']}->{r['eff']}")
         if r['a_trim']['held'] != rp['a_trim']['held']:
             changed.append(f"held trim votes {rp['a_trim']['held']}->{r['a_trim']['held']}")
+        if r['eff'] == rp['eff'] == 'A' and tuple(r['a_trim']['base']) != tuple(rp['a_trim']['base']):
+            changed.append(f"A base {tuple(rp['a_trim']['base'])}->{tuple(r['a_trim']['base'])}")
         if r['d_gate'] != rp['d_gate']:
             changed.append(f"D gate {'on' if r['d_gate'] else 'off'}")
         if r.get('d_zone') != rp.get('d_zone') and r['eff'] == rp['eff'] == 'D':

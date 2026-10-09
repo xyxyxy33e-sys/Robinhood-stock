@@ -32,7 +32,10 @@ C row when the fast read is A/B/C.
 2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A",
 then "make it 40/60" the same day — it was set to 30/70 first); **25/75 in
 every A spell that starts on or after 2026-10-09** (owner, with the D ladder:
-"I will do pick"; the running spell keeps 50/50 — "Next A spell").
+"I will do pick"), **and in every A session from 2026-10-12 whatever its spell
+start** (`A_BASE_FROM_SESSION`; owner, later on 10-09: "actually change to 75/25
+tomorrow when market open" — the spell running since 2026-08-04 moves 50/50 →
+25/75 at the 2026-10-12 run; until then it holds 50/50).
 The tables below show the 50/50 row that is held today.
 
 **Extension trim v2 (APPLIED 2026-09-23, owner decision):** inside effective
@@ -152,6 +155,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-09 | **running A spell → 25/75 from the 2026-10-12 session** (`A_BASE_FROM_SESSION`; an A-base change is reported as a regime change) | owner: "actually change to 75/25 tomorrow when market open" (supersedes "next A spell" for the running spell) |
 | 2026-10-09 | **state-D ladder**: ungated D holds D1 (above the 100d) 50% SPMO / 50% QLD, D2 (100d–150d) 50% TQQQ / 50% QLD, D3 (below the 150d) 25% SPMO / 75% TQQQ; zone change = rebalance trigger (`d_zone`, `d_ladder_row`, `D_LADDER_ROWS`); **A base 25/75 for A spells starting on/after 2026-10-09** (`A_BASE_ROWS`; the spell running since 2026-08-04 keeps 50/50); shadow tracks v2/fastcut carry the ladder, sep19 does not | **owner decision** ("I will do pick", "next A spell"); real 54.7% / 1.977 / −19.4%, proxy 32.7% / 1.275 / −27.7%; ladder vs plain split at the same leverage Sharpe +0.08 / +0.05 (P 0.06 / 0.03); "State-D ladder" |
 | 2026-09-30 | **idle-cash sweep**: on a no-trade day, idle cash of $100 or more (dividends, interest, leftovers) buys the legs below their dollar target in proportion to the shortfall; zero-target legs get nothing; skipped while a deposit plan is active or above 20% of the account (ask the owner). DRIP stays OFF in this account (`cash_sweep.py`, `data/cash_sweeps.csv`) | owner, after TQQQ paid $224: "you should have a plan for it"; a housekeeping rule, not a design change — the band never fires on dividend-sized cash |
 | 2026-09-25 | **deposit plan closed early**: the remaining $200,007 is deployed in one go at the Mon 28 Sep run instead of tranches on 1 and 8 Oct | owner decision; a lump beat staging in about two of three historical windows (`deposit_staging_backtest.py`) |

@@ -1078,6 +1078,10 @@ EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
 A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
                ('2026-09-23', (0.40, 0.60)),   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
                ('2026-10-09', (0.25, 0.75)))   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
+# 2026-10-09, later the same day (owner: "actually change to 75/25 tomorrow when market open"):
+# from this SESSION on, every A session holds this base whatever its spell start -- the spell
+# running since 2026-08-04 moves 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-12 run (next session).
+A_BASE_FROM_SESSION = ('2026-10-12', (0.25, 0.75))
 
 
 def a_base_row(spell_start):
@@ -1087,6 +1091,15 @@ def a_base_row(spell_start):
         if spell_start is not None and spell_start >= since:
             base = row
     return base
+
+
+def a_base_for(spell_start, session):
+    """(core, tqqq) base row held on `session` inside an A spell that started on
+    spell_start: the spell's row, or A_BASE_FROM_SESSION's from that session on."""
+    since, row = A_BASE_FROM_SESSION
+    if session is not None and session >= since:
+        return row
+    return a_base_row(spell_start)
 
 
 def a_trim_row(base, held):
@@ -1127,7 +1140,7 @@ def a_trim_series(dates, px):
             held = raw
         elif held > raw and closes[i] >= max(closes[max(0, i - n + 1):i + 1]):
             held -= 1
-        out[d] = dict(date=d, eff='A', in_a=True, spell_start=start, base=a_base_row(start), raw=raw, held=held)
+        out[d] = dict(date=d, eff='A', in_a=True, spell_start=start, base=a_base_for(start, d), raw=raw, held=held)
     return out
 
 
