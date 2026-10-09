@@ -17,3 +17,9 @@ date,basket,nav,week_return,turnover,cost_bp,n_names,note
 2026-10-02,SPMO,1.007493,0.002223,0,0,1,benchmark
 2026-10-02,QQQ,1.010871,0.006837,0,0,1,benchmark
 2026-10-02,SPY,0.995023,-0.002139,0,0,1,benchmark
+2026-10-09,top5,0.972154,-0.024997,0.0405,0.2,5,weekly mark; last regular-session trades
+2026-10-09,top10,0.983192,-0.025311,0.0436,0.2,10,weekly mark; last regular-session trades
+2026-10-09,top15,0.980341,-0.024186,0.0440,0.2,15,weekly mark; last regular-session trades
+2026-10-09,SPMO,0.993296,-0.014092,0,0,1,benchmark
+2026-10-09,QQQ,1.013177,0.002281,0,0,1,benchmark
+2026-10-09,SPY,1.006503,0.011538,0,0,1,benchmark
