@@ -1076,7 +1076,8 @@ EXTENSION_TRIM_V2_ENABLED = True
 EXTENSION_REENTRY_HIGH_N = 15
 EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
 A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
-               ('2026-09-23', (0.40, 0.60)))   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
+               ('2026-09-23', (0.40, 0.60)),   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
+               ('2026-10-09', (0.25, 0.75)))   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
 
 
 def a_base_row(spell_start):
@@ -1236,8 +1237,67 @@ def d_gate_active(state, breadth_pct, gap200):
     return b or g
 
 
+# ---------------------------------------------------------------------------
+# STATE-D LADDER -- APPLIED 2026-10-09, owner decision ("I will do pick").
+# An ungated macro-D day no longer holds one row (100% QLD). The row depends
+# on how deep QQQ sits under its moving averages, read from the same gaps
+# dict the extension trim uses (gap = close / SMA - 1):
+#   D1  close above the 100-day SMA (gaps[100] > 0)        50% SPMO / 50% QLD    1.5x
+#   D2  below the 100-day, above the 150-day (gaps[150] > 0) 50% TQQQ / 50% QLD  2.5x
+#   D3  below the 150-day (still above the 200-day: macro D) 25% SPMO / 75% TQQQ 2.5x
+# D3 is the A row of the same release (A_BASE_ROWS 2026-10-09), untrimmed.
+# The owner's ordering: the shallow dip carries the least leverage; the deeper
+# dip and A carry more. The D gate still wins (whole row to cash) and the vol
+# target scales every row. A change of zone is a regime change for
+# needs_rebalance(), like the D gate.
+#
+# Why. Next-session QQQ return inside D depends on depth: D1 (still above the
+# 100-day) +0.12% real / +0.08% proxy vs D2 +0.51% / +0.32%. D1 is the weakest
+# D zone in both eras (research repo: research/d_substates_dma.py,
+# d_three_levels.py, leverage_ladder.py, d1_leverage.py, d_zone_boundaries.py).
+# Evidence for the released design (A 25/75 + this ladder) vs live (A 40/60,
+# D 100% QLD), real ETFs 2015-11..2026-10 with VIXM / proxy 2001-2026:
+#   live   47.7% / Sharpe 1.912 / MaxDD -18.7%  |  28.7% / 1.226 / -23.5%
+#   pick   54.7% / 1.977 / -19.4%               |  32.7% / 1.275 / -27.7%
+# Against the plain A 25/75 split with D 100% QLD (same top leverage): Sharpe
+# +0.08 real (bootstrap P 0.06) / +0.05 proxy (P 0.03); above the plain-split
+# CAGR-vs-MaxDD frontier on both datasets. Cut lines 90/140 .. 110/160: the
+# ladder beats the plain split at every setting; a first line at 90 is the
+# weak one (real MaxDD -22.0%), 100 and longer hold. Cost, stated: the proxy
+# MaxDD is 4 pp deeper than live and every year's worst dip runs 1-3 pp deeper
+# (higher A leverage, not the ladder). An owner decision on research results.
+D_LADDER_ENABLED = True
+D_LADDER_ROWS = {             # zone -> (core, tqqq, qld), before the vol target
+    'D1': (0.50, 0.00, 0.50),
+    'D2': (0.00, 0.50, 0.50),
+    'D3': (0.25, 0.75, 0.00),
+}
+D_LADDER_WINDOWS = (100, 150)  # gaps[] keys of the D1/D2 and D2/D3 cut lines
+
+
+def d_zone(gaps):
+    """'D1' / 'D2' / 'D3' from the {window: gap} dict, or None when a cut-line
+    gap is missing (warm-up). Only meaningful on a macro-D day."""
+    if not isinstance(gaps, dict):
+        return None
+    g1, g2 = (gaps.get(n) for n in D_LADDER_WINDOWS)
+    if g1 is None or g2 is None:
+        return None
+    return 'D1' if g1 > 0 else 'D2' if g2 > 0 else 'D3'
+
+
+def d_ladder_row(gaps):
+    """5-leg D row (core, tqqq, qld, xlu, cash) before the vol target, or None
+    when the zone cannot be read."""
+    z = d_zone(gaps)
+    if z is None:
+        return None
+    c, t, q = D_LADDER_ROWS[z]
+    return (c, t, q, 0.0, 1.0 - c - t - q)
+
+
 def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None,
-                                  d_gate=None, a_trim=None):
+                                  d_gate=None, a_trim=None, d_ladder=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -1268,12 +1328,21 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
     d_gate: the state-D gate reading for the same date from d_gate_active()
     (2026-09-19). True on a macro-D day sends the WHOLE row to cash (the vol
     multiplier is irrelevant to a cash row). None/False leaves D at its
-    normal row, which is also what every pre-gate backtest gets."""
+    normal row, which is also what every pre-gate backtest gets.
+
+    d_ladder: True on the live path (2026-10-09) -- an ungated D day holds
+    d_ladder_row(gaps) instead of the single D row. None/False keeps the
+    single 100% QLD row, which is what every pre-2026-10-09 backtest gets."""
     eff = effective_state(state, fast_state)
     if d_gate and D_GATE_ENABLED and state == D_GATE_STATE:
         return (0.0, 0.0, 0.0, 0.0, 1.0)
     core, tqqq, qld, xlu, cash = target_weights_with_micro(eff, micro_agrees)
-    if a_trim is not None and EXTENSION_TRIM_V2_ENABLED and eff == 'A':
+    if d_ladder and D_LADDER_ENABLED and eff == 'D':
+        row = d_ladder_row(gaps)
+        if row is None:
+            raise MissingOverlayInputs(f"d_ladder needs gaps[{D_LADDER_WINDOWS[0]}] and gaps[{D_LADDER_WINDOWS[1]}]")
+        core, tqqq, qld, xlu, cash = row
+    elif a_trim is not None and EXTENSION_TRIM_V2_ENABLED and eff == 'A':
         # v2 trim (2026-09-23): the whole A row comes from the held-vote state.
         if not a_trim.get('in_a'):
             raise MissingOverlayInputs(
@@ -1317,7 +1386,10 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct,
     a_trim (REQUIRED since 2026-09-23, extension trim v2): today's
     a_trim_state(dates, px, as_of=today) dict. Refused when missing or when
     it disagrees with the effective state (a date mix-up), because without it
-    a caller would silently trade the v1 trim."""
+    a caller would silently trade the v1 trim.
+
+    D ladder (2026-10-09): on an effective-D day gaps[100] and gaps[150] must
+    be numbers (they pick D1/D2/D3); the live path always passes d_ladder."""
     if TARGET_WEIGHTS != _CANONICAL_TARGET_WEIGHTS:
         raise MissingOverlayInputs(
             "TARGET_WEIGHTS was modified in this process (a research module re-pins state E); "
@@ -1355,8 +1427,12 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct,
             raise MissingOverlayInputs(
                 f"a_trim (eff {a_trim['eff']!r}, in_a {a_trim['in_a']}) disagrees with the effective state "
                 f"{eff!r} -- was it computed for the same date?")
+    if D_LADDER_ENABLED and effective_state(state, fast_state) == 'D' and d_zone(gaps) is None:
+        raise MissingOverlayInputs(
+            f"the D ladder needs gaps[{D_LADDER_WINDOWS[0]}] and gaps[{D_LADDER_WINDOWS[1]}] as numbers on a D day")
     return target_weights_with_voltarget(
-        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate, a_trim=a_trim)
+        state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate, a_trim=a_trim,
+        d_ladder=D_LADDER_ENABLED)
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',

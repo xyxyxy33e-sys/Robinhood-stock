@@ -88,7 +88,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 2.4 **Fridays only.** Do these before the dashboard:
 - **Weekly report.** Append one entry, newest at top, to `https://claude.ai/artifact/65u1kZeRoYha2Amps9mESw` from the week's
   `data/runs/*.json` files. It covers:
-  - state, trim, D gate and VIXM readings
+  - state, trim, D gate, D ladder zone (D1/D2/D3, on D days) and VIXM readings
   - each day's decision and trades, with slippage
   - realized P&L split usable / wash-sale-deferred, via `wash_sale.flag_wash_sales(trades, require_buys=True)`.
     The trade list comes from `get_pnl_trade_history` plus the BUYS from `get_equity_orders`, filled, from 30 days before the earliest loss sale.

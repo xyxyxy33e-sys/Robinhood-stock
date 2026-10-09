@@ -420,7 +420,8 @@ def check_d_gate():
             assert live_target_weights(st, False, 0.15, st, hot, 0.1, at) == \
                 target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=hot, a_trim=at), f"gate moved state {st}"
     cash = (0.0, 0.0, 0.0, 0.0, 1.0)
-    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5, _at('D')) == (0.0, 0.0, 1.0, 0.0, 0.0), "ungated D is 100% QLD"
+    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5, _at('D')) == (0.5, 0.0, 0.5, 0.0, 0.0), \
+        "ungated D above the 100-day is the D1 ladder row (2026-10-09; was 100% QLD)"
     assert live_target_weights('D', False, 0.15, 'D', hot, 0.5, _at('D')) == cash, "gap200 half must gate"
     assert live_target_weights('D', False, 0.15, 'D', cold, 0.1, _at('D')) == cash, "breadth half must gate"
     assert live_target_weights('D', False, 0.50, 'D', cold, 0.1, _at('D')) == cash, "gate ignores the vol multiplier"
@@ -437,6 +438,66 @@ def check_d_gate():
 
 
 check_d_gate()
+
+
+def check_d_ladder():
+    """State-D ladder (APPLIED 2026-10-09, owner): an ungated D day holds D1 / D2 / D3 by
+    QQQ's depth under its 100- and 150-day SMAs; the gate still wins; the vol target scales
+    every row; the permissive function without d_ladder keeps 100% QLD (old backtests);
+    the live function refuses a D day without the cut-line gaps; the A base for spells
+    starting on/after 2026-10-09 is 25/75 and the running spell keeps its row."""
+    from state import (D_LADDER_ENABLED, D_LADDER_ROWS, D_LADDER_WINDOWS, d_zone, d_ladder_row,
+                       live_target_weights, target_weights_with_voltarget, MissingOverlayInputs,
+                       vol_target_multiplier, a_base_row, A_BASE_ROWS, effective_state, STATE_LABEL)
+    assert D_LADDER_ENABLED, "the D ladder is applied (2026-10-09); flipping it off is a design change"
+    assert D_LADDER_WINDOWS == (100, 150)
+    assert D_LADDER_ROWS == {'D1': (0.50, 0.00, 0.50), 'D2': (0.00, 0.50, 0.50), 'D3': (0.25, 0.75, 0.00)}
+    assert D_LADDER_ROWS['D3'] == A_BASE_ROWS[-1][1][:1] + A_BASE_ROWS[-1][1][1:] + (0.0,), "D3 is the A row"
+    lev = lambda r: r[0] + 3 * r[1] + 2 * r[2]
+    assert lev(D_LADDER_ROWS['D1']) < lev(D_LADDER_ROWS['D2']) <= lev(D_LADDER_ROWS['D3']), "owner's ordering"
+    z = lambda a, b: {100: a, 150: b, 200: 0.05}
+    assert d_zone(z(0.001, 0.03)) == 'D1' and d_zone(z(0.0, 0.03)) == 'D2', "D1 needs close strictly above the 100d"
+    assert d_zone(z(-0.02, 0.001)) == 'D2' and d_zone(z(-0.02, 0.0)) == 'D3' and d_zone(z(-0.05, -0.01)) == 'D3'
+    assert d_zone(z(None, 0.01)) is None and d_zone(None) is None
+    for name, gp in (('D1', z(0.01, 0.03)), ('D2', z(-0.01, 0.02)), ('D3', z(-0.04, -0.01))):
+        c, t, q = D_LADDER_ROWS[name]
+        for vol in (0.15, 0.30):
+            m = vol_target_multiplier(vol)
+            w = live_target_weights('D', False, vol, 'D', gp, 0.5, _at('D'))
+            want = (c * m, t * m, q * m, 0.0, 1.0 - (c + t + q) * m)
+            assert all(abs(a - b) < 1e-12 for a, b in zip(w, want)), (name, vol, w, want)
+            assert abs(sum(w) - 1.0) < 1e-12
+        assert d_ladder_row(gp)[:3] == (c, t, q)
+        gated = dict(gp); gated[200] = 0.01
+        assert live_target_weights('D', False, 0.15, 'D', gated, 0.5, _at('D')) == (0.0, 0.0, 0.0, 0.0, 1.0), "gate wins"
+        assert live_target_weights('D', False, 0.15, 'D', gp, 0.1, _at('D')) == (0.0, 0.0, 0.0, 0.0, 1.0), "gate wins"
+        assert target_weights_with_voltarget('D', False, 0.15, fast_state='D', gaps=gp) == (0.0, 0.0, 1.0, 0.0, 0.0), \
+            "d_ladder=None must keep the pre-ladder D row (research harnesses depend on this)"
+    try:
+        live_target_weights('D', False, 0.15, 'D', z(None, 0.01), 0.5, _at('D'))
+    except MissingOverlayInputs:
+        pass
+    else:
+        raise AssertionError("live_target_weights accepted a D day without gaps[100]")
+    gp = z(-0.01, 0.02)      # a D2 reading must not touch any other state
+    for st in STATE_LABEL:
+        if st == 'D':
+            continue
+        e = effective_state(st, st)
+        at = _at(e)
+        assert live_target_weights(st, False, 0.15, st, gp, 0.5, at) == \
+            target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=gp, a_trim=at), f"ladder moved {st}"
+    assert a_base_row('2026-08-04') == (0.50, 0.50), "the A spell running since 2026-08-04 keeps 50/50"
+    assert a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2026-10-08') == (0.40, 0.60)
+    assert a_base_row('2026-10-09') == (0.25, 0.75) and a_base_row('2027-01-04') == (0.25, 0.75)
+    w = live_target_weights('A', False, 0.15, 'A', {100: 0.0, 150: 0.0, 200: 0.0}, 0.5,
+                            _at('A', base=a_base_row('2026-10-12')))
+    assert w == (0.25, 0.75, 0.0, 0.0, 0.0), w
+    print("OK: D ladder -- D1 above the 100d 50/0/50, D2 100-150d 0/50/50, D3 below the 150d 25/75/0 "
+          "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A spells from 2026-10-09 at 25/75")
+
+
+check_d_ladder()
 
 
 def check_extension_scale_floor():
@@ -662,14 +723,14 @@ def check_extension_trim_v2():
     at the first held vote, core x (1 - held/6), held votes rise at once and come
     off one at a time only on a new 15-session closing high and never below the
     raw count, reset on leaving A; A spells starting on/after 2026-09-23 hold
-    40/60. Checked on the real QQQ history (a pure function of closes)."""
+    40/60, on/after 2026-10-09 25/75. Checked on the real QQQ history (a pure function of closes)."""
     import csv, os
     from state import (EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, EXTENSION_CORE_CUT_PER_VOTE,
                        A_BASE_ROWS, a_base_row, a_trim_row, a_trim_series, a_trim_state, validate_weights,
                        target_weights_with_voltarget, live_target_weights)
     assert EXTENSION_TRIM_V2_ENABLED and EXTENSION_REENTRY_HIGH_N == 15 and abs(EXTENSION_CORE_CUT_PER_VOTE - 1 / 6) < 1e-12
-    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2027-01-04') == (0.40, 0.60)
-    for base in ((0.50, 0.50), (0.40, 0.60)):
+    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2027-01-04') == (0.25, 0.75)
+    for base in ((0.50, 0.50), (0.40, 0.60), (0.25, 0.75)):
         for held in range(4):
             r = a_trim_row(base, held)
             validate_weights('A', *r)

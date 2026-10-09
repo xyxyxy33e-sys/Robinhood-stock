@@ -17,6 +17,8 @@ the inputs it already computes (same state, vol, gaps, breadth, a_trim):
                  row, same whipsaw carry of the spell.
   * 'sep19'   -- the 19 Sep design: the v1 trim (x2/3, x1/3, x0 on raw votes),
                  A 50/50. Information only; not part of the rule.
+From 2026-10-09 'v2' and 'fastcut' both hold the D ladder (state.py "STATE-D
+LADDER"), so they still differ only in the trim; 'sep19' keeps D 100% QLD.
 Each track: weights set at today's close earn tomorrow's close-to-close leg
 returns; rebalance on a change of its key (effective state, D gate, its own
 trim level) or L1 drift > REBALANCE_DRIFT_BAND; 4 bp one-way cost on the L1
@@ -41,7 +43,8 @@ import csv
 import os
 
 from state import (live_target_weights, target_weights_with_voltarget, d_gate_active,
-                   effective_state, extension_votes, REBALANCE_DRIFT_BAND, A_SPELL_GAP_CARRY)
+                   effective_state, extension_votes, REBALANCE_DRIFT_BAND, A_SPELL_GAP_CARRY,
+                   d_zone, D_LADDER_ENABLED)
 
 LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'shadow_tracks.csv')
 TRACKS = ('v2', 'fastcut', 'sep19')
@@ -67,11 +70,13 @@ def track_targets(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_tri
     w_v2 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
     fc = dict(a_trim, held=a_trim['raw']) if a_trim['in_a'] else a_trim
     w_fc = target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast_state, gaps=gaps,
-                                         d_gate=gate, a_trim=fc)
+                                         d_gate=gate, a_trim=fc, d_ladder=D_LADDER_ENABLED)
     w_19 = target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast_state, gaps=gaps,
                                          d_gate=gate, a_trim=None)
     base = f'{eff}|{int(gate)}'
-    return {'v2': (w_v2, f'{base}|{held}'), 'fastcut': (w_fc, f'{base}|{raw}'),
+    zone = d_zone(gaps) if eff == 'D' and not gate else None
+    lad = base + (f'|{zone}' if zone else '')      # D ladder zone (2026-10-09); A-day keys unchanged
+    return {'v2': (w_v2, f'{lad}|{held}'), 'fastcut': (w_fc, f'{lad}|{raw}'),
             'sep19': (w_19, f'{base}|{raw}')}
 
 

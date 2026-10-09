@@ -132,10 +132,12 @@ def reading(dates, qqq, qqew, as_of):
         raise Guard(f'breadth pct is None for {as_of}: too little QQEW history')
     a_trim = S.a_trim_state(dates, qqq, as_of=as_of)
     eff = S.effective_state(state, fast)
+    gate = S.d_gate_active(state, br['pct'], gaps[200])
     return dict(date=as_of, state=state, fast=fast, eff=eff, gaps=gaps, micro=micro, vol=vol,
+                d_zone=S.d_zone(gaps) if eff == 'D' and not gate else None,
                 mult=S.vol_target_multiplier(vol), breadth_pct=br['pct'], x60=br['x60'],
                 d_flags=S.d_gate_flags(br['pct'], gaps[200]),
-                d_gate=S.d_gate_active(state, br['pct'], gaps[200]),
+                d_gate=gate,
                 raw_votes=S.extension_votes(eff, gaps), a_trim=a_trim)
 
 
@@ -323,6 +325,8 @@ def cmd_signal(inp, write=True):
             changed.append(f"held trim votes {rp['a_trim']['held']}->{r['a_trim']['held']}")
         if r['d_gate'] != rp['d_gate']:
             changed.append(f"D gate {'on' if r['d_gate'] else 'off'}")
+        if r.get('d_zone') != rp.get('d_zone') and r['eff'] == rp['eff'] == 'D':
+            changed.append(f"D zone {rp.get('d_zone')}->{r.get('d_zone')}")
         if bool(vx.get('allowed')) != bool(vx_prev.get('allowed')):
             changed.append(f"VIXM {'in' if vx.get('allowed') else 'out'}")
         do, drift, why = S.needs_rebalance(w6, held, bool(changed))
@@ -364,6 +368,9 @@ def cmd_signal(inp, write=True):
     print(f"breadth pct {r['breadth_pct']:.2f}, 200d gap {g[200]*100:+.1f}%, D gate "
           f"{'ON (' + ('both' if bf and gf else 'breadth' if bf else 'gap200') + ')' if r['d_gate'] else 'off'}"
           f"{'' if r['state'] == 'D' else ' (informational outside D)'}")
+    if r['eff'] == 'D':
+        z = r.get('d_zone')
+        print(f"D ladder zone: {z or 'n/a (gated)'}" + (f" -> row SPMO/TQQQ/QLD {S.D_LADDER_ROWS[z]}" if z else ''))
     print(f"QQQ 30d vol {r['vol']*100:.1f}% -> multiplier {r['mult']:.3f}")
     print(f"VIXM: {vnote}")
     if vz:

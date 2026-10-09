@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder and A 25/75 2026-10-09)
 
 **What the account holds, by effective state** — see the tables under
 "Target weights"; effective state = macro 50/200 state, except that macro
@@ -21,14 +21,18 @@ C row when the fast read is A/B/C.
 | A | 50% SPMO / 50% TQQQ | 2.0x |
 | B | 75% SPMO / 25% TQQQ | 1.5x |
 | C | 100% SPMO | 1.0x |
-| D | 100% QLD | 2.0x |
+| D1 (above the 100d) | 50% SPMO / 50% QLD | 1.5x |
+| D2 (100d-150d) | 50% TQQQ / 50% QLD | 2.5x |
+| D3 (below the 150d) | 25% SPMO / 75% TQQQ | 2.5x |
 | E | 100% BOXX | 0.00x |
 | F | 100% BOXX | 0.00x |
 
 **A row base: 50/50 in the A spell in progress on 2026-09-23 (began
 2026-08-04); 40/60 SPMO/TQQQ in every A spell that starts on or after
 2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A",
-then "make it 40/60" the same day — it was set to 30/70 first).
+then "make it 40/60" the same day — it was set to 30/70 first); **25/75 in
+every A spell that starts on or after 2026-10-09** (owner, with the D ladder:
+"I will do pick"; the running spell keeps 50/50 — "Next A spell").
 The tables below show the 50/50 row that is held today.
 
 **Extension trim v2 (APPLIED 2026-09-23, owner decision):** inside effective
@@ -46,7 +50,8 @@ the raw votes), which re-levered into falls as the votes fell away. Then the fou
 `min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX (the max(10d, 30d)
 estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
 state, on a change in HELD trim votes (v2), on L1 drift > 5% (3% until 2026-09-09), on a
-zero-target leg still held above 0.10%, or on the state-D gate switching.
+zero-target leg still held above 0.10%, on the state-D gate switching, or on the D ladder zone
+changing inside D (2026-10-09).
 
 **VIXM sleeve in the cash leg (APPLIED 2026-10-08, owner decision):** the
 rows above are unchanged; this only decides what the cash (BOXX) leg holds.
@@ -73,6 +78,34 @@ now REQUIRES the breadth pct. The gate fails the both-era bar (the gap200
 half loses −0.045 Sharpe in the 2007–2015 holdout against breadth alone)
 and the bootstrap against breadth; the owner applied it on SPMO-era
 evidence. Section "State D gate" below has the full record.
+
+**State-D ladder (APPLIED 2026-10-09, owner decision — "I will do pick"):** an
+ungated D day no longer holds one row. **D1** — QQQ still above its 100-day
+SMA — holds 50% SPMO / 50% QLD (1.5x); **D2** — between the 100- and 150-day —
+50% TQQQ / 50% QLD (2.5x); **D3** — below the 150-day (above the 200-day, or it
+would not be D) — the A row of this release, 25% SPMO / 75% TQQQ (2.5x),
+untrimmed. The shallow dip carries the least leverage and the deep dip and A
+the most (owner's ordering). The gate above still sends the whole row to cash;
+the vol target scales every row; a zone change is a rebalance trigger.
+`d_zone(gaps)` / `d_ladder_row(gaps)` in `state.py`, read from the same gaps
+dict as the trim. Why: inside D, next-session QQQ is weakest while QQQ is still
+above its 100-day (+0.12% real / +0.08% proxy vs +0.51% / +0.32% in D2).
+Research (Robinhood repo, `research/`): `d_substates_dma.py`,
+`d_three_levels.py`, `leverage_ladder.py`, `d1_leverage.py`,
+`d_zone_boundaries.py`, `avg_drawdown.py`. Released design (A 25/75 + ladder)
+vs the 2026-09-23 design at 40/60, real 2015-11..2026-10 with VIXM / proxy
+2001–2026: **54.7% / Sharpe 1.977 / −19.4%** vs 47.7% / 1.912 / −18.7%;
+proxy **32.7% / 1.275 / −27.7%** vs 28.7% / 1.226 / −23.5%. Against the plain
+25/75 split with D 100% QLD (same top leverage): Sharpe +0.08 real (bootstrap
+P 0.06) / +0.05 proxy (P 0.03), and above the plain-split CAGR-vs-drawdown
+frontier on both datasets. Cut lines 90/140 … 110/160 all beat the plain split;
+a first line at 90 days is the weak case (real MaxDD −22.0%). **Cost, stated:**
+the proxy max drawdown is 4 pp deeper than the 40/60 design and most years'
+worst dip runs 1–3 pp deeper (2026 −18.6% vs −15.8%); that is the A leverage,
+not the ladder. A crash from calm (a −20% QQQ day before the vol target
+reacts) costs ~−50% at 25/75 vs ~−43% at 40/60. Average weekly drawdown −3.75% real / −6.0% proxy. No timing
+rule tested (tighter vol target, 20-day exits, NAV brakes) beat simply holding
+less; the A split stays the dial. An owner decision on research results.
 
 **Standing figures, design of 2026-09-23 incl. the whipsaw carry** (extension
 trim v2 + 3-session carry; E cash; D gate; plain 30d vol target; 5% band). With
@@ -119,6 +152,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-09 | **state-D ladder**: ungated D holds D1 (above the 100d) 50% SPMO / 50% QLD, D2 (100d–150d) 50% TQQQ / 50% QLD, D3 (below the 150d) 25% SPMO / 75% TQQQ; zone change = rebalance trigger (`d_zone`, `d_ladder_row`, `D_LADDER_ROWS`); **A base 25/75 for A spells starting on/after 2026-10-09** (`A_BASE_ROWS`; the spell running since 2026-08-04 keeps 50/50); shadow tracks v2/fastcut carry the ladder, sep19 does not | **owner decision** ("I will do pick", "next A spell"); real 54.7% / 1.977 / −19.4%, proxy 32.7% / 1.275 / −27.7%; ladder vs plain split at the same leverage Sharpe +0.08 / +0.05 (P 0.06 / 0.03); "State-D ladder" |
 | 2026-09-30 | **idle-cash sweep**: on a no-trade day, idle cash of $100 or more (dividends, interest, leftovers) buys the legs below their dollar target in proportion to the shortfall; zero-target legs get nothing; skipped while a deposit plan is active or above 20% of the account (ask the owner). DRIP stays OFF in this account (`cash_sweep.py`, `data/cash_sweeps.csv`) | owner, after TQQQ paid $224: "you should have a plan for it"; a housekeeping rule, not a design change — the band never fires on dividend-sized cash |
 | 2026-09-25 | **deposit plan closed early**: the remaining $200,007 is deployed in one go at the Mon 28 Sep run instead of tranches on 1 and 8 Oct | owner decision; a lump beat staging in about two of three historical windows (`deposit_staging_backtest.py`) |
 | 2026-09-24 | **deposit cut to $300k, 3 × $100k tranches** (24 Sep, 1 Oct, 8 Oct), same rules | owner: ~$170k stays in the individual account for a transfer bonus |
@@ -326,7 +360,9 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | A | 50% | 50% | 0% | 0% | 0% | 2.0x |
 | B | 75% | 25% | 0% | 0% | 0% | 1.5x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
-| D | 0% | 0% | 100% | 0% | 0% | 2.0x |
+| D1 (above the 100d) | 50% | 0% | 50% | 0% | 0% | 1.5x |
+| D2 (100d-150d) | 0% | 50% | 50% | 0% | 0% | 2.5x |
+| D3 (below the 150d) | 25% | 75% | 0% | 0% | 0% | 2.5x |
 | E | 0% | 0% | 0% | 0% | 100% | 0.00x |
 | F | 0% | 0% | 0% | 0% | 100% | 0.00x |
 

@@ -11,7 +11,8 @@ sys.path.insert(0, 'paper-track')
 from state import (TARGET_WEIGHTS, EXTENSION_RULES, EXTENSION_STEP, STATE_LABEL,
                    VOL_TARGET_PA, VOL_LOOKBACK_DAYS, VOL_FAST_LOOKBACK_DAYS,
                    VOL_ESTIMATOR_MAX_ENABLED, FAST_SHORT_N, FAST_LONG_N,
-                   EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, A_BASE_ROWS, a_trim_row)
+                   EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, A_BASE_ROWS, a_trim_row,
+                   D_LADDER_ENABLED, D_LADDER_ROWS)
 
 LEV = (1.0, 3.0, 2.0, 0.5, 0.0)   # core, TQQQ, QLD, XLU, cash
 
@@ -29,21 +30,33 @@ def pct(x):
     return f"{x * 100:.0f}%"
 
 
+D_ZONE_LABEL = {'D1': 'D1 (above the 100d)', 'D2': 'D2 (100d-150d)', 'D3': 'D3 (below the 150d)'}
+
+
+def _rows():
+    """(label, 5-leg row) in table order; D expands to its ladder zones when enabled."""
+    for st in 'ABCDEF':
+        if st == 'D' and D_LADDER_ENABLED:
+            for z, (c, t, q) in D_LADDER_ROWS.items():
+                yield D_ZONE_LABEL[z], (c, t, q, 0.0, round(1.0 - c - t - q, 10))
+        else:
+            yield st, TARGET_WEIGHTS[st]
+
+
 def glance_table():
     out = ["| State | Holds | Effective exposure |", "|---|---|---|"]
-    for st in 'ABCDEF':
-        c, t, q, x, k = TARGET_WEIGHTS[st]
+    for st, w in _rows():
+        c, t, q, x, k = w
         parts = [(c, 'SPMO'), (t, 'TQQQ'), (q, 'QLD'), (x, 'XLU'), (k, 'BOXX')]
         holds = ' / '.join(f"{pct(v)} {n}" for v, n in parts if v > 0)
-        out.append(f"| {st} | {holds} | {expfmt(exposure(TARGET_WEIGHTS[st]))} |")
+        out.append(f"| {st} | {holds} | {expfmt(exposure(w))} |")
     return '\n'.join(out)
 
 
 def full_table():
     out = ["| State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |",
            "|---|---|---|---|---|---|---|"]
-    for st in 'ABCDEF':
-        w = TARGET_WEIGHTS[st]
+    for st, w in _rows():
         out.append(f"| {st} | " + " | ".join(pct(v) for v in w) + f" | {expfmt(exposure(w))} |")
     return '\n'.join(out)
 
