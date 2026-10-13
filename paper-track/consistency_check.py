@@ -1150,6 +1150,20 @@ def check_margin_funding():
     assert not closed, "cash still in the account"
     led4, closed = MF.settle_if_sent(json_copy(led), '2026-11-02', 10.0)
     assert closed and led4['status'] == 'closed' and MF.principal(led4) == 0 and led4['history']
+    # whole-share basket (owner: "calculate based on full share so can be bought after hours")
+    bk, cost = MF.whole_share_basket(10_290, {'SPMO': 0.25, 'TQQQ': 0.75, 'BOXX': 0.0},
+                                     {'SPMO': 148.0099, 'TQQQ': 78.8099, 'BOXX': 118.57})
+    assert set(bk) == {'SPMO', 'TQQQ'} and all(isinstance(b['shares'], int) for b in bk.values())
+    assert cost <= 10_290 and cost > 10_290 - 160, cost
+    assert bk['TQQQ']['limit'] == 79.04 and bk['SPMO']['limit'] == 148.45, bk
+    lb, a5, _ = MF.request_draw({'collateral_value': 139_000.0}, '2026-10-13', 'tier-5', 10_290, 500_000,
+                                '2026-10-06', 1.11, 1.05, weights={'SPMO': 0.25, 'TQQQ': 0.75},
+                                prices={'SPMO': 148.0099, 'TQQQ': 78.8099})
+    assert a5 == float(int(a5)) and a5 >= cost and lb['draws'][-1]['basket'], "whole-dollar draw = basket cost"
+    _, a6, _ = MF.request_draw({'collateral_value': 139_000.0}, '2026-10-13', 'tier-5', 50_000, 500_000,
+                               '2026-10-06', 1.11, 1.05, weights={'SPMO': 0.25, 'TQQQ': 0.75},
+                               prices={'SPMO': 148.0099, 'TQQQ': 78.8099})
+    assert a6 <= 20_000, "basket respects the cap"
     import live_run as L
     q = {s: dict(last=100.0, bid=100.0, ask=100.0) for s in L.LEGS6}
     vals = {'SPMO': 250_000.0, 'TQQQ': 750_000.0}
@@ -1157,7 +1171,7 @@ def check_margin_funding():
     freed = sum(x['dollars'] for x in o if x['side'] == 'sell') - sum(x['dollars'] for x in o if x['side'] == 'buy')
     assert abs(freed - 20_000) < 1.0, freed
     print("OK: margin funding -- cap min(4% acct, 25% collateral), draws stack to the cap and are idempotent, "
-          "no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
+          "draws are whole-share baskets in whole dollars, no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
           "closes only after the raised cash leaves")
 
 

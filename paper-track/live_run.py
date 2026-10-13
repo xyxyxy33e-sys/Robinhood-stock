@@ -11,6 +11,7 @@ the record step. RUNBOOK.md is the procedure; STRATEGY.md the design.
     python3 paper-track/live_run.py record  data/runs/in/<date>-record.json   # after the close
     python3 paper-track/live_run.py check   data/runs/in/<date>-check.json   # same as signal, writes nothing
     python3 paper-track/live_run.py status  [<date>]                   # did today's run finish?
+    python3 paper-track/live_run.py draw-orders                        # whole-share buys for the latest margin draw
 
 Exit codes: 0 ok, 2 GUARD tripped (do not trade), 3 market closed (stop).
 
@@ -228,7 +229,12 @@ def plan_orders(target, values, qty, quotes, tv, res=0.0):
 def _draw_push(led, got, msg, tv, today):
     if not got:
         return f"MARGIN: {msg}"
-    return (f"MARGIN DRAW: borrow ${got:,.0f} in account 6826 and transfer it to Agentic (the sweep invests it); "
+    d = led['draws'][-1]
+    buy = ''
+    if d.get('basket'):
+        buy = '; then buy ' + ', '.join(f"{b['shares']} {l} @ {b['limit']:.2f}" for l, b in sorted(d['basket'].items())) + \
+              ' (extended-hours limits; `live_run.py draw-orders`)'
+    return (f"MARGIN DRAW: borrow ${got:,.0f} in account 6826 and transfer it to Agentic{buy or ' (the sweep invests it)'}; "
             f"loan ${MF.principal(led):,.0f} of cap ${MF.cap(led, tv):,.0f}; repays when the NAV index is back to "
             f"{led['peak_value']:.4f} ({led['peak_date']} high) or {MF.DEADLINE_SESSIONS} sessions after "
             f"{led['first_draw']}")
@@ -384,7 +390,9 @@ def cmd_signal(inp, write=True):
             pushes.append(f"FUNDING TRIGGER (turn): effective {rp['eff']} -> {r['eff']}; account ${tv:,.0f}; "
                           f"suggested deposit ${amt:,.0f}")
             dd = DT.current_drawdown()
-            led, got, msg = MF.request_draw(led, today, 'turn', amt, tv, dd[1], dd[2], dd[4])
+            led, got, msg = MF.request_draw(led, today, 'turn', amt, tv, dd[1], dd[2], dd[4],
+                                            weights=dict(zip(LEGS6, w6)),
+                                            prices={s: float(q[s]['last']) for s in LEGS6})
             led_dirty = True
             pushes.append(_draw_push(led, got, msg, tv, today))
         if repay_new:
@@ -514,7 +522,9 @@ def cmd_record(inp):
                       f"account ${tv:,.0f}; suggested deposit ${amt:,.0f}")
         prior = [x for x in after if x[0] < date]
         pk = DT.current_drawdown(prior) if prior else dd
-        led, got, msg = MF.request_draw(led, date, f'tier-{int(tier*100)}', amt, tv, pk[1], pk[2], after[-1][2])
+        tw = (run or {}).get('target') or w_prev
+        led, got, msg = MF.request_draw(led, date, f'tier-{int(tier*100)}', amt, tv, pk[1], pk[2], after[-1][2],
+                                        weights=dict(zip(LEGS6, tw)), prices={s: closes[s] for s in LEGS6})
         MF.save(led)
         pushes.append(_draw_push(led, got, msg, tv, date))
     # 4. shadow tracks + breadth D log, on the inputs the book traded on
@@ -548,6 +558,22 @@ def cmd_record(inp):
     return 0
 
 
+def cmd_draw_orders():
+    """Print the whole-share buys for the latest margin draw (after its transfer
+    has landed). After 16:00 they are extended-hours limits; anything not
+    filled by the next 15:50 is left to the idle-cash sweep."""
+    led = MF.load()
+    draws = [d for d in (led or {}).get('draws', []) if d.get('basket')]
+    if not MF.is_open(led) or not draws:
+        print('no open margin draw with a whole-share basket')
+        return 1
+    d = draws[-1]
+    print(f"margin draw {d['date']} ({d['kind']}): ${d['amount']:,.0f} -- place once the transfer has landed:")
+    for line in MF.basket_lines(d):
+        print('  ' + line)
+    return 0
+
+
 def cmd_status(date=None):
     date = date or datetime.date.today().isoformat()
     run = _load_run(date)
@@ -561,9 +587,11 @@ def cmd_status(date=None):
 
 def main(argv):
     os.chdir(ROOT)                # tracker logs use repo-relative paths
-    if len(argv) < 2 or argv[1] not in ('signal', 'check', 'record', 'status'):
+    if len(argv) < 2 or argv[1] not in ('signal', 'check', 'record', 'status', 'draw-orders'):
         print(__doc__)
         return 1
+    if argv[1] == 'draw-orders':
+        return cmd_draw_orders()
     if argv[1] == 'status':
         return cmd_status(argv[2] if len(argv) > 2 else None)
     inp = json.load(open(argv[2]))

@@ -113,6 +113,8 @@ Only after the orders are placed: one short line to the session ("traded / no tr
   - a guard trip, or a missed or fallback run, naming any legs that wait for the open
   - a funding trigger, quoted exactly as `live_run.py` printed it
   - a `MARGIN DRAW` or `MARGIN REPAY DUE` line, quoted exactly (the owner moves the money; the run never does)
+    When the owner says a draw's transfer has landed, run `live_run.py draw-orders` and place the printed
+    whole-share limits (extended hours after 16:00, regular hours otherwise).
   - a regime shift
   - a REVERT or AFFIRM verdict
   - missing records

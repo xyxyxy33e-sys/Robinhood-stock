@@ -49,6 +49,7 @@ reinvestment) until the transfer leaves the account.
 """
 import datetime
 import json
+import math
 import os
 
 LEDGER_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'margin_loan.json')
@@ -106,11 +107,39 @@ def cap(led, account_value):
     return c
 
 
-def request_draw(led, today, kind, suggested, account_value, peak_date, peak_value, latest_value=None):
+def whole_share_basket(budget, weights, prices, limit_band=0.003):
+    """Whole shares of the positive-weight legs worth ~budget, priced at the
+    after-hours buy limit (price + limit_band, rounded down to the cent).
+    weights/prices: leg -> weight / last price. Returns (basket, total) where
+    basket is leg -> {shares, limit}; total <= budget unless budget buys less
+    than one share of everything (then total is 0)."""
+    w = {l: x for l, x in weights.items() if x > 0 and prices.get(l)}
+    if not w:
+        return {}, 0.0
+    sw = sum(w.values())
+    lim = {l: math.floor(round(prices[l] * (1 + limit_band) * 100, 6)) / 100 for l in w}
+    sh = {l: int(round(budget * w[l] / sw / lim[l])) for l in w}
+
+    def total():
+        return round(sum(sh[l] * lim[l] for l in sh), 2)
+    while total() > budget and any(sh.values()):
+        # drop one share from the leg furthest above its dollar target
+        l = max((l for l in sh if sh[l]), key=lambda l: sh[l] * lim[l] - budget * w[l] / sw)
+        sh[l] -= 1
+    basket = {l: dict(shares=sh[l], limit=lim[l]) for l in sh if sh[l]}
+    return basket, total()
+
+
+def request_draw(led, today, kind, suggested, account_value, peak_date, peak_value, latest_value=None,
+                 weights=None, prices=None):
     """Size and log a draw for a funding event. Returns (led, amount, line).
     amount is 0 when the cap is full, or when a new loan would start with the
     NAV index already at its high (it would repay at once). Idempotent per
-    (date, kind)."""
+    (date, kind). With weights/prices (owner 2026-10-13: "borrow a whole
+    number or calculate based on full share so can be bought after hours")
+    the draw is a basket of WHOLE shares at the after-hours buy limit and
+    the amount is its cost rounded UP to a whole dollar; without them, a
+    whole-dollar amount rounded to $10."""
     led = dict(led or {})
     led.setdefault('draws', [])
     if any(d['date'] == today and d['kind'] == kind for d in led['draws']):
@@ -121,15 +150,30 @@ def request_draw(led, today, kind, suggested, account_value, peak_date, peak_val
     if not is_open(led) and latest_value is not None and latest_value >= peak_value:
         return led, 0.0, 'margin: NAV index is at its high -- no loan to start'
     room = cap(led, account_value) - principal(led)
-    amt = max(0.0, _round(min(suggested, room)))
+    basket = None
+    if weights and prices:
+        basket, cost = whole_share_basket(min(suggested, room - 1.0), weights, prices)
+        amt = float(math.ceil(cost)) if basket else 0.0
+    else:
+        amt = max(0.0, _round(min(suggested, room)))
     if amt < ROUND_TO:
         return led, 0.0, (f"margin cap full (${principal(led):,.0f} of ${cap(led, account_value):,.0f}): "
                           f"no draw for this event")
     if not is_open(led):
         led.update(status='open', first_draw=today, peak_date=peak_date, peak_value=peak_value,
                    draws=[], repay=None)
-    led['draws'].append(dict(date=today, kind=kind, amount=amt))
+    d = dict(date=today, kind=kind, amount=amt)
+    if basket:
+        d['basket'] = basket
+    led['draws'].append(d)
     return led, amt, None
+
+
+def basket_lines(draw, market_hours='extended_hours'):
+    """The buy orders for a draw's whole-share basket, for the session to place
+    once the transfer has landed (after hours: limit orders only)."""
+    return [f"BUY {l:5} {b['shares']:>5} sh  LIMIT {b['limit']:.2f}  {market_hours}  (~${b['shares'] * b['limit']:,.2f})"
+            for l, b in sorted(draw.get('basket', {}).items())]
 
 
 def sessions_since(first, session_dates, today):

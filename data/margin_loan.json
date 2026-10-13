@@ -8,7 +8,17 @@
     {
       "date": "2026-10-13",
       "kind": "tier-5",
-      "amount": 10290
+      "amount": 10270.0,
+      "basket": {
+        "SPMO": {
+          "shares": 17,
+          "limit": 148.45
+        },
+        "TQQQ": {
+          "shares": 98,
+          "limit": 79.04
+        }
+      }
     }
   ],
   "status": "open",

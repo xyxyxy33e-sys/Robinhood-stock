@@ -1138,8 +1138,13 @@ ending 6826 instead of outside cash, with a fixed repay plan
 (`paper-track/margin_funding.py`, ledger `data/margin_loan.json`):
 
 - **Draw.** At each funding event the record/signal run prints
-  `MARGIN DRAW: borrow $X in account 6826 and transfer it to Agentic`. The
-  transfer lands as idle cash and the cash sweep invests it. Draws during an
+  `MARGIN DRAW: borrow $X in account 6826 and transfer it to Agentic; then buy …`.
+  The draw is a basket of **whole shares** of the target legs (by target weight)
+  priced at the after-hours buy limit (close + 0.3%), and $X is its cost rounded
+  up to a whole dollar (owner: "borrow a whole number or calculate based on full
+  share so can be bought after hours"), so it can be bought with extended-hours
+  limits as soon as the transfer lands (`live_run.py draw-orders`); whatever is
+  not filled by the next 15:50 run goes to the idle-cash sweep. Draws during an
   open loan stack on it.
 - **Cap.** The loan outstanding never exceeds min(**4%** of the Agentic
   account, **25%** of the 6826 marginable collateral). Collateral on
