@@ -99,6 +99,13 @@ def owed(led, today):
     return round(tot, 2)
 
 
+def net_value(led, account_value, today):
+    """The owner's true equity in the strategy: Agentic account value minus the
+    margin loan owed in 6826 (principal + accrued interest). Owner, 2026-10-13:
+    "consider true account value, minus the margin+interest"."""
+    return round(account_value - owed(led, today), 2)
+
+
 def cap(led, account_value):
     c = CAP_ACCOUNT_PCT * account_value
     coll = (led or {}).get('collateral_value')

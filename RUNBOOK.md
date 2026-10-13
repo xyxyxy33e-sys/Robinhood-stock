@@ -105,6 +105,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 
 2.5 **Dashboard.** Update `https://claude.ai/artifact/HoxQpURsWcALzFG7hGr5ck`.
 - Read it first, then edit the saved `index.html` surgically. Use figures from today's run file and the record output only.
+- Account value is NET of the margin loan (the `NET` line `live_run.py record` prints: value minus loan + interest), with the gross value beside it.
 - Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
 - Leave the backtest charts alone.
 
@@ -123,6 +124,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - **Long-term line.** `data/longterm_watch.json` holds VTI and VXUS entries in the owner's account ending 6826, which is READ-ONLY.
   - Add `LT: VTI ±a%, VXUS ±b% vs entry`.
   - When a level not yet in `reached` closes at or below, lead with `BUY-MORE LEVEL …`, append it to `reached`, and commit.
+- While a margin loan is open, `$X` is the NET value (gross minus loan + interest) and the line adds `· margin $L`.
 - If a re-fire finds today's push already sent, send nothing.
 
 2.7 **Commit** the run's `data/` files: `<today>: <eff state>, <traded|no trade>, NAV ±x%`.

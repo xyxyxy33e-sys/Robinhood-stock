@@ -1138,6 +1138,7 @@ def check_margin_funding():
     long = ['2026-10-13'] + ['d%03d' % i for i in range(260)]
     assert MF.repay_check(dict(led, first_draw='2026-10-13'), [('x', 0, 1.0)], [d for d in long],
                           'zzz')[0] == 'deadline'
+    assert MF.net_value(led, 500_000, '2026-10-13') == 480_000, 'net = gross - principal on day 0'
     owed = MF.owed(led, '2027-10-13')
     assert 20_000 < owed < 20_000 * 1.0526, owed
     led = MF.mark_repay_due(led, '2026-10-30', 'recovery')

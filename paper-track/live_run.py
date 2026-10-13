@@ -512,6 +512,10 @@ def cmd_record(inp):
     out_lines.append(f"NAV {date}: strategy {daily*100:+.2f}%, index {after[-1][2]:.4f}, drawdown {dd[0]*100:.2f}% "
                      f"from {dd[1]}")
     tv = float(inp.get('total_value') or (run or {}).get('total_value') or 0)
+    led0 = MF.load()
+    if MF.is_open(led0):
+        out_lines.append(f"account ${tv:,.2f} gross; margin loan ~${MF.owed(led0, date):,.2f} owed -> "
+                         f"NET ${MF.net_value(led0, tv, date):,.2f} (report this as the account value)")
     led = MF.load()
     if led and led.get('status') == 'repay_due' and any(f['side'] == 'sell' for f in inp.get('fills', [])):
         led['repay']['raised'] = date
