@@ -45,6 +45,7 @@ import deposit_plan as DP         # noqa: E402
 import drawdown_tracker as DT     # noqa: E402
 import fill_quality as FQ         # noqa: E402
 import funding_policy as FP       # noqa: E402
+import margin_funding as MF       # noqa: E402
 import shadow_tracker as ST       # noqa: E402
 import vol_curve as VC            # noqa: E402
 
@@ -224,6 +225,15 @@ def plan_orders(target, values, qty, quotes, tv, res=0.0):
 
 
 # ------------------------------------------------------------------ helpers
+def _draw_push(led, got, msg, tv, today):
+    if not got:
+        return f"MARGIN: {msg}"
+    return (f"MARGIN DRAW: borrow ${got:,.0f} in account 6826 and transfer it to Agentic (the sweep invests it); "
+            f"loan ${MF.principal(led):,.0f} of cap ${MF.cap(led, tv):,.0f}; repays when the NAV index is back to "
+            f"{led['peak_value']:.4f} ({led['peak_date']} high) or {MF.DEADLINE_SESSIONS} sessions after "
+            f"{led['first_draw']}")
+
+
 def _fmt_w(w):
     return ' / '.join(f'{l} {x * 100:.1f}%' for l, x in zip(LEGS6, w))
 
@@ -294,6 +304,8 @@ def cmd_signal(inp, write=True):
     implied = sum(values.values()) + idle
     plan = DP.load()
     plan_active = DP.active(plan)
+    led = MF.load()
+    led_dirty = False
 
     out = dict(date=today, time=inp.get('time'), prev=prev, notes=notes, reading=_ser(r), prev_reading=_ser(rp),
                vixm=_ser(vx), vixm_prev=_ser(vx_prev), vixm_note=vnote, quotes=q, positions=inp['positions'],
@@ -306,6 +318,26 @@ def cmd_signal(inp, write=True):
         S.circuit_breaker_check(tv, implied)
         w6 = weights6(r, vx)
         S.validate_weights_live(r['state'], *w6)
+        # margin loan (margin_funding.py): settle a sent repay, flag a due one, size the cash hold
+        repay_new = False
+        if led and led.get('status') == 'repay_due':
+            if idle >= MF.repay_hold(led) and not led['repay'].get('raised'):
+                led['repay']['raised'] = today
+                led_dirty = True
+            led, closed = MF.settle_if_sent(led, today, idle)
+            if closed:
+                led_dirty = True
+                lines.append('margin loan: repay transfer seen (idle cash left the account) -- loan closed')
+        if MF.is_open(led) and led['status'] == 'open':
+            reason, _ = MF.repay_check(led, DT.load_log(), dates, today)
+            if reason:
+                led = MF.mark_repay_due(led, today, reason)
+                led_dirty = repay_new = True
+        hold = MF.repay_hold(led)
+        if hold and plan_active:
+            raise Guard('margin repay due while a deposit plan is active: settle one by hand first')
+        if led:
+            lines.append(MF.summary_line(led, tv, today, DT.load_log(), dates))
         if plan_active:
             sess = dates
             if idle > DP.ARRIVAL_MIN:
@@ -316,7 +348,10 @@ def cmd_signal(inp, write=True):
             lines.append(DP.summary_line(plan, sess, today))
         else:
             res = 0.0
-            held = tuple(values[s] / tv for s in LEGS6[:-1]) + ((values['BOXX'] + idle) / tv,)
+            inv = tv - hold
+            if inv <= 0:
+                raise Guard(f'margin repay hold ${hold:,.0f} >= account ${tv:,.0f}')
+            held = tuple(values[s] / inv for s in LEGS6[:-1]) + ((values['BOXX'] + idle - hold) / inv,)
         w6_prev = weights6(rp, vx_prev)
         changed = []
         if r['eff'] != rp['eff']:
@@ -331,11 +366,14 @@ def cmd_signal(inp, write=True):
             changed.append(f"D zone {rp.get('d_zone')}->{r.get('d_zone')}")
         if bool(vx.get('allowed')) != bool(vx_prev.get('allowed')):
             changed.append(f"VIXM {'in' if vx.get('allowed') else 'out'}")
+        if hold and idle < hold:
+            changed.append(f"margin repay: raise ${hold:,.0f} cash")
         do, drift, why = S.needs_rebalance(w6, held, bool(changed))
-        orders = plan_orders(w6, values, qty, q, tv, res) if do else []
+        orders = plan_orders(w6, values, qty, q, tv - hold, res) if do else []
         sweep = {}
         if not do:
-            sweep, swhy = CS.plan_sweep(w6, {s: values[s] for s in LEGS6}, idle, tv, plan_active=plan_active)
+            sweep, swhy = CS.plan_sweep(w6, {s: values[s] for s in LEGS6}, idle - hold, tv - hold,
+                                        plan_active=plan_active)
             if sweep:
                 lines.append(f'idle-cash sweep (${idle:,.2f}): ' + ', '.join(f'{k} ${v:,.2f}' for k, v in sweep.items()))
         # push events (RUNBOOK: exactly these)
@@ -345,6 +383,15 @@ def cmd_signal(inp, write=True):
             amt = FP.turn_funding_amount(tv)
             pushes.append(f"FUNDING TRIGGER (turn): effective {rp['eff']} -> {r['eff']}; account ${tv:,.0f}; "
                           f"suggested deposit ${amt:,.0f}")
+            dd = DT.current_drawdown()
+            led, got, msg = MF.request_draw(led, today, 'turn', amt, tv, dd[1], dd[2], dd[4])
+            led_dirty = True
+            pushes.append(_draw_push(led, got, msg, tv, today))
+        if repay_new:
+            pushes.append(f"MARGIN REPAY DUE ({led['repay']['reason']}): holding ${hold:,.0f} as cash; once the "
+                          f"sells settle, transfer ${hold:,.0f} to account 6826 to repay the margin loan")
+        elif hold and led['repay'].get('raised'):
+            lines.append(f"margin repay: ${hold:,.0f} held as cash -- waiting for the transfer to 6826")
         out.update(target=list(w6), target_prev=list(w6_prev), held=list(held), drift=drift, decision=do,
                    why=why, regime_changed=changed, orders=orders, sweep=sweep, pushes=pushes, status='signal')
     except (Guard, S.WeightSanityError, S.CircuitBreakerTripped, S.MissingOverlayInputs) as e:
@@ -354,6 +401,8 @@ def cmd_signal(inp, write=True):
     if write:
         out['input'] = inp
         json.dump(_ser(out), open(_run_path(today), 'w'), indent=1)
+        if led_dirty:
+            MF.save(led)
     else:
         print('(check mode: nothing written)')
 
@@ -455,10 +504,19 @@ def cmd_record(inp):
     out_lines.append(f"NAV {date}: strategy {daily*100:+.2f}%, index {after[-1][2]:.4f}, drawdown {dd[0]*100:.2f}% "
                      f"from {dd[1]}")
     tv = float(inp.get('total_value') or (run or {}).get('total_value') or 0)
+    led = MF.load()
+    if led and led.get('status') == 'repay_due' and any(f['side'] == 'sell' for f in inp.get('fills', [])):
+        led['repay']['raised'] = date
+        MF.save(led)
     if tier:
         amt = FP.tier_funding_amount(tv, tier)
         pushes.append(f"FUNDING TRIGGER (drawdown): strategy crossed -{int(tier*100)}% from its 252-day high; "
                       f"account ${tv:,.0f}; suggested deposit ${amt:,.0f}")
+        prior = [x for x in after if x[0] < date]
+        pk = DT.current_drawdown(prior) if prior else dd
+        led, got, msg = MF.request_draw(led, date, f'tier-{int(tier*100)}', amt, tv, pk[1], pk[2], after[-1][2])
+        MF.save(led)
+        pushes.append(_draw_push(led, got, msg, tv, date))
     # 4. shadow tracks + breadth D log, on the inputs the book traded on
     if run and run.get('reading'):
         r = _restore_reading(run['reading'])

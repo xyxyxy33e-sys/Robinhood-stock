@@ -1,0 +1,19 @@
+{
+  "account": "individual margin account ending 6826 (loan source; the runner never moves money)",
+  "collateral_value": 139180.0,
+  "collateral_date": "2026-10-13",
+  "collateral_note": "VTI 293.291711 x 381.34 + VXUS 323.483172 x 84.505 at the 13 Oct close; crypto is not marginable. Owner updates this; the cap uses 25% of it.",
+  "rate": 0.0525,
+  "draws": [
+    {
+      "date": "2026-10-13",
+      "kind": "tier-5",
+      "amount": 10290
+    }
+  ],
+  "status": "open",
+  "first_draw": "2026-10-13",
+  "peak_date": "2026-10-06",
+  "peak_value": 1.108323153865471,
+  "repay": null
+}

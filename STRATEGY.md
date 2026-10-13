@@ -155,6 +155,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-13 | **margin-funded drawdown deposits**: each funding-policy event is funded with a margin loan in the individual account ending 6826 (transferred to Agentic, swept in); loan capped at min(4% of the Agentic account, 25% of the 6826 collateral); the whole loan is repaid at the first of RECOVERY (NAV index back to the 252-day high before the first draw) or 252 sessions; on a repay day the trade run frees the amount as cash for the owner's transfer (`margin_funding.py`, `data/margin_loan.json`); the VTI/VXUS margin dip-buy plan is dropped | **owner decision** ("I want the rule to be based on a margin … and has an exit/repay plan"; repay rule and cap: "pick your own"); 5.25% margin vs no borrowing, cap 4%: recovery/12m +0.14 pp/yr real, +0.07 proxy; recovery/6m/E-F +0.01 / −0.08; recovery only +0.38 / +0.25 but open ~3y in 2000-03; "Margin-funded deposits (2026-10-13)" |
 | 2026-10-09 | **running A spell → 25/75 from the 2026-10-09 session (one-time rebalance at the open)** (`A_BASE_FROM_SESSION`; an A-base change is reported as a regime change) | owner: "actually change to 75/25 tomorrow when market open" (supersedes "next A spell" for the running spell) |
 | 2026-10-09 | **state-D ladder**: ungated D holds D1 (above the 100d) 50% SPMO / 50% QLD, D2 (100d–150d) 50% TQQQ / 50% QLD, D3 (below the 150d) 25% SPMO / 75% TQQQ; zone change = rebalance trigger (`d_zone`, `d_ladder_row`, `D_LADDER_ROWS`); **A base 25/75 for A spells starting on/after 2026-10-09** (`A_BASE_ROWS`; the spell running since 2026-08-04 keeps 50/50); shadow tracks v2/fastcut carry the ladder, sep19 does not | **owner decision** ("I will do pick", "next A spell"); real 54.7% / 1.977 / −19.4%, proxy 32.7% / 1.275 / −27.7%; ladder vs plain split at the same leverage Sharpe +0.08 / +0.05 (P 0.06 / 0.03); "State-D ladder" |
 | 2026-09-30 | **idle-cash sweep**: on a no-trade day, idle cash of $100 or more (dividends, interest, leftovers) buys the legs below their dollar target in proportion to the shortfall; zero-target legs get nothing; skipped while a deposit plan is active or above 20% of the account (ask the owner). DRIP stays OFF in this account (`cash_sweep.py`, `data/cash_sweeps.csv`) | owner, after TQQQ paid $224: "you should have a plan for it"; a housekeeping rule, not a design change — the band never fires on dividend-sized cash |
@@ -1128,6 +1129,40 @@ do the split-adjusted backtests it is compared with, so it understates total
 return by roughly the two legs' yield (under 1%/yr). DRIP stays on in the
 owner's buy-and-hold accounts (the Roth IRA's VGT; VTI/VXUS in the
 individual account), which the agent does not trade.
+
+## Margin-funded deposits (2026-10-13) — the funding policy's money source
+
+The funding policy (below) still decides WHEN and HOW MUCH. Since 2026-10-13
+the owner funds those events with a **margin loan** in the individual account
+ending 6826 instead of outside cash, with a fixed repay plan
+(`paper-track/margin_funding.py`, ledger `data/margin_loan.json`):
+
+- **Draw.** At each funding event the record/signal run prints
+  `MARGIN DRAW: borrow $X in account 6826 and transfer it to Agentic`. The
+  transfer lands as idle cash and the cash sweep invests it. Draws during an
+  open loan stack on it.
+- **Cap.** The loan outstanding never exceeds min(**4%** of the Agentic
+  account, **25%** of the 6826 marginable collateral). Collateral on
+  2026-10-13: VTI + VXUS ≈ $139k (crypto is not marginable), so the cap is
+  ≈ $20.6k. At a 30% maintenance requirement a margin call would need the
+  collateral to fall ~79% at a $20k loan (vs ~48% at $51k and ~6% at the full
+  $98k available) — the draws happen when markets are already down.
+- **Repay.** The whole loan plus interest, at the first of **recovery** (the
+  strategy NAV index back to the 252-day high it had before the loan's first
+  draw) or **252 sessions** after the first draw. On that day the trade run
+  sells enough to hold the amount as cash (`MARGIN REPAY DUE` push); the owner
+  transfers it to 6826; the loan closes when the cash has left the account.
+  No forced repay on an E/F state.
+- **The runner never moves money**; it only sizes, reports and holds cash.
+
+Backtest (funding_pct_backtest harness, 5.25%, cap 4%, vs not borrowing; real
+2015–2026 / proxy 2000–2026): recovery-or-12-months **+0.14 / +0.07 pp/yr**;
+recovery-or-6-months-or-E/F +0.01 / −0.08 (the tight exits sell into the
+lows of late 2018, March 2020 and 2022); recovery only +0.38 / +0.25 but loans
+stayed open ~1.5 years (2018, 2022) and ~3 years (2000–03). The proxy runs the
+older A 50/50 row, so these are relative figures. The gain is small either way:
+borrowing adds a few tenths of a point a year, not the funding policy's
+outside-cash effect.
 
 ## Funding policy (owner, 2026-09-07; amount formula ADOPTED 2026-09-16) — reporting duty only
 

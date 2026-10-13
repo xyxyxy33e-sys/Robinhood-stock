@@ -22,6 +22,9 @@ Account `576391551` only. Everything below is US/Eastern.
    so; the post-close run's push carries it.
 5. Time matters more than prose. In the trade window do nothing but steps 1.1–1.5.
 6. Commit only `data/` files the run wrote, one line per commit.
+7. Margin loan (`data/margin_loan.json`, STRATEGY.md "Margin-funded deposits"): `live_run.py` sizes draws,
+   flags the repay and holds the repay cash out of the strategy. Never edit the ledger from a run except
+   by running `live_run.py`; never sweep or reinvest held repay cash.
 
 ## 1. Trade run — 15:50, Mon–Fri
 
@@ -109,6 +112,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - **Lead with whatever needs the owner:**
   - a guard trip, or a missed or fallback run, naming any legs that wait for the open
   - a funding trigger, quoted exactly as `live_run.py` printed it
+  - a `MARGIN DRAW` or `MARGIN REPAY DUE` line, quoted exactly (the owner moves the money; the run never does)
   - a regime shift
   - a REVERT or AFFIRM verdict
   - missing records

@@ -1112,3 +1112,58 @@ def check_live_run_orders():
 
 
 check_live_run_orders()
+
+
+def check_margin_funding():
+    """Margin-funded drawdown deposits (owner 2026-10-13, margin_funding.py):
+    cap = min(4% account, 25% collateral), draws stack to the cap, recovery or
+    252-session repay, the repay hold leaves cash unswept and untraded, and the
+    loan closes only once the raised cash has left the account."""
+    import margin_funding as MF
+    led = {'collateral_value': 139_000.0}
+    assert abs(MF.cap(led, 500_000) - 20_000) < 1e-6 and abs(MF.cap(led, 1_000_000) - 34_750) < 1e-6
+    led, a, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 500_000, '2026-10-06', 1.11, 1.05)
+    assert a == 10_000 and led['status'] == 'open' and led['peak_value'] == 1.11
+    led, a2, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 500_000, '2026-10-06', 1.11, 1.05)
+    assert a2 == 10_000 and MF.principal(led) == 10_000, "idempotent per date+kind"
+    led, a3, _ = MF.request_draw(led, '2026-10-20', 'tier-10', 15_000, 500_000, '2026-10-06', 1.11, 0.99)
+    assert a3 == 10_000 and MF.principal(led) == 20_000, "stack only to the cap"
+    led, a4, msg = MF.request_draw(led, '2026-10-21', 'turn', 10_000, 500_000, '2026-10-06', 1.11, 0.99)
+    assert a4 == 0 and 'cap full' in msg
+    _, _, m0 = MF.request_draw({}, '2026-10-13', 'turn', 5_000, 500_000, '2026-10-06', 1.11, 1.12)
+    assert 'at its high' in m0, "no loan that would repay at once"
+    sess = ['2026-10-%02d' % d for d in range(13, 31)]
+    assert MF.repay_check(led, [('x', 0, 1.05)], sess, '2026-10-30')[0] is None
+    assert MF.repay_check(led, [('x', 0, 1.11)], sess, '2026-10-30')[0] == 'recovery'
+    long = ['2026-10-13'] + ['d%03d' % i for i in range(260)]
+    assert MF.repay_check(dict(led, first_draw='2026-10-13'), [('x', 0, 1.0)], [d for d in long],
+                          'zzz')[0] == 'deadline'
+    owed = MF.owed(led, '2027-10-13')
+    assert 20_000 < owed < 20_000 * 1.0526, owed
+    led = MF.mark_repay_due(led, '2026-10-30', 'recovery')
+    hold = MF.repay_hold(led)
+    assert hold >= MF.owed(led, '2026-10-30') and hold % 10 == 0
+    led2, closed = MF.settle_if_sent(json_copy(led), '2026-10-31', 50.0)
+    assert not closed, "never close before the cash was raised"
+    led['repay']['raised'] = '2026-10-30'
+    led3, closed = MF.settle_if_sent(json_copy(led), '2026-10-31', hold)
+    assert not closed, "cash still in the account"
+    led4, closed = MF.settle_if_sent(json_copy(led), '2026-11-02', 10.0)
+    assert closed and led4['status'] == 'closed' and MF.principal(led4) == 0 and led4['history']
+    import live_run as L
+    q = {s: dict(last=100.0, bid=100.0, ask=100.0) for s in L.LEGS6}
+    vals = {'SPMO': 250_000.0, 'TQQQ': 750_000.0}
+    o = L.plan_orders((0.25, 0.75, 0, 0, 0, 0), vals, {'SPMO': 2500.0, 'TQQQ': 7500.0}, q, 1_000_000 - 20_000)
+    freed = sum(x['dollars'] for x in o if x['side'] == 'sell') - sum(x['dollars'] for x in o if x['side'] == 'buy')
+    assert abs(freed - 20_000) < 1.0, freed
+    print("OK: margin funding -- cap min(4% acct, 25% collateral), draws stack to the cap and are idempotent, "
+          "no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
+          "closes only after the raised cash leaves")
+
+
+def json_copy(x):
+    import json
+    return json.loads(json.dumps(x))
+
+
+check_margin_funding()
