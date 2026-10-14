@@ -1,0 +1,100 @@
+======================================================================================================================================================
+election_cycle_study (2026-10-14): election year / month / day vs the strategy (pre-registered)
+======================================================================================================================================================
+
+  PART A -- market, four-year cycle (calendar-year price return by cycle position)
+  NYSE Composite              1971-2025  election yr   +8.0% (n 14, 13/14 up) | post-election  +10.4% (n 14, 10/14 up) | midterm yr   -0.3% (n 13, 7/13 up) | pre-election  +14.4% (n 14, 11/14 up)  spread 14.7pp, perm p 0.06
+  Nasdaq-100                  1986-2025  election yr   +9.2% (n 10, 8/10 up) | post-election  +19.3% (n 10, 9/10 up) | midterm yr   +5.6% (n 10, 6/10 up) | pre-election  +39.1% (n 10, 10/10 up)  spread 33.5pp, perm p 0.07
+  QQQ                         2000-2025  election yr   +3.8% (n 7, 5/7 up) | post-election  +19.3% (n 7, 6/7 up) | midterm yr   -4.7% (n 6, 3/6 up) | pre-election  +28.5% (n 6, 6/6 up)  spread 33.2pp, perm p 0.16
+
+  PART A -- market, election windows (price return; placebo = same window at a random day of the same year)
+  NYSE Composite
+      pre  [-10,0] all  mean +1.14% (n 28, 20 up) placebo p 0.09
+      pre  [-10,0] pres mean +0.77% (n 14, 8 up) placebo p 0.62
+      pre  [-10,0] mid  mean +1.51% (n 14, 12 up) placebo p 0.04
+      post [0,+10] all  mean -0.52% (n 28, 13 up) placebo p 0.33
+      post [0,+10] pres mean -0.09% (n 14, 7 up) placebo p 0.68
+      post [0,+10] mid  mean -0.96% (n 14, 6 up) placebo p 0.31
+      Oct in election yrs +0.96% (n 28) vs odd yrs +0.24% (n 28)
+      Nov in election yrs +2.32% (n 28) vs odd yrs +1.08% (n 28)
+  Nasdaq-100
+      pre  [-10,0] all  mean +1.76% (n 20, 13 up) placebo p 0.13
+      pre  [-10,0] pres mean +0.61% (n 10, 5 up) placebo p 0.95
+      pre  [-10,0] mid  mean +2.90% (n 10, 8 up) placebo p 0.03
+      post [0,+10] all  mean -0.75% (n 20, 11 up) placebo p 0.35
+      post [0,+10] pres mean -1.79% (n 10, 6 up) placebo p 0.16
+      post [0,+10] mid  mean +0.30% (n 10, 5 up) placebo p 0.82
+      Oct in election yrs +0.69% (n 20) vs odd yrs +2.70% (n 20)
+      Nov in election yrs +2.57% (n 20) vs odd yrs +2.50% (n 21)
+  QQQ
+      pre  [-10,0] all  mean +1.26% (n 13, 7 up) placebo p 0.31
+      pre  [-10,0] pres mean +0.71% (n 7, 3 up) placebo p 0.85
+      pre  [-10,0] mid  mean +1.89% (n 6, 4 up) placebo p 0.18
+      post [0,+10] all  mean -1.46% (n 13, 7 up) placebo p 0.30
+      post [0,+10] pres mean -2.91% (n 7, 4 up) placebo p 0.11
+      post [0,+10] mid  mean +0.23% (n 6, 3 up) placebo p 0.72
+      Oct in election yrs -0.11% (n 13) vs odd yrs +5.97% (n 14)
+      Nov in election yrs +1.23% (n 13) vs odd yrs +3.84% (n 14)
+
+  PART B -- the strategy (current design, A base 40/60) vs QQQ over the same days
+  strategy real               2016-2025  election yr  +43.7% (n 3, 3/3 up) | post-election  +70.9% (n 3, 3/3 up) | midterm yr  +16.8% (n 2, 1/2 up) | pre-election  +68.0% (n 2, 2/2 up)  spread 54.0pp, perm p 0.39
+  QQQ same days (real)        2016-2025  election yr  +26.3% (n 3, 3/3 up) | post-election  +27.5% (n 3, 3/3 up) | midterm yr  -18.2% (n 2, 0/2 up) | pre-election  +45.9% (n 2, 2/2 up)  spread 64.1pp, perm p 0.00
+  strategy real
+      pre  [-10,0] all  mean +2.76% (n 5, 4 up) placebo p 0.34
+      pre  [-10,0] pres mean +4.48% (n 3, 2 up) placebo p 0.12
+      pre  [-10,0] mid  mean +0.19% (n 2, 2 up) placebo p 0.86
+      post [0,+10] all  mean +0.12% (n 5, 3 up) placebo p 0.51
+      post [0,+10] pres mean -0.15% (n 3, 1 up) placebo p 0.34
+      post [0,+10] mid  mean +0.53% (n 2, 2 up) placebo p 0.96
+      Oct in election yrs -2.60% (n 5) vs odd yrs +6.29% (n 5)
+      Nov in election yrs +4.29% (n 5) vs odd yrs +7.67% (n 5)
+  QQQ same days (real)
+      pre  [-10,0] all  mean +0.96% (n 5, 3 up) placebo p 0.72
+      pre  [-10,0] pres mean +1.29% (n 3, 2 up) placebo p 1.00
+      pre  [-10,0] mid  mean +0.47% (n 2, 1 up) placebo p 0.68
+      post [0,+10] all  mean +0.46% (n 5, 3 up) placebo p 0.99
+      post [0,+10] pres mean +0.43% (n 3, 2 up) placebo p 0.68
+      post [0,+10] mid  mean +0.51% (n 2, 1 up) placebo p 0.70
+      Oct in election yrs -2.43% (n 5) vs odd yrs +4.37% (n 5)
+      Nov in election yrs +4.90% (n 5) vs odd yrs +2.09% (n 5)
+  strategy proxy              2001-2025  election yr  +25.8% (n 6, 6/6 up) | post-election  +45.7% (n 7, 6/7 up) | midterm yr  +21.3% (n 6, 5/6 up) | pre-election  +36.6% (n 6, 5/6 up)  spread 24.4pp, perm p 0.62
+  QQQ same days (proxy)       2001-2025  election yr  +11.2% (n 6, 5/6 up) | post-election  +20.2% (n 7, 6/7 up) | midterm yr   -5.2% (n 6, 3/6 up) | pre-election  +26.8% (n 6, 6/6 up)  spread 32.1pp, perm p 0.12
+  strategy proxy
+      pre  [-10,0] all  mean +2.82% (n 13, 9 up) placebo p 0.06
+      pre  [-10,0] pres mean +2.59% (n 7, 4 up) placebo p 0.17
+      pre  [-10,0] mid  mean +3.09% (n 6, 5 up) placebo p 0.15
+      post [0,+10] all  mean +1.37% (n 13, 10 up) placebo p 0.45
+      post [0,+10] pres mean +1.29% (n 7, 5 up) placebo p 0.58
+      post [0,+10] mid  mean +1.47% (n 6, 5 up) placebo p 0.58
+      Oct in election yrs +1.39% (n 13) vs odd yrs +4.48% (n 13)
+      Nov in election yrs +3.67% (n 13) vs odd yrs +6.22% (n 13)
+  QQQ same days (proxy)
+      pre  [-10,0] all  mean +1.94% (n 13, 9 up) placebo p 0.08
+      pre  [-10,0] pres mean +0.93% (n 7, 4 up) placebo p 0.55
+      pre  [-10,0] mid  mean +3.13% (n 6, 5 up) placebo p 0.03
+      post [0,+10] all  mean -1.34% (n 13, 7 up) placebo p 0.40
+      post [0,+10] pres mean -3.22% (n 7, 3 up) placebo p 0.10
+      post [0,+10] mid  mean +0.85% (n 6, 4 up) placebo p 0.49
+      Oct in election yrs -0.31% (n 13) vs odd yrs +6.27% (n 13)
+      Nov in election yrs +0.98% (n 13) vs odd yrs +2.68% (n 13)
+
+  PART C -- rules (A base 40/60). LIVE: real 44.18% / -18.7% / exSh 1.697  proxy 27.78% / -22.6% / exSh 1.114  holdout 0.760
+  rule                                     real CAGR  MaxDD     dSh  prx CAGR  MaxDD     dSh   dHold  placebo rank  verdict
+  R1 x0.5, -5..+5 sessions, all elections     43.54% -18.7%  +0.004    26.87% -23.8%  -0.023  -0.036         0.90   P1 n P2 n P3 n => fail
+       bootstrap real: excess-Sharpe 95% CI [-0.022, +0.030], P(not better) 0.34
+       bootstrap proxy: excess-Sharpe 95% CI [-0.051, -0.000], P(not better) 0.97
+  R2 cash, -5..+5 sessions, all elections     42.87% -18.7%  -0.010    25.89% -28.2%  -0.055  -0.076         0.93   P1 n P2 n P3 n => fail
+       bootstrap real: excess-Sharpe 95% CI [-0.075, +0.044], P(not better) 0.59
+       bootstrap proxy: excess-Sharpe 95% CI [-0.121, -0.008], P(not better) 0.99
+  R3 x0.5, -5..+5, presidential only          43.46% -18.7%  +0.001    27.27% -23.8%  -0.010  -0.010         0.83   P1 n P2 n P3 n => fail
+       bootstrap real: excess-Sharpe 95% CI [-0.025, +0.025], P(not better) 0.44
+       bootstrap proxy: excess-Sharpe 95% CI [-0.032, +0.007], P(not better) 0.84
+  R4 x0.75 midterm yr, Jan 1 -> election      43.45% -18.7%  +0.029    26.77% -22.6%  +0.006  -0.024         0.12   P1 Y P2 n P3 n => fail
+       bootstrap real: excess-Sharpe 95% CI [-0.029, +0.085], P(not better) 0.14
+       bootstrap proxy: excess-Sharpe 95% CI [-0.034, +0.043], P(not better) 0.39
+  R5 x1.2 election -> Dec 31                  44.72% -18.7%  +0.001    27.98% -22.6%  -0.001  -0.003         0.40   P1 n P2 n P3 n => fail
+       bootstrap real: excess-Sharpe 95% CI [-0.016, +0.017], P(not better) 0.51
+       bootstrap proxy: excess-Sharpe 95% CI [-0.013, +0.011], P(not better) 0.57
+
+  next election: midterm 2026-11-03
+  done in 84s

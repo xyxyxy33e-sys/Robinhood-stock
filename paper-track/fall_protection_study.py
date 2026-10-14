@@ -82,6 +82,7 @@ NAV_BRAKE = None     # nav_brake_study (2026-10-08): (depth, mult, release). Whe
                      # off once NAV is back above the line; 'high20' = off on a new 20-session QQQ closing high;
                      # 'roll252' = as 'nav' but the peak is the rolling 252-session high (the funding-tier peak).
 LEV_SCALE = 1.0      # nav_brake_study: flat de-levering of the risky legs (the null frontier for this design)
+DATE_SCALE = None    # election_cycle_study (2026-10-14): callable(decision date) -> multiplier on the risky legs
                      # None = the live gate, reproduced exactly.
 
 def sim(h, arm=None, detail=False):
@@ -252,8 +253,10 @@ def sim(h, arm=None, detail=False):
             else: brk = under
             if brk: m *= mul
         m *= LEV_SCALE
+        dsc = DATE_SCALE(d) if DATE_SCALE is not None else 1.0
+        m *= dsc
         t = tuple(x * m for x in row[:4]) + (1.0 - sum(row[:4]) * m,)
-        key = keyf(I, v, gate) + ((flag,) if arm else ()) + hrk + ((brk,) if NAV_BRAKE is not None else ())
+        key = keyf(I, v, gate) + ((flag,) if arm else ()) + hrk + ((brk,) if NAV_BRAKE is not None else ()) + ((dsc,) if DATE_SCALE is not None else ())
         cost = 0.0
         if held is None: held = list(t); nreb += 1
         else:
