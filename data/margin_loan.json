@@ -34,6 +34,21 @@
           "order": "6ace9773-0a0b-4bc2-9164-bd9d1e71b49c"
         }
       ]
+    },
+    {
+      "date": "2026-10-15",
+      "kind": "tier-10",
+      "amount": 9422.0,
+      "basket": {
+        "SPMO": {
+          "shares": 16,
+          "limit": 144.58
+        },
+        "TQQQ": {
+          "shares": 96,
+          "limit": 74.04
+        }
+      }
     }
   ],
   "status": "open",
