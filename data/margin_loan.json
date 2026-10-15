@@ -38,7 +38,7 @@
     {
       "date": "2026-10-15",
       "kind": "tier-10",
-      "amount": 9422.0,
+      "amount": 9400.0,
       "basket": {
         "SPMO": {
           "shares": 16,
@@ -48,7 +48,22 @@
           "shares": 96,
           "limit": 74.04
         }
-      }
+      },
+      "note": "planned $9,422; owner transferred $9,400 on 2026-10-15 (cash seen in Agentic)",
+      "bought": [
+        {
+          "symbol": "SPMO",
+          "shares": 16,
+          "avg": 144.2,
+          "order": "6ad1343a-5793-4d05-acff-cfac32b58fd1"
+        },
+        {
+          "symbol": "TQQQ",
+          "shares": 96,
+          "avg": 73.749,
+          "order": "6ad1346d-ba9a-485f-92be-48b935e20b77"
+        }
+      ]
     }
   ],
   "status": "open",
