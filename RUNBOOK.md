@@ -105,6 +105,9 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 
 2.5 **Dashboard.** Update `https://claude.ai/artifact/HoxQpURsWcALzFG7hGr5ck`.
 - Read it first, then edit the saved `index.html` surgically. Use figures from today's run file and the record output only.
+- Derived figures (moving averages, state lines, positions table): `python3 paper-track/dashboard_figures.py <today> SYM=qty@avg_cost ...`.
+  Copy the saved page into the scratchpad and change it with the Edit tool (pre-approved), then publish with the Artifact tool.
+  No inline `python3 -` scripts: they are not pre-approved and stop an unattended run at a permission prompt.
 - Account value is NET of the margin loan (the `NET` line `live_run.py record` prints: value minus loan + interest), with the gross value beside it.
 - Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
 - Leave the backtest charts alone.

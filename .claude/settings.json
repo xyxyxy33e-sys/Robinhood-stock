@@ -26,7 +26,11 @@
       "mcp__61743e88-b422-4cfe-9837-67c54c881b23__place_equity_order",
       "mcp__61743e88-b422-4cfe-9837-67c54c881b23__cancel_equity_order",
       "Artifact",
-      "PushNotification"
+      "PushNotification",
+      "Bash(python3 paper-track/dashboard_figures.py *)",
+      "Edit(//tmp/claude-0/**)",
+      "Read(//tmp/claude-0/**)",
+      "Read(//root/.claude/projects/**)"
     ]
   }
 }
