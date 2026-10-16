@@ -25,6 +25,10 @@ Account `576391551` only. Everything below is US/Eastern.
 7. Margin loan (`data/margin_loan.json`, STRATEGY.md "Margin-funded deposits"): `live_run.py` sizes draws,
    flags the repay and holds the repay cash out of the strategy. Never edit the ledger from a run except
    by running `live_run.py`; never sweep or reinvest held repay cash.
+   **Netting (2026-10-16):** while a loan is drawn the strategy holds no BOXX up to the loan amount;
+   `live_run.py signal` keeps that cash back (orders already reflect it, the `netted:` line shows the
+   weights) and, after 2 sessions, prints `MARGIN REPAY: transfer $X …` or `MARGIN DRAW (re-borrow): …`.
+   Trade the printed orders as usual; never buy BOXX with cash the run is keeping back.
 
 ## 1. Trade run — 15:50, Mon–Fri
 
@@ -116,7 +120,9 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - **Lead with whatever needs the owner:**
   - a guard trip, or a missed or fallback run, naming any legs that wait for the open
   - a funding trigger, quoted exactly as `live_run.py` printed it
-  - a `MARGIN DRAW` or `MARGIN REPAY DUE` line, quoted exactly (the owner moves the money; the run never does)
+  - a `MARGIN DRAW`, `MARGIN DRAW (re-borrow)`, `MARGIN REPAY` or `MARGIN REPAY DUE` line, quoted exactly
+    (the owner moves the money; the run never does). `live_run.py record` repeats the trade run's margin
+    lines as `PUSH:` so the post-close push carries them.
     When the owner says a draw's transfer has landed, run `live_run.py draw-orders` and place the printed
     whole-share limits (extended hours after 16:00, regular hours otherwise).
   - a regime shift

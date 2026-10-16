@@ -155,6 +155,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-16 | **margin netting**: while a margin loan is drawn the strategy holds no BOXX — targets on the imaginary account (account + netted principal), the BOXX leg pays the loan down (kept as cash, `MARGIN REPAY` push after 2 sessions, owner transfers), re-borrowed (`MARGIN DRAW (re-borrow)`, within the cap) when the BOXX leg shrinks; moves under max($1k, 1%) ignored unless whole; VIXM does not net (`margin_funding.net_step`) | **owner decision** ("when there is a margin, we shouldn't be holding any portion in boxx"; "leave it as buying power, give me a notification, I will transfer it"); vs the 2026-10-13 rule: +0.134 → +0.200 pp/yr real, +0.067 → +0.138 proxy, interest −58%, transfers 9.4 → 13.0/yr; "Margin-funded deposits", Netting |
 | 2026-10-13 | **margin-funded drawdown deposits**: each funding-policy event is funded with a margin loan in the individual account ending 6826 (transferred to Agentic, swept in); loan capped at min(4% of the Agentic account, 25% of the 6826 collateral); the whole loan is repaid at the first of RECOVERY (NAV index back to the 252-day high before the first draw) or 252 sessions; on a repay day the trade run frees the amount as cash for the owner's transfer (`margin_funding.py`, `data/margin_loan.json`); the VTI/VXUS margin dip-buy plan is dropped | **owner decision** ("I want the rule to be based on a margin … and has an exit/repay plan"; repay rule and cap: "pick your own"); 5.25% margin vs no borrowing, cap 4%: recovery/12m +0.14 pp/yr real, +0.07 proxy; recovery/6m/E-F +0.01 / −0.08; recovery only +0.38 / +0.25 but open ~3y in 2000-03; "Margin-funded deposits (2026-10-13)" |
 | 2026-10-09 | **running A spell → 25/75 from the 2026-10-09 session (one-time rebalance at the open)** (`A_BASE_FROM_SESSION`; an A-base change is reported as a regime change) | owner: "actually change to 75/25 tomorrow when market open" (supersedes "next A spell" for the running spell) |
 | 2026-10-09 | **state-D ladder**: ungated D holds D1 (above the 100d) 50% SPMO / 50% QLD, D2 (100d–150d) 50% TQQQ / 50% QLD, D3 (below the 150d) 25% SPMO / 75% TQQQ; zone change = rebalance trigger (`d_zone`, `d_ladder_row`, `D_LADDER_ROWS`); **A base 25/75 for A spells starting on/after 2026-10-09** (`A_BASE_ROWS`; the spell running since 2026-08-04 keeps 50/50); shadow tracks v2/fastcut carry the ladder, sep19 does not | **owner decision** ("I will do pick", "next A spell"); real 54.7% / 1.977 / −19.4%, proxy 32.7% / 1.275 / −27.7%; ladder vs plain split at the same leverage Sharpe +0.08 / +0.05 (P 0.06 / 0.03); "State-D ladder" |
@@ -1158,6 +1159,32 @@ ending 6826 instead of outside cash, with a fixed repay plan
   sells enough to hold the amount as cash (`MARGIN REPAY DUE` push); the owner
   transfers it to 6826; the loan closes when the cash has left the account.
   No forced repay on an E/F state.
+- **Netting: no BOXX while a loan is drawn (2026-10-16).** Owner: "the main
+  idea is to avoid paying interest for margin, so when there is a margin, we
+  shouldn't be holding any portion in boxx"; "if it's under the margin amount,
+  just leave it as buying power, give me a notification, I will transfer it".
+  The targets are computed on the **imaginary account** (account + principal
+  already netted), so the risky legs hold the same dollars as with the loan
+  drawn. The BOXX leg pays the loan down first: netted = min(BOXX dollars,
+  principal); only the BOXX above the whole loan is bought. Cash to net is kept
+  back as buying power from the first session and, after **2 sessions in a
+  row**, the trade run pushes `MARGIN REPAY: transfer $X from Agentic to
+  account 6826 …`; the netting is booked once the cash has left. When the BOXX
+  leg shrinks below what was netted, it pushes `MARGIN DRAW (re-borrow): …`
+  (again after 2 sessions, within the 4% cap); until that lands the risky legs
+  are scaled to the cash on hand. A move under max($1,000, 1% of the account)
+  is ignored unless it nets or restores the whole loan. Only BOXX nets — VIXM
+  is the hedge. The recovery / 252-session repay covers what is still drawn;
+  if netting already paid it all, the loan closes. Interest stops on each
+  netted dollar from the transfer date.
+  Backtest (same harness, cap 4%, recovery/12m, 5.25%, scratch
+  `margin_net_sim.py`): **+0.134 → +0.200 pp/yr real 2015–26, +0.067 → +0.138
+  proxy 2000–26**; interest $28.9k → $12.2k (real, $500k start); owner
+  transfers 9.4 → 13.0 a year. Band 0.25–2% and 1–5 confirm sessions all land
+  within 0.004 pp/yr; 1% / 2 sessions has the fewest transfers for the gain.
+  Risky dollars are identical, so drawdowns are unchanged. The harness runs the
+  older rows (BOXX ~30% of days on average) and has no VIXM leg, so the live
+  gain is likely smaller.
 - **The runner never moves money**; it only sizes, reports and holds cash.
 
 Backtest (funding_pct_backtest harness, 5.25%, cap 4%, vs not borrowing; real

@@ -344,6 +344,27 @@ def cmd_signal(inp, write=True):
             raise Guard('margin repay due while a deposit plan is active: settle one by hand first')
         if led:
             lines.append(MF.summary_line(led, tv, today, DT.load_log(), dates))
+        # margin netting (owner 2026-10-16): no BOXX while a loan is drawn -- the BOXX leg pays it down
+        net_plan = dict(T=0.0, hold=0.0, gap=0.0)
+        if not plan_active and MF.is_open(led) and led['status'] == 'open':
+            led, net_plan, npush, nline, ndirty = MF.net_step(led, today, w6[-1] * (tv - hold + MF.netted(led)),
+                                                             idle, tv)
+            led_dirty = led_dirty or ndirty
+            if npush:
+                pushes.append(npush)
+            if nline:
+                lines.append(nline)
+        imag = tv - hold + MF.netted(led)
+        hold_all = hold + net_plan['hold']
+        w_eff = w6
+        if net_plan['T'] or net_plan['hold'] or net_plan['gap']:
+            nd = MF.net_dollar_targets(w6, LEGS6, tv - hold_all, imag, net_plan)
+            w_eff = tuple(nd[s] / (tv - hold_all) for s in LEGS6)
+            lines.append(f"margin netting: BOXX {w6[-1]*100:.1f}% of the imaginary account ${imag:,.0f} -> "
+                         f"${net_plan['T']:,.0f} netted against the loan, BOXX held ${nd['BOXX']:,.0f}"
+                         + (f", ${net_plan['hold']:,.0f} kept as cash for the transfer" if net_plan['hold'] else '')
+                         + (f", risky legs scaled until the ${net_plan['gap']:,.0f} re-borrow arrives"
+                            if net_plan['gap'] else ''))
         if plan_active:
             sess = dates
             if idle > DP.ARRIVAL_MIN:
@@ -354,10 +375,10 @@ def cmd_signal(inp, write=True):
             lines.append(DP.summary_line(plan, sess, today))
         else:
             res = 0.0
-            inv = tv - hold
+            inv = tv - hold_all
             if inv <= 0:
-                raise Guard(f'margin repay hold ${hold:,.0f} >= account ${tv:,.0f}')
-            held = tuple(values[s] / inv for s in LEGS6[:-1]) + ((values['BOXX'] + idle - hold) / inv,)
+                raise Guard(f'margin repay hold ${hold_all:,.0f} >= account ${tv:,.0f}')
+            held = tuple(values[s] / inv for s in LEGS6[:-1]) + ((values['BOXX'] + idle - hold_all) / inv,)
         w6_prev = weights6(rp, vx_prev)
         changed = []
         if r['eff'] != rp['eff']:
@@ -374,11 +395,13 @@ def cmd_signal(inp, write=True):
             changed.append(f"VIXM {'in' if vx.get('allowed') else 'out'}")
         if hold and idle < hold:
             changed.append(f"margin repay: raise ${hold:,.0f} cash")
-        do, drift, why = S.needs_rebalance(w6, held, bool(changed))
-        orders = plan_orders(w6, values, qty, q, tv - hold, res) if do else []
+        if net_plan['hold'] and idle < hold_all:
+            changed.append(f"margin netting: keep ${net_plan['hold']:,.0f} of the BOXX leg as cash")
+        do, drift, why = S.needs_rebalance(w_eff, held, bool(changed))
+        orders = plan_orders(w_eff, values, qty, q, tv - hold_all, res) if do else []
         sweep = {}
         if not do:
-            sweep, swhy = CS.plan_sweep(w6, {s: values[s] for s in LEGS6}, idle - hold, tv - hold,
+            sweep, swhy = CS.plan_sweep(w_eff, {s: values[s] for s in LEGS6}, idle - hold_all, tv - hold_all,
                                         plan_active=plan_active)
             if sweep:
                 lines.append(f'idle-cash sweep (${idle:,.2f}): ' + ', '.join(f'{k} ${v:,.2f}' for k, v in sweep.items()))
@@ -400,6 +423,8 @@ def cmd_signal(inp, write=True):
                           f"sells settle, transfer ${hold:,.0f} to account 6826 to repay the margin loan")
         elif hold and led['repay'].get('raised'):
             lines.append(f"margin repay: ${hold:,.0f} held as cash -- waiting for the transfer to 6826")
+        if w_eff is not w6:
+            out.update(target_net=list(w_eff), margin_net=dict(net_plan, imaginary=imag))
         out.update(target=list(w6), target_prev=list(w6_prev), held=list(held), drift=drift, decision=do,
                    why=why, regime_changed=changed, orders=orders, sweep=sweep, pushes=pushes, status='signal')
     except (Guard, S.WeightSanityError, S.CircuitBreakerTripped, S.MissingOverlayInputs) as e:
@@ -445,6 +470,8 @@ def cmd_signal(inp, write=True):
         return code
     print(f"\naccount ${tv:,.2f} (positions+cash ${implied:,.2f}, breaker ok)")
     print(f"target: {_fmt_w(out['target'])}")
+    if out.get('target_net'):
+        print(f"netted: {_fmt_w(out['target_net'])}  (of the account less holds; BOXX nets the margin loan)")
     print(f"held:   {_fmt_w(out['held'])}")
     print(f"L1 drift {drift*100:.2f}%; regime change: {', '.join(changed) or 'none'}")
     if do:
@@ -520,6 +547,13 @@ def cmd_record(inp):
     if led and led.get('status') == 'repay_due' and any(f['side'] == 'sell' for f in inp.get('fills', [])):
         led['repay']['raised'] = date
         MF.save(led)
+    np_ = (led or {}).get('net_pending')
+    if np_ and np_['kind'] == 'repay' and not np_.get('raised') and \
+            any(f['side'] == 'sell' and f['symbol'] == 'BOXX' for f in inp.get('fills', [])):
+        np_['raised'] = date            # the netting cash was freed from BOXX today
+        MF.save(led)
+    if np_ and np_.get('notified') == date:
+        out_lines.append(f"margin netting: {np_['kind']} ${np_['amount']:,.0f} requested today (see the trade-run push)")
     if tier:
         amt = FP.tier_funding_amount(tv, tier)
         pushes.append(f"FUNDING TRIGGER (drawdown): strategy crossed -{int(tier*100)}% from its 252-day high; "
@@ -556,6 +590,8 @@ def cmd_record(inp):
         run['record'] = dict(fills=inp.get('fills', []), nav_return=daily, tier=tier, session_lag=lag)
         json.dump(_ser(run), open(_run_path(date), 'w'), indent=1)
     print('\n'.join(out_lines))
+    # the trade run's margin lines go to the owner in this run's push (RUNBOOK 2.6)
+    pushes = [p for p in (run or {}).get('pushes', []) if p.startswith('MARGIN') and p not in pushes] + pushes
     for p in pushes:
         print(f"\nPUSH: {p}")
     print(f"\nNext: commit data/ (git add data && git commit -m '{date}: <state>, <traded|no trade>, NAV {daily*100:+.2f}%' && git push)")
