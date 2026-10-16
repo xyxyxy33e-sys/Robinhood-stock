@@ -64,6 +64,22 @@
           "order": "6ad1346d-ba9a-485f-92be-48b935e20b77"
         }
       ]
+    },
+    {
+      "date": "2026-10-16",
+      "kind": "tier-15",
+      "amount": 15094.0,
+      "basket": {
+        "TQQQ": {
+          "shares": 110,
+          "limit": 68.43
+        },
+        "QLD": {
+          "shares": 86,
+          "limit": 87.98
+        }
+      },
+      "note": "catch-up for the 16 Oct -15% tier: the record found the old 4% cap full; owner raised the cap to min(10% account, 25% collateral) and asked to re-run it"
     }
   ],
   "status": "open",
