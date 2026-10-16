@@ -12,7 +12,7 @@ THE RULE
   Draw.   At a funding event, borrow the funding_policy amount in 6826 and
           transfer it to Agentic; it lands as idle cash and the cash sweep
           invests it. Each draw is capped so the loan outstanding never
-          exceeds CAP = min(10% of the Agentic account, 20% of the 6826
+          exceeds CAP = min(10% of the Agentic account, 25% of the 6826
           collateral) -- 4% / 25% until the owner's change of 2026-10-16.
           Draws while a loan is open stack on it.
   Repay.  The whole loan (principal + accrued interest) is repaid at the
@@ -84,7 +84,7 @@ import os
 LEDGER_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'margin_loan.json')
 RATE = 0.0525                 # owner's margin rate, 2026-10-13
 CAP_ACCOUNT_PCT = 0.10        # of the Agentic account value (4% -> 5% -> 10%, owner 2026-10-16)
-CAP_COLLATERAL_PCT = 0.20     # of the 6826 marginable collateral (25% -> 20%, owner 2026-10-16)
+CAP_COLLATERAL_PCT = 0.25     # of the 6826 marginable collateral (owner 2026-10-16: 10% / 25%)
 DEADLINE_SESSIONS = 252       # 12 months
 ROUND_TO = 10
 TRANSFER_SEEN = 0.5           # repay considered sent once idle cash < this x the hold

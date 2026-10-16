@@ -1121,7 +1121,7 @@ def check_margin_funding():
     loan closes only once the raised cash has left the account."""
     import margin_funding as MF
     led = {'collateral_value': 139_000.0}
-    assert abs(MF.cap(led, 200_000) - 20_000) < 1e-6 and abs(MF.cap(led, 1_000_000) - 27_800) < 1e-6
+    assert abs(MF.cap(led, 200_000) - 20_000) < 1e-6 and abs(MF.cap(led, 1_000_000) - 34_750) < 1e-6
     led, a, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 200_000, '2026-10-06', 1.11, 1.05)
     assert a == 10_000 and led['status'] == 'open' and led['peak_value'] == 1.11
     led, a2, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 200_000, '2026-10-06', 1.11, 1.05)
@@ -1164,7 +1164,7 @@ def check_margin_funding():
     _, a6, _ = MF.request_draw({'collateral_value': 139_000.0}, '2026-10-13', 'tier-5', 50_000, 500_000,
                                '2026-10-06', 1.11, 1.05, weights={'SPMO': 0.25, 'TQQQ': 0.75},
                                prices={'SPMO': 148.0099, 'TQQQ': 78.8099})
-    assert a6 <= 27_800, "basket respects the cap (20% of the collateral)"
+    assert a6 <= 34_750, "basket respects the cap (25% of the collateral)"
     import live_run as L
     q = {s: dict(last=100.0, bid=100.0, ask=100.0) for s in L.LEGS6}
     vals = {'SPMO': 250_000.0, 'TQQQ': 750_000.0}
@@ -1210,7 +1210,7 @@ def check_margin_funding():
     full['draws'] = [dict(date='2026-10-15', kind='x', amount=19_700.0)]
     full = MF.mark_repay_due(full, '2026-10-15', 'recovery')
     assert full['status'] == 'closed' and full['history'][-1]['repay']['note'] == 'fully netted'
-    print("OK: margin funding -- cap min(10% acct, 20% collateral), draws stack to the cap and are idempotent, "
+    print("OK: margin funding -- cap min(10% acct, 25% collateral), draws stack to the cap and are idempotent, "
           "draws are whole-share baskets in whole dollars, no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
           "closes only after the raised cash leaves; netting: the BOXX leg pays the loan down (cash kept back from "
           "session 1, MARGIN REPAY on session 2), the netted amount re-borrowed in full on the way out of BOXX, risky "
