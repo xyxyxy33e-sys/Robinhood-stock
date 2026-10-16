@@ -1196,15 +1196,12 @@ def check_margin_funding():
     n, p, push, _, _ = MF.net_step(n, '2026-10-22', 0.0, 70.0, tv - 9_460)
     assert push is None and p['T'] == 9_460, "re-borrow waits for the second session"
     n, p, push, _, _ = MF.net_step(n, '2026-10-23', 0.0, 70.0, tv - 9_460)
-    room = MF.cap(n, tv - 9_460) - 10_240          # the loan is over the 4% cap: re-borrow only to the cap
-    gap = -(-room // 10) * 10
-    assert push.startswith(f'MARGIN DRAW (re-borrow): borrow ${gap:,.0f}') and p['gap'] == gap, (push, gap)
+    assert MF.outstanding(n) + 9_460 > MF.cap(n, tv - 9_460), "this loan is over the 4% cap"
+    assert 'borrow $9,460' in push and p['gap'] == 9_460, ("re-borrow restores the netted amount, cap or not", push)
     nd = MF.net_dollar_targets((0.0, 0.5, 0.5, 0.0, 0.0, 0.0), L.LEGS6, tv - 9_460, tv, p)
     assert abs(sum(nd.values()) - (tv - 9_460)) < 0.01 and nd['BOXX'] < 0.01, "risky legs scaled to cash on hand"
-    n, p, _, line, _ = MF.net_step(n, '2026-10-26', 0.0, gap + 70.0, tv - 9_460 + gap)
-    assert MF.netted(n) == 9_460 - gap and 'arrived' in line, line
-    n, p, push, _, _ = MF.net_step(n, '2026-10-27', 0.0, 70.0, 600_000.0)
-    assert push is None and p['T'] == 9_460 - gap, "the rest re-borrows only once the cap has room, after 2 sessions"
+    n, p, _, line, _ = MF.net_step(n, '2026-10-26', 0.0, 9_530.0, tv)
+    assert MF.netted(n) == 0 and MF.outstanding(n) == 19_700 and 'arrived' in line, line
     n, p, push, _, _ = MF.net_step(json_copy(n0), '2026-10-19', 0.4 * tv, 70.0, tv)
     assert p['T'] == 19_700, "a BOXX leg over the loan nets all of it; only the rest is bought"
     nd = MF.net_dollar_targets((0.0, 0.3, 0.3, 0.0, 0.0, 0.4), L.LEGS6, tv - 19_700, tv, p)
@@ -1217,7 +1214,8 @@ def check_margin_funding():
     print("OK: margin funding -- cap min(4% acct, 25% collateral), draws stack to the cap and are idempotent, "
           "draws are whole-share baskets in whole dollars, no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
           "closes only after the raised cash leaves; netting: the BOXX leg pays the loan down (cash kept back from "
-          "session 1, MARGIN REPAY on session 2), re-borrow within the cap, risky dollars unchanged, sub-1% moves ignored")
+          "session 1, MARGIN REPAY on session 2), the netted amount re-borrowed in full on the way out of BOXX, risky "
+          "dollars unchanged, sub-1% moves ignored")
 
 
 def json_copy(x):

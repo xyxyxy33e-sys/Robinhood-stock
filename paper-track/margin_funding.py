@@ -56,7 +56,9 @@ me a notification, I will transfer it".
     cash held       = T - already netted, left as buying power for the
                       owner's transfer to 6826 (MARGIN REPAY push)
   When the BOXX leg shrinks below what was netted, the difference is
-  re-borrowed (MARGIN DRAW push, within the cap); until it lands the risky
+  re-borrowed (MARGIN DRAW push) -- the amount netted earlier, cap or not
+  (owner: "when position shifts out of the boxx, let me know I will transfer
+  in the previous amount back to the account"); until it lands the risky
   legs are scaled to the cash on hand. A move of under NET_MIN dollars (or
   NET_MIN_PCT of the account) is left alone unless it nets or restores the
   whole loan, and a transfer is requested only after NET_CONFIRM sessions in
@@ -334,10 +336,7 @@ def net_step(led, today, boxx_dollars, idle_cash, account_value):
             f"margin netting: waiting for the ${amt:,.0f} re-borrow from 6826", dirty
     # 2. where netting should be today
     T = min(max(boxx_dollars, 0.0), P)
-    d = T - n
-    room = max(cap(led, account_value) - outstanding(led), 0.0)
-    if d < 0:
-        d = -min(-d, room)
+    d = T - n          # a re-borrow restores what was netted, cap or not (owner: "the previous amount")
     big = abs(d) >= max(NET_MIN, NET_MIN_PCT * account_value)
     whole = abs(d) >= ROUND_TO and (T >= P - 0.5 or T <= 0.5)
     if not (big or whole):
@@ -346,7 +345,7 @@ def net_step(led, today, boxx_dollars, idle_cash, account_value):
             dirty = True
         return led, dict(T=n, hold=0.0, gap=0.0), None, None, dirty
     kind = 'repay' if d > 0 else 'borrow'
-    amt = float(math.floor(abs(d) / ROUND_TO) * ROUND_TO) if kind == 'repay' else float(_round_up(abs(d)))
+    amt = float(math.floor(abs(d) / ROUND_TO) * ROUND_TO) if kind == 'repay' else float(min(_round_up(abs(d)), n))
     same = bool(pend) and pend['kind'] == kind
     streak = pend['streak'] + 1 if same else 1
     led['net_pending'] = dict(kind=kind, amount=amt, since=pend['since'] if same else today,
@@ -366,8 +365,9 @@ def net_step(led, today, boxx_dollars, idle_cash, account_value):
         push = (f"MARGIN REPAY: transfer ${amt:,.0f} from Agentic to account 6826 (the BOXX leg, kept as cash) to pay "
                 f"the margin loan down from ${outstanding(led):,.0f} to ${outstanding(led) - amt:,.0f}")
         return led, plan, push, None, dirty
-    push = (f"MARGIN DRAW (re-borrow): borrow ${amt:,.0f} in account 6826 and transfer it to Agentic; the BOXX leg "
-            f"shrank, so the loan goes back from ${outstanding(led):,.0f} to ${outstanding(led) + amt:,.0f}")
+    push = (f"MARGIN DRAW (re-borrow): the strategy is moving out of BOXX -- borrow ${amt:,.0f} in account 6826 and "
+            f"transfer it back to Agentic (the amount netted earlier); the loan goes back from "
+            f"${outstanding(led):,.0f} to ${outstanding(led) + amt:,.0f}")
     return led, dict(T=n - amt, hold=0.0, gap=amt), push, None, dirty
 
 
