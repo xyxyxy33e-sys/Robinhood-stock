@@ -64,6 +64,26 @@
           "order": "6ad1346d-ba9a-485f-92be-48b935e20b77"
         }
       ]
+    },
+    {
+      "date": "2026-10-16",
+      "kind": "tier-15",
+      "amount": 20950.89,
+      "note": "owner draw for the 16 Oct -15% tier, borrowed in 6826 and transferred by the owner; amount = cash seen in Agentic ($21,020.13 - $69.24), above the min(10% acct, 25% collateral) cap of $34,795 by owner choice; Support confirmed internal transfers keep the bonus",
+      "bought": [
+        {
+          "symbol": "TQQQ",
+          "shares": 153,
+          "avg": 68.15,
+          "order": "6ad2a008-3f5a-4e55-a064-92c2ef084be1"
+        },
+        {
+          "symbol": "QLD",
+          "shares": 120,
+          "avg": 87.73,
+          "order": "6ad2a00c-c360-47d2-b8bd-cb0545c63518"
+        }
+      ]
     }
   ],
   "status": "open",
