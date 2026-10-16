@@ -155,6 +155,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-16 | **margin cap 4% → 5%** of the Agentic account (the 25%-of-collateral limit unchanged; `margin_funding.CAP_ACCOUNT_PCT`) | **owner decision** ("raise the cap to 5%"); netting backtest 4% → 5%: +0.200 → +0.257 pp/yr real, +0.138 → +0.169 proxy; interest +20%, transfers 13.0 → 13.9/yr; "Margin-funded deposits", Cap |
 | 2026-10-16 | **margin netting**: while a margin loan is drawn the strategy holds no BOXX — targets on the imaginary account (account + netted principal), the BOXX leg pays the loan down (kept as cash, `MARGIN REPAY` push after 2 sessions, owner transfers), the netted amount re-borrowed in full (`MARGIN DRAW (re-borrow)`) when the BOXX leg shrinks; moves under max($1k, 1%) ignored unless whole; VIXM does not net (`margin_funding.net_step`) | **owner decision** ("when there is a margin, we shouldn't be holding any portion in boxx"; "leave it as buying power, give me a notification, I will transfer it"); vs the 2026-10-13 rule: +0.134 → +0.200 pp/yr real, +0.067 → +0.138 proxy, interest −58%, transfers 9.4 → 13.0/yr; "Margin-funded deposits", Netting |
 | 2026-10-13 | **margin-funded drawdown deposits**: each funding-policy event is funded with a margin loan in the individual account ending 6826 (transferred to Agentic, swept in); loan capped at min(4% of the Agentic account, 25% of the 6826 collateral); the whole loan is repaid at the first of RECOVERY (NAV index back to the 252-day high before the first draw) or 252 sessions; on a repay day the trade run frees the amount as cash for the owner's transfer (`margin_funding.py`, `data/margin_loan.json`); the VTI/VXUS margin dip-buy plan is dropped | **owner decision** ("I want the rule to be based on a margin … and has an exit/repay plan"; repay rule and cap: "pick your own"); 5.25% margin vs no borrowing, cap 4%: recovery/12m +0.14 pp/yr real, +0.07 proxy; recovery/6m/E-F +0.01 / −0.08; recovery only +0.38 / +0.25 but open ~3y in 2000-03; "Margin-funded deposits (2026-10-13)" |
 | 2026-10-09 | **running A spell → 25/75 from the 2026-10-09 session (one-time rebalance at the open)** (`A_BASE_FROM_SESSION`; an A-base change is reported as a regime change) | owner: "actually change to 75/25 tomorrow when market open" (supersedes "next A spell" for the running spell) |
@@ -1147,12 +1148,18 @@ ending 6826 instead of outside cash, with a fixed repay plan
   limits as soon as the transfer lands (`live_run.py draw-orders`); whatever is
   not filled by the next 15:50 run goes to the idle-cash sweep. Draws during an
   open loan stack on it.
-- **Cap.** The loan outstanding never exceeds min(**4%** of the Agentic
-  account, **25%** of the 6826 marginable collateral). Collateral on
-  2026-10-13: VTI + VXUS ≈ $139k (crypto is not marginable), so the cap is
-  ≈ $20.6k. At a 30% maintenance requirement a margin call would need the
-  collateral to fall ~79% at a $20k loan (vs ~48% at $51k and ~6% at the full
-  $98k available) — the draws happen when markets are already down.
+- **Cap.** The loan outstanding never exceeds min(**5%** of the Agentic
+  account, **25%** of the 6826 marginable collateral). It was 4% from
+  2026-10-13 and was raised to 5% on 2026-10-16 (owner: "raise the cap to 5%").
+  Collateral on 2026-10-13: VTI + VXUS ≈ $139k (crypto is not marginable), so
+  the collateral limit is ≈ $34.8k and the account limit binds: ≈ $23.7k at
+  the 16 Oct account of $473k. At a 30% maintenance requirement a margin call
+  would need the collateral to fall ~75% at a $24k loan (vs ~48% at $51k and
+  ~6% at the full $98k available) — the draws happen when markets are
+  already down. Netting backtest by cap (real 2015–26 / proxy 2000–26, vs not
+  borrowing): 4% +0.200 / +0.138, **5% +0.257 / +0.169**, 6% +0.294 / +0.209
+  pp/yr; interest and transfers rise with it (real interest $12.2k → $14.7k,
+  transfers 13.0 → 13.9 a year at 5%).
 - **Repay.** The whole loan plus interest, at the first of **recovery** (the
   strategy NAV index back to the 252-day high it had before the loan's first
   draw) or **252 sessions** after the first draw. On that day the trade run

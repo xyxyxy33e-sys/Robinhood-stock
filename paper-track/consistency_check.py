@@ -1121,16 +1121,16 @@ def check_margin_funding():
     loan closes only once the raised cash has left the account."""
     import margin_funding as MF
     led = {'collateral_value': 139_000.0}
-    assert abs(MF.cap(led, 500_000) - 20_000) < 1e-6 and abs(MF.cap(led, 1_000_000) - 34_750) < 1e-6
-    led, a, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 500_000, '2026-10-06', 1.11, 1.05)
+    assert abs(MF.cap(led, 400_000) - 20_000) < 1e-6 and abs(MF.cap(led, 1_000_000) - 34_750) < 1e-6
+    led, a, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 400_000, '2026-10-06', 1.11, 1.05)
     assert a == 10_000 and led['status'] == 'open' and led['peak_value'] == 1.11
-    led, a2, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 500_000, '2026-10-06', 1.11, 1.05)
+    led, a2, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 400_000, '2026-10-06', 1.11, 1.05)
     assert a2 == 10_000 and MF.principal(led) == 10_000, "idempotent per date+kind"
-    led, a3, _ = MF.request_draw(led, '2026-10-20', 'tier-10', 15_000, 500_000, '2026-10-06', 1.11, 0.99)
+    led, a3, _ = MF.request_draw(led, '2026-10-20', 'tier-10', 15_000, 400_000, '2026-10-06', 1.11, 0.99)
     assert a3 == 10_000 and MF.principal(led) == 20_000, "stack only to the cap"
-    led, a4, msg = MF.request_draw(led, '2026-10-21', 'turn', 10_000, 500_000, '2026-10-06', 1.11, 0.99)
+    led, a4, msg = MF.request_draw(led, '2026-10-21', 'turn', 10_000, 400_000, '2026-10-06', 1.11, 0.99)
     assert a4 == 0 and 'cap full' in msg
-    _, _, m0 = MF.request_draw({}, '2026-10-13', 'turn', 5_000, 500_000, '2026-10-06', 1.11, 1.12)
+    _, _, m0 = MF.request_draw({}, '2026-10-13', 'turn', 5_000, 400_000, '2026-10-06', 1.11, 1.12)
     assert 'at its high' in m0, "no loan that would repay at once"
     sess = ['2026-10-%02d' % d for d in range(13, 31)]
     assert MF.repay_check(led, [('x', 0, 1.05)], sess, '2026-10-30')[0] is None
@@ -1138,7 +1138,7 @@ def check_margin_funding():
     long = ['2026-10-13'] + ['d%03d' % i for i in range(260)]
     assert MF.repay_check(dict(led, first_draw='2026-10-13'), [('x', 0, 1.0)], [d for d in long],
                           'zzz')[0] == 'deadline'
-    assert MF.net_value(led, 500_000, '2026-10-13') == 480_000, 'net = gross - principal on day 0'
+    assert MF.net_value(led, 400_000, '2026-10-13') == 380_000, 'net = gross - principal on day 0'
     owed = MF.owed(led, '2027-10-13')
     assert 20_000 < owed < 20_000 * 1.0526, owed
     led = MF.mark_repay_due(led, '2026-10-30', 'recovery')
@@ -1164,7 +1164,7 @@ def check_margin_funding():
     _, a6, _ = MF.request_draw({'collateral_value': 139_000.0}, '2026-10-13', 'tier-5', 50_000, 500_000,
                                '2026-10-06', 1.11, 1.05, weights={'SPMO': 0.25, 'TQQQ': 0.75},
                                prices={'SPMO': 148.0099, 'TQQQ': 78.8099})
-    assert a6 <= 20_000, "basket respects the cap"
+    assert a6 <= 25_000, "basket respects the cap (5% of $500k)"
     import live_run as L
     q = {s: dict(last=100.0, bid=100.0, ask=100.0) for s in L.LEGS6}
     vals = {'SPMO': 250_000.0, 'TQQQ': 750_000.0}
@@ -1196,7 +1196,6 @@ def check_margin_funding():
     n, p, push, _, _ = MF.net_step(n, '2026-10-22', 0.0, 70.0, tv - 9_460)
     assert push is None and p['T'] == 9_460, "re-borrow waits for the second session"
     n, p, push, _, _ = MF.net_step(n, '2026-10-23', 0.0, 70.0, tv - 9_460)
-    assert MF.outstanding(n) + 9_460 > MF.cap(n, tv - 9_460), "this loan is over the 4% cap"
     assert 'borrow $9,460' in push and p['gap'] == 9_460, ("re-borrow restores the netted amount, cap or not", push)
     nd = MF.net_dollar_targets((0.0, 0.5, 0.5, 0.0, 0.0, 0.0), L.LEGS6, tv - 9_460, tv, p)
     assert abs(sum(nd.values()) - (tv - 9_460)) < 0.01 and nd['BOXX'] < 0.01, "risky legs scaled to cash on hand"
@@ -1211,7 +1210,7 @@ def check_margin_funding():
     full['draws'] = [dict(date='2026-10-15', kind='x', amount=19_700.0)]
     full = MF.mark_repay_due(full, '2026-10-15', 'recovery')
     assert full['status'] == 'closed' and full['history'][-1]['repay']['note'] == 'fully netted'
-    print("OK: margin funding -- cap min(4% acct, 25% collateral), draws stack to the cap and are idempotent, "
+    print("OK: margin funding -- cap min(5% acct, 25% collateral), draws stack to the cap and are idempotent, "
           "draws are whole-share baskets in whole dollars, no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
           "closes only after the raised cash leaves; netting: the BOXX leg pays the loan down (cash kept back from "
           "session 1, MARGIN REPAY on session 2), the netted amount re-borrowed in full on the way out of BOXX, risky "
