@@ -91,6 +91,11 @@ TRANSFER_SEEN = 0.5           # repay considered sent once idle cash < this x th
 NET_MIN = 1000.0              # netting: smallest transfer worth asking for ...
 NET_MIN_PCT = 0.01            # ... or this share of the account, whichever is larger
 NET_CONFIRM = 2               # sessions in a row before a netting transfer is requested
+# Owner 2026-10-16 ("No more margin transfer then"): moving money out of 6826
+# during its bonus hold period takes part of the bonus with it. Off: no new
+# draws and no netting re-borrows; the existing loan still repays (money INTO
+# 6826) through netting and the recovery / 252-session rule.
+DRAWS_ENABLED = False
 
 
 def load(path=LEDGER_PATH):
@@ -193,6 +198,9 @@ def request_draw(led, today, kind, suggested, account_value, peak_date, peak_val
     whole-dollar amount rounded to $10."""
     led = dict(led or {})
     led.setdefault('draws', [])
+    if not DRAWS_ENABLED:
+        return led, 0.0, ('margin draws are off (owner 2026-10-16: a transfer out of 6826 during its bonus hold '
+                          'period takes part of the bonus with it): no draw for this event')
     if any(d['date'] == today and d['kind'] == kind for d in led['draws']):
         d = next(d for d in led['draws'] if d['date'] == today and d['kind'] == kind)
         return led, d['amount'], f"margin draw for {kind} on {today} already logged: ${d['amount']:,.0f}"
@@ -338,6 +346,8 @@ def net_step(led, today, boxx_dollars, idle_cash, account_value):
     # 2. where netting should be today
     T = min(max(boxx_dollars, 0.0), P)
     d = T - n          # a re-borrow restores what was netted, cap or not (owner: "the previous amount")
+    if d < 0 and not DRAWS_ENABLED:
+        d = 0.0        # no transfers out of 6826 while draws are off: what was netted stays repaid
     big = abs(d) >= max(NET_MIN, NET_MIN_PCT * account_value)
     whole = abs(d) >= ROUND_TO and (T >= P - 0.5 or T <= 0.5)
     if not (big or whole):

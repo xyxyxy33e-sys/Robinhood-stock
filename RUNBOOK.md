@@ -29,6 +29,8 @@ Account `576391551` only. Everything below is US/Eastern.
    `live_run.py signal` keeps that cash back (orders already reflect it, the `netted:` line shows the
    weights) and, after 2 sessions, prints `MARGIN REPAY: transfer $X …` or `MARGIN DRAW (re-borrow): …`.
    Trade the printed orders as usual; never buy BOXX with cash the run is keeping back.
+   **Draws are OFF (owner 2026-10-16, 6826 bonus hold):** no `MARGIN DRAW` lines are printed; funding
+   triggers are still reported. The existing loan still repays (`MARGIN REPAY`, `MARGIN REPAY DUE`).
 
 ## 1. Trade run — 15:50, Mon–Fri
 

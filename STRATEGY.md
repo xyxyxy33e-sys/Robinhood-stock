@@ -155,6 +155,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-16 | **margin draws OFF** (`margin_funding.DRAWS_ENABLED = False`): no new draws, no netting re-borrows; the existing $19,700 loan still repays into 6826 via netting and recovery / 252 sessions; the −15% catch-up draw cancelled untransferred | **owner decision** ("No more margin transfer then"): a transfer out of 6826 in its bonus hold period moves part of the bonus with it; "Margin-funded deposits", Draws OFF |
 | 2026-10-16 | **margin cap min(4% account, 25% collateral) → min(10% account, 25% collateral)** (5% and 10% / 20% were set briefly the same day; `margin_funding.CAP_ACCOUNT_PCT`): ≈ $34.8k today, collateral-bound, ~7.4% of the account | **owner decision** ("raise the cap to 5%", "use 10% account and 20% collateral", then "Do 10% and 25%"); netting backtest by account cap (no collateral limit in the harness): 4% +0.200 / +0.138, 5% +0.257 / +0.169, 6% +0.294 / +0.209, 10% +0.573 / +0.434 pp/yr real / proxy; worst loan scales with the cap; margin call at $34.8k needs the collateral −64%; "Margin-funded deposits", Cap |
 | 2026-10-16 | **margin netting**: while a margin loan is drawn the strategy holds no BOXX — targets on the imaginary account (account + netted principal), the BOXX leg pays the loan down (kept as cash, `MARGIN REPAY` push after 2 sessions, owner transfers), the netted amount re-borrowed in full (`MARGIN DRAW (re-borrow)`) when the BOXX leg shrinks; moves under max($1k, 1%) ignored unless whole; VIXM does not net (`margin_funding.net_step`) | **owner decision** ("when there is a margin, we shouldn't be holding any portion in boxx"; "leave it as buying power, give me a notification, I will transfer it"); vs the 2026-10-13 rule: +0.134 → +0.200 pp/yr real, +0.067 → +0.138 proxy, interest −58%, transfers 9.4 → 13.0/yr; "Margin-funded deposits", Netting |
 | 2026-10-13 | **margin-funded drawdown deposits**: each funding-policy event is funded with a margin loan in the individual account ending 6826 (transferred to Agentic, swept in); loan capped at min(4% of the Agentic account, 25% of the 6826 collateral); the whole loan is repaid at the first of RECOVERY (NAV index back to the 252-day high before the first draw) or 252 sessions; on a repay day the trade run frees the amount as cash for the owner's transfer (`margin_funding.py`, `data/margin_loan.json`); the VTI/VXUS margin dip-buy plan is dropped | **owner decision** ("I want the rule to be based on a margin … and has an exit/repay plan"; repay rule and cap: "pick your own"); 5.25% margin vs no borrowing, cap 4%: recovery/12m +0.14 pp/yr real, +0.07 proxy; recovery/6m/E-F +0.01 / −0.08; recovery only +0.38 / +0.25 but open ~3y in 2000-03; "Margin-funded deposits (2026-10-13)" |
@@ -1197,6 +1198,14 @@ ending 6826 instead of outside cash, with a fixed repay plan
   Risky dollars are identical, so drawdowns are unchanged. The harness runs the
   older rows (BOXX ~30% of days on average) and has no VIXM leg, so the live
   gain is likely smaller.
+- **Draws OFF (2026-10-16).** Owner: "No more margin transfer then". A
+  transfer out of 6826 during its bonus hold period moves part of the bonus
+  with it ($572 on a $1,000 test). `margin_funding.DRAWS_ENABLED = False`: the
+  funding policy still prints its triggers, but there are no new draws and no
+  netting re-borrows. The existing $19,700 loan keeps its repay plan, and the
+  money goes INTO 6826: netting repays it from any BOXX leg (what is netted
+  stays repaid), and the recovery / 252-session rule repays the rest. The 16 Oct
+  −15% catch-up draw ($7,459) was cancelled before any transfer.
 - **The runner never moves money**; it only sizes, reports and holds cash.
 
 Backtest (funding_pct_backtest harness, 5.25%, cap 4%, vs not borrowing; real

@@ -1120,6 +1120,8 @@ def check_margin_funding():
     252-session repay, the repay hold leaves cash unswept and untraded, and the
     loan closes only once the raised cash has left the account."""
     import margin_funding as MF
+    live_flag = MF.DRAWS_ENABLED
+    MF.DRAWS_ENABLED = True          # exercise the draw path; the live switch is tested at the end
     led = {'collateral_value': 139_000.0}
     assert abs(MF.cap(led, 200_000) - 20_000) < 1e-6 and abs(MF.cap(led, 1_000_000) - 34_750) < 1e-6
     led, a, _ = MF.request_draw(led, '2026-10-13', 'tier-5', 10_000, 200_000, '2026-10-06', 1.11, 1.05)
@@ -1210,6 +1212,18 @@ def check_margin_funding():
     full['draws'] = [dict(date='2026-10-15', kind='x', amount=19_700.0)]
     full = MF.mark_repay_due(full, '2026-10-15', 'recovery')
     assert full['status'] == 'closed' and full['history'][-1]['repay']['note'] == 'fully netted'
+    # draws off (owner 2026-10-16, 6826 bonus hold): no draw, no re-borrow; netting repays still work
+    MF.DRAWS_ENABLED = False
+    _, a7, m7 = MF.request_draw(json_copy(n0), '2026-10-19', 'tier-20', 20_000, tv, '2026-10-06', 1.108, 0.88)
+    assert a7 == 0 and 'draws are off' in m7
+    off = json_copy(n0)
+    off.update(netted=9_460.0, net_events=[dict(date='2026-10-21', amount=9_460.0)])
+    off, p, push, _, _ = MF.net_step(off, '2026-10-22', 0.0, 70.0, tv)
+    off, p, push, _, _ = MF.net_step(off, '2026-10-23', 0.0, 70.0, tv)
+    assert push is None and p['gap'] == 0 and MF.netted(off) == 9_460, "no re-borrow while draws are off"
+    off, p, push, _, _ = MF.net_step(json_copy(n0), '2026-10-22', 0.4 * tv, 70.0, tv)
+    assert p['T'] == 19_700, "a BOXX leg still nets (repays) the loan"
+    MF.DRAWS_ENABLED = live_flag
     print("OK: margin funding -- cap min(10% acct, 25% collateral), draws stack to the cap and are idempotent, "
           "draws are whole-share baskets in whole dollars, no loan at the NAV high, recovery / 252-session repay, the hold is freed as cash and the loan "
           "closes only after the raised cash leaves; netting: the BOXX leg pays the loan down (cash kept back from "

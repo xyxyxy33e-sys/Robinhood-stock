@@ -64,7 +64,14 @@
           "order": "6ad1346d-ba9a-485f-92be-48b935e20b77"
         }
       ]
-    },
+    }
+  ],
+  "status": "open",
+  "first_draw": "2026-10-13",
+  "peak_date": "2026-10-06",
+  "peak_value": 1.108323153865471,
+  "repay": null,
+  "cancelled_draws": [
     {
       "date": "2026-10-16",
       "kind": "tier-15",
@@ -79,12 +86,9 @@
           "limit": 87.98
         }
       },
-      "note": "catch-up for the 16 Oct -15% tier under the new cap min(10% account, 25% collateral); owner option B: ~half the room now, the rest kept for the -20% tier"
+      "note": "catch-up for the 16 Oct -15% tier under the new cap min(10% account, 25% collateral); owner option B: ~half the room now, the rest kept for the -20% tier",
+      "cancelled": "2026-10-16",
+      "why": "owner: no more margin transfers (6826 bonus hold period); never transferred"
     }
-  ],
-  "status": "open",
-  "first_draw": "2026-10-13",
-  "peak_date": "2026-10-06",
-  "peak_value": 1.108323153865471,
-  "repay": null
+  ]
 }
