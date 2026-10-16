@@ -248,7 +248,7 @@
  "pushes": [
   "Regime shift: macro A -> D (pullback in uptrend)"
  ],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-10-16",
   "time": "15:51 ET",
@@ -325,5 +325,54 @@
   },
   "idle_cash": 80.08,
   "total_value": 473005.3413855033
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "SPMO",
+    "side": "sell",
+    "quantity": 907.0,
+    "price": 140.8501
+   },
+   {
+    "symbol": "SPMO",
+    "side": "sell",
+    "quantity": 0.04937,
+    "price": 140.8101
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 1598.0,
+    "price": 67.98
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 0.78117,
+    "price": 67.9901
+   },
+   {
+    "symbol": "QLD",
+    "side": "buy",
+    "quantity": 0.269779,
+    "price": 87.5899
+   },
+   {
+    "symbol": "QLD",
+    "side": "buy",
+    "quantity": 2697.0,
+    "price": 87.6299
+   },
+   {
+    "symbol": "QLD",
+    "side": "buy",
+    "quantity": 1.0,
+    "price": 87.63
+   }
+  ],
+  "nav_return": -0.06256860032721218,
+  "tier": 0.15,
+  "session_lag": 0
  }
 }
