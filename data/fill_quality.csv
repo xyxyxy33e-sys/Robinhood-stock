@@ -23,3 +23,8 @@ date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,no
 2026-10-16,QLD,buy,0.269779,87.5899,87.72,signal_session_close,-14.83,23.63,,0
 2026-10-16,QLD,buy,2697.0,87.6299,87.72,signal_session_close,-10.27,236337.84,,0
 2026-10-16,QLD,buy,1.0,87.63,87.72,signal_session_close,-10.26,87.63,,0
+2026-10-19,TQQQ,buy,645.0,70.6575,70.65,signal_session_close,1.06,45574.09,,0
+2026-10-19,TQQQ,buy,0.284422,70.7399,70.65,signal_session_close,12.72,20.12,,0
+2026-10-19,QLD,buy,548.0,89.8299,89.78,signal_session_close,5.56,49226.79,,0
+2026-10-19,QLD,buy,0.915595,89.865,89.78,signal_session_close,9.47,82.28,,0
+2026-10-19,TQQQ,buy,2.0,70.54,70.65,signal_session_close,-15.57,141.08,,0
