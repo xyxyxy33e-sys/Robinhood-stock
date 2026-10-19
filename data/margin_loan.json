@@ -1,95 +1,14 @@
 {
   "account": "individual margin account ending 6826 (loan source; the runner never moves money)",
-  "collateral_value": 139180.0,
-  "collateral_date": "2026-10-13",
-  "collateral_note": "VTI 293.291711 x 381.34 + VXUS 323.483172 x 84.505 at the 13 Oct close; crypto is not marginable. Owner updates this; the cap uses 25% of it.",
+  "collateral_value": 0.0,
+  "collateral_date": "2026-10-19",
+  "collateral_note": "VTI/VXUS sold 2026-10-19 (owner moved the account to Agentic): no marginable collateral; draws off",
   "rate": 0.0525,
-  "draws": [
-    {
-      "date": "2026-10-13",
-      "kind": "tier-5",
-      "amount": 10300.0,
-      "basket": {
-        "SPMO": {
-          "shares": 17,
-          "limit": 148.45
-        },
-        "TQQQ": {
-          "shares": 98,
-          "limit": 79.04
-        }
-      },
-      "note": "planned $10,270; owner transferred $10,300 on 2026-10-13 (cash seen in Agentic)",
-      "bought": [
-        {
-          "symbol": "SPMO",
-          "shares": 17,
-          "avg": 148.45,
-          "order": "6ace9771-3385-4dbf-9266-b527eff44b05"
-        },
-        {
-          "symbol": "TQQQ",
-          "shares": 98,
-          "avg": 78.665,
-          "order": "6ace9773-0a0b-4bc2-9164-bd9d1e71b49c"
-        }
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "kind": "tier-10",
-      "amount": 9400.0,
-      "basket": {
-        "SPMO": {
-          "shares": 16,
-          "limit": 144.58
-        },
-        "TQQQ": {
-          "shares": 96,
-          "limit": 74.04
-        }
-      },
-      "note": "planned $9,422; owner transferred $9,400 on 2026-10-15 (cash seen in Agentic)",
-      "bought": [
-        {
-          "symbol": "SPMO",
-          "shares": 16,
-          "avg": 144.2,
-          "order": "6ad1343a-5793-4d05-acff-cfac32b58fd1"
-        },
-        {
-          "symbol": "TQQQ",
-          "shares": 96,
-          "avg": 73.749,
-          "order": "6ad1346d-ba9a-485f-92be-48b935e20b77"
-        }
-      ]
-    },
-    {
-      "date": "2026-10-16",
-      "kind": "tier-15",
-      "amount": 20950.89,
-      "note": "owner draw for the 16 Oct -15% tier, borrowed in 6826 and transferred by the owner; amount = cash seen in Agentic ($21,020.13 - $69.24), above the min(10% acct, 25% collateral) cap of $34,795 by owner choice; Support confirmed internal transfers keep the bonus",
-      "bought": [
-        {
-          "symbol": "TQQQ",
-          "shares": 153,
-          "avg": 68.15,
-          "order": "6ad2a008-3f5a-4e55-a064-92c2ef084be1"
-        },
-        {
-          "symbol": "QLD",
-          "shares": 120,
-          "avg": 87.73,
-          "order": "6ad2a00c-c360-47d2-b8bd-cb0545c63518"
-        }
-      ]
-    }
-  ],
-  "status": "open",
-  "first_draw": "2026-10-13",
-  "peak_date": "2026-10-06",
-  "peak_value": 1.108323153865471,
+  "draws": [],
+  "status": "closed",
+  "first_draw": null,
+  "peak_date": null,
+  "peak_value": null,
   "repay": null,
   "cancelled_draws": [
     {
@@ -110,5 +29,102 @@
       "cancelled": "2026-10-16",
       "why": "owner: no more margin transfers (6826 bonus hold period); never transferred"
     }
-  ]
+  ],
+  "history": [
+    {
+      "first_draw": "2026-10-13",
+      "draws": [
+        {
+          "date": "2026-10-13",
+          "kind": "tier-5",
+          "amount": 10300.0,
+          "basket": {
+            "SPMO": {
+              "shares": 17,
+              "limit": 148.45
+            },
+            "TQQQ": {
+              "shares": 98,
+              "limit": 79.04
+            }
+          },
+          "note": "planned $10,270; owner transferred $10,300 on 2026-10-13 (cash seen in Agentic)",
+          "bought": [
+            {
+              "symbol": "SPMO",
+              "shares": 17,
+              "avg": 148.45,
+              "order": "6ace9771-3385-4dbf-9266-b527eff44b05"
+            },
+            {
+              "symbol": "TQQQ",
+              "shares": 98,
+              "avg": 78.665,
+              "order": "6ace9773-0a0b-4bc2-9164-bd9d1e71b49c"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-15",
+          "kind": "tier-10",
+          "amount": 9400.0,
+          "basket": {
+            "SPMO": {
+              "shares": 16,
+              "limit": 144.58
+            },
+            "TQQQ": {
+              "shares": 96,
+              "limit": 74.04
+            }
+          },
+          "note": "planned $9,422; owner transferred $9,400 on 2026-10-15 (cash seen in Agentic)",
+          "bought": [
+            {
+              "symbol": "SPMO",
+              "shares": 16,
+              "avg": 144.2,
+              "order": "6ad1343a-5793-4d05-acff-cfac32b58fd1"
+            },
+            {
+              "symbol": "TQQQ",
+              "shares": 96,
+              "avg": 73.749,
+              "order": "6ad1346d-ba9a-485f-92be-48b935e20b77"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-16",
+          "kind": "tier-15",
+          "amount": 20950.89,
+          "note": "owner draw for the 16 Oct -15% tier, borrowed in 6826 and transferred by the owner; amount = cash seen in Agentic ($21,020.13 - $69.24), above the min(10% acct, 25% collateral) cap of $34,795 by owner choice; Support confirmed internal transfers keep the bonus",
+          "bought": [
+            {
+              "symbol": "TQQQ",
+              "shares": 153,
+              "avg": 68.15,
+              "order": "6ad2a008-3f5a-4e55-a064-92c2ef084be1"
+            },
+            {
+              "symbol": "QLD",
+              "shares": 120,
+              "avg": 87.73,
+              "order": "6ad2a00c-c360-47d2-b8bd-cb0545c63518"
+            }
+          ]
+        }
+      ],
+      "net_events": [],
+      "repay": {
+        "date": "2026-10-19",
+        "reason": "owner: VTI/VXUS sold in 6826, sale proceeds paid the margin balance to $0",
+        "amount": 40674.23,
+        "note": "repaid outside Agentic; no cash held in the strategy",
+        "settled": "2026-10-19"
+      }
+    }
+  ],
+  "netted": 0.0,
+  "net_events": []
 }

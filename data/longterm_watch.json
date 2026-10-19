@@ -51,5 +51,7 @@
     ]
   },
   "reached": [],
-  "other_holdings": "The rest of the ~$170k is crypto in the same account's crypto wallet (BTC 0.1708, ETH 7.469, SOL 39.94; ~$39k on 2026-09-24). Crypto is not margin collateral, so the margin-call arithmetic uses the VTI/VXUS stake only. No cash is set aside for dip buys: every level is a margin buy."
+  "other_holdings": "The rest of the ~$170k is crypto in the same account's crypto wallet (BTC 0.1708, ETH 7.469, SOL 39.94; ~$39k on 2026-09-24). Crypto is not margin collateral, so the margin-call arithmetic uses the VTI/VXUS stake only. No cash is set aside for dip buys: every level is a margin buy.",
+  "retired": "2026-10-19",
+  "retired_note": "owner sold VTI/VXUS in 6826 and moved the cash to Agentic (Robinhood kept to one strategy; diversification held at other brokerages). No LT line in the push; levels kept for history."
 }

@@ -158,7 +158,7 @@ def net_value(led, account_value, today):
 def cap(led, account_value):
     c = CAP_ACCOUNT_PCT * account_value
     coll = (led or {}).get('collateral_value')
-    if coll:
+    if coll is not None:            # 0 = no marginable collateral left -> no room
         c = min(c, CAP_COLLATERAL_PCT * float(coll))
     return c
 

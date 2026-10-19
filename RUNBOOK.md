@@ -132,6 +132,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
   - missing records
   - a long-term buy level (below)
 - **Then the shape:** `Agentic $X (±$Y / ±Z% strategy) · <eff> <split>, drift d% · <traded …|no trade> · VIXM <in/out/latch> · DD -x% · recorded`.
+- **Long-term line: RETIRED 2026-10-19** (VTI/VXUS sold; `longterm_watch.json` has `retired`). Skip the two bullets below while `retired` is set.
 - **Long-term line.** `data/longterm_watch.json` holds VTI and VXUS entries in the owner's account ending 6826, which is READ-ONLY.
   - Add `LT: VTI ±a%, VXUS ±b% vs entry`.
   - When a level not yet in `reached` closes at or below, lead with `BUY-MORE LEVEL …`, append it to `reached`, and commit.
