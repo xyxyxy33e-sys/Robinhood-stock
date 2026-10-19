@@ -56,6 +56,10 @@ RUNS_DIR = os.path.join(ROOT, 'data', 'runs')
 LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')     # == state.LIVE_LEGS order
 LEGS5 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')             # shadow tracks / old NAV
 SYMS = ('QQQ', 'QQEW') + LEGS6
+# Funding-policy triggers (drawdown tiers, D/E/F -> A/B/C turn) and their margin draws:
+# OFF from 2026-10-19 (owner: "remove the funding trigger"). The drawdown log still
+# records the tiers (drawdown_tracker); nothing is pushed and nothing is borrowed.
+FUNDING_TRIGGERS = False
 LIMIT_BAND = 0.003            # never more than 0.3% through the touch
 YAHOO_DAILY = "https://query2.finance.yahoo.com/v8/finance/chart/{sym}?range=1y&interval=1d"
 
@@ -408,7 +412,7 @@ def cmd_signal(inp, write=True):
         # push events (RUNBOOK: exactly these)
         if r['state'] != rp['state']:
             pushes.append(f"Regime shift: macro {rp['state']} -> {r['state']} ({S.STATE_LABEL[r['state']]})")
-        if rp['eff'] in 'DEF' and r['eff'] in 'ABC':
+        if FUNDING_TRIGGERS and rp['eff'] in 'DEF' and r['eff'] in 'ABC':
             amt = FP.turn_funding_amount(tv)
             pushes.append(f"FUNDING TRIGGER (turn): effective {rp['eff']} -> {r['eff']}; account ${tv:,.0f}; "
                           f"suggested deposit ${amt:,.0f}")
@@ -554,7 +558,7 @@ def cmd_record(inp):
         MF.save(led)
     if np_ and np_.get('notified') == date:
         out_lines.append(f"margin netting: {np_['kind']} ${np_['amount']:,.0f} requested today (see the trade-run push)")
-    if tier:
+    if tier and FUNDING_TRIGGERS:
         amt = FP.tier_funding_amount(tv, tier)
         pushes.append(f"FUNDING TRIGGER (drawdown): strategy crossed -{int(tier*100)}% from its 252-day high; "
                       f"account ${tv:,.0f}; suggested deposit ${amt:,.0f}")

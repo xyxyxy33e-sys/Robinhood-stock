@@ -121,7 +121,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 2.6 **One push** per trading day: `PushNotification`, proactive, one line, at most about 250 characters, figures only.
 - **Lead with whatever needs the owner:**
   - a guard trip, or a missed or fallback run, naming any legs that wait for the open
-  - a funding trigger, quoted exactly as `live_run.py` printed it
+  - ~~a funding trigger~~ — removed 2026-10-19 (owner); `live_run.py` no longer prints one
   - a `MARGIN DRAW`, `MARGIN DRAW (re-borrow)`, `MARGIN REPAY` or `MARGIN REPAY DUE` line, quoted exactly
     (the owner moves the money; the run never does). `live_run.py record` repeats the trade run's margin
     lines as `PUSH:` so the post-close push carries them.
