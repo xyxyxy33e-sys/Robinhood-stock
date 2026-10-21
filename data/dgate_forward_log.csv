@@ -1,4 +1,5 @@
 date,eff_state,x60,pct,gate,qld_next,qqq_next,note
 2026-10-16,D,-0.005399,0.7083,0,0.023484,0.012003,gap200=+5.1% gap_flag=False applied=False
 2026-10-19,D,-0.010040,0.6607,0,-0.003453,-0.001169,gap200=+6.4% gap_flag=False applied=False
-2026-10-20,D,-0.019467,0.5615,0,,,gap200=+6.1% gap_flag=False applied=False
+2026-10-20,D,-0.019467,0.5615,0,0.021890,0.010563,gap200=+6.1% gap_flag=False applied=False
+2026-10-21,D,-0.036907,0.3790,0,,,gap200=+7.3% gap_flag=False applied=False

@@ -243,7 +243,7 @@
  ],
  "sweep": {},
  "pushes": [],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-10-21",
   "time": "15:50 ET",
@@ -320,5 +320,60 @@
   },
   "idle_cash": 47.29,
   "total_value": 620441.34559779
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 4278.0,
+    "price": 72.9501
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 0.168219,
+    "price": 72.9701
+   },
+   {
+    "symbol": "SPMO",
+    "side": "buy",
+    "quantity": 0.739937,
+    "price": 143.3499
+   },
+   {
+    "symbol": "SPMO",
+    "side": "buy",
+    "quantity": 2165.0,
+    "price": 143.3126
+   },
+   {
+    "symbol": "QLD",
+    "side": "buy",
+    "quantity": 0.731088,
+    "price": 91.7399
+   },
+   {
+    "symbol": "QLD",
+    "side": "buy",
+    "quantity": 16.0,
+    "price": 91.68
+   },
+   {
+    "symbol": "SPMO",
+    "side": "buy",
+    "quantity": 0.7739,
+    "price": 143.3
+   },
+   {
+    "symbol": "QLD",
+    "side": "buy",
+    "quantity": 1.20925,
+    "price": 91.7097
+   }
+  ],
+  "nav_return": 0.02663862262188954,
+  "tier": null,
+  "session_lag": 0
  }
 }
