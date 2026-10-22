@@ -221,14 +221,23 @@ def signals(qpx, ewpx):
         nh = np.where(raw > h, raw, np.where((h > raw) & hi15, h - 1, h))
         h = np.where(ina, nh, h).astype(np.int8)
         held[:, t] = np.where(ina, h, 0)
-    gate = (macro == 3) & ((pct < S.D_GATE_BREADTH_PCT) | (gaps[200] < S.D_GATE_GAP200))
+    gate_b = (macro == 3) & (pct < S.D_GATE_BREADTH_PCT)
+    gate_g = (macro == 3) & (gaps[200] < S.D_GATE_GAP200)
+    gate = gate_b | gate_g
     zone = np.where(gaps[100] > 0, 1, np.where(gaps[150] > 0, 2, 3))
     return dict(macro=macro, fast=fast, eff=eff, eff_slow=eff_slow, gaps=gaps, vol=vol, vol10=vol10,
-                pct=pct, held=held, votes=votes, gate=gate, zone=zone)
+                pct=pct, held=held, votes=votes, gate=gate, gate_b=gate_b, gate_g=gate_g, zone=zone)
 
 
 def _eff(sig, cfg):
     return sig['eff'] if cfg['fast'] else sig['eff_slow']
+
+
+def _gate(sig, cfg):
+    """D gate per cfg: 'both' (live: breadth OR gap200), 'breadth', 'gap200', or off."""
+    if not cfg['d_gate']:
+        return np.zeros_like(sig['gate'])
+    return {'both': sig['gate'], 'breadth': sig['gate_b'], 'gap200': sig['gate_g']}[cfg.get('d_gate_mode', 'both')]
 
 
 def target_weights(sig, cfg=LIVE):
@@ -256,9 +265,10 @@ def target_weights(sig, cfg=LIVE):
             c, tq, q = S.D_LADDER_ROWS[k]
             w[(eff == 3) & (sig['zone'] == z)] = (c, tq, q, 0.0, 0.0)
     if cfg['d_gate']:
-        w[sig['gate']] = (0.0, 0.0, 0.0, 0.0, 1.0)
+        w[_gate(sig, cfg)] = (0.0, 0.0, 0.0, 0.0, 1.0)
     v = sig['vol'] if cfg['vol'] == '30' else np.fmax(sig['vol'], np.where(np.isnan(sig['vol']), np.nan, sig['vol10']))
-    mult = np.where(np.isnan(v) | (v <= 0), 1.0, np.minimum(1.0, S.VOL_TARGET_PA / np.where(v > 0, v, 1)))
+    vt = cfg.get('vol_target', S.VOL_TARGET_PA)
+    mult = np.where(np.isnan(v) | (v <= 0), 1.0, np.minimum(1.0, vt / np.where(v > 0, v, 1)))
     w[..., :4] *= mult[..., None]
     w[..., 4] = 1.0 - w[..., :4].sum(-1)
     return w
@@ -273,7 +283,7 @@ def regime_key(sig, cfg=LIVE):
         k = k + sig['held'] * 100
     elif cfg['trim'] == 'v1':
         k = k + np.where(eff == 0, sig['votes'], 0) * 100
-    gate = sig['gate'] if cfg['d_gate'] else np.zeros_like(sig['gate'])
+    gate = _gate(sig, cfg)
     if cfg['d_gate']:
         k = k + gate * 10
     if cfg['d_ladder']:
