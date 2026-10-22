@@ -116,6 +116,11 @@ Only after the orders are placed: one short line to the session ("traded / no tr
   No inline `python3 -` scripts: they are not pre-approved and stop an unattended run at a permission prompt.
 - Account value is NET of the margin loan (the `NET` line `live_run.py record` prints: value minus loan + interest), with the gross value beside it.
 - Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
+- **Realized column in the positions table** (added 2026-10-22, owner): on a day with any sell, refresh it from
+  `get_pnl_trade_history(account_number='576391551', span='all')`: per-symbol sums of `realized_gain` for SPMO, QLD,
+  TQQQ, VIXM, BOXX; the "closed earlier" row is everything else (gold, the 31 Aug stock mirror, pre-strategy trades);
+  the total must equal `get_realized_pnl(span='all', asset_classes=['equity'])['total_returns']`. Sum in code, never
+  by hand. Robinhood's figures are before wash-sale deferral; keep the note saying so.
 - **Cumulative return section** (added 2026-10-22, owner): `dashboard_figures.py` prints a `cumulative since ...` block.
   Replace the whole `const CUM = [...];` line in the page script with the printed one; set the three figures
   (`id="cum-s"`, `cum-q`, `cum-m`, sign class `pos`/`neg`), their sub-lines (NAV and distance from its high;
