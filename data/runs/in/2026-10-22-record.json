@@ -1,0 +1,14 @@
+{"date": "2026-10-22",
+ "closes": {"QQQ": 704.59, "QQEW": 154.99, "SPMO": 138.745, "TQQQ": 66.41, "QLD": 86.24, "XLU": 42.8597, "BOXX": 118.6992, "VIXM": 13.215},
+ "fills": [
+  {"symbol": "SPMO", "side": "sell", "quantity": 2166.0, "price": 138.7701},
+  {"symbol": "SPMO", "side": "sell", "quantity": 0.513837, "price": 138.7701},
+  {"symbol": "QLD", "side": "sell", "quantity": 378.0, "price": 86.2432},
+  {"symbol": "QLD", "side": "sell", "quantity": 0.21069, "price": 86.2317},
+  {"symbol": "TQQQ", "side": "buy", "quantity": 3901.0, "price": 66.39},
+  {"symbol": "TQQQ", "side": "buy", "quantity": 0.798585, "price": 66.3799},
+  {"symbol": "BOXX", "side": "buy", "quantity": 624.0, "price": 118.6974},
+  {"symbol": "BOXX", "side": "buy", "quantity": 0.615754, "price": 118.6999},
+  {"symbol": "BOXX", "side": "buy", "quantity": 0.656361, "price": 118.6999}
+ ],
+ "session_lag": 0, "total_value": 592630.7166213485}
