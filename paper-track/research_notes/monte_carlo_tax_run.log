@@ -1,0 +1,258 @@
+# After-tax Monte Carlo 2026-10-22 01:23 paths=500
+
+Median 10-year CAGR, pre-tax → after tax (liquidated at the end); in brackets, share of paths beating QQQ after tax.
+
+### top (ST 40.8% / LT 23.8%)
+
+| cell | QQQ buy-and-hold | live, FIFO lots | live, HIFO lots | live + 10% band, HIFO |
+|---|---|---|---|---|
+| proxy/L60 | 9.5% → **7.8%** | 12.0% → **6.8%** (47% beat QQQ) | 12.0% → **6.9%** (47% beat QQQ) | 12.1% → **7.0%** (46% beat QQQ) |
+| proxy/L120 | 10.5% → **8.7%** | 18.5% → **10.9%** (66% beat QQQ) | 18.5% → **10.9%** (66% beat QQQ) | 18.4% → **11.0%** (67% beat QQQ) |
+| holdout/L60 | 3.6% → **2.9%** | 7.1% → **3.6%** (55% beat QQQ) | 7.1% → **3.6%** (55% beat QQQ) | 7.0% → **3.7%** (56% beat QQQ) |
+| real/L60 | 19.2% → **16.6%** | 22.5% → **13.4%** (30% beat QQQ) | 22.5% → **13.5%** (30% beat QQQ) | 22.6% → **13.7%** (30% beat QQQ) |
+| real/L120 | 19.5% → **16.9%** | 32.2% → **19.4%** (65% beat QQQ) | 32.2% → **19.5%** (65% beat QQQ) | 32.5% → **19.7%** (67% beat QQQ) |
+
+### middle (ST 24% / LT 15%)
+
+| cell | QQQ buy-and-hold | live, FIFO lots | live, HIFO lots | live + 10% band, HIFO |
+|---|---|---|---|---|
+| proxy/L60 | 9.5% → **8.5%** | 12.0% → **9.0%** (57% beat QQQ) | 12.0% → **9.1%** (57% beat QQQ) | 12.1% → **9.1%** (57% beat QQQ) |
+| proxy/L120 | 10.5% → **9.4%** | 18.5% → **14.0%** (76% beat QQQ) | 18.5% → **14.1%** (76% beat QQQ) | 18.4% → **14.0%** (76% beat QQQ) |
+| holdout/L60 | 3.6% → **3.1%** | 7.1% → **5.0%** (61% beat QQQ) | 7.1% → **5.0%** (62% beat QQQ) | 7.0% → **5.0%** (61% beat QQQ) |
+| real/L60 | 19.2% → **17.6%** | 22.5% → **17.3%** (48% beat QQQ) | 22.5% → **17.3%** (48% beat QQQ) | 22.6% → **17.4%** (48% beat QQQ) |
+| real/L120 | 19.5% → **17.9%** | 32.2% → **24.7%** (84% beat QQQ) | 32.2% → **24.8%** (84% beat QQQ) | 32.5% → **25.0%** (85% beat QQQ) |
+
+```json
+{
+ "proxy/L60": {
+  "top (ST 40.8% / LT 23.8%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.09472436318248423,
+    "post_cagr": 0.07812125156235528,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.12022577078901486,
+    "post_cagr": 0.06847100225018732,
+    "p_beats_qqq_after_tax": 0.466
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.12022577078901486,
+    "post_cagr": 0.06925870432394032,
+    "p_beats_qqq_after_tax": 0.466
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.12090098263018889,
+    "post_cagr": 0.07013589995343461,
+    "p_beats_qqq_after_tax": 0.464
+   }
+  },
+  "middle (ST 24% / LT 15%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.09472436318248423,
+    "post_cagr": 0.08452945188439343,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.12022577078901486,
+    "post_cagr": 0.09001946548946282,
+    "p_beats_qqq_after_tax": 0.566
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.12022577078901486,
+    "post_cagr": 0.09076853562042964,
+    "p_beats_qqq_after_tax": 0.566
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.12090098263018889,
+    "post_cagr": 0.09147716205712875,
+    "p_beats_qqq_after_tax": 0.566
+   }
+  }
+ },
+ "proxy/L120": {
+  "top (ST 40.8% / LT 23.8%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.10491388089672882,
+    "post_cagr": 0.08707126835753687,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.18466147513121467,
+    "post_cagr": 0.10852274364813985,
+    "p_beats_qqq_after_tax": 0.662
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.18466147513121467,
+    "post_cagr": 0.10913128550332918,
+    "p_beats_qqq_after_tax": 0.662
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.1839385138402383,
+    "post_cagr": 0.10950419723566274,
+    "p_beats_qqq_after_tax": 0.67
+   }
+  },
+  "middle (ST 24% / LT 15%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.10491388089672882,
+    "post_cagr": 0.09397697546356443,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.18466147513121467,
+    "post_cagr": 0.14022661380670665,
+    "p_beats_qqq_after_tax": 0.76
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.18466147513121467,
+    "post_cagr": 0.14066108380645104,
+    "p_beats_qqq_after_tax": 0.76
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.1839385138402383,
+    "post_cagr": 0.13999334621342818,
+    "p_beats_qqq_after_tax": 0.762
+   }
+  }
+ },
+ "holdout/L60": {
+  "top (ST 40.8% / LT 23.8%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.03614003698397883,
+    "post_cagr": 0.028523499638801852,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.07102815726694656,
+    "post_cagr": 0.03607792766671525,
+    "p_beats_qqq_after_tax": 0.554
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.07102815726694656,
+    "post_cagr": 0.0362020873778266,
+    "p_beats_qqq_after_tax": 0.554
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.07029042494508786,
+    "post_cagr": 0.03682404057650224,
+    "p_beats_qqq_after_tax": 0.556
+   }
+  },
+  "middle (ST 24% / LT 15%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.03614003698397883,
+    "post_cagr": 0.031398977683405827,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.07102815726694656,
+    "post_cagr": 0.05022082445948206,
+    "p_beats_qqq_after_tax": 0.612
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.07102815726694656,
+    "post_cagr": 0.05029260915238021,
+    "p_beats_qqq_after_tax": 0.616
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.07029042494508786,
+    "post_cagr": 0.050149337925373905,
+    "p_beats_qqq_after_tax": 0.614
+   }
+  }
+ },
+ "real/L60": {
+  "top (ST 40.8% / LT 23.8%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.19177749419199686,
+    "post_cagr": 0.16594039025025686,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.22467416949496188,
+    "post_cagr": 0.13449878851536579,
+    "p_beats_qqq_after_tax": 0.298
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.22467416949496188,
+    "post_cagr": 0.13529405465033106,
+    "p_beats_qqq_after_tax": 0.3
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.2260419859376488,
+    "post_cagr": 0.1369476993694756,
+    "p_beats_qqq_after_tax": 0.304
+   }
+  },
+  "middle (ST 24% / LT 15%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.19177749419199686,
+    "post_cagr": 0.17609724212503286,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.22467416949496188,
+    "post_cagr": 0.17275922039099278,
+    "p_beats_qqq_after_tax": 0.478
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.22467416949496188,
+    "post_cagr": 0.17319238877788223,
+    "p_beats_qqq_after_tax": 0.48
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.2260419859376488,
+    "post_cagr": 0.17444245084239896,
+    "p_beats_qqq_after_tax": 0.478
+   }
+  }
+ },
+ "real/L120": {
+  "top (ST 40.8% / LT 23.8%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.1952722314341766,
+    "post_cagr": 0.16918574652325924,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.32175110050042266,
+    "post_cagr": 0.19388657619802485,
+    "p_beats_qqq_after_tax": 0.648
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.32175110050042266,
+    "post_cagr": 0.19483385970065314,
+    "p_beats_qqq_after_tax": 0.652
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.32469605358539877,
+    "post_cagr": 0.19655181237193298,
+    "p_beats_qqq_after_tax": 0.668
+   }
+  },
+  "middle (ST 24% / LT 15%)": {
+   "QQQ buy-and-hold": {
+    "pre_cagr": 0.1952722314341766,
+    "post_cagr": 0.17944481508793775,
+    "p_beats_qqq_after_tax": 0.0
+   },
+   "live, FIFO lots": {
+    "pre_cagr": 0.32175110050042266,
+    "post_cagr": 0.2474151385318809,
+    "p_beats_qqq_after_tax": 0.844
+   },
+   "live, HIFO lots": {
+    "pre_cagr": 0.32175110050042266,
+    "post_cagr": 0.24821878171332912,
+    "p_beats_qqq_after_tax": 0.844
+   },
+   "live + 10% band, HIFO": {
+    "pre_cagr": 0.32469605358539877,
+    "post_cagr": 0.2501299167163641,
+    "p_beats_qqq_after_tax": 0.852
+   }
+  }
+ }
+}
+```
