@@ -58,12 +58,27 @@ import breadth_tracker as BT  # noqa: E402
 
 COST = 0.0004
 QQQ_DIV, SPY_DIV = 0.006, 0.018          # %/yr dividend accrual on the proxy panel
+XLU_DIV = 0.03                            # flat XLU yield (long_history_backtest), both panels
 FIN_SPREAD, TQQQ_ER, QLD_ER = 0.003, 0.0084, 0.0095
 WARMUP = 420                              # sessions before the scored horizon (classifier converges <= 323)
 A_BASE = (0.25, 0.75)                     # live A base from 2026-10-09
-ROWS = {0: (0.0, 0.0, 0.0, 0.0), 1: (0.75, 0.25, 0.0, 0.0), 2: (1.0, 0.0, 0.0, 0.0),
-        4: (0.0, 0.0, 0.0, 1.0), 5: (0.0, 0.0, 0.0, 1.0)}   # (core, tqqq, qld, cash); A, D built below
 LETTERS = 'ABCDEF'
+
+# A design = the rows and overlays a release traded. LIVE is the 2026-10-09
+# release; monte_carlo_versions.py builds the earlier ones from the same keys.
+# Rows are (core, tqqq, qld, xlu, cash) before the vol target.
+LIVE = dict(
+    name='2026-10-09 live (A 25/75 + D ladder)',
+    rows={'B': (0.75, 0.25, 0, 0, 0), 'C': (1, 0, 0, 0, 0), 'D': (0, 0, 1, 0, 0),
+          'E': (0, 0, 0, 0, 1), 'F': (0, 0, 0, 0, 1)},
+    a_base=A_BASE,
+    fast=True,            # 20/100 re-entry overlay on B/C/F
+    trim='v2',            # 'none' | 'v1' (risky x (1 - step*votes)) | 'v2' (held votes, TQQQ out)
+    trim_step=1 / 3,      # v1 only
+    d_gate=True, d_ladder=True,
+    vol='30',             # '30' | 'max10_30'
+    band=0.05, stubs=True,
+)
 
 
 # --------------------------------------------------------------------------- data
@@ -128,6 +143,8 @@ def load_panel(kind):
     ew[[i for i, d in enumerate(dates) if d == first_qqew]] = 0.0
     p = dict(dates=dates, qqq=rq, ew=ew, cash=cash, spy=_rets(spy, dates) + SPY_DIV * yf,
              qqq_tr=rq + QQQ_DIV * yf)
+    xlu = _load('xlu_ohlc.csv') if kind == 'real' else _load('xlu_long_history.csv')
+    p['xlu'] = _rets(xlu, dates) + XLU_DIV * yf
     if kind == 'real':
         p.update(core=_rets(spmo, dates), tqqq=_rets(tq, dates), qld=_rets(ql, dates),
                  spmo=_rets(spmo, dates), qqq_tr=rq.copy(), spy=_rets(spy, dates))
@@ -173,14 +190,17 @@ def signals(qpx, ewpx):
     macro = _classify(qpx, 50, 200)
     fast = _classify(qpx, 20, 100)
     eff = macro.copy()
+    eff_slow = macro.copy()
     eff[(macro == 1) & (fast <= 1)] = 0
     eff[(macro == 2) & (fast <= 1)] = 0
     eff[(macro == 5) & (fast <= 2)] = 2
     gaps = {n: qpx / _sma(qpx, n) - 1 for n in (100, 150, 200)}
-    vol = np.full((P, T), np.nan)
+    vol = np.full((P, T), np.nan); vol10 = np.full((P, T), np.nan)
     sr = qpx[:, 1:] / qpx[:, :-1] - 1                                # simple returns, as realized_vol
-    for t in range(30, T):
-        vol[:, t] = sr[:, t - 30:t].std(axis=1, ddof=1) * math.sqrt(252)
+    for t in range(10, T):
+        vol10[:, t] = sr[:, t - 10:t].std(axis=1, ddof=1) * math.sqrt(252)
+        if t >= 30:
+            vol[:, t] = sr[:, t - 30:t].std(axis=1, ddof=1) * math.sqrt(252)
     # breadth: x60 = log(EW/QQQ) change over 60 sessions; pct = trailing-252 rank (incl. itself)
     lrel = np.log(ewpx / qpx)
     x = np.full((P, T), np.nan); x[:, 60:] = lrel[:, 60:] - lrel[:, :-60]
@@ -203,42 +223,65 @@ def signals(qpx, ewpx):
         held[:, t] = np.where(ina, h, 0)
     gate = (macro == 3) & ((pct < S.D_GATE_BREADTH_PCT) | (gaps[200] < S.D_GATE_GAP200))
     zone = np.where(gaps[100] > 0, 1, np.where(gaps[150] > 0, 2, 3))
-    return dict(macro=macro, fast=fast, eff=eff, gaps=gaps, vol=vol, pct=pct, held=held,
-                gate=gate, zone=zone)
+    return dict(macro=macro, fast=fast, eff=eff, eff_slow=eff_slow, gaps=gaps, vol=vol, vol10=vol10,
+                pct=pct, held=held, votes=votes, gate=gate, zone=zone)
 
 
-def target_weights(sig, a_base=A_BASE):
-    """(P, T, 4) live targets (core, tqqq, qld, cash) after the vol target."""
-    eff, held = sig['eff'], sig['held']
+def _eff(sig, cfg):
+    return sig['eff'] if cfg['fast'] else sig['eff_slow']
+
+
+def target_weights(sig, cfg=LIVE):
+    """(P, T, 5) targets (core, tqqq, qld, xlu, cash) after the vol target, for design cfg."""
+    eff, held = _eff(sig, cfg), sig['held']
     P, T = eff.shape
-    w = np.zeros((P, T, 4))
-    for s, row in ROWS.items():
-        w[eff == s] = row
-    c0, t0 = a_base
+    w = np.zeros((P, T, 5))
+    for s_, row in cfg['rows'].items():
+        w[eff == LETTERS.index(s_)] = row
     a = eff == 0
-    core = c0 * (1 - S.EXTENSION_CORE_CUT_PER_VOTE * held)
-    w[..., 0] = np.where(a, core, w[..., 0])
-    w[..., 1] = np.where(a, np.where(held == 0, t0, 0.0), w[..., 1])
-    w[..., 2] = np.where(a, 0.0, w[..., 2])
-    for z, (c, tq, q) in {1: S.D_LADDER_ROWS['D1'], 2: S.D_LADDER_ROWS['D2'],
-                          3: S.D_LADDER_ROWS['D3']}.items():
-        m = (eff == 3) & (sig['zone'] == z)
-        w[m] = (c, tq, q, 0.0)
-    w[sig['gate']] = (0.0, 0.0, 0.0, 1.0)
-    v = sig['vol']
+    if cfg['trim'] == 'v2':
+        # held votes are computed on the fast-overlay A spells; v2 never ran without the overlay
+        c0, t0 = cfg['a_base']
+        w[a] = 0.0
+        w[..., 0] = np.where(a, c0 * (1 - S.EXTENSION_CORE_CUT_PER_VOTE * held), w[..., 0])
+        w[..., 1] = np.where(a, np.where(held == 0, t0, 0.0), w[..., 1])
+    else:
+        c0, t0 = cfg['a_base']
+        w[a] = (c0, t0, 0.0, 0.0, 0.0)
+        if cfg['trim'] == 'v1':
+            f = np.maximum(0.0, 1 - cfg['trim_step'] * sig['votes'])
+            w[..., :4] = np.where(a[..., None], w[..., :4] * f[..., None], w[..., :4])
+    if cfg['d_ladder']:
+        for z, k in ((1, 'D1'), (2, 'D2'), (3, 'D3')):
+            c, tq, q = S.D_LADDER_ROWS[k]
+            w[(eff == 3) & (sig['zone'] == z)] = (c, tq, q, 0.0, 0.0)
+    if cfg['d_gate']:
+        w[sig['gate']] = (0.0, 0.0, 0.0, 0.0, 1.0)
+    v = sig['vol'] if cfg['vol'] == '30' else np.fmax(sig['vol'], np.where(np.isnan(sig['vol']), np.nan, sig['vol10']))
     mult = np.where(np.isnan(v) | (v <= 0), 1.0, np.minimum(1.0, S.VOL_TARGET_PA / np.where(v > 0, v, 1)))
-    w[..., :3] *= mult[..., None]
-    w[..., 3] = 1.0 - w[..., :3].sum(-1)
+    w[..., :4] *= mult[..., None]
+    w[..., 4] = 1.0 - w[..., :4].sum(-1)
     return w
 
 
-def regime_key(sig):
-    """Anything whose change forces a rebalance: eff state, held votes, gate, D zone."""
-    z = np.where((sig['eff'] == 3) & ~sig['gate'], sig['zone'], 0)
-    return sig['eff'].astype(int) * 1000 + sig['held'] * 100 + sig['gate'] * 10 + z
+def regime_key(sig, cfg=LIVE):
+    """Anything whose change forces a rebalance: eff state, trim votes (held for v2, raw for
+    v1), D gate, D zone -- each only where the design has it."""
+    eff = _eff(sig, cfg)
+    k = eff.astype(int) * 1000
+    if cfg['trim'] == 'v2':
+        k = k + sig['held'] * 100
+    elif cfg['trim'] == 'v1':
+        k = k + np.where(eff == 0, sig['votes'], 0) * 100
+    gate = sig['gate'] if cfg['d_gate'] else np.zeros_like(sig['gate'])
+    if cfg['d_gate']:
+        k = k + gate * 10
+    if cfg['d_ladder']:
+        k = k + np.where((eff == 3) & ~gate, sig['zone'], 0)
+    return k
 
 
-def run_strategy(w, key, legs, start):
+def run_strategy(w, key, legs, start, band=S.REBALANCE_DRIFT_BAND, stubs=True):
     """Daily NAV returns from session start+1 on. legs (P, T, 4) simple returns.
     Rebalance at close t when the regime key changed, L1 drift > band, or a
     zero-target leg is held above ZERO_LEG_EPS; cost COST x turnover."""
@@ -249,8 +292,8 @@ def run_strategy(w, key, legs, start):
         if t > start:
             tgt = w[:, t]
             drift = np.abs(tgt - h).sum(1)
-            stub = ((tgt == 0) & (h > S.ZERO_LEG_EPS)).any(1)
-            reb = (key[:, t] != key[:, t - 1]) | (drift > S.REBALANCE_DRIFT_BAND) | stub
+            stub = ((tgt == 0) & (h > S.ZERO_LEG_EPS)).any(1) if stubs else False
+            reb = (key[:, t] != key[:, t - 1]) | (drift > band) | stub
             cost = np.where(reb, COST * drift, 0.0)
             h = np.where(reb[:, None], tgt, h)
             trades += reb
@@ -305,14 +348,14 @@ def simulate(panel, P, years, block, seed):
     qpx = 100 * np.cumprod(1 + g['qqq'], 1); ewpx = 100 * np.cumprod(1 + g['ew'], 1)
     sig = signals(qpx, ewpx)
     w = target_weights(sig)
-    legs = np.stack([g['core'], g['tqqq'], g['qld'], g['cash']], -1)
+    legs = np.stack([g['core'], g['tqqq'], g['qld'], g['xlu'], g['cash']], -1)
     start = WARMUP
     r, trades = run_strategy(w, regime_key(sig), legs, start)
     sl = slice(start + 1, T)
     cash = g['cash'][:, sl]
     res = {'strategy': stats(r, cash)}
     res['strategy']['trades_pa'] = trades / years
-    res['strategy']['exposure'] = w[:, start:T - 1, :3].sum(-1).mean(1)
+    res['strategy']['exposure'] = w[:, start:T - 1, :4].sum(-1).mean(1)
     lev = w[:, start:T - 1, 0] + 3 * w[:, start:T - 1, 1] + 2 * w[:, start:T - 1, 2]
     res['strategy']['leverage'] = lev.mean(1)
     qtr = g['qqq_tr'][:, sl]
@@ -361,7 +404,7 @@ def verify():
         if i % 25 == 0:
             ref = S.target_weights_with_voltarget(st[i], False, vol, fast_state=fa[d], gaps=gp[d], d_gate=gate,
                                                   a_trim=at[d] if at[d]['in_a'] else None, d_ladder=True)
-            mine = (w[i, 0], w[i, 1], w[i, 2], 0.0, w[i, 3])
+            mine = tuple(w[i])
             dd = max(abs(a - b) for a, b in zip(ref, mine)); worst = max(worst, dd)
             bad['w'] += dd > 1e-9
     n = len(dates) - 400
@@ -371,7 +414,7 @@ def verify():
     print(f"  worst weight diff: {worst:.2e}")
     # historical single-path run, 2001-01-02 on (the STRATEGY.md proxy window)
     s0 = next(i for i, d in enumerate(dates) if d >= '2001-01-02')
-    legs = np.stack([p['core'], p['tqqq'], p['qld'], p['cash']], -1)[None]
+    legs = np.stack([p['core'], p['tqqq'], p['qld'], p['xlu'], p['cash']], -1)[None]
     r, tr = run_strategy(target_weights(sig), regime_key(sig), legs, s0)
     m = stats(r, p['cash'][None, s0 + 1:]); q = stats(p['qqq_tr'][None, s0 + 1:])
     print(f"  historical proxy {dates[s0]}..{dates[-1]}: strategy {m['cagr'][0]*100:.1f}% / Sharpe "
@@ -383,7 +426,7 @@ def verify():
     sr = {k: (v[:, off:] if not isinstance(v, dict) else {n: a[:, off:] for n, a in v.items()})
           for k, v in sig.items()}
     s1 = next(i for i, d in enumerate(pr['dates']) if d >= '2015-11-02')
-    lr_ = np.stack([pr['core'], pr['tqqq'], pr['qld'], pr['cash']], -1)[None]
+    lr_ = np.stack([pr['core'], pr['tqqq'], pr['qld'], pr['xlu'], pr['cash']], -1)[None]
     r, tr = run_strategy(target_weights(sr), regime_key(sr), lr_, s1)
     m = stats(r); q = stats(pr['qqq'][None, s1 + 1:]); sp = stats(pr['spmo'][None, s1 + 1:])
     print(f"  historical real   {pr['dates'][s1]}..{pr['dates'][-1]}: strategy {m['cagr'][0]*100:.1f}% / "
