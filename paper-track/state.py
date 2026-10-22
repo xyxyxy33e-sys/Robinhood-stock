@@ -1099,7 +1099,7 @@ A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core,
 # 2026-10-22 (owner: "change to 40/60", after the drawdown-profile comparison of 25/75 .. 50/50):
 # every A session from 2026-10-22 holds 40/60. The book was in D that day, so it takes effect at
 # the next A session. The D ladder's D3 row followed to 40/60 the same day (owner: "Change d3
-# also"; D_LADDER_ROWS). A_BASE_FROM_SESSION is the LATEST override (research
+# also"), then went to 100% TQQQ (owner: "Change d3 to 100 tqqq"; D_LADDER_ROWS). A_BASE_FROM_SESSION is the LATEST override (research
 # harnesses replace it to pin one base); the earlier ones stay in A_BASE_FROM_SESSION_PRIOR so a
 # replay of 2026-10-09..10-21 still reads 25/75.
 A_BASE_FROM_SESSION_PRIOR = (('2026-10-09', (0.25, 0.75)),)
@@ -1284,13 +1284,16 @@ def d_gate_active(state, breadth_pct, gap200):
 # dict the extension trim uses (gap = close / SMA - 1):
 #   D1  close above the 100-day SMA (gaps[100] > 0)        50% SPMO / 50% QLD    1.5x
 #   D2  below the 100-day, above the 150-day (gaps[150] > 0) 50% TQQQ / 50% QLD  2.5x
-#   D3  below the 150-day (still above the 200-day: macro D) 40% SPMO / 60% TQQQ 2.2x
-#       (25/75, 2.5x, from 2026-10-09 until 2026-10-22; never held live at 25/75)
-# D3 is the A row, untrimmed: 25/75 with the 2026-10-09 release, 40/60 from 2026-10-22 when the
-# owner moved A back to 40/60 ("Change d3 also"). Since then D3 (2.2x) carries less leverage than
-# D2 (2.5x): the ladder is no longer monotone in depth. Engine (monte_carlo.py, max(10d, 30d) vol,
-# no VIXM), A 40/60 with D3 25/75 -> 40/60: real 44.2% / 1.890 / -17.7% -> 44.0% / 1.887 / -17.7%,
-# proxy 30.1% / 1.313 / -24.4% -> 29.9% / 1.309 / -24.2%.
+#   D3  below the 150-day (still above the 200-day: macro D) 100% TQQQ        3.0x
+#       (25/75 SPMO/TQQQ 2.5x from 2026-10-09; 40/60 2.2x earlier on 2026-10-22; neither held live)
+# D3 was the A row, untrimmed: 25/75 with the 2026-10-09 release, then 40/60 on 2026-10-22 when
+# the owner moved A back to 40/60 ("Change d3 also"). Later on 2026-10-22 the owner set D3 to
+# 100% TQQQ (3.0x, the most leveraged row in the design; D3 no longer follows A). Engine
+# (monte_carlo.py, max(10d, 30d) vol, no VIXM, A 40/60), D3 40/60 -> 100% TQQQ: real 44.0% / 1.887 /
+# -17.7% -> 44.5% / 1.892 / -18.4%, proxy 29.9% / 1.309 / -24.2% -> 30.4% / 1.320 / -24.6%,
+# holdout 20.2% / 0.959 -> 20.8% / 0.973. An ungated D3 day is rare (9 days / 8 episodes in
+# 2015-2026, 24 days / 17 episodes since 2001): the D gate usually has the book in cash below
+# the 150-day, so this row rests on very few events.
 # The owner's ordering: the shallow dip carries the least leverage; the deeper
 # dip and A carry more. The D gate still wins (whole row to cash) and the vol
 # target scales every row. A change of zone is a regime change for
@@ -1315,7 +1318,7 @@ D_LADDER_ENABLED = True
 D_LADDER_ROWS = {             # zone -> (core, tqqq, qld), before the vol target
     'D1': (0.50, 0.00, 0.50),
     'D2': (0.00, 0.50, 0.50),
-    'D3': (0.40, 0.60, 0.00),   # 2026-10-22: was (0.25, 0.75, 0.00); follows the A base (owner)
+    'D3': (0.00, 1.00, 0.00),   # 2026-10-22: 100% TQQQ (owner); was 40/60 earlier that day, 25/75 from 10-09
 }
 D_LADDER_WINDOWS = (100, 150)  # gaps[] keys of the D1/D2 and D2/D3 cut lines
 
