@@ -445,14 +445,16 @@ def check_d_ladder():
     QQQ's depth under its 100- and 150-day SMAs; the gate still wins; the vol target scales
     every row; the permissive function without d_ladder keeps 100% QLD (old backtests);
     the live function refuses a D day without the cut-line gaps; the A base for spells
-    starting on/after 2026-10-09 is 25/75 and the running spell keeps its row."""
+    starting on/after 2026-10-09 is 25/75 and the running spell keeps its row; from the
+    2026-10-22 session every A session holds 40/60 (owner), D3 stays 25/75."""
     from state import (D_LADDER_ENABLED, D_LADDER_ROWS, D_LADDER_WINDOWS, d_zone, d_ladder_row,
                        live_target_weights, target_weights_with_voltarget, MissingOverlayInputs,
                        vol_target_multiplier, a_base_row, A_BASE_ROWS, effective_state, STATE_LABEL)
     assert D_LADDER_ENABLED, "the D ladder is applied (2026-10-09); flipping it off is a design change"
     assert D_LADDER_WINDOWS == (100, 150)
     assert D_LADDER_ROWS == {'D1': (0.50, 0.00, 0.50), 'D2': (0.00, 0.50, 0.50), 'D3': (0.25, 0.75, 0.00)}
-    assert D_LADDER_ROWS['D3'] == A_BASE_ROWS[-1][1][:1] + A_BASE_ROWS[-1][1][1:] + (0.0,), "D3 is the A row"
+    rel = dict(A_BASE_ROWS)['2026-10-09']
+    assert D_LADDER_ROWS['D3'] == rel + (0.0,), "D3 is the A row of the 2026-10-09 release (unchanged when A went to 40/60)"
     lev = lambda r: r[0] + 3 * r[1] + 2 * r[2]
     assert lev(D_LADDER_ROWS['D1']) < lev(D_LADDER_ROWS['D2']) <= lev(D_LADDER_ROWS['D3']), "owner's ordering"
     z = lambda a, b: {100: a, 150: b, 200: 0.05}
@@ -489,16 +491,21 @@ def check_d_ladder():
             target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=gp, a_trim=at), f"ladder moved {st}"
     assert a_base_row('2026-08-04') == (0.50, 0.50), "the A spell running since 2026-08-04 keeps 50/50"
     assert a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2026-10-08') == (0.40, 0.60)
-    assert a_base_row('2026-10-09') == (0.25, 0.75) and a_base_row('2027-01-04') == (0.25, 0.75)
-    from state import a_base_for, A_BASE_FROM_SESSION
-    assert A_BASE_FROM_SESSION == ('2026-10-09', (0.25, 0.75)), "owner: the running spell moves to 25/75 on 2026-10-09"
+    assert a_base_row('2026-10-09') == (0.25, 0.75) and a_base_row('2026-10-21') == (0.25, 0.75)
+    assert a_base_row('2026-10-22') == (0.40, 0.60) and a_base_row('2027-01-04') == (0.40, 0.60)
+    from state import a_base_for, A_BASE_FROM_SESSION, A_BASE_FROM_SESSION_PRIOR
+    assert A_BASE_FROM_SESSION == ('2026-10-22', (0.40, 0.60)), "owner 2026-10-22: every A session from today holds 40/60"
+    assert A_BASE_FROM_SESSION_PRIOR == (('2026-10-09', (0.25, 0.75)),), "owner 2026-10-08: 25/75 from the 2026-10-09 session"
     assert a_base_for('2026-08-04', '2026-10-08') == (0.50, 0.50) and a_base_for('2026-08-04', '2026-10-09') == (0.25, 0.75)
-    assert a_base_for('2026-09-25', '2026-10-08') == (0.40, 0.60) and a_base_for('2026-11-02', '2026-11-02') == (0.25, 0.75)
+    assert a_base_for('2026-08-04', '2026-10-21') == (0.25, 0.75) and a_base_for('2026-10-12', '2026-10-21') == (0.25, 0.75)
+    assert a_base_for('2026-08-04', '2026-10-22') == (0.40, 0.60) and a_base_for('2026-10-12', '2026-10-23') == (0.40, 0.60)
+    assert a_base_for('2026-09-25', '2026-10-08') == (0.40, 0.60) and a_base_for('2026-11-02', '2026-11-02') == (0.40, 0.60)
     w = live_target_weights('A', False, 0.15, 'A', {100: 0.0, 150: 0.0, 200: 0.0}, 0.5,
                             _at('A', base=a_base_row('2026-10-12')))
     assert w == (0.25, 0.75, 0.0, 0.0, 0.0), w
     print("OK: D ladder -- D1 above the 100d 50/0/50, D2 100-150d 0/50/50, D3 below the 150d 25/75/0 "
-          "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A at 25/75 from the 2026-10-09 session (running spell included)")
+          "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A at 25/75 from the 2026-10-09 session, "
+          "40/60 from the 2026-10-22 session (running spell included)")
 
 
 check_d_ladder()
@@ -733,13 +740,14 @@ def check_extension_trim_v2():
     at the first held vote, core x (1 - held/6), held votes rise at once and come
     off one at a time only on a new 15-session closing high and never below the
     raw count, reset on leaving A; A spells starting on/after 2026-09-23 hold
-    40/60, on/after 2026-10-09 25/75. Checked on the real QQQ history (a pure function of closes)."""
+    40/60, on/after 2026-10-09 25/75, on/after 2026-10-22 40/60. Checked on the real QQQ history (a pure function of closes)."""
     import csv, os
     from state import (EXTENSION_TRIM_V2_ENABLED, EXTENSION_REENTRY_HIGH_N, EXTENSION_CORE_CUT_PER_VOTE,
                        A_BASE_ROWS, a_base_row, a_trim_row, a_trim_series, a_trim_state, validate_weights,
                        target_weights_with_voltarget, live_target_weights)
     assert EXTENSION_TRIM_V2_ENABLED and EXTENSION_REENTRY_HIGH_N == 15 and abs(EXTENSION_CORE_CUT_PER_VOTE - 1 / 6) < 1e-12
-    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2027-01-04') == (0.25, 0.75)
+    assert a_base_row('2026-08-04') == (0.50, 0.50) and a_base_row('2026-09-23') == (0.40, 0.60) and a_base_row('2026-10-09') == (0.25, 0.75) \
+        and a_base_row('2027-01-04') == (0.40, 0.60)
     for base in ((0.50, 0.50), (0.40, 0.60), (0.25, 0.75)):
         for held in range(4):
             r = a_trim_row(base, held)

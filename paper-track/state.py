@@ -1091,11 +1091,19 @@ EXTENSION_REENTRY_HIGH_N = 15
 EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
 A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
                ('2026-09-23', (0.40, 0.60)),   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
-               ('2026-10-09', (0.25, 0.75)))   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
-# 2026-10-08 evening ET (owner: "actually change to 75/25 tomorrow when market open"):
-# from this SESSION on, every A session holds this base whatever its spell start -- the spell
-# running since 2026-08-04 moves 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-09 session (the open, by a one-time rebalance).
-A_BASE_FROM_SESSION = ('2026-10-09', (0.25, 0.75))
+               ('2026-10-09', (0.25, 0.75)),   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
+               ('2026-10-22', (0.40, 0.60)))   # 2026-10-22: back to 40/60, owner ("change to 40/60")
+# Session overrides: from each SESSION on, every A session holds that base whatever its spell start.
+# 2026-10-08 evening ET (owner: "actually change to 75/25 tomorrow when market open"): the spell
+# running since 2026-08-04 moved 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-09 session (one-time rebalance).
+# 2026-10-22 (owner: "change to 40/60", after the drawdown-profile comparison of 25/75 .. 50/50):
+# every A session from 2026-10-22 holds 40/60. The book was in D that day, so it takes effect at
+# the next A session. The D ladder's D3 row stays 25/75 (the owner changed A only; moving D3 too
+# changes real/proxy figures by <= 0.2 pp). A_BASE_FROM_SESSION is the LATEST override (research
+# harnesses replace it to pin one base); the earlier ones stay in A_BASE_FROM_SESSION_PRIOR so a
+# replay of 2026-10-09..10-21 still reads 25/75.
+A_BASE_FROM_SESSION_PRIOR = (('2026-10-09', (0.25, 0.75)),)
+A_BASE_FROM_SESSION = ('2026-10-22', (0.40, 0.60))
 
 
 def a_base_row(spell_start):
@@ -1109,10 +1117,15 @@ def a_base_row(spell_start):
 
 def a_base_for(spell_start, session):
     """(core, tqqq) base row held on `session` inside an A spell that started on
-    spell_start: the spell's row, or A_BASE_FROM_SESSION's from that session on."""
-    since, row = A_BASE_FROM_SESSION
-    if session is not None and session >= since:
-        return row
+    spell_start: the spell's row, or the latest session override (A_BASE_FROM_SESSION,
+    then A_BASE_FROM_SESSION_PRIOR) whose date the session has reached."""
+    if session is not None:
+        since, row = A_BASE_FROM_SESSION
+        if session >= since:
+            return row
+        for since, row in sorted(A_BASE_FROM_SESSION_PRIOR, reverse=True):
+            if since < A_BASE_FROM_SESSION[0] and session >= since:
+                return row
     return a_base_row(spell_start)
 
 
@@ -1272,7 +1285,8 @@ def d_gate_active(state, breadth_pct, gap200):
 #   D1  close above the 100-day SMA (gaps[100] > 0)        50% SPMO / 50% QLD    1.5x
 #   D2  below the 100-day, above the 150-day (gaps[150] > 0) 50% TQQQ / 50% QLD  2.5x
 #   D3  below the 150-day (still above the 200-day: macro D) 25% SPMO / 75% TQQQ 2.5x
-# D3 is the A row of the same release (A_BASE_ROWS 2026-10-09), untrimmed.
+# D3 is the A row of the same release (A_BASE_ROWS 2026-10-09), untrimmed. It stayed 25/75
+# when A went back to 40/60 on 2026-10-22 (owner changed A only).
 # The owner's ordering: the shallow dip carries the least leverage; the deeper
 # dip and A carry more. The D gate still wins (whole row to cash) and the vol
 # target scales every row. A change of zone is a regime change for
