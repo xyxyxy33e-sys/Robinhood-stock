@@ -265,13 +265,18 @@ def target_weights(sig, cfg=LIVE):
             f = np.maximum(0.0, 1 - cfg['trim_step'] * sig['votes'])
             w[..., :4] = np.where(a[..., None], w[..., :4] * f[..., None], w[..., :4])
     if cfg['d_ladder']:
+        ladder = dict(S.D_LADDER_ROWS, **cfg.get('ladder_rows', {}))
         for z, k in ((1, 'D1'), (2, 'D2'), (3, 'D3')):
-            c, tq, q = S.D_LADDER_ROWS[k]
+            c, tq, q = ladder[k]
             w[(eff == 3) & (sig['zone'] == z)] = (c, tq, q, 0.0, 0.0)
     if cfg['d_gate']:
         w[_gate(sig, cfg)] = (0.0, 0.0, 0.0, 0.0, 1.0)
     v = sig['vol'] if cfg['vol'] == '30' else np.fmax(sig['vol'], np.where(np.isnan(sig['vol']), np.nan, sig['vol10']))
     vt = cfg.get('vol_target', S.VOL_TARGET_PA)
+    if cfg.get('vol_scope') == 'book':
+        # research only: scale by the row's own QQQ-equivalent leverage, so the target is on book vol
+        lev = w[..., 0] + 3 * w[..., 1] + 2 * w[..., 2] + w[..., 3]
+        v = np.where(lev > 0, v * np.maximum(lev, 1e-9), v)
     mult = np.where(np.isnan(v) | (v <= 0), 1.0, np.minimum(1.0, vt / np.where(v > 0, v, 1)))
     w[..., :4] *= mult[..., None]
     w[..., 4] = 1.0 - w[..., :4].sum(-1)
