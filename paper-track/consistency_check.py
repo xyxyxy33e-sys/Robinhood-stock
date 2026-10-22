@@ -1063,6 +1063,20 @@ def check_vixm_overlay():
     w6 = S.live_target_weights_with_vixm('A', False, 0.30, 'A', good, 0.5, _at('A'), on)
     assert w6[:4] == w5[:4] and abs(w6[4] + w6[5] - w5[4]) < 1e-12 and abs(w6[4] - 0.75 * w5[4]) < 1e-12
     S.validate_weights_live('A', *w6)
+    # --- 2026-10-22 (owner): VIXM off in ungated D2 only; D1, D3 and a gated D day keep it
+    assert S.VIXM_OFF_D_ZONES == ('D2',), "owner: VIXM off in D2 only"
+    d1, d2, d3 = ({100: 0.01, 150: 0.03, 200: 0.05}, {100: -0.01, 150: 0.02, 200: 0.05},
+                  {100: -0.04, 150: -0.01, 200: 0.05})
+    for gp, want_on in ((d1, True), (d2, False), (d3, True)):
+        w5 = S.live_target_weights('D', False, 0.30, 'D', gp, 0.5, _at('D'))
+        w6 = S.live_target_weights_with_vixm('D', False, 0.30, 'D', gp, 0.5, _at('D'), on)
+        assert w6[:4] == w5[:4] and abs(w6[4] + w6[5] - w5[4]) < 1e-12
+        assert (w6[4] > 0) == want_on, (S.d_zone(gp), w6)
+        S.validate_weights_live('D', *w6)
+    gated = dict(d2); gated[200] = 0.01
+    w6 = S.live_target_weights_with_vixm('D', False, 0.30, 'D', gated, 0.5, _at('D'), on)
+    assert w6 == (0, 0, 0, 0, 0.75, 0.25), "a gated D2 day is all cash, and the sleeve stays on"
+    assert not S.vixm_blocked('A', 'A', d2, 0.5) and S.vixm_blocked('D', 'D', d2, 0.5)
     try:
         S.validate_weights_live('E', 0, 0, 0, 0, 0.9, 0.1)
     except S.WeightSanityError:
@@ -1085,7 +1099,7 @@ def check_vixm_overlay():
     o, _ = CS.plan_sweep((0, 0, 0, 0, 0.75, 0.25), dict(VIXM=74000.0, BOXX=25000.0), 1000.0, 100000.0)
     assert set(o) == {'VIXM'} and abs(o['VIXM'] - 1000.0) < 0.01, o
     print("OK: VIXM sleeve -- latch on VIX<18 / off on VIX>VIX3M, only with QQQ vol >= 20%, 25% fade blocks "
-          "until stress resets, 75% of cash, strict live entry point, 6-leg validator/rebalance/deposit/sweep paths")
+          "until stress resets, 75% of cash, off in ungated D2 (2026-10-22), strict live entry point, 6-leg validator/rebalance/deposit/sweep paths")
 
 
 check_vixm_overlay()

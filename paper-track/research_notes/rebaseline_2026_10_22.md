@@ -15,7 +15,7 @@ proxy line reproduces its verified 33.7% / 1.310 / −26.6%.
 
 | | CAGR | Sharpe | Max DD | Avg DD | 95th-pct DD | Worst 12m | −15% episodes | Longest underwater |
 |---|---|---|---|---|---|---|---|---|
-| **Real ETFs 2015-11..2026-08, with VIXM** | **47.7%** | **2.01** | **−18.4%** | −3.3% | −12.4% | −11.0% | 3 | 221 d |
+| **Real ETFs 2015-11..2026-08, with VIXM** (off in D2, 2026-10-22) | **47.9%** | **2.01** | **−18.4%** | −3.4% | −12.4% | −11.0% | 3 | 221 d |
 | real, no VIXM | 44.5% | 1.89 | −18.4% | −3.7% | −13.7% | −12.7% | 4 | 326 d |
 | real, before today (A 25/75, D3 25/75, 30d vol) | 53.9% | 1.97 | −19.3% | −4.2% | −15.0% | −13.3% | 6 | 297 d |
 | QQQ / SPMO / SPY held | 18.6 / 17.5 / 12.8% | 0.88 / 0.89 / 0.77 | −35.6 / −31.3 / −34.1% | | | | | |
@@ -29,6 +29,8 @@ Real panel: ~46 trades/yr, average QQQ-equivalent exposure 1.18×, time in A 68%
 C 6% / D 14% / E 6% / F 6%, VIXM held on 9.2% of sessions. Calendar years (real, 2015 is
 Nov–Dec only): 2015 −10, 2016 +15, 2017 +89, 2018 +64, 2019 +69, 2020 +36, 2021 +97,
 2022 −8, 2023 +81, 2024 +77, 2025 +28, 2026 YTD +23 (%).
+
+Updated later on 2026-10-22 for VIXM off in ungated D2 (owner): 47.7% / 2.005 → 47.9% / 2.006.
 
 ## Reading
 

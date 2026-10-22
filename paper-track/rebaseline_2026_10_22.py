@@ -7,7 +7,7 @@ against a single reference instead of figures from several separate studies:
   (D1 50% SPMO / 50% QLD, D2 50% TQQQ / 50% QLD, D3 100% TQQQ), vol target 20% on
   max(10d, 30d) QQQ vol, 5% drift band + zero-leg stubs + regime triggers, 4bp one way,
   decide at close t / earn t+1, and (real panel) the VIXM cash sleeve: 75% of the cash leg
-  in VIXM while state.vixm_series() says allowed (latch VIX<18 & VIX<=VIX3M on, VIX>VIX3M
+  in VIXM while state.vixm_series() says allowed, except on ungated D2 days (2026-10-22) (latch VIX<18 & VIX<=VIX3M on, VIX>VIX3M
   off; plain-30d QQQ vol >= 20%; 25% fade). An `allowed` flip is a regime trigger.
 Engine: monte_carlo.py (verified day by day against state.py). VIXM: data/vixm_daily.csv
 (Robinhood daily closes, split-adjusted), VIX/VIX3M from vol_curve.history (CBOE, else FRED).
@@ -23,7 +23,7 @@ import monte_carlo as MC, state as S, vol_curve as VC
 
 LIVE = dict(MC.LIVE, name='2026-10-22 live', a_base=(0.40, 0.60), vol='max10_30')
 PRE = dict(MC.LIVE, name='before 2026-10-22 (A 25/75, D3 25/75, plain 30d)', a_base=(0.25, 0.75), vol='30')
-assert S.D_LADDER_ROWS['D3'] == (0.0, 1.0, 0.0) and S.A_BASE_FROM_SESSION[1] == (0.40, 0.60) and S.VOL_ESTIMATOR_MAX_ENABLED
+assert S.VIXM_OFF_D_ZONES == ('D2',) and S.D_LADDER_ROWS['D3'] == (0.0, 1.0, 0.0) and S.A_BASE_FROM_SESSION[1] == (0.40, 0.60) and S.VOL_ESTIMATOR_MAX_ENABLED
 LOG = open(os.path.join(HERE, 'research_notes', 'rebaseline_2026_10_22_run.log'), 'w')
 def log(*a):
     s = ' '.join(str(x) for x in a); print(s); LOG.write(s + '\n'); LOG.flush()
@@ -56,7 +56,10 @@ def run(sg, pn, d0, cfg, d3=None, vixm=False, d1='2099'):
         w = MC.target_weights(sg, cfg); key = MC.regime_key(sg, cfg)
         legs = [pn['core'], pn['tqqq'], pn['qld'], pn['xlu'], pn['cash']]
         if vixm:
-            al = allowed[:e + 1]
+            al = allowed[:e + 1].copy()
+            if cfg is LIVE:   # VIXM off in ungated D2 (owner, 2026-10-22; state.VIXM_OFF_D_ZONES)
+                effv = MC._eff(sg, cfg)[0]
+                al &= ~((effv == 3) & ~sg['gate'][0].astype(bool) & (sg['zone'][0] == 2))
             v = np.where(al, w[0, :, 4] * S.VIXM_CASH_SHARE, 0.0)
             w = np.concatenate([w[..., :4], v[None, :, None], (w[0, :, 4] - v)[None, :, None]], -1)
             key = key + al[None].astype(int) * 100000

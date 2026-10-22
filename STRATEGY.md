@@ -13,7 +13,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
-real ETFs 2015-11..2026-08 with VIXM **47.7% / Sharpe 2.01 / max DD −18.4%** (avg DD −3.3%,
+real ETFs 2015-11..2026-08 with VIXM (off in D2 from 10-22) **47.9% / Sharpe 2.01 / max DD −18.4%** (avg DD −3.4%,
 95th-pct −12.4%, worst 12m −11.0%; no VIXM 44.5% / 1.89 / −18.4%); 26-year proxy (no VIXM)
 **30.4% / 1.32 / −24.6%**; 2001–2015 holdout **20.8% / 0.97 / −24.6%**. QQQ held: 18.6% / 0.88 /
 −35.6% real, 11.4% / 0.56 / −70.1% proxy. These supersede the scattered per-study figures
@@ -182,6 +182,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-22 | **VIXM off in ungated D2** (`VIXM_OFF_D_ZONES = ('D2',)`, `vixm_blocked`, applied inside `live_target_weights_with_vixm`); gated D, D1, D3 and every other state keep the sleeve; entering/leaving D2 is already a regime trigger | **owner decision** ("turn off vixm in d2 only"); `vixm_by_state.py`: D2 the only losing state (−1.4%, 2 spells / 19 days); live 47.7% / 2.005 / −18.4% → 47.9% / 2.006 / −18.4%, bootstrap P(not better) 0.40 — inside noise |
 | 2026-10-22 | **re-baseline** (no design change): one run of the live design after the day's changes — real with VIXM 47.7% / 2.01 / −18.4%, proxy 30.4% / 1.32 / −24.6%, holdout 20.8% / 0.97 | `rebaseline_2026_10_22.py`; engine = `monte_carlo.py` (verified vs `state.py`) |
 | 2026-10-22 | **D3 → 100% TQQQ (3.0x)** (`D_LADDER_ROWS['D3'] = (0, 1, 0)`); D3 no longer follows the A row; never held live at the earlier rows | **owner decision** ("Change d3 to 100 tqqq"); engine vs D3 40/60: real 44.5% / 1.892 / −18.4% vs 44.0% / 1.887 / −17.7%, proxy 30.4% / 1.320 / −24.6% vs 29.9% / 1.309 / −24.2%, holdout 20.8% / 0.973 vs 20.2% / 0.959; rests on 8 (real) / 17 (proxy) one-to-two-day episodes |
 | 2026-10-22 | **A base 25/75 → 40/60 for every A session from 2026-10-22** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; the 25/75 session override kept in `A_BASE_FROM_SESSION_PRIOR`); **D3 25/75 → 40/60 the same day** (`D_LADDER_ROWS`; owner: "Change d3 also"; never held live at 25/75; D3 now 2.2x < D2 2.5x); book in D1 on the day, so no trade unless the book enters D3 or A | **owner decision** ("change to 40/60"); engine real 48.8% / 1.864 / −19.0% → 44.2% / 1.890 / −17.7%, proxy 32.5% / 1.300 / −27.5% → 30.1% / 1.313 / −24.4%; avg drawdown −4.4% → −3.7% real; −15% drawdowns 7 → 4 (2015–2026); D3 also at 40/60: real 44.0% / 1.887 / −17.7%, proxy 29.9% / 1.309 / −24.2% |
@@ -729,6 +730,7 @@ cash. This layer decides what the cash leg holds:
 | stress | QQQ `realized_vol_live` >= 20% (== the vol target) | `VIXM_MIN_VOL` |
 | fade | VIX 25% below its high since entry -> sell, no re-buy until stress dips and returns | `VIXM_FADE` |
 | size | VIXM = 75% of the cash leg while ON and stressed; the rest BOXX | `VIXM_CASH_SHARE` |
+| off in D2 | no VIXM on an ungated D day in ladder zone D2 (2026-10-22, owner); gated D, D1, D3 keep it | `VIXM_OFF_D_ZONES`, `vixm_blocked` |
 
 `vixm_state(dates, px, vix, vix3m, as_of)` replays the whole VIX/VIX3M history
 every run (no stored state). VIX comes from Robinhood (real time). VIX3M

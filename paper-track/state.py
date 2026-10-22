@@ -1722,16 +1722,38 @@ def apply_vixm(weights5, vixm):
     return (core, tqqq, qld, xlu, v, cash - v)
 
 
+# 2026-10-22, owner ("turn off vixm in d2 only"): no VIXM on an ungated effective-D day in
+# these ladder zones; the cash leg stays all BOXX there. Evidence (vixm_by_state.py, real ETFs
+# 2015-11..2026-08, live design): D2 was the only state where the sleeve lost (-1.4%, 32% of
+# VIXM days up, 2 spells / 19 days); switching it off there: 47.7% / 2.005 -> 47.9% / 2.006,
+# max DD unchanged, bootstrap P(not better) 0.40 -- inside noise, an owner decision. Entering or
+# leaving D2 is already a regime trigger (zone change), so no new rebalance rule is needed.
+VIXM_OFF_D_ZONES = ('D2',)
+
+
+def vixm_blocked(state, fast_state, gaps, breadth_pct):
+    """True when the VIXM sleeve is switched off for this session's row: an ungated
+    effective-D day whose ladder zone is in VIXM_OFF_D_ZONES."""
+    if effective_state(state, fast_state) != 'D' or not isinstance(gaps, dict):
+        return False
+    if D_GATE_ENABLED and d_gate_active(state, breadth_pct, gaps.get(200)):
+        return False
+    return D_LADDER_ENABLED and d_zone(gaps) in VIXM_OFF_D_ZONES
+
+
 def live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm):
     """THE live weight function from 2026-10-08: live_target_weights() (every
     existing guard and overlay, unchanged) followed by apply_vixm(). Returns
     6 legs in LIVE_LEGS order. `vixm` is REQUIRED: vixm_state(...) or, when
-    the index data cannot be had, vixm_unavailable(reason)."""
+    the index data cannot be had, vixm_unavailable(reason). From 2026-10-22 the
+    sleeve is off in the D ladder zones in VIXM_OFF_D_ZONES (D2)."""
     if not isinstance(vixm, dict) or 'allowed' not in vixm or 'available' not in vixm:
         raise MissingOverlayInputs(
             "vixm is required: pass vixm_state(dates, px, vix, vix3m, as_of=<date>) "
             "or vixm_unavailable(<reason>)")
     w5 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
+    if vixm_blocked(state, fast_state, gaps, breadth_pct):
+        return apply_vixm(w5, dict(vixm, allowed=False))
     return apply_vixm(w5, vixm)
 
 
