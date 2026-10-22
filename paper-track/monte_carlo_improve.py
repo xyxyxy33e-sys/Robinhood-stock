@@ -31,7 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import monte_carlo as MC  # noqa: E402
 
-LIVE = dict(MC.LIVE, name='live')
+LIVE = dict(MC.DESIGN_1009, name='live')   # the 2026-10-09 design these candidates were judged against
 CANDIDATES = [
     dict(LIVE, name='vol max(10,30)', vol='max10_30'),
     dict(LIVE, name='D gate breadth only', d_gate_mode='breadth'),

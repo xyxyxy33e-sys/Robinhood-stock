@@ -64,11 +64,13 @@ WARMUP = 420                              # sessions before the scored horizon (
 A_BASE = (0.25, 0.75)                     # live A base from 2026-10-09
 LETTERS = 'ABCDEF'
 
-# A design = the rows and overlays a release traded. LIVE is the 2026-10-09
-# release; monte_carlo_versions.py builds the earlier ones from the same keys.
+# A design = the rows and overlays a release traded. DESIGN_1009 is the
+# 2026-10-09 release (the one monte_carlo.md / _versions.md / _improve.md
+# tested); LIVE is the 2026-10-22 release, the same with the max(10d, 30d)
+# vol estimator. monte_carlo_versions.py builds the earlier ones from the same keys.
 # Rows are (core, tqqq, qld, xlu, cash) before the vol target.
-LIVE = dict(
-    name='2026-10-09 live (A 25/75 + D ladder)',
+DESIGN_1009 = dict(
+    name='2026-10-09 (A 25/75 + D ladder)',
     rows={'B': (0.75, 0.25, 0, 0, 0), 'C': (1, 0, 0, 0, 0), 'D': (0, 0, 1, 0, 0),
           'E': (0, 0, 0, 0, 1), 'F': (0, 0, 0, 0, 1)},
     a_base=A_BASE,
@@ -79,6 +81,8 @@ LIVE = dict(
     vol='30',             # '30' | 'max10_30'
     band=0.05, stubs=True,
 )
+LIVE = dict(DESIGN_1009, name='2026-10-22 live (max(10d, 30d) vol)',
+            vol='max10_30' if S.VOL_ESTIMATOR_MAX_ENABLED else '30')
 
 
 # --------------------------------------------------------------------------- data
@@ -410,7 +414,7 @@ def verify():
         bad['pct'] += (q is None) != np.isnan(sig['pct'][0, i]) or (q is not None and abs(q - sig['pct'][0, i]) > 1e-9)
         gate = S.d_gate_active(st[i], q, gp[d][200])
         bad['gate'] += gate != bool(sig['gate'][0, i])
-        vol = S.realized_vol(dates, px, as_of=d) if i % 25 == 0 else None
+        vol = S.realized_vol_live(dates, px, as_of=d) if i % 25 == 0 else None
         if i % 25 == 0:
             ref = S.target_weights_with_voltarget(st[i], False, vol, fast_state=fa[d], gaps=gp[d], d_gate=gate,
                                                   a_trim=at[d] if at[d]['in_a'] else None, d_ladder=True)

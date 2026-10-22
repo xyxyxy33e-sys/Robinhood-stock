@@ -31,17 +31,17 @@ import monte_carlo as MC  # noqa: E402
 
 CASH = (0, 0, 0, 0, 1)
 E_XLU = (0, 0, 0, 0.5, 0.5)
-V0902 = dict(MC.LIVE, name='2026-09-02', a_base=(0.70, 0.30),
+V0902 = dict(MC.DESIGN_1009, name='2026-09-02', a_base=(0.70, 0.30),
              rows={'B': (0.75, 0.25, 0, 0, 0), 'C': (1, 0, 0, 0, 0), 'D': (0, 0, 0.85, 0, 0.15), 'E': E_XLU, 'F': CASH},
              fast=False, trim='none', d_gate=False, d_ladder=False, vol='30', band=0.03, stubs=False)
-V0907 = dict(MC.LIVE, name='2026-09-07', a_base=(0.50, 0.50),
+V0907 = dict(MC.DESIGN_1009, name='2026-09-07', a_base=(0.50, 0.50),
              rows={'B': (0.75, 0.25, 0, 0, 0), 'C': (1, 0, 0, 0, 0), 'D': (0, 0, 1, 0, 0), 'E': E_XLU, 'F': CASH},
              fast=True, trim='v1', trim_step=1 / 3, d_gate=False, d_ladder=False, vol='max10_30', band=0.03)
 V0909 = dict(V0907, name='2026-09-09', vol='30', band=0.05)
 V0919 = dict(V0909, name='2026-09-19', d_gate=True, rows=dict(V0909['rows'], E=CASH))
 V0923_50 = dict(V0919, name='2026-09-23 A 50/50', trim='v2')
 V0923_40 = dict(V0923_50, name='2026-09-23 A 40/60', a_base=(0.40, 0.60))
-LIVE = dict(MC.LIVE, name='2026-10-09 live')
+LIVE = dict(MC.DESIGN_1009, name='2026-10-09 live')
 NOLADDER = dict(LIVE, name='control: live without D ladder', d_ladder=False)
 DESIGNS = [V0902, V0907, V0909, V0919, V0923_50, V0923_40, LIVE, NOLADDER]
 
