@@ -69,3 +69,61 @@ QQQ, at 51–56%.
    the new families nor the live design manage it. The live design is the
    only one that beats QQQ on Sharpe AND drawdown together, and only when
    trends last for months.
+
+## Follow-up: simulated interest rates (`--rates sim`)
+
+Bootstrapping TLT's own returns inherits the rate path of the sampled era.
+In 2002–2015, every bond day carries a share of a 30-year bond rally. This
+mode simulates rates instead:
+
+- **Rate changes.** Each sampled day contributes its 30-year yield change
+  (^TYX, `data/tyx_daily.csv`) and its 3-month bill change, paired with that
+  day's stock return, so the day's stock/bond co-move is kept. The changes
+  are demeaned, so no historical drift is inherited.
+- **Levels.** Rates accumulate from today's levels (30y 5.44%, 3m 3.91%)
+  with mean reversion toward them (κ 0.2/yr, half-life ~3.5 yr), floored at
+  0.5% / 0%.
+- **TLT pricing.** TLT is priced from the simulated 30y path:
+  (y − 0.25%) carry − 15.81·Δy + ½·261·Δy². This is calibrated on 2002–2026
+  real TLT: R² 0.88, mean error 0.00%/yr, each era within 0.5 pp of CAGR.
+- **Cash and leverage.** Cash and the financing cost inside QLD/TQQQ follow
+  the simulated bill rate. QLD/TQQQ are rebuilt from QQQ with the
+  `long_history_backtest` constants.
+
+**Sanity.** Expected TLT return becomes ~5.1%/yr, close to today's carry,
+against 7.0% when bootstrapping 2002–2015 TLT. The 30y yield after 10 years
+spans 3.8–7.6% (p5–p95).
+
+**Search (2002–2015), re-run with simulated rates.**
+- The static 30/70 TQQQ/TLT mix falls from a worst-case P(CAGR > QQQ) of 81%
+  to 51%.
+- The winner becomes **F1: vol target 35% on QQQ, no leverage** (worst case
+  57%, 64–70% at L ≥ 20).
+- Simulating rates removes the artifact that picked the stock/bond mix.
+
+**Confirmation (simulated rates throughout), share of paths:**
+
+| series | panel | P(CAGR > QQQ) | P(Sharpe > QQQ) | P(MaxDD shallower) | median CAGR vs QQQ |
+|---|---|---|---|---|---|
+| F1 vol target 35%, no leverage (winner) | real 2015–26 | 4–44% | 56–71% | 69–81% | about equal (19.3–19.9% vs 19.7–20.6%) |
+| F1 | full 2002–26 | 39–49% | 66–69% | 66–81% | about equal |
+| F4 static 30/70 TQQQ/TLT | real | 29–34% | 46–50% | 25–48% | ~1 pp lower |
+| F4 | full | 43–49% | 67–76% | 61–72% | about equal |
+| F2 vol target 40%, cap 2x, 200d gate | real | 78–96% | 14–46% | 2–9% | +5–7 pp |
+| live design | real | 18–99% | 12–98% | 16–73% | −6 … +18 pp |
+
+**Reading.**
+- **The stock/bond mix is neither a miracle nor a disaster** once the rate
+  path is not inherited. Its return is QQQ-like with a slightly better
+  Sharpe on the full panel. The 2002–2015 "win" and the 2015–2026 "loss"
+  were both the sampled era's rate drift.
+- **The one thing that holds in every world** (both panels, every block
+  length, and the search) is the simplest. An unlevered vol target on QQQ
+  keeps about QQQ's return with a better Sharpe on 56–71% of paths and a
+  shallower drawdown on 66–81%. It is a QQQ with a smaller downside, not a
+  higher-returning one.
+- **Beating QQQ's return in every world still needs leverage** (F2), at a
+  deeper drawdown and, in short-trend worlds, a lower Sharpe.
+- **The live design** is unaffected in kind. It is the only strategy that
+  beats QQQ by a wide margin on return, Sharpe and drawdown, and only when
+  trends persist.

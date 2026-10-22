@@ -41,9 +41,18 @@ sys.path.insert(0, HERE)
 import monte_carlo as MC  # noqa: E402
 
 SEARCH = ('2002-08-01', '2015-10-30')
+# Simulated rates (--rates sim): yield CHANGES are drawn with each sampled day (keeping that
+# day's stock/bond co-move), demeaned so the 2002-2015 bond bull is not inherited, and
+# accumulated from today's level with mean reversion to it. TLT and cash are then priced
+# from the simulated paths, and QLD/TQQQ are rebuilt from QQQ with the simulated
+# financing rate (long_history_backtest constants), so no leg carries a historical rate path.
+TLT_D, TLT_C, TLT_S = 15.81, 261.0, -0.0025     # calibrated on 2002-07..2026-10 (data/tyx_daily_provenance.md)
+Y30_0, R3_0 = 0.05439, 0.0391                   # latest ^TYX (2026-10-21) and 3m T-bill (2026-08-31)
+KAPPA = 0.20                                    # /yr mean reversion toward the start level (half-life ~3.5 yr)
 REAL0 = '2015-10-12'
 BLOCKS = (5, 20, 60, 120, 250)
 LOG = os.path.join(HERE, 'research_notes')
+SUFFIX = ''
 
 
 # ------------------------------------------------------------------ panels
@@ -59,8 +68,46 @@ def load_panel(kind):
     keep = [i for i, d in enumerate(p['dates']) if lo <= d <= hi]
     q = {k: (v[keep[0]:keep[-1] + 1]) for k, v in p.items()}
     q['tlt'] = MC._rets(tlt, q['dates']); q['tlt'][0] = 0.0
-    q['qqq_leg'] = q['qqq_tr'] if kind != 'real' else q['qqq_tr']
+    q['qqq_leg'] = q['qqq_tr']
+    # rate changes on the same dates, for --rates sim
+    y30 = {r['d']: float(r['yield_pct']) / 100 for r in csv.DictReader(open(os.path.join(MC.DATA, 'tyx_daily.csv')))}
+    r3 = {}
+    for r in csv.DictReader(open(os.path.join(MC.DATA, 'dgs3mo_full.csv'))):
+        try:
+            r3[r['observation_date']] = float(r['DGS3MO']) / 100
+        except ValueError:
+            pass
+    def lv(src):
+        prior = [d for d in src if d <= q['dates'][0]]
+        out, last = [], src[max(prior)] if prior else None     # seed from the last print before the panel (holidays)
+        for d in q['dates']:
+            last = src.get(d, last); out.append(last)
+        return np.array(out, float)
+    a30, a3 = lv(y30), lv(r3)
+    q['dy30'] = np.concatenate([[0.0], np.diff(a30)]); q['dr3'] = np.concatenate([[0.0], np.diff(a3)])
+    from datetime import date
+    q['yf'] = np.array([0.0] + [(date.fromisoformat(q['dates'][i]) - date.fromisoformat(q['dates'][i - 1])).days / 365
+                                for i in range(1, len(q['dates']))])
     return q
+
+
+def simulate_rates(g, panel):
+    """Replace tlt / cash / qld / tqqq in sampled paths g with legs priced from simulated rates."""
+    dy = g['dy30'] - panel['dy30'][1:].mean(); dr = g['dr3'] - panel['dr3'][1:].mean(); yf = g['yf']
+    P, T = dy.shape
+    y = np.empty((P, T)); r = np.empty((P, T)); y[:, 0], r[:, 0] = Y30_0, R3_0
+    for t in range(1, T):
+        y[:, t] = np.maximum(0.005, y[:, t - 1] + dy[:, t] - KAPPA * (y[:, t - 1] - Y30_0) * yf[:, t])
+        r[:, t] = np.maximum(0.0, r[:, t - 1] + dr[:, t] - KAPPA * (r[:, t - 1] - R3_0) * yf[:, t])
+    d = np.concatenate([np.zeros((P, 1)), np.diff(y, axis=1)], 1)
+    yp, rp = np.concatenate([y[:, :1], y[:, :-1]], 1), np.concatenate([r[:, :1], r[:, :-1]], 1)
+    g['tlt'] = (yp + TLT_S) * yf - TLT_D * d + 0.5 * TLT_C * d * d
+    g['cash'] = rp * yf
+    u = g['qqq_tr']; fin = (rp + MC.FIN_SPREAD) * yf
+    g['qld'] = 2 * u - fin - MC.QLD_ER * yf
+    g['tqqq'] = 3 * u - 2 * fin - MC.TQQQ_ER * yf
+    g['y30'], g['r3'] = y, r
+    return g
 
 
 # ------------------------------------------------------------------ signals
@@ -163,12 +210,16 @@ def label(c):
 
 
 # ------------------------------------------------------------------ evaluation
+RATES = 'hist'
+
+
 def paths(panel, P, block, seed, years=10):
     rng = np.random.default_rng(seed)
     T = MC.WARMUP + int(round(252 * years)) + 1
     src = np.arange(1, len(panel['dates']))
     idx = src[MC.bootstrap_idx(rng, len(src), P, T, block)]
-    return {k: panel[k][idx] for k in panel if k != 'dates'}
+    g = {k: panel[k][idx] for k in panel if k != 'dates'}
+    return simulate_rates(g, panel) if RATES == 'sim' else g
 
 
 def run(g, s, c, start=MC.WARMUP):
@@ -212,13 +263,13 @@ def cmd_search(a):
         best_per_fam.setdefault(x['cfg']['fam'], x)
     lines += ["", "Best per family: " + "; ".join(f"{f}: {x['name']} (passes {x['ok']}, worst {x['worst']*100:.0f}%)" for f, x in sorted(best_per_fam.items()))]
     txt = "\n".join(lines); print(txt)
-    with open(os.path.join(LOG, 'monte_carlo_new_search.log'), 'w') as fh:
+    with open(os.path.join(LOG, f'monte_carlo_new_search{SUFFIX}.log'), 'w') as fh:
         fh.write(txt + "\n\n```json\n" + json.dumps({'winner': rows[0]['cfg'], 'per_family': {f: x['cfg'] for f, x in best_per_fam.items()},
                                                        'bench': bench, 'all': [{k: v for k, v in x.items() if k != 'r'} | {'r': x['r']} for x in rows]}, indent=1) + "\n```\n")
 
 
 def cmd_confirm(a):
-    j = json.loads(open(os.path.join(LOG, 'monte_carlo_new_search.log')).read().split('```json')[1].split('```')[0])
+    j = json.loads(open(os.path.join(LOG, f'monte_carlo_new_search{SUFFIX}.log')).read().split('```json')[1].split('```')[0])
     picks = [j['winner']] + [c for f, c in sorted(j['per_family'].items()) if c['name'] != j['winner']['name']]
     lines = [f"# New-strategy confirmation {time.strftime('%Y-%m-%d %H:%M')} (real ETFs {REAL0}..2026-08, paths={a.paths})", "",
              f"Search winner: **{j['winner']['name']}**. Other rows: best of each family on the search.", ""]
@@ -253,7 +304,7 @@ def cmd_confirm(a):
     q = MC.stats(g['qqq_tr'][:, st + 1:]); lines.append(f"| QQQ | {q['cagr'][0]*100:.1f}% | {q['sharpe'][0]:.2f} | {q['mdd'][0]*100:.1f}% |")
     lines.append(f"\n(scored {panel['dates'][st+1]}..{panel['dates'][-1]})")
     txt = "\n".join(lines); print(txt)
-    with open(os.path.join(LOG, 'monte_carlo_new_confirm.log'), 'w') as fh:
+    with open(os.path.join(LOG, f'monte_carlo_new_confirm{SUFFIX}.log'), 'w') as fh:
         fh.write(txt + "\n")
 
 
@@ -262,7 +313,10 @@ def main(argv):
     ap.add_argument('cmd', choices=('search', 'confirm'))
     ap.add_argument('--paths', type=int, default=400)
     ap.add_argument('--seed', type=int, default=20261022)
+    ap.add_argument('--rates', choices=('hist', 'sim'), default='hist')
     a = ap.parse_args(argv)
+    global RATES, SUFFIX
+    RATES, SUFFIX = a.rates, ('' if a.rates == 'hist' else '_simrates')
     (cmd_search if a.cmd == 'search' else cmd_confirm)(a)
 
 
