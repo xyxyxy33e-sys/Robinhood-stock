@@ -23,7 +23,7 @@ C row when the fast read is A/B/C.
 | C | 100% SPMO | 1.0x |
 | D1 (above the 100d) | 50% SPMO / 50% QLD | 1.5x |
 | D2 (100d-150d) | 50% TQQQ / 50% QLD | 2.5x |
-| D3 (below the 150d) | 25% SPMO / 75% TQQQ | 2.5x |
+| D3 (below the 150d) | 40% SPMO / 60% TQQQ | 2.2x |
 | E | 100% BOXX | 0.00x |
 | F | 100% BOXX | 0.00x |
 
@@ -41,8 +41,8 @@ tomorrow when market open" — the spell running since 2026-08-04 moves 50/50 �
 and `A_BASE_FROM_SESSION`; the 25/75 override stays on record in
 `A_BASE_FROM_SESSION_PRIOR` so 2026-10-09..10-21 replay as traded; owner: "change to
 40/60", after the drawdown profiles of 25/75 … 50/50). The book was in D that day, so it
-takes effect at the next A session. **D3 stays 25/75** — the owner changed A only; moving
-D3 to 40/60 as well changes the figures by ≤ 0.2 pp. Engine figures for the 40/60 change
+takes effect at the next A session. **D3 followed to 40/60 the same day** (owner: "Change d3
+also"; it had never been held live at 25/75); that moves the figures by ≤ 0.2 pp. Engine figures for the 40/60 change
 (`monte_carlo.py` engine, max(10d, 30d) vol, no VIXM; real 2015-11..2026-08 / proxy
 2001–2026): 25/75 **48.8% / 1.864 / −19.0%** and **32.5% / 1.300 / −27.5%** → 40/60
 **44.2% / 1.890 / −17.7%** and **30.1% / 1.313 / −24.4%**; average drawdown −4.4% → −3.7%
@@ -100,9 +100,10 @@ evidence. Section "State D gate" below has the full record.
 ungated D day no longer holds one row. **D1** — QQQ still above its 100-day
 SMA — holds 50% SPMO / 50% QLD (1.5x); **D2** — between the 100- and 150-day —
 50% TQQQ / 50% QLD (2.5x); **D3** — below the 150-day (above the 200-day, or it
-would not be D) — the A row of this release, 25% SPMO / 75% TQQQ (2.5x),
-untrimmed. The shallow dip carries the least leverage and the deep dip and A
-the most (owner's ordering). The gate above still sends the whole row to cash;
+would not be D) — the A row, untrimmed: 25% SPMO / 75% TQQQ (2.5x) from
+2026-10-09, **40% SPMO / 60% TQQQ (2.2x) from 2026-10-22** with the A base.
+The shallow dip carries the least leverage (owner's ordering); since 2026-10-22
+D3 carries a little less than D2 (2.2x vs 2.5x). The gate above still sends the whole row to cash;
 the vol target scales every row; a zone change is a rebalance trigger.
 `d_zone(gaps)` / `d_ladder_row(gaps)` in `state.py`, read from the same gaps
 dict as the trim. Why: inside D, next-session QQQ is weakest while QQQ is still
@@ -169,7 +170,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
-| 2026-10-22 | **A base 25/75 → 40/60 for every A session from 2026-10-22** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; the 25/75 session override kept in `A_BASE_FROM_SESSION_PRIOR`); D3 unchanged at 25/75; book in D on the day, so no trade until the next A session | **owner decision** ("change to 40/60"); engine real 48.8% / 1.864 / −19.0% → 44.2% / 1.890 / −17.7%, proxy 32.5% / 1.300 / −27.5% → 30.1% / 1.313 / −24.4%; avg drawdown −4.4% → −3.7% real; −15% drawdowns 7 → 4 (2015–2026) |
+| 2026-10-22 | **A base 25/75 → 40/60 for every A session from 2026-10-22** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; the 25/75 session override kept in `A_BASE_FROM_SESSION_PRIOR`); **D3 25/75 → 40/60 the same day** (`D_LADDER_ROWS`; owner: "Change d3 also"; never held live at 25/75; D3 now 2.2x < D2 2.5x); book in D1 on the day, so no trade unless the book enters D3 or A | **owner decision** ("change to 40/60"); engine real 48.8% / 1.864 / −19.0% → 44.2% / 1.890 / −17.7%, proxy 32.5% / 1.300 / −27.5% → 30.1% / 1.313 / −24.4%; avg drawdown −4.4% → −3.7% real; −15% drawdowns 7 → 4 (2015–2026); D3 also at 40/60: real 44.0% / 1.887 / −17.7%, proxy 29.9% / 1.309 / −24.2% |
 | 2026-10-22 | **vol estimator plain 30d → max(10d, 30d)** (`VOL_ESTIMATOR_MAX_ENABLED = True`); the VIXM sleeve's "QQQ vol ≥ 20%" test pinned to the plain 30d (`vixm_state`); no holdings change on the day (both readings under 20%) | **owner decision** ("Embed the change"); Monte Carlo, 12 cells: higher Sharpe on 55–73% of paths and shallower MaxDD on 79–93% in every cell, CAGR −1.3..+0.6pp, ~+7 rebalances/yr; still wins all 12 cells against plain 30d at the exposure-matched target; holds on the no-COVID holdout and under one session of lag; "Monte Carlo of the live design" |
 | 2026-10-19 | **funding triggers removed** (`live_run.FUNDING_TRIGGERS = False`): no drawdown-tier or turn pushes and no margin draws; the drawdown log still records tiers. The 6826 margin loan was repaid by the VTI/VXUS sale and the long-term watch retired | **owner decision** ("remove the funding trigger"; Robinhood consolidated into the strategy account) |
 | 2026-10-16 | **margin draws OFF** (`margin_funding.DRAWS_ENABLED = False`): no new draws, no netting re-borrows; the existing $19,700 loan still repays into 6826 via netting and recovery / 252 sessions; the −15% catch-up draw cancelled untransferred | **owner decision** ("No more margin transfer then"): a transfer out of 6826 in its bonus hold period moves part of the bonus with it; "Margin-funded deposits", Draws OFF |
@@ -387,7 +388,7 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
 | D1 (above the 100d) | 50% | 0% | 50% | 0% | 0% | 1.5x |
 | D2 (100d-150d) | 0% | 50% | 50% | 0% | 0% | 2.5x |
-| D3 (below the 150d) | 25% | 75% | 0% | 0% | 0% | 2.5x |
+| D3 (below the 150d) | 40% | 60% | 0% | 0% | 0% | 2.2x |
 | E | 0% | 0% | 0% | 0% | 100% | 0.00x |
 | F | 0% | 0% | 0% | 0% | 100% | 0.00x |
 

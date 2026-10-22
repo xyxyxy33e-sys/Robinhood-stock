@@ -446,17 +446,18 @@ def check_d_ladder():
     every row; the permissive function without d_ladder keeps 100% QLD (old backtests);
     the live function refuses a D day without the cut-line gaps; the A base for spells
     starting on/after 2026-10-09 is 25/75 and the running spell keeps its row; from the
-    2026-10-22 session every A session holds 40/60 (owner), D3 stays 25/75."""
+    2026-10-22 session every A session holds 40/60 and D3 follows it to 40/60 (owner)."""
     from state import (D_LADDER_ENABLED, D_LADDER_ROWS, D_LADDER_WINDOWS, d_zone, d_ladder_row,
                        live_target_weights, target_weights_with_voltarget, MissingOverlayInputs,
                        vol_target_multiplier, a_base_row, A_BASE_ROWS, effective_state, STATE_LABEL)
     assert D_LADDER_ENABLED, "the D ladder is applied (2026-10-09); flipping it off is a design change"
     assert D_LADDER_WINDOWS == (100, 150)
-    assert D_LADDER_ROWS == {'D1': (0.50, 0.00, 0.50), 'D2': (0.00, 0.50, 0.50), 'D3': (0.25, 0.75, 0.00)}
-    rel = dict(A_BASE_ROWS)['2026-10-09']
-    assert D_LADDER_ROWS['D3'] == rel + (0.0,), "D3 is the A row of the 2026-10-09 release (unchanged when A went to 40/60)"
+    assert D_LADDER_ROWS == {'D1': (0.50, 0.00, 0.50), 'D2': (0.00, 0.50, 0.50), 'D3': (0.40, 0.60, 0.00)}
+    assert D_LADDER_ROWS['D3'] == A_BASE_ROWS[-1][1] + (0.0,), "D3 is the current A row (40/60 from 2026-10-22)"
     lev = lambda r: r[0] + 3 * r[1] + 2 * r[2]
-    assert lev(D_LADDER_ROWS['D1']) < lev(D_LADDER_ROWS['D2']) <= lev(D_LADDER_ROWS['D3']), "owner's ordering"
+    # owner's ordering: the shallow dip (D1) carries the least leverage. Since 2026-10-22 D3 (40/60,
+    # 2.2x) sits below D2 (2.5x) by owner decision ("Change d3 also"), so only D1 < D2, D3 is checked.
+    assert lev(D_LADDER_ROWS['D1']) < min(lev(D_LADDER_ROWS['D2']), lev(D_LADDER_ROWS['D3'])), "owner's ordering"
     z = lambda a, b: {100: a, 150: b, 200: 0.05}
     assert d_zone(z(0.001, 0.03)) == 'D1' and d_zone(z(0.0, 0.03)) == 'D2', "D1 needs close strictly above the 100d"
     assert d_zone(z(-0.02, 0.001)) == 'D2' and d_zone(z(-0.02, 0.0)) == 'D3' and d_zone(z(-0.05, -0.01)) == 'D3'
@@ -503,7 +504,7 @@ def check_d_ladder():
     w = live_target_weights('A', False, 0.15, 'A', {100: 0.0, 150: 0.0, 200: 0.0}, 0.5,
                             _at('A', base=a_base_row('2026-10-12')))
     assert w == (0.25, 0.75, 0.0, 0.0, 0.0), w
-    print("OK: D ladder -- D1 above the 100d 50/0/50, D2 100-150d 0/50/50, D3 below the 150d 25/75/0 "
+    print("OK: D ladder -- D1 above the 100d 50/0/50, D2 100-150d 0/50/50, D3 below the 150d 40/60/0 "
           "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A at 25/75 from the 2026-10-09 session, "
           "40/60 from the 2026-10-22 session (running spell included)")
 
