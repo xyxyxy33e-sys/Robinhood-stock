@@ -1,9 +1,12 @@
 """dashboard_figures.py -- the derived numbers the post-close dashboard update needs (2026-10-15).
 
 Prints, for a recorded date: QQQ against its 50/100/150/200-day averages, the state
-lines (D, E, D-gate, trim votes), and the positions table (value, weight, unrealized
-against Robinhood's average cost) at that date's closes. Read-only: it writes
-nothing, so the post-close run can call it without editing any file.
+lines (D, E, D-gate, trim votes), the positions table (value, weight, unrealized
+against Robinhood's average cost) at that date's closes, and (2026-10-22) the
+cumulative-return card: the strategy's NAV index since its 1 Sep 2026 start against
+QQQ and SPMO price over the same days, by month, plus the `const CUM = [...]` line
+for the dashboard chart. Read-only: it writes nothing, so the post-close run can
+call it without editing any file.
 
     python3 paper-track/dashboard_figures.py <date> SYM=qty@avg_cost [SYM=qty@avg_cost ...]
     e.g.  python3 paper-track/dashboard_figures.py 2026-10-15 SPMO=891.04937@151.34 TQQQ=4980.664967@76.86
@@ -14,6 +17,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLOSES = os.path.join(ROOT, 'data', 'live_closes.csv')
+NAV = os.path.join(ROOT, 'data', 'live_nav_index.csv')
 
 
 def main(argv):
@@ -51,7 +55,35 @@ def main(argv):
             print(f'{sym:5} {q_:,.4f} sh  avg {avg:.2f}  px {px:.2f}  value {v:,.2f}  weight {v / tot:.2%}  '
                   f'unrealized {u:+,.2f} ({px / avg - 1:+.2%})')
         print(f'total {tot:,.2f}  unrealized {un:+,.2f}')
+    cumulative(date, rows)
     return 0
+
+
+def cumulative(date, rows):
+    """Strategy NAV index (cash-flow-blind, from 1 Sep 2026; base = the prior close) vs
+    QQQ and SPMO price return over the same sessions."""
+    nav = [r for r in csv.DictReader(open(NAV)) if r['date'] <= date]
+    if not nav:
+        return
+    px = {r['date']: r for r in rows}
+    days = [r['date'] for r in rows]
+    base = days[days.index(nav[0]['date']) - 1]          # the close before the first NAV row
+    pts = [(base, 1.0)] + [(r['date'], float(r['index_value'])) for r in nav]
+    def rel(sym, d):
+        return float(px[d][sym]) / float(px[base][sym]) - 1
+    out = [(d, v - 1, rel('QQQ', d), rel('SPMO', d)) for d, v in pts if d in px]
+    d, s_, q_, m_ = out[-1]
+    peak = max(v for _, v in pts)
+    print(f'cumulative since {base} close (strategy NAV index, cash-flow-blind; QQQ/SPMO price):')
+    print(f'  strategy {s_:+.2%}  QQQ {q_:+.2%}  SPMO {m_:+.2%}  (strategy vs QQQ {s_ - q_:+.2%}); '
+          f'NAV {pts[-1][1]:.4f}, {pts[-1][1] / peak - 1:+.2%} vs its high {peak:.4f}')
+    months = sorted({x[0][:7] for x in out[1:]})
+    for mo in months:
+        first = max(x for x in out if x[0][:7] < mo)        # last point before the month
+        last = max(x for x in out if x[0][:7] == mo)
+        f = lambda i: (1 + last[i]) / (1 + first[i]) - 1
+        print(f'  {mo}: strategy {f(1):+.2%}  QQQ {f(2):+.2%}  SPMO {f(3):+.2%}')
+    print('  const CUM = [' + ','.join(f'["{a}",{b * 100:.2f},{c * 100:.2f},{e * 100:.2f}]' for a, b, c, e in out) + '];')
 
 
 if __name__ == '__main__':

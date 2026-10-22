@@ -116,6 +116,10 @@ Only after the orders are placed: one short line to the session ("traded / no tr
   No inline `python3 -` scripts: they are not pre-approved and stop an unattended run at a permission prompt.
 - Account value is NET of the margin loan (the `NET` line `live_run.py record` prints: value minus loan + interest), with the gross value beside it.
 - Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
+- **Cumulative return section** (added 2026-10-22, owner): `dashboard_figures.py` prints a `cumulative since ...` block.
+  Replace the whole `const CUM = [...];` line in the page script with the printed one; set the three figures
+  (`id="cum-s"`, `cum-q`, `cum-m`, sign class `pos`/`neg`), their sub-lines (NAV and distance from its high;
+  strategy vs QQQ and vs SPMO in points) and the month line (`id="cum-months"`) from the same block.
 - Leave the backtest charts alone.
 
 2.6 **One push** per trading day: `PushNotification`, proactive, one line, at most about 250 characters, figures only.
