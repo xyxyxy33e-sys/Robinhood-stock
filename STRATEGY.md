@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder and A 25/75 2026-10-09)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder and A 25/75 2026-10-09; max(10d, 30d) vol estimator 2026-10-22)
 
 **What the account holds, by effective state** — see the tables under
 "Target weights"; effective state = macro 50/200 state, except that macro
@@ -50,8 +50,10 @@ per held vote; the rest is BOXX. At 50/50: 50/50/0 → 41.7/0/58.3 → 33.3/0/66
 `a_trim_state(dates, px, as_of)` computes it from QQQ closes (no stored state);
 `live_target_weights` now REQUIRES it. It replaced the v1 trim (×⅔ / ×⅓ / ×0 on
 the raw votes), which re-levered into falls as the votes fell away. Then the four risky legs are scaled by
-`min(1, 20% / 30-day realized QQQ vol)` with the remainder in BOXX (the max(10d, 30d)
-estimator was live only 09-07..09-09 and was reverted — see below). Rebalance on any change of effective
+`min(1, 20% / max(10-day, 30-day) realized QQQ vol)` with the remainder in BOXX (the
+max(10d, 30d) estimator was live 09-07..09-09, reverted to the plain 30-day, and
+**re-enabled 2026-10-22** on the Monte Carlo — see "Monte Carlo of the live design"
+in Part II; the VIXM sleeve's stress test stays on the plain 30-day). Rebalance on any change of effective
 state, on a change in HELD trim votes (v2), on L1 drift > 5% (3% until 2026-09-09), on a
 zero-target leg still held above 0.10%, on the state-D gate switching, or on the D ladder zone
 changing inside D (2026-10-09).
@@ -155,6 +157,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-22 | **vol estimator plain 30d → max(10d, 30d)** (`VOL_ESTIMATOR_MAX_ENABLED = True`); the VIXM sleeve's "QQQ vol ≥ 20%" test pinned to the plain 30d (`vixm_state`); no holdings change on the day (both readings under 20%) | **owner decision** ("Embed the change"); Monte Carlo, 12 cells: higher Sharpe on 55–73% of paths and shallower MaxDD on 79–93% in every cell, CAGR −1.3..+0.6pp, ~+7 rebalances/yr; still wins all 12 cells against plain 30d at the exposure-matched target; holds on the no-COVID holdout and under one session of lag; "Monte Carlo of the live design" |
 | 2026-10-19 | **funding triggers removed** (`live_run.FUNDING_TRIGGERS = False`): no drawdown-tier or turn pushes and no margin draws; the drawdown log still records tiers. The 6826 margin loan was repaid by the VTI/VXUS sale and the long-term watch retired | **owner decision** ("remove the funding trigger"; Robinhood consolidated into the strategy account) |
 | 2026-10-16 | **margin draws OFF** (`margin_funding.DRAWS_ENABLED = False`): no new draws, no netting re-borrows; the existing $19,700 loan still repays into 6826 via netting and recovery / 252 sessions; the −15% catch-up draw cancelled untransferred | **owner decision** ("No more margin transfer then"): a transfer out of 6826 in its bonus hold period moves part of the bonus with it; "Margin-funded deposits", Draws OFF |
 | 2026-10-16 | **margin cap min(4% account, 25% collateral) → min(10% account, 25% collateral)** (5% and 10% / 20% were set briefly the same day; `margin_funding.CAP_ACCOUNT_PCT`): ≈ $34.8k today, collateral-bound, ~7.4% of the account | **owner decision** ("raise the cap to 5%", "use 10% account and 20% collateral", then "Do 10% and 25%"); netting backtest by account cap (no collateral limit in the harness): 4% +0.200 / +0.138, 5% +0.257 / +0.169, 6% +0.294 / +0.209, 10% +0.573 / +0.434 pp/yr real / proxy; worst loan scales with the cap; margin call at $34.8k needs the collateral −64%; "Margin-funded deposits", Cap |
@@ -401,9 +404,9 @@ fast_state=, gaps=, d_gate=, a_trim=)` and refuses a missing input.
    is None.) Section "Extension trim" below.
 3. **Volatility targeting** (2026-09-01; estimator changed 2026-09-07): the
    four risky legs of that row are scaled by
-   `min(1, 0.20 / realized_vol_live)` where `realized_vol_live` is the
-   plain **30-day** annualized realized QQQ vol (max(10d, 30d) was live only
-   2026-09-07..09), and the freed weight goes to cash. Section "Volatility targeting" below.
+   `min(1, 0.20 / realized_vol_live)` where `realized_vol_live` is
+   **max(10-day, 30-day)** annualized realized QQQ vol (live 2026-09-07..09,
+   plain 30-day 09-09..10-21, max again from 2026-10-22), and the freed weight goes to cash. Section "Volatility targeting" below.
 
 `micro_agrees` is still passed (the signature needs it) but the 30/150 micro
 overlay is DISABLED (2026-09-02) and it moves no weight. `validate_weights(state,
@@ -742,12 +745,13 @@ then scales the four risky legs (core/TQQQ/QLD/XLU) by
     multiplier = min(1.0, VOL_TARGET_PA / realized_vol)
 
 putting whatever is freed into cash (BOXX). `vol` comes from
-`realized_vol(dates, px, as_of=date)` on the **same QQQ series** used for the
-state, as of the **same date** — 30 trading days (= 6.0 calendar weeks),
-annualized. Pass `None` when history is short: the multiplier degrades to 1.0
+`realized_vol_live(dates, px, as_of=date)` on the **same QQQ series** used for the
+state, as of the **same date**: from 2026-10-22 the larger of the 10- and 30-trading-day
+annualized readings (`VOL_ESTIMATOR_MAX_ENABLED`), so the fast window can only
+de-lever, never lever up. Pass `None` when history is short: the multiplier degrades to 1.0
 and the weights are returned unscaled. Then run `validate_weights()` (5-leg)
 before computing any dollar target. Live constants: `VOL_TARGET_PA = 0.20`,
-`VOL_LOOKBACK_DAYS = 30`, `VOL_TARGET_CAP = 1.0`.
+`VOL_LOOKBACK_DAYS = 30`, `VOL_FAST_LOOKBACK_DAYS = 10`, `VOL_TARGET_CAP = 1.0`.
 
 **`VOL_TARGET_CAP` must stay at 1.0** — de-lever only. `cap=1.5` was tested
 and is worse where it matters: it levers up into the calm before a crash,
@@ -1491,6 +1495,7 @@ listed under a rejection, do not re-run it without a genuinely new reason.
 | 2026-09-07 | Outside review round 2: spec/control/churn audit | 3 defects FIXED; hysteresis negative |
 | 2026-09-07 | vol estimator vol30 → max(vol10, vol30) | owner decision; real daily +0.05 Sharpe / +3pp MaxDD, both proxy eras up, real WEEKLY CAGR −0.85pp; block bootstrap NOT significant |
 | 2026-09-07 | Block bootstrap + leave-one-regime-out; drawdown reconciliation | trim survives, overlay/estimator do not; −39/−40% gap = execution lag |
+| 2026-10-21/22 | Monte Carlo of the live design, past releases and improvement candidates | max(10d, 30d) estimator RE-ENABLED (owner) |
 | 2026-09-07 | A 40/60 → **50/50** (reverted); CHANGE FREEZE; fill-quality tracking | owner decision after the bootstrap; see "Change freeze" |
 
 ### Why each row is what it is (short version — full backtests in the
@@ -5041,3 +5046,54 @@ scored against the flat-de-levering null.
   45.0–45.5%, Sharpe 1.60–1.62) and fails the holdout at every N (0.710–0.721 vs
   live 0.754) — structural, not a parameter problem. One-step on a 15-day high
   remains the shadow pick. Not applied.
+
+### Monte Carlo of the live design — 2026-10-21/22 (max(10d, 30d) estimator RE-ENABLED 2026-10-22, owner decision)
+
+`paper-track/monte_carlo.py` re-implements the live weight path in numpy,
+vectorised across paths. `--verify` checks it against this file's functions
+and finds 0 mismatches over 6,378 sessions. It also reproduces every release's
+single-path figures above to within ~0.5 pp. Paths are stationary
+block-bootstrapped 10-year runs (1,000 per cell), with every signal recomputed
+from the synthetic QQQ path.
+
+The cells are three panels × four mean block lengths L = 20 / 60 / 120 / 250
+sessions. The panels:
+- 26-year QQQ-core proxy;
+- the same proxy cut at 2015-10 (holdout);
+- real ETFs, 2015-11 to 2026-08.
+
+Not modelled: VIXM, taxes.
+
+**The live design against benchmarks** (`research_notes/monte_carlo.md`).
+- Results depend on how long trends last. Against buy-and-hold QQQ, the
+  design's 10-year CAGR is higher on 22–35% of paths at L ≤ 20, 66% at L60,
+  89% at L120 and 96% at L250 (proxy).
+- It beats same-volatility and same-leverage QQQ at about the same rates, so
+  the edge is timing, not leverage.
+- The holdout shows the same pattern, smaller. Short-L worlds lose to QQQ
+  with deeper drawdowns.
+- The p5 MaxDD is −43% to −85% across cells, against the single-path −19% to
+  −27% above.
+
+**Past releases** (`monte_carlo_versions.md`, paired on shared paths).
+- No earlier release beats live in the central case (proxy L60–120).
+- The 2026-09-23 A 50/50 release has a shallower MaxDD than live on 94–97% of
+  paths in every cell, at about the same Sharpe and 1.4–7 pp lower median
+  CAGR. That is the A split acting as a leverage dial.
+- The release before the D gate (09-07) leads slightly on the holdout at L60.
+
+**Improvement candidates** (`monte_carlo_improve.md`, fixed before running).
+- Removing the D gate or the extension trim is clearly worse in most cells.
+- A breadth-only gate and vol targets of 18% or 22% move along the
+  risk/return line.
+- One session of execution lag costs 0.2–3.1 pp of median CAGR.
+- **max(10d, 30d) passes in all 12 cells**: higher Sharpe on 55–73% of paths,
+  shallower MaxDD on 79–93%, CAGR −1.3..+0.6 pp, about +7 rebalances/yr.
+- Against plain 30d at the exposure-matched target (18.2–18.6%) it still wins
+  all 12 cells: Sharpe +0.002..+0.016, MaxDD +0.0..+1.5 pp. Roughly a third of
+  the gain is timing and two thirds is lower exposure.
+- It holds on the holdout panel, which has no COVID 2020 (the 09-09
+  objection), and under one session of lag.
+
+Still standing from the 09-09 revert: more churn and the slower-recovery cost.
+The VIXM sleeve's stress test stays on the plain 30d it was validated on.

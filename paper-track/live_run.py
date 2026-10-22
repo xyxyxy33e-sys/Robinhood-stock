@@ -459,7 +459,7 @@ def cmd_signal(inp, write=True):
     if r['eff'] == 'D':
         z = r.get('d_zone')
         print(f"D ladder zone: {z or 'n/a (gated)'}" + (f" -> row SPMO/TQQQ/QLD {S.D_LADDER_ROWS[z]}" if z else ''))
-    print(f"QQQ 30d vol {r['vol']*100:.1f}% -> multiplier {r['mult']:.3f}")
+    print(f"QQQ vol {'max(10d,30d)' if S.VOL_ESTIMATOR_MAX_ENABLED else '30d'} {r['vol']*100:.1f}% -> multiplier {r['mult']:.3f}")
     print(f"VIXM: {vnote}")
     if vz:
         hi = f", VIX high since entry {vz['vix_high']:.2f}" if vz.get('vix_high') else ''

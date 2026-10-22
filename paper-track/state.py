@@ -639,8 +639,22 @@ VOL_LOOKBACK_DAYS = 30      # trading days (= 6.0 calendar weeks)
 # against more churn and slower recovery -- resolved by the owner for the
 # simpler estimator. The code path is kept and tested so it can be re-enabled
 # by flag; realized_vol_live() returns the plain 30d when disabled.
-VOL_FAST_LOOKBACK_DAYS = 10   # trading days; the fast leg of the max (disabled)
-VOL_ESTIMATOR_MAX_ENABLED = False   # REVERTED 2026-09-09 (owner): see note above
+# 2026-10-22 RE-ENABLED (owner decision: "Embed the change"), on the Monte
+# Carlo (paper-track/monte_carlo_improve.py, research_notes/monte_carlo_improve.md):
+# paired against the live 2026-10-09 design on 1,000 block-bootstrapped
+# 10-year paths in 12 cells (proxy / 2000-2015 holdout / real ETFs x mean
+# block 20/60/120/250), max(10,30) has the higher Sharpe on 55-73% of paths
+# and the shallower MaxDD on 79-93% in EVERY cell, median CAGR -1.3..+0.6pp,
+# ~+7 rebalances/yr. Against plain 30d at the exposure-matched target
+# (18.2-18.6%) it still wins all 12 cells (Sharpe +0.002..+0.016, MaxDD
+# +0.0..+1.5pp), so about a third of the gain is timing and two thirds is
+# lower average exposure. It holds on the holdout panel, which has no COVID
+# 2020 (the 09-09 objection), and under one session of execution lag. Still
+# standing from 09-09: more churn and the slower-recovery cost.
+# The VIXM sleeve's stress test stays on the plain 30d (vixm_state), as the
+# sleeve was specified and validated on it.
+VOL_FAST_LOOKBACK_DAYS = 10   # trading days; the fast leg of the max
+VOL_ESTIMATOR_MAX_ENABLED = True    # RE-ENABLED 2026-10-22 (owner); was reverted 2026-09-09: see notes above
 VOL_TARGET_CAP = 1.0        # never exceed the un-scaled weights; do NOT raise
 TRADING_DAYS_PER_YEAR = 252
 
@@ -1590,7 +1604,7 @@ LIVE_LEGS = ('core', 'tqqq', 'qld', 'xlu', 'vixm', 'cash')
 
 def vixm_series(dates, vix, vix3m, qqq_vol):
     """Replay the VIXM latch over `dates` (ascending ISO strings).
-    vix, vix3m: {date: close}; qqq_vol: {date: realized_vol_live as of that
+    vix, vix3m: {date: close}; qqq_vol: {date: plain 30d realized_vol as of that
     date, or None}. Dates missing either index level are skipped (they neither
     set nor clear anything). Returns {date: dict(on, stress, allowed, faded,
     vix, vix3m, ratio, vol, vix_high)}: `allowed` is the only field that moves
@@ -1629,10 +1643,11 @@ def vixm_state(dates, px, vix, vix3m, as_of=None, backfill=True):
     """THE live input for the VIXM sleeve: today's dict from vixm_series().
 
     dates/px: the SAME QQQ series (today's 15:5x snapshot appended) passed to
-    compute_states(); QQQ realized vol per date is computed here with
-    realized_vol_live(), backfilled from data/qqq_long_history.csv like
-    a_trim_state. vix/vix3m: {date: close} with today's 15:5x readings
-    appended (vol_curve.load_vix_inputs builds both). The latch is path
+    compute_states(); QQQ realized vol per date is computed here with the
+    plain 30-day realized_vol(), backfilled from data/qqq_long_history.csv like
+    a_trim_state. (2026-10-22: pinned to the 30d the sleeve was specified and
+    validated on, so it does not follow VOL_ESTIMATOR_MAX_ENABLED.) vix/vix3m:
+    {date: close} with today's 15:5x readings appended (vol_curve.load_vix_inputs builds both). The latch is path
     dependent, so the whole index history is replayed every run -- no stored
     state, and a missed run reconstructs it exactly.
 
@@ -1662,7 +1677,7 @@ def vixm_state(dates, px, vix, vix3m, as_of=None, backfill=True):
     vols = {}
     for d in idx_dates:
         if d in qset:
-            vols[d] = realized_vol_live(qd, px2, as_of=d)
+            vols[d] = realized_vol(qd, px2, as_of=d, lookback=VOL_LOOKBACK_DAYS)
     out = vixm_series(idx_dates, vix, vix3m, vols)
     if as_of not in out:
         raise MissingOverlayInputs(f"vixm_state: replay produced no reading for {as_of}")
