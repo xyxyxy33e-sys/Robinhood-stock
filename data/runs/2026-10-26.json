@@ -241,7 +241,7 @@
  ],
  "sweep": {},
  "pushes": [],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-10-26",
   "time": "15:51 ET",
@@ -319,5 +319,48 @@
   },
   "idle_cash": 20.7,
   "total_value": 609410.554738127
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 324.0,
+    "price": 68.56
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 0.96382,
+    "price": 68.5546
+   },
+   {
+    "symbol": "QLD",
+    "side": "sell",
+    "quantity": 218.0,
+    "price": 88.1401
+   },
+   {
+    "symbol": "QLD",
+    "side": "sell",
+    "quantity": 0.23562,
+    "price": 88.1501
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 349.0,
+    "price": 118.765
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 0.280716,
+    "price": 118.7673
+   }
+  ],
+  "nav_return": 0.024383623291284805,
+  "tier": 0.1,
+  "session_lag": 0
  }
 }
