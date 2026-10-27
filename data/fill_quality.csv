@@ -56,3 +56,11 @@ date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,no
 2026-10-26,QLD,sell,0.23562,88.1501,88.015,signal_session_close,-15.35,20.77,,0
 2026-10-26,BOXX,buy,349.0,118.765,118.76,signal_session_close,0.42,41448.99,,0
 2026-10-26,BOXX,buy,0.280716,118.7673,118.76,signal_session_close,0.61,33.34,,0
+2026-10-27,TQQQ,sell,3728.0,71.13,71.04,signal_session_close,-12.67,265172.64,,0
+2026-10-27,TQQQ,sell,0.410683,71.1001,71.04,signal_session_close,-8.46,29.2,,0
+2026-10-27,QLD,sell,168.0,90.33,90.23,signal_session_close,-11.08,15175.44,,0
+2026-10-27,QLD,sell,0.95161,90.3103,90.23,signal_session_close,-8.9,85.94,,0
+2026-10-27,SPMO,buy,1729.0,142.6,142.565,signal_session_close,2.46,246555.4,,0
+2026-10-27,SPMO,buy,0.612136,142.5989,142.565,signal_session_close,2.38,87.29,,0
+2026-10-27,BOXX,buy,284.0,118.7699,118.77,signal_session_close,-0.01,33730.65,,0
+2026-10-27,BOXX,buy,0.671813,118.768,118.77,signal_session_close,-0.17,79.79,,0
