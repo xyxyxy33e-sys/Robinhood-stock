@@ -1334,10 +1334,66 @@ def d_zone(gaps):
     return 'D1' if g1 > 0 else 'D2' if g2 > 0 else 'D3'
 
 
-def d_ladder_row(gaps):
+# 2026-10-29, owner ("add it then"): a +/-0.5% buffer on both ladder lines. On 16-29 Oct 2026
+# QQQ sat on its 100-day and the book went A->D2->D1->D2->D1->D2, each flip swapping ~40% of
+# the account between SPMO and TQQQ. With the buffer the zone moves one step deeper only when
+# the gap is below -D_ZONE_BUFFER and back up only when it is above +D_ZONE_BUFFER; in between
+# it keeps the previous session's zone. The memory starts fresh (plain d_zone) on the first
+# effective-D session of a spell and runs through gated D days, so the zone is rebuilt from
+# price history alone (d_zone_series) -- nothing is stored between runs.
+# Evidence (d_zone_buffer_study.py, pre-registered, VIXM out of every arm; real ETFs
+# 2015-11..2026-10 / proxy 2001-2026 / holdout 2001-2015): Sharpe 1.831 -> 1.849 real,
+# 1.306 -> 1.321 proxy, 0.973 -> 0.988 holdout; at 20 bp per side +0.030 / +0.027; max DD
+# unchanged real, 2.5 pp shallower proxy; D zone changes 6.2 -> 4.3 a year. Small: the
+# bootstrap does not separate it from no buffer (P 0.23 / 0.12) and it was the best of six
+# arms (1% / 2% buffers, 3-close confirmation and SPMO-favouring stays all failed).
+D_ZONE_BUFFER_ENABLED = True
+D_ZONE_BUFFER = 0.005
+
+
+def d_zone_step(prev, gaps, b=D_ZONE_BUFFER):
+    """Buffered zone for today given yesterday's buffered zone `prev` ('D1'/'D2'/'D3');
+    None when a cut-line gap is missing."""
+    if not isinstance(gaps, dict):
+        return None
+    g1, g2 = (gaps.get(n) for n in D_LADDER_WINDOWS)
+    if g1 is None or g2 is None:
+        return None
+    if prev == 'D1' and g1 < -b:
+        return 'D3' if g2 < -b else 'D2'
+    if prev == 'D2' and g1 > b:
+        return 'D1'
+    if prev == 'D2' and g2 < -b:
+        return 'D3'
+    if prev == 'D3' and g2 > b:
+        return 'D1' if g1 > b else 'D2'
+    return prev
+
+
+def d_zone_series(dates, px, states=None, fast=None, gaps=None):
+    """{date: buffered ladder zone} on every effective-D session (gated ones included),
+    None elsewhere. The first D session of a spell takes the plain d_zone; later ones
+    step with d_zone_step. With the buffer disabled this is plain d_zone."""
+    states = states if states is not None else compute_states(dates, px)
+    fast = fast if fast is not None else compute_fast_states(dates, px)
+    gaps = gaps if gaps is not None else compute_extension_gaps(dates, px)
+    out, cur = {}, None
+    for i, d in enumerate(dates):
+        if effective_state(states[i], fast[d]) != 'D' or d_zone(gaps[d]) is None:
+            cur = None
+        elif cur is None or not D_ZONE_BUFFER_ENABLED:
+            cur = d_zone(gaps[d])
+        else:
+            cur = d_zone_step(cur, gaps[d])
+        out[d] = cur
+    return out
+
+
+def d_ladder_row(gaps, zone=None):
     """5-leg D row (core, tqqq, qld, xlu, cash) before the vol target, or None
-    when the zone cannot be read."""
-    z = d_zone(gaps)
+    when the zone cannot be read. `zone` (the buffered zone from d_zone_series)
+    wins over the plain reading of gaps."""
+    z = zone or d_zone(gaps)
     if z is None:
         return None
     c, t, q = D_LADDER_ROWS[z]
@@ -1345,7 +1401,7 @@ def d_ladder_row(gaps):
 
 
 def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None,
-                                  d_gate=None, a_trim=None, d_ladder=None):
+                                  d_gate=None, a_trim=None, d_ladder=None, d_zone=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -1380,13 +1436,16 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
 
     d_ladder: True on the live path (2026-10-09) -- an ungated D day holds
     d_ladder_row(gaps) instead of the single D row. None/False keeps the
-    single 100% QLD row, which is what every pre-2026-10-09 backtest gets."""
+    single 100% QLD row, which is what every pre-2026-10-09 backtest gets.
+
+    d_zone: the buffered ladder zone from d_zone_series() (2026-10-29). None
+    reads the plain zone from gaps, which is what every earlier backtest gets."""
     eff = effective_state(state, fast_state)
     if d_gate and D_GATE_ENABLED and state == D_GATE_STATE:
         return (0.0, 0.0, 0.0, 0.0, 1.0)
     core, tqqq, qld, xlu, cash = target_weights_with_micro(eff, micro_agrees)
     if d_ladder and D_LADDER_ENABLED and eff == 'D':
-        row = d_ladder_row(gaps)
+        row = d_ladder_row(gaps, d_zone)
         if row is None:
             raise MissingOverlayInputs(f"d_ladder needs gaps[{D_LADDER_WINDOWS[0]}] and gaps[{D_LADDER_WINDOWS[1]}]")
         core, tqqq, qld, xlu, cash = row
@@ -1410,7 +1469,7 @@ class MissingOverlayInputs(ValueError):
     """A live weight call omitted a mandatory overlay input."""
 
 
-def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim):
+def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, *, zone=None):
     """THE function live triggers must call (added 2026-09-07).
 
     Identical maths to target_weights_with_voltarget(), but `fast_state` and
@@ -1437,7 +1496,11 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct,
     a caller would silently trade the v1 trim.
 
     D ladder (2026-10-09): on an effective-D day gaps[100] and gaps[150] must
-    be numbers (they pick D1/D2/D3); the live path always passes d_ladder."""
+    be numbers (they pick D1/D2/D3); the live path always passes d_ladder.
+
+    zone (REQUIRED on an ungated effective-D day since 2026-10-29, the zone
+    buffer): d_zone_series(dates, px)[<date>]. Refused when missing there,
+    because without it a caller would silently trade the unbuffered zone."""
     if TARGET_WEIGHTS != _CANONICAL_TARGET_WEIGHTS:
         raise MissingOverlayInputs(
             "TARGET_WEIGHTS was modified in this process (a research module re-pins state E); "
@@ -1478,9 +1541,15 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct,
     if D_LADDER_ENABLED and effective_state(state, fast_state) == 'D' and d_zone(gaps) is None:
         raise MissingOverlayInputs(
             f"the D ladder needs gaps[{D_LADDER_WINDOWS[0]}] and gaps[{D_LADDER_WINDOWS[1]}] as numbers on a D day")
+    if zone is not None and zone not in D_LADDER_ROWS:
+        raise MissingOverlayInputs(f"zone {zone!r} is not one of {sorted(D_LADDER_ROWS)}")
+    if D_LADDER_ENABLED and D_ZONE_BUFFER_ENABLED and effective_state(state, fast_state) == 'D' \
+            and not gate and zone is None:
+        raise MissingOverlayInputs(
+            "zone is required on an ungated D day (zone buffer): pass d_zone_series(dates, px)[<date>]")
     return target_weights_with_voltarget(
         state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate, a_trim=a_trim,
-        d_ladder=D_LADDER_ENABLED)
+        d_ladder=D_LADDER_ENABLED, d_zone=zone if D_ZONE_BUFFER_ENABLED else None)
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
@@ -1731,17 +1800,18 @@ def apply_vixm(weights5, vixm):
 VIXM_OFF_D_ZONES = ('D2',)
 
 
-def vixm_blocked(state, fast_state, gaps, breadth_pct):
+def vixm_blocked(state, fast_state, gaps, breadth_pct, zone=None):
     """True when the VIXM sleeve is switched off for this session's row: an ungated
-    effective-D day whose ladder zone is in VIXM_OFF_D_ZONES."""
+    effective-D day whose ladder zone (the buffered `zone` when given) is in VIXM_OFF_D_ZONES."""
     if effective_state(state, fast_state) != 'D' or not isinstance(gaps, dict):
         return False
     if D_GATE_ENABLED and d_gate_active(state, breadth_pct, gaps.get(200)):
         return False
-    return D_LADDER_ENABLED and d_zone(gaps) in VIXM_OFF_D_ZONES
+    return D_LADDER_ENABLED and (zone or d_zone(gaps)) in VIXM_OFF_D_ZONES
 
 
-def live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm):
+def live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm, *,
+                                  zone=None):
     """THE live weight function from 2026-10-08: live_target_weights() (every
     existing guard and overlay, unchanged) followed by apply_vixm(). Returns
     6 legs in LIVE_LEGS order. `vixm` is REQUIRED: vixm_state(...) or, when
@@ -1751,8 +1821,8 @@ def live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, br
         raise MissingOverlayInputs(
             "vixm is required: pass vixm_state(dates, px, vix, vix3m, as_of=<date>) "
             "or vixm_unavailable(<reason>)")
-    w5 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
-    if vixm_blocked(state, fast_state, gaps, breadth_pct):
+    w5 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, zone=zone)
+    if vixm_blocked(state, fast_state, gaps, breadth_pct, zone if D_ZONE_BUFFER_ENABLED else None):
         return apply_vixm(w5, dict(vixm, allowed=False))
     return apply_vixm(w5, vixm)
 

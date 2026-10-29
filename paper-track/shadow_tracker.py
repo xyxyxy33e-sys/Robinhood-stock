@@ -60,21 +60,21 @@ FIELDS = (['date', 'track', 'key', 'ret', 'nav', 'rebalanced']
           + ['qqq', 'eff', 'in_a', 'spell_start', 'raw', 'held'])
 
 
-def track_targets(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim):
+def track_targets(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, zone=None):
     """{track: (weights, key)} for one date. v2 goes through live_target_weights,
     so a missing input fails here exactly as it would for the live book."""
     eff = effective_state(state, fast_state)
     gate = d_gate_active(state, breadth_pct, gaps[200])
     raw = extension_votes(eff, gaps) if eff == 'A' else 0
     held = a_trim['held'] if a_trim['in_a'] else 0
-    w_v2 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
+    w_v2 = live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, zone=zone)
     fc = dict(a_trim, held=a_trim['raw']) if a_trim['in_a'] else a_trim
     w_fc = target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast_state, gaps=gaps,
-                                         d_gate=gate, a_trim=fc, d_ladder=D_LADDER_ENABLED)
+                                         d_gate=gate, a_trim=fc, d_ladder=D_LADDER_ENABLED, d_zone=zone)
     w_19 = target_weights_with_voltarget(state, micro_agrees, vol, fast_state=fast_state, gaps=gaps,
                                          d_gate=gate, a_trim=None)
     base = f'{eff}|{int(gate)}'
-    zone = d_zone(gaps) if eff == 'D' and not gate else None
+    zone = (zone or d_zone(gaps)) if eff == 'D' and not gate else None     # buffered zone (2026-10-29)
     lad = base + (f'|{zone}' if zone else '')      # D ladder zone (2026-10-09); A-day keys unchanged
     return {'v2': (w_v2, f'{lad}|{held}'), 'fastcut': (w_fc, f'{lad}|{raw}'),
             'sep19': (w_19, f'{base}|{raw}')}
@@ -96,7 +96,7 @@ def _write(rows, path):
 
 
 def update(date, closes, qqq_close, state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim,
-           path=LOG_PATH):
+           path=LOG_PATH, zone=None):
     """Record one COMPLETED session for all three tracks. Idempotent: a re-run for
     the same date replaces that date's rows (recomputed from the prior date).
     closes: {'SPMO':..,'TQQQ':..,'QLD':..,'XLU':..,'BOXX':..} official closes.
@@ -109,7 +109,7 @@ def update(date, closes, qqq_close, state, micro_agrees, vol, fast_state, gaps, 
     if any(r['date'] > date for r in rows):
         raise ValueError(f"shadow_tracker.update: {date} is older than the last logged date; "
                          f"only the latest date may be re-run")
-    tt = track_targets(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim)
+    tt = track_targets(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, zone)
     last = {}
     if prior:
         d0 = max(r['date'] for r in prior)

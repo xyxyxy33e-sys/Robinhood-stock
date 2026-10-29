@@ -139,8 +139,10 @@ def reading(dates, qqq, qqew, as_of):
     a_trim = S.a_trim_state(dates, qqq, as_of=as_of)
     eff = S.effective_state(state, fast)
     gate = S.d_gate_active(state, br['pct'], gaps[200])
+    zone = S.d_zone_series(dates[:i + 1], qqq)[as_of] if eff == 'D' and not gate else None
     return dict(date=as_of, state=state, fast=fast, eff=eff, gaps=gaps, micro=micro, vol=vol,
-                d_zone=S.d_zone(gaps) if eff == 'D' and not gate else None,
+                d_zone=zone,                                      # buffered (2026-10-29)
+                d_zone_plain=S.d_zone(gaps) if eff == 'D' and not gate else None,
                 mult=S.vol_target_multiplier(vol), breadth_pct=br['pct'], x60=br['x60'],
                 d_flags=S.d_gate_flags(br['pct'], gaps[200]),
                 d_gate=gate,
@@ -149,12 +151,20 @@ def reading(dates, qqq, qqew, as_of):
 
 def weights5(r):
     return S.live_target_weights(r['state'], r['micro'], r['vol'], r['fast'], r['gaps'],
-                                 r['breadth_pct'], r['a_trim'])
+                                 r['breadth_pct'], r['a_trim'], zone=_zone(r))
 
 
 def weights6(r, vx):
     return S.live_target_weights_with_vixm(r['state'], r['micro'], r['vol'], r['fast'], r['gaps'],
-                                           r['breadth_pct'], r['a_trim'], vx)
+                                           r['breadth_pct'], r['a_trim'], vx, zone=_zone(r))
+
+
+def _zone(r):
+    """The reading's ladder zone. Run files written before 2026-10-29 hold the plain zone
+    under d_zone (what that day traded); recompute it from gaps if a D-day file lacks it."""
+    if r['eff'] != 'D' or r.get('d_gate'):
+        return None
+    return r.get('d_zone') or S.d_zone(r['gaps'])
 
 
 def vixm_pair(dates, qqq, today, prev, vix_now, notes):
@@ -458,7 +468,9 @@ def cmd_signal(inp, write=True):
           f"{'' if r['state'] == 'D' else ' (informational outside D)'}")
     if r['eff'] == 'D':
         z = r.get('d_zone')
-        print(f"D ladder zone: {z or 'n/a (gated)'}" + (f" -> row SPMO/TQQQ/QLD {S.D_LADDER_ROWS[z]}" if z else ''))
+        print(f"D ladder zone: {z or 'n/a (gated)'}" + (f" -> row SPMO/TQQQ/QLD {S.D_LADDER_ROWS[z]}" if z else '')
+              + (f" (held by the +/-{S.D_ZONE_BUFFER:.1%} buffer; plain reading {r['d_zone_plain']})"
+                 if z and r.get('d_zone_plain') and r['d_zone_plain'] != z else ''))
     print(f"QQQ vol {'max(10d,30d)' if S.VOL_ESTIMATOR_MAX_ENABLED else '30d'} {r['vol']*100:.1f}% -> multiplier {r['mult']:.3f}")
     print(f"VIXM: {vnote}")
     if vz:
@@ -573,7 +585,7 @@ def cmd_record(inp):
     if run and run.get('reading'):
         r = _restore_reading(run['reading'])
         ST.update(date, {s: closes[s] for s in LEGS5}, closes['QQQ'], r['state'], r['micro'], r['vol'],
-                  r['fast'], r['gaps'], r['breadth_pct'], r['a_trim'])
+                  r['fast'], r['gaps'], r['breadth_pct'], r['a_trim'], zone=_zone(r))
         v = ST.revert_check()
         out_lines.append(ST.summary_line())
         if r['state'] == 'D':

@@ -420,7 +420,7 @@ def check_d_gate():
             assert live_target_weights(st, False, 0.15, st, hot, 0.1, at) == \
                 target_weights_with_voltarget(st, False, 0.15, fast_state=st, gaps=hot, a_trim=at), f"gate moved state {st}"
     cash = (0.0, 0.0, 0.0, 0.0, 1.0)
-    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5, _at('D')) == (0.5, 0.0, 0.5, 0.0, 0.0), \
+    assert live_target_weights('D', False, 0.15, 'D', cold, 0.5, _at('D'), zone='D1') == (0.5, 0.0, 0.5, 0.0, 0.0), \
         "ungated D above the 100-day is the D1 ladder row (2026-10-09; was 100% QLD)"
     assert live_target_weights('D', False, 0.15, 'D', hot, 0.5, _at('D')) == cash, "gap200 half must gate"
     assert live_target_weights('D', False, 0.15, 'D', cold, 0.1, _at('D')) == cash, "breadth half must gate"
@@ -466,7 +466,7 @@ def check_d_ladder():
         c, t, q = D_LADDER_ROWS[name]
         for vol in (0.15, 0.30):
             m = vol_target_multiplier(vol)
-            w = live_target_weights('D', False, vol, 'D', gp, 0.5, _at('D'))
+            w = live_target_weights('D', False, vol, 'D', gp, 0.5, _at('D'), zone=name)
             want = (c * m, t * m, q * m, 0.0, 1.0 - (c + t + q) * m)
             assert all(abs(a - b) < 1e-12 for a, b in zip(w, want)), (name, vol, w, want)
             assert abs(sum(w) - 1.0) < 1e-12
@@ -509,7 +509,65 @@ def check_d_ladder():
           "40/60 from the 2026-10-22 session (running spell included)")
 
 
+def check_d_zone_buffer():
+    """D ladder zone buffer (APPLIED 2026-10-29, owner): +/-0.5% on both cut lines, memory
+    from the first effective-D session of a spell (plain zone there), through gated D days,
+    reset off D; the live function refuses an ungated D day without the buffered zone;
+    the engine's d_buffer reproduces state.d_zone_series; the 16-29 Oct 2026 path."""
+    import state as S
+    import monte_carlo as MC
+    import numpy as np
+    assert S.D_ZONE_BUFFER_ENABLED and S.D_ZONE_BUFFER == 0.005, "owner 2026-10-29: +/-0.5% zone buffer"
+    z = lambda a, b: {100: a, 150: b, 200: 0.05}
+    st = S.d_zone_step
+    assert st('D1', z(-0.004, 0.03)) == 'D1' and st('D1', z(-0.006, 0.03)) == 'D2' and st('D1', z(-0.006, -0.006)) == 'D3'
+    assert st('D2', z(0.004, 0.03)) == 'D2' and st('D2', z(0.006, 0.03)) == 'D1' and st('D2', z(-0.03, -0.004)) == 'D2'
+    assert st('D2', z(-0.03, -0.006)) == 'D3' and st('D3', z(-0.03, 0.004)) == 'D3' and st('D3', z(-0.03, 0.006)) == 'D2'
+    assert st('D3', z(0.006, 0.006)) == 'D1' and st('D1', z(None, 0.01)) is None
+    # live function: zone required on an ungated D day, not on a gated one or off D; the zone picks the row
+    for bad in (None, 'D4'):
+        try:
+            S.live_target_weights('D', False, 0.15, 'D', z(-0.003, 0.03), 0.5, _at('D'), zone=bad)
+        except S.MissingOverlayInputs:
+            pass
+        else:
+            raise AssertionError(f"live_target_weights accepted zone={bad!r} on an ungated D day")
+    assert S.live_target_weights('D', False, 0.15, 'D', z(-0.003, 0.03), 0.1, _at('D')) == (0, 0, 0, 0, 1.0)
+    assert S.live_target_weights('A', False, 0.15, 'A', z(-0.003, 0.03), 0.5, _at('A'))
+    held = S.live_target_weights('D', False, 0.15, 'D', z(-0.003, 0.03), 0.5, _at('D'), zone='D1')
+    assert held == (0.5, 0.0, 0.5, 0.0, 0.0), "a held D1 keeps the D1 row though the plain reading is D2"
+    on = dict(available=True, allowed=True)
+    w6 = S.live_target_weights_with_vixm('D', False, 0.30, 'D', z(0.003, 0.03), 0.5, _at('D'), on, zone='D2')
+    assert w6[4] == 0.0, "VIXM follows the buffered zone (held D2 -> off)"
+    # spell memory on a synthetic path: D spell, wiggle around the 100d, leave D, re-enter
+    dates = [f'd{i:02d}' for i in range(8)]
+    states = ['D'] * 3 + ['A'] + ['D'] * 4
+    g = [z(0.01, 0.03), z(-0.004, 0.03), z(-0.006, 0.03), z(0.01, 0.03), z(-0.003, 0.03), z(0.004, 0.03),
+         z(-0.004, 0.03), z(0.006, 0.03)]
+    zs = S.d_zone_series(dates, None, states=states, fast=dict(zip(dates, states)), gaps=dict(zip(dates, g)))
+    assert [zs[d] for d in dates] == ['D1', 'D1', 'D2', None, 'D2', 'D2', 'D2', 'D1'], zs
+    # engine == state.py on the proxy history, every effective-D session
+    p = MC.load_panel('proxy'); dates = p['dates']; qpx = 100 * np.cumprod(1 + p['qqq'])
+    sig = MC.signals(qpx[None], (100 * np.cumprod(1 + p['ew']))[None])
+    zs = S.d_zone_series(dates, dict(zip(dates, qpx)))
+    ez = MC._zone(sig, dict(MC.LIVE, d_buffer=S.D_ZONE_BUFFER))[0]
+    nd = sum(1 for d in dates if zs[d])
+    bad = sum(1 for i, d in enumerate(dates) if zs[d] and zs[d] != f'D{ez[i]}')
+    assert nd > 800 and bad == 0, (nd, bad)
+    assert (MC._zone(sig, MC.LIVE) == sig['zone']).all(), "no d_buffer keeps the plain zone (old designs)"
+    # the 16-29 Oct 2026 live closes: 27 Oct holds D2 (gap100 +0.31%), the rest as traded
+    import live_run as L
+    c = L.load_closes(); q = c['QQQ']; ds = sorted(q)
+    if '2026-10-29' in q:
+        zs = S.d_zone_series([d for d in ds if d <= '2026-10-29'], q)
+        got = [zs[d] for d in ('2026-10-16', '2026-10-21', '2026-10-22', '2026-10-27', '2026-10-28', '2026-10-29')]
+        assert got == ['D2', 'D1', 'D2', 'D2', 'D1', 'D2'], got
+    print(f"OK: D zone buffer +/-{S.D_ZONE_BUFFER:.1%} -- steps, spell memory, live refuses a missing zone, "
+          f"VIXM follows it, engine == state.py on {nd} proxy D sessions, Oct 2026 path")
+
+
 check_d_ladder()
+check_d_zone_buffer()
 
 
 def check_extension_scale_floor():
@@ -1068,8 +1126,8 @@ def check_vixm_overlay():
     d1, d2, d3 = ({100: 0.01, 150: 0.03, 200: 0.05}, {100: -0.01, 150: 0.02, 200: 0.05},
                   {100: -0.04, 150: -0.01, 200: 0.05})
     for gp, want_on in ((d1, True), (d2, False), (d3, True)):
-        w5 = S.live_target_weights('D', False, 0.30, 'D', gp, 0.5, _at('D'))
-        w6 = S.live_target_weights_with_vixm('D', False, 0.30, 'D', gp, 0.5, _at('D'), on)
+        w5 = S.live_target_weights('D', False, 0.30, 'D', gp, 0.5, _at('D'), zone=S.d_zone(gp))
+        w6 = S.live_target_weights_with_vixm('D', False, 0.30, 'D', gp, 0.5, _at('D'), on, zone=S.d_zone(gp))
         assert w6[:4] == w5[:4] and abs(w6[4] + w6[5] - w5[4]) < 1e-12
         assert (w6[4] > 0) == want_on, (S.d_zone(gp), w6)
         S.validate_weights_live('D', *w6)

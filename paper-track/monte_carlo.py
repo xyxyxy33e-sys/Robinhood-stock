@@ -233,6 +233,30 @@ def _eff(sig, cfg):
     return sig['eff'] if cfg['fast'] else sig['eff_slow']
 
 
+def _zone(sig, cfg):
+    """D ladder zone per session. cfg['d_buffer'] = b > 0 (live from 2026-10-29, 0.005) applies
+    state.d_zone_step's buffer: the first effective-D session of a spell takes the plain zone,
+    later ones move a zone only past +/-b; the memory runs through gated D days and resets off D."""
+    b = cfg.get('d_buffer', 0.0)
+    if not b:
+        return sig['zone']
+    ck = ('_zone_b', b, cfg['fast'])
+    if ck not in sig:
+        eff = _eff(sig, cfg); g1, g2 = sig['gaps'][100], sig['gaps'][150]; raw = sig['zone']
+        z = raw.copy(); P, T = raw.shape
+        cur = np.zeros(P, int)                                  # 0 = no memory
+        for t in range(T):
+            ok = (eff[:, t] == 3) & ~np.isnan(g1[:, t]) & ~np.isnan(g2[:, t])
+            a, c = g1[:, t], g2[:, t]
+            nxt = np.where(cur == 1, np.where(a < -b, np.where(c < -b, 3, 2), 1),
+                  np.where(cur == 2, np.where(a > b, 1, np.where(c < -b, 3, 2)),
+                  np.where(cur == 3, np.where(c > b, np.where(a > b, 1, 2), 3), raw[:, t])))
+            cur = np.where(ok, nxt, 0)
+            z[:, t] = np.where(ok, cur, raw[:, t])
+        sig[ck] = z
+    return sig[ck]
+
+
 def _gate(sig, cfg):
     """D gate per cfg: 'both' (live: breadth OR gap200), 'breadth', 'gap200', or off."""
     if not cfg['d_gate']:
@@ -263,7 +287,7 @@ def target_weights(sig, cfg=LIVE):
     if cfg['d_ladder']:
         for z, k in ((1, 'D1'), (2, 'D2'), (3, 'D3')):
             c, tq, q = S.D_LADDER_ROWS[k]
-            w[(eff == 3) & (sig['zone'] == z)] = (c, tq, q, 0.0, 0.0)
+            w[(eff == 3) & (_zone(sig, cfg) == z)] = (c, tq, q, 0.0, 0.0)
     if cfg['d_gate']:
         w[_gate(sig, cfg)] = (0.0, 0.0, 0.0, 0.0, 1.0)
     v = sig['vol'] if cfg['vol'] == '30' else np.fmax(sig['vol'], np.where(np.isnan(sig['vol']), np.nan, sig['vol10']))
@@ -287,7 +311,7 @@ def regime_key(sig, cfg=LIVE):
     if cfg['d_gate']:
         k = k + gate * 10
     if cfg['d_ladder']:
-        k = k + np.where((eff == 3) & ~gate, sig['zone'], 0)
+        k = k + np.where((eff == 3) & ~gate, _zone(sig, cfg), 0)
     return k
 
 

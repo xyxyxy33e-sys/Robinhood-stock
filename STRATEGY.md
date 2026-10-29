@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -77,7 +77,7 @@ max(10d, 30d) estimator was live 09-07..09-09, reverted to the plain 30-day, and
 in Part II; the VIXM sleeve's stress test stays on the plain 30-day). Rebalance on any change of effective
 state, on a change in HELD trim votes (v2), on L1 drift > 5% (3% until 2026-09-09), on a
 zero-target leg still held above 0.10%, on the state-D gate switching, or on the D ladder zone
-changing inside D (2026-10-09).
+changing inside D (2026-10-09; the zone moves only past a ±0.5% buffer from 2026-10-29).
 
 **VIXM sleeve in the cash leg (APPLIED 2026-10-08, owner decision):** the
 rows above are unchanged; this only decides what the cash (BOXX) leg holds.
@@ -118,7 +118,20 @@ An ungated D3 day is rare — 9 days (8 episodes) in 2015–2026, 24 (17) since 
 because the D gate usually has the book in cash below the 150-day. The gate above still sends the whole row to cash;
 the vol target scales every row; a zone change is a rebalance trigger.
 `d_zone(gaps)` / `d_ladder_row(gaps)` in `state.py`, read from the same gaps
-dict as the trim. Why: inside D, next-session QQQ is weakest while QQQ is still
+dict as the trim. **Zone buffer (APPLIED 2026-10-29, owner — "add it then"):**
+the zone moves one step deeper only when QQQ's gap to the line is below −0.5%,
+and back up only when it is above +0.5%; in between it keeps the previous
+session's zone. The first D session of a spell takes the plain zone; the memory
+runs through gated D days and resets when the book leaves D, so `d_zone_series`
+rebuilds it from price history (nothing stored between runs) and the live weight
+function refuses an ungated D day without it. Why: 16–29 Oct 2026 QQQ sat on its
+100-day and the book flipped A→D2→D1→D2→D1→D2, each flip swapping ~40% of the
+account between SPMO and TQQQ. `d_zone_buffer_study.py` (pre-registered, VIXM out):
+Sharpe 1.831 → 1.849 real, 1.306 → 1.321 proxy, 0.973 → 0.988 holdout; +0.030 /
++0.027 at 20 bp per side; max DD same real, 2.5 pp shallower proxy; zone changes
+6.2 → 4.3 a year. Small — bootstrap P 0.23 / 0.12, best of six arms; 1% / 2%
+buffers, a 3-close confirmation and SPMO-favouring stays (D1 kept to −1% / −2%)
+all failed. It would have saved one of the five October flips (27 Oct, gap +0.31%). Why: inside D, next-session QQQ is weakest while QQQ is still
 above its 100-day (+0.12% real / +0.08% proxy vs +0.51% / +0.32% in D2).
 Research (Robinhood repo, `research/`): `d_substates_dma.py`,
 `d_three_levels.py`, `leverage_ladder.py`, `d1_leverage.py`,
@@ -182,6 +195,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-29 | **D zone buffer ±0.5%** on both ladder lines (`D_ZONE_BUFFER`, `d_zone_step`, `d_zone_series`; `live_target_weights(..., zone=)` required on an ungated D day; VIXM-off-D2 and the shadow tracks follow the buffered zone; engine `cfg['d_buffer']`); no trade on the day (book in D2 both ways) | **owner decision** ("add it then"); `d_zone_buffer_study.py`, pre-registered, passes all four rules: real 43.5% / 1.831 / −18.4% → 44.0% / 1.849 / −18.4%, proxy 30.2% / 1.306 / −24.6% → 30.7% / 1.321 / −22.2%, holdout 0.973 → 0.988, 20 bp +0.030 / +0.027; bootstrap P 0.23 / 0.12 — small, inside noise; engine == `state.py` on 934 proxy D sessions |
 | 2026-10-22 | **VIXM off in ungated D2** (`VIXM_OFF_D_ZONES = ('D2',)`, `vixm_blocked`, applied inside `live_target_weights_with_vixm`); gated D, D1, D3 and every other state keep the sleeve; entering/leaving D2 is already a regime trigger | **owner decision** ("turn off vixm in d2 only"); `vixm_by_state.py`: D2 the only losing state (−1.4%, 2 spells / 19 days); live 47.7% / 2.005 / −18.4% → 47.9% / 2.006 / −18.4%, bootstrap P(not better) 0.40 — inside noise |
 | 2026-10-22 | **re-baseline** (no design change): one run of the live design after the day's changes — real with VIXM 47.7% / 2.01 / −18.4%, proxy 30.4% / 1.32 / −24.6%, holdout 20.8% / 0.97 | `rebaseline_2026_10_22.py`; engine = `monte_carlo.py` (verified vs `state.py`) |
 | 2026-10-22 | **D3 → 100% TQQQ (3.0x)** (`D_LADDER_ROWS['D3'] = (0, 1, 0)`); D3 no longer follows the A row; never held live at the earlier rows | **owner decision** ("Change d3 to 100 tqqq"); engine vs D3 40/60: real 44.5% / 1.892 / −18.4% vs 44.0% / 1.887 / −17.7%, proxy 30.4% / 1.320 / −24.6% vs 29.9% / 1.309 / −24.2%, holdout 20.8% / 0.973 vs 20.2% / 0.959; rests on 8 (real) / 17 (proxy) one-to-two-day episodes |
