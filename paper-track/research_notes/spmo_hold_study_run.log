@@ -1,0 +1,57 @@
+======================================================================================================================
+spmo_hold_study (2026-10-29): hold SPMO longer through state shifts? (pre-registered)
+======================================================================================================================
+
+  REAL ETFs (extended with live closes)  2015-11-03..2026-10-29   cost 4 bp per side
+  arm                           CAGR  Sharpe  max DD  avg DD trades/yr SPMO turn/yr SPMO sells/yr
+  live design                 43.52%   1.831  -18.4%   -3.8%        44         644%          15.8
+  hold SPMO cut 5 days        39.50%   1.732  -19.1%   -4.3%        48         375%          18.0
+  hold SPMO cut 10 days       37.26%   1.657  -23.2%   -5.2%        43         299%          16.6
+  hold SPMO cut 20 days       37.90%   1.679  -24.0%   -4.8%        40         192%          15.8
+  cut SPMO only if >15 pp     42.67%   1.820  -17.9%   -3.7%        39         592%           7.2
+
+  PROXY 2001.. (core = QQQ)  2001-01-03..2026-10-29   cost 4 bp per side
+  arm                           CAGR  Sharpe  max DD  avg DD trades/yr SPMO turn/yr SPMO sells/yr
+  live design                 30.16%   1.306  -24.6%   -5.7%        42         681%          14.9
+  hold SPMO cut 5 days        26.85%   1.197  -26.3%   -6.6%        45         429%          18.2
+  hold SPMO cut 10 days       25.62%   1.148  -31.8%   -7.4%        42         354%          17.8
+  hold SPMO cut 20 days       25.67%   1.145  -33.1%   -7.3%        39         235%          16.8
+  cut SPMO only if >15 pp     29.63%   1.299  -22.8%   -5.6%        37         636%           7.5
+
+  HOLDOUT 2001..2015-10 (proxy)  2001-01-03..2015-10-30   cost 4 bp per side
+  arm                           CAGR  Sharpe  max DD  avg DD trades/yr SPMO turn/yr SPMO sells/yr
+  live design                 20.76%   0.973  -24.6%   -6.4%        41         708%          14.3
+  hold SPMO cut 5 days        17.80%   0.862  -25.3%   -7.2%        43         472%          18.1
+  hold SPMO cut 10 days       16.67%   0.813  -31.8%   -8.0%        41         395%          18.3
+  hold SPMO cut 20 days       16.38%   0.798  -33.1%   -8.3%        38         268%          17.1
+  cut SPMO only if >15 pp     20.56%   0.975  -22.8%   -6.3%        36         669%           7.8
+
+  REAL ETFs (extended with live closes)  2015-11-03..2026-10-29   cost 20 bp per side
+  arm                           CAGR  Sharpe  max DD  avg DD trades/yr SPMO turn/yr SPMO sells/yr
+  live design                 37.35%   1.623  -19.1%   -4.4%        44         644%          15.8
+  hold SPMO cut 5 days        34.32%   1.547  -22.3%   -5.0%        48         375%          18.0
+  hold SPMO cut 10 days       32.61%   1.489  -25.8%   -6.0%        43         299%          16.6
+  hold SPMO cut 20 days       33.71%   1.528  -25.1%   -5.4%        40         192%          15.8
+  cut SPMO only if >15 pp     36.78%   1.618  -18.7%   -4.3%        39         592%           7.2
+
+  PROXY 2001.. (core = QQQ)  2001-01-03..2026-10-29   cost 20 bp per side
+  arm                           CAGR  Sharpe  max DD  avg DD trades/yr SPMO turn/yr SPMO sells/yr
+  live design                 24.67%   1.111  -27.7%   -6.9%        42         681%          14.9
+  hold SPMO cut 5 days        22.30%   1.030  -29.1%   -7.8%        45         429%          18.2
+  hold SPMO cut 10 days       21.54%   0.999  -33.5%   -8.6%        42         354%          17.8
+  hold SPMO cut 20 days       22.10%   1.015  -34.3%   -8.2%        39         235%          16.8
+  cut SPMO only if >15 pp     24.36%   1.110  -26.7%   -6.9%        37         636%           7.5
+
+  HOLDOUT 2001..2015-10 (proxy)  2001-01-03..2015-10-30   cost 20 bp per side
+  arm                           CAGR  Sharpe  max DD  avg DD trades/yr SPMO turn/yr SPMO sells/yr
+  live design                 15.72%   0.778  -27.7%   -8.0%        41         708%          14.3
+  hold SPMO cut 5 days        13.67%   0.698  -28.9%   -8.8%        43         472%          18.1
+  hold SPMO cut 10 days       12.99%   0.667  -33.5%   -9.6%        41         395%          18.3
+  hold SPMO cut 20 days       13.24%   0.675  -34.2%   -9.4%        38         268%          17.1
+  cut SPMO only if >15 pp     15.70%   0.785  -26.7%   -7.9%        36         669%           7.8
+
+  PRE-REGISTERED VERDICT
+  hold SPMO cut 5 days       P1 n (dSh -0.099 / -0.109)  P2 n (-0.111)  P3 n (dDD -0.7 / -1.7 pp)  P4@20bp n (-0.076 / -0.081)  => fail   bootstrap real [-0.210, +0.012] P 0.96; proxy [-0.176, -0.043] P 1.00
+  hold SPMO cut 10 days      P1 n (dSh -0.175 / -0.157)  P2 n (-0.160)  P3 n (dDD -4.8 / -7.1 pp)  P4@20bp n (-0.134 / -0.112)  => fail   bootstrap real [-0.343, -0.037] P 0.99; proxy [-0.265, -0.059] P 1.00
+  hold SPMO cut 20 days      P1 n (dSh -0.152 / -0.161)  P2 n (-0.175)  P3 n (dDD -5.6 / -8.4 pp)  P4@20bp n (-0.094 / -0.096)  => fail   bootstrap real [-0.331, -0.000] P 0.98; proxy [-0.285, -0.050] P 1.00
+  cut SPMO only if >15 pp    P1 n (dSh -0.011 / -0.006)  P2 Y (+0.002)  P3 Y (dDD +0.5 / +1.8 pp)  P4@20bp n (-0.005 / -0.001)  => fail   bootstrap real [-0.044, +0.017] P 0.80; proxy [-0.025, +0.010] P 0.79
