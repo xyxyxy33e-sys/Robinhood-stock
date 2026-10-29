@@ -1,0 +1,37 @@
+========================================================================================================================
+spmo_consistency_study (2026-10-29): hold SPMO more consistently? (pre-registered)
+========================================================================================================================
+
+  REAL ETFs (extended with live closes)  2015-11-03..2026-10-29
+  arm                             CAGR  Sharpe  max DD  avg DD trades/yr avg core wt
+  live design                   43.52%   1.831  -18.4%   -3.8%        44         29%
+  E/F 50% SPMO                  43.73%   1.822  -20.7%   -4.0%        49         33%
+  E/F 100% SPMO                 43.98%   1.781  -23.9%   -4.4%        53         36%
+  E/F + gated D 50% SPMO        42.53%   1.775  -21.8%   -4.4%        50         34%
+  SPMO floor 30% everywhere     39.93%   1.761  -19.3%   -4.2%        47         33%
+  trim keeps SPMO at base       43.34%   1.812  -18.4%   -3.9%        46         32%
+
+  PROXY 2001.. (core = QQQ)  2001-01-03..2026-10-29
+  arm                             CAGR  Sharpe  max DD  avg DD trades/yr avg core wt
+  live design                   30.16%   1.306  -24.6%   -5.7%        42         28%
+  E/F 50% SPMO                  29.82%   1.275  -24.3%   -6.2%        49         33%
+  E/F 100% SPMO                 29.23%   1.205  -37.4%   -7.8%        55         38%
+  E/F + gated D 50% SPMO        29.10%   1.246  -25.3%   -6.5%        50         35%
+  SPMO floor 30% everywhere     27.81%   1.245  -24.1%   -6.1%        46         33%
+  trim keeps SPMO at base       30.04%   1.295  -24.6%   -5.8%        44         31%
+
+  HOLDOUT 2001..2015-10 (proxy)  2001-01-03..2015-10-30
+  arm                             CAGR  Sharpe  max DD  avg DD trades/yr avg core wt
+  live design                   20.76%   0.973  -24.6%   -6.4%        41         27%
+  E/F 50% SPMO                  19.64%   0.915  -24.2%   -7.3%        49         33%
+  E/F 100% SPMO                 18.24%   0.824  -37.4%   -9.8%        56         40%
+  E/F + gated D 50% SPMO        19.43%   0.904  -24.2%   -7.4%        50         35%
+  SPMO floor 30% everywhere     18.88%   0.914  -24.1%   -6.8%        46         33%
+  trim keeps SPMO at base       20.89%   0.974  -24.6%   -6.6%        42         29%
+
+  PRE-REGISTERED VERDICT
+  E/F 50% SPMO                 P1 n (dSh -0.010 / -0.031)  P2 n (-0.058)  P3 n (dDD -2.3 / +0.3 pp)  => fail   bootstrap real [-0.066, +0.044] P 0.62; proxy [-0.089, +0.026] P 0.84
+  E/F 100% SPMO                P1 n (dSh -0.050 / -0.101)  P2 n (-0.149)  P3 n (dDD -5.5 / -12.8 pp)  => fail   bootstrap real [-0.162, +0.062] P 0.79; proxy [-0.216, +0.020] P 0.95
+  E/F + gated D 50% SPMO       P1 n (dSh -0.056 / -0.060)  P2 n (-0.069)  P3 n (dDD -3.5 / -0.7 pp)  => fail   bootstrap real [-0.129, +0.012] P 0.94; proxy [-0.122, +0.004] P 0.97
+  SPMO floor 30% everywhere    P1 n (dSh -0.070 / -0.061)  P2 n (-0.059)  P3 Y (dDD -0.9 / +0.5 pp)  => fail   bootstrap real [-0.153, -0.003] P 0.98; proxy [-0.112, -0.017] P 1.00
+  trim keeps SPMO at base      P1 n (dSh -0.019 / -0.011)  P2 Y (+0.001)  P3 Y (dDD +0.0 / -0.0 pp)  => fail   bootstrap real [-0.063, +0.025] P 0.80; proxy [-0.031, +0.009] P 0.85
