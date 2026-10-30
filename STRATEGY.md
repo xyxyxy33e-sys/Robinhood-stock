@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -35,7 +35,7 @@ C row when the fast read is A/B/C.
 | E | 100% BOXX | 0.00x |
 | F | 100% BOXX | 0.00x |
 
-**A is held at 40% SPMO / 60% TQQQ (2.2x) from 2026-10-22; the table's A row is the code's 50/50 reference row.**
+**A is held at 20% SPMO / 80% TQQQ (2.6x) from 2026-10-30 (40/60 from 2026-10-22); the table's A row is the code's 50/50 reference row.**
 **A row base: 50/50 in the A spell in progress on 2026-09-23 (began
 2026-08-04); 40/60 SPMO/TQQQ in every A spell that starts on or after
 2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A",
@@ -45,7 +45,17 @@ every A spell that starts on or after 2026-10-09** (owner, with the D ladder:
 start** (`A_BASE_FROM_SESSION`; owner, the evening of 10-08: "actually change to 75/25
 tomorrow when market open" — the spell running since 2026-08-04 moves 50/50 →
 25/75 by a one-time rebalance at the 2026-10-09 open; the 15:50 run then holds it).
-**From the 2026-10-22 session every A session holds 40/60 again** (`A_BASE_ROWS`
+**From the 2026-10-30 session every A session holds 20/80 SPMO/TQQQ** (`A_BASE_FROM_SESSION`;
+owner: "Change to 20/80", after comparing 0/100 … 50/50 and the drawdown profiles of 20/80 vs
+40/60; the 40/60 override stays on record in `A_BASE_FROM_SESSION_PRIOR`). The book was in D2
+that day, so it takes effect at the next A session. Engine (current design incl. the zone buffer;
+real 2015-11..2026-10 with VIXM / proxy 2001–2026): 40/60 **47.2% / 1.959 / −18.4%** and
+**30.7% / 1.321 / −22.2%** → 20/80 **53.5% / 1.911 / −20.3%** and **33.9% / 1.301 / −26.5%**;
+average drawdown −3.4% → −4.4% real, −5.5% → −6.3% proxy; drawdowns past −15% 3 → 7 real,
+14 → 17 proxy; time more than 15% under the high 0.9% → 6.9% of days real, 9.1% → 14.2% proxy;
+holdout 2001–2015 Sharpe 0.988 → 0.961. **Cost, stated:** lower Sharpe on every panel and roughly
+1.5× the time spent deep under water — an owner choice of return over risk, not a research pass.
+**From the 2026-10-22 session every A session held 40/60 again** (`A_BASE_ROWS`
 and `A_BASE_FROM_SESSION`; the 25/75 override stays on record in
 `A_BASE_FROM_SESSION_PRIOR` so 2026-10-09..10-21 replay as traded; owner: "change to
 40/60", after the drawdown profiles of 25/75 … 50/50). The book was in D that day, so it
@@ -195,6 +205,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-10-30 | **A base 40/60 → 20/80 for every A session from 2026-10-30** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 40/60 kept in `A_BASE_FROM_SESSION_PRIOR`); book in D2 on the day, so no trade until the book enters A | **owner decision** ("Change to 20/80"); engine real 47.2% / 1.959 / −18.4% → 53.5% / 1.911 / −20.3%, proxy 30.7% / 1.321 / −22.2% → 33.9% / 1.301 / −26.5%, holdout Sharpe 0.988 → 0.961; −15% drawdowns 3 → 7 real; time >15% down 0.9% → 6.9% real, 9.1% → 14.2% proxy |
 | 2026-10-29 | **D zone buffer ±0.5%** on both ladder lines (`D_ZONE_BUFFER`, `d_zone_step`, `d_zone_series`; `live_target_weights(..., zone=)` required on an ungated D day; VIXM-off-D2 and the shadow tracks follow the buffered zone; engine `cfg['d_buffer']`); no trade on the day (book in D2 both ways) | **owner decision** ("add it then"); `d_zone_buffer_study.py`, pre-registered, passes all four rules: real 43.5% / 1.831 / −18.4% → 44.0% / 1.849 / −18.4%, proxy 30.2% / 1.306 / −24.6% → 30.7% / 1.321 / −22.2%, holdout 0.973 → 0.988, 20 bp +0.030 / +0.027; bootstrap P 0.23 / 0.12 — small, inside noise; engine == `state.py` on 934 proxy D sessions |
 | 2026-10-22 | **VIXM off in ungated D2** (`VIXM_OFF_D_ZONES = ('D2',)`, `vixm_blocked`, applied inside `live_target_weights_with_vixm`); gated D, D1, D3 and every other state keep the sleeve; entering/leaving D2 is already a regime trigger | **owner decision** ("turn off vixm in d2 only"); `vixm_by_state.py`: D2 the only losing state (−1.4%, 2 spells / 19 days); live 47.7% / 2.005 / −18.4% → 47.9% / 2.006 / −18.4%, bootstrap P(not better) 0.40 — inside noise |
 | 2026-10-22 | **re-baseline** (no design change): one run of the live design after the day's changes — real with VIXM 47.7% / 2.01 / −18.4%, proxy 30.4% / 1.32 / −24.6%, holdout 20.8% / 0.97 | `rebaseline_2026_10_22.py`; engine = `monte_carlo.py` (verified vs `state.py`) |

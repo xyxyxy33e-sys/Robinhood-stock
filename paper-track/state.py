@@ -1092,7 +1092,8 @@ EXTENSION_CORE_CUT_PER_VOTE = 1.0 / 6.0
 A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core, tqqq))
                ('2026-09-23', (0.40, 0.60)),   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
                ('2026-10-09', (0.25, 0.75)),   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
-               ('2026-10-22', (0.40, 0.60)))   # 2026-10-22: back to 40/60, owner ("change to 40/60")
+               ('2026-10-22', (0.40, 0.60)),   # 2026-10-22: back to 40/60, owner ("change to 40/60")
+               ('2026-10-30', (0.20, 0.80)))   # 2026-10-30: 20/80, owner ("Change to 20/80")
 # Session overrides: from each SESSION on, every A session holds that base whatever its spell start.
 # 2026-10-08 evening ET (owner: "actually change to 75/25 tomorrow when market open"): the spell
 # running since 2026-08-04 moved 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-09 session (one-time rebalance).
@@ -1102,8 +1103,13 @@ A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core,
 # also"), then went to 100% TQQQ (owner: "Change d3 to 100 tqqq"; D_LADDER_ROWS). A_BASE_FROM_SESSION is the LATEST override (research
 # harnesses replace it to pin one base); the earlier ones stay in A_BASE_FROM_SESSION_PRIOR so a
 # replay of 2026-10-09..10-21 still reads 25/75.
-A_BASE_FROM_SESSION_PRIOR = (('2026-10-09', (0.25, 0.75)),)
-A_BASE_FROM_SESSION = ('2026-10-22', (0.40, 0.60))
+# 2026-10-30 (owner: "Change to 20/80", after the 0/100 .. 50/50 comparison and the drawdown
+# profiles of 20/80 vs 40/60): every A session from 2026-10-30 holds 20/80. The book is in D2 that
+# day, so it takes effect at the next A session. Engine, real 2015-11..2026-10 with VIXM: 40/60
+# 47.2% / 1.959 / -18.4% -> 20/80 53.5% / 1.911 / -20.3%; proxy 2001-2026 30.7% / 1.321 / -22.2% ->
+# 33.9% / 1.301 / -26.5%; time >15% under the high 0.9% -> 6.9% of days real, 9.1% -> 14.2% proxy.
+A_BASE_FROM_SESSION_PRIOR = (('2026-10-09', (0.25, 0.75)), ('2026-10-22', (0.40, 0.60)))
+A_BASE_FROM_SESSION = ('2026-10-30', (0.20, 0.80))
 
 
 def a_base_row(spell_start):
