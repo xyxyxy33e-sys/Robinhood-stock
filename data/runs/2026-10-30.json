@@ -263,7 +263,7 @@
  ],
  "sweep": {},
  "pushes": [],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-10-30",
   "time": "15:53 ET",
@@ -341,5 +341,66 @@
   },
   "idle_cash": 43.94,
   "total_value": 577785.006593314
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 3600.0,
+    "price": 62.2804
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "sell",
+    "quantity": 0.999566,
+    "price": 62.2733
+   },
+   {
+    "symbol": "QLD",
+    "side": "sell",
+    "quantity": 2806.0,
+    "price": 82.7901
+   },
+   {
+    "symbol": "QLD",
+    "side": "sell",
+    "quantity": 0.511499,
+    "price": 82.7817
+   },
+   {
+    "symbol": "VIXM",
+    "side": "buy",
+    "quantity": 5103.0,
+    "price": 13.17
+   },
+   {
+    "symbol": "VIXM",
+    "side": "buy",
+    "quantity": 0.473879,
+    "price": 13.1679
+   },
+   {
+    "symbol": "VIXM",
+    "side": "buy",
+    "quantity": 27780.0,
+    "price": 13.1877
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 191.0,
+    "price": 118.8299
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 0.215349,
+    "price": 118.8299
+   }
+  ],
+  "nav_return": -0.06991498236537907,
+  "tier": 0.15,
+  "session_lag": 0
  }
 }
