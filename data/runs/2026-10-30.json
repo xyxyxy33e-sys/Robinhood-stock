@@ -1,0 +1,345 @@
+{
+ "date": "2026-10-30",
+ "time": "15:53 ET",
+ "prev": "2026-10-29",
+ "notes": [],
+ "reading": {
+  "date": "2026-10-30",
+  "state": "D",
+  "fast": "E",
+  "eff": "D",
+  "gaps": {
+   "100": -0.03872114276513017,
+   "150": -0.018021310053349615,
+   "200": 0.017168232009052486
+  },
+  "micro": false,
+  "vol": 0.27353801636881053,
+  "d_zone": null,
+  "d_zone_plain": null,
+  "mult": 0.7311597950989766,
+  "breadth_pct": 0.5932539682539683,
+  "x60": -0.01645368128307334,
+  "d_flags": [
+   false,
+   true
+  ],
+  "d_gate": true,
+  "raw_votes": 0,
+  "a_trim": {
+   "date": "2026-10-30",
+   "eff": "D",
+   "in_a": false,
+   "spell_start": null,
+   "base": null,
+   "raw": 0,
+   "held": 0
+  }
+ },
+ "prev_reading": {
+  "date": "2026-10-29",
+  "state": "D",
+  "fast": "E",
+  "eff": "D",
+  "gaps": {
+   "100": -0.005363063894445741,
+   "150": 0.017529701775539586,
+   "200": 0.053264554719135715
+  },
+  "micro": false,
+  "vol": 0.24784681977443523,
+  "d_zone": "D2",
+  "d_zone_plain": "D2",
+  "mult": 0.8069500354372895,
+  "breadth_pct": 0.4781746031746032,
+  "x60": -0.02846430448089121,
+  "d_flags": [
+   false,
+   false
+  ],
+  "d_gate": false,
+  "raw_votes": 0,
+  "a_trim": {
+   "date": "2026-10-29",
+   "eff": "D",
+   "in_a": false,
+   "spell_start": null,
+   "base": null,
+   "raw": 0,
+   "held": 0
+  }
+ },
+ "vixm": {
+  "on": true,
+  "stress": true,
+  "allowed": true,
+  "faded": false,
+  "vix": 19.6,
+  "vix3m": 21.395,
+  "ratio": 0.9161018929656463,
+  "vol": 0.2131280061033289,
+  "vix_high": 19.6,
+  "as_of": "2026-10-30",
+  "available": true
+ },
+ "vixm_prev": {
+  "on": true,
+  "stress": false,
+  "allowed": false,
+  "faded": false,
+  "vix": 17.2,
+  "vix3m": 19.37,
+  "ratio": 0.8879710893133711,
+  "vol": 0.19061334617935902,
+  "vix_high": null,
+  "as_of": "2026-10-29",
+  "available": true
+ },
+ "vixm_note": "VIX 19.60 (Robinhood; history CBOE); VIX3M history CBOE; VIX3M 21.39 = median of CBOE 21.40 (1m), Google 21.39 (0m); stale ignored: Yahoo; ratio 0.916",
+ "quotes": {
+  "QQQ": {
+   "last": 691.189,
+   "bid": 691.18,
+   "ask": 691.22,
+   "close": 715.34,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "QQEW": {
+   "last": 151.48,
+   "bid": 151.52,
+   "ask": 151.6,
+   "close": 156.4226,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "SPMO": {
+   "last": 136.21,
+   "bid": 136.23,
+   "ask": 136.25,
+   "close": 142.4,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "TQQQ": {
+   "last": 62.1899,
+   "bid": 62.18,
+   "ask": 62.19,
+   "close": 69.26,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "QLD": {
+   "last": 82.7,
+   "bid": 82.72,
+   "ask": 82.73,
+   "close": 88.74,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "XLU": {
+   "last": 43.445,
+   "bid": 43.44,
+   "ask": 43.45,
+   "close": 43.14,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "BOXX": {
+   "last": 118.8299,
+   "bid": 118.82,
+   "ask": 118.83,
+   "close": 118.8,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  },
+  "VIXM": {
+   "last": 13.1767,
+   "bid": 13.16,
+   "ask": 13.17,
+   "close": 12.91,
+   "close_date": "2026-10-29",
+   "last_trade_date": "2026-10-30"
+  }
+ },
+ "positions": {
+  "TQQQ": 3600.999566,
+  "BOXX": 1024.356078,
+  "QLD": 2806.511499
+ },
+ "idle_cash": 43.94,
+ "total_value": 577785.006593314,
+ "target": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.75,
+  0.25
+ ],
+ "target_prev": [
+  0.0,
+  0.40347501771864475,
+  0.40347501771864475,
+  0.0,
+  0.0,
+  0.1930499645627105
+ ],
+ "held": [
+  0.0,
+  0.38759365569209436,
+  0.4017039180988429,
+  0.0,
+  0.0,
+  0.21074979261073346
+ ],
+ "drift": 1.5785477811802038,
+ "decision": true,
+ "why": "regime change",
+ "regime_changed": [
+  "D gate on",
+  "D zone D2->None",
+  "VIXM in"
+ ],
+ "orders": [
+  {
+   "symbol": "TQQQ",
+   "side": "sell",
+   "kind": "limit",
+   "quantity": 3600,
+   "limit": 62.18,
+   "dollars": 223848.0
+  },
+  {
+   "symbol": "TQQQ",
+   "side": "sell",
+   "kind": "market_qty",
+   "quantity": 0.999566,
+   "note": "fractional stub of a 0% leg (market, regular hours)"
+  },
+  {
+   "symbol": "QLD",
+   "side": "sell",
+   "kind": "limit",
+   "quantity": 2806,
+   "limit": 82.72,
+   "dollars": 232112.32
+  },
+  {
+   "symbol": "QLD",
+   "side": "sell",
+   "kind": "market_qty",
+   "quantity": 0.511499,
+   "note": "fractional stub of a 0% leg (market, regular hours)"
+  },
+  {
+   "symbol": "VIXM",
+   "side": "buy",
+   "kind": "limit",
+   "quantity": 32903,
+   "limit": 13.17,
+   "dollars": 433332.51
+  },
+  {
+   "symbol": "VIXM",
+   "side": "buy",
+   "kind": "market_dollars",
+   "dollars": 6.24
+  },
+  {
+   "symbol": "BOXX",
+   "side": "buy",
+   "kind": "limit",
+   "quantity": 191,
+   "limit": 118.83,
+   "dollars": 22696.53
+  },
+  {
+   "symbol": "BOXX",
+   "side": "buy",
+   "kind": "market_dollars",
+   "dollars": 25.59
+  }
+ ],
+ "sweep": {},
+ "pushes": [],
+ "status": "signal",
+ "input": {
+  "date": "2026-10-30",
+  "time": "15:53 ET",
+  "quotes": {
+   "QQQ": {
+    "last": 691.189,
+    "bid": 691.18,
+    "ask": 691.22,
+    "close": 715.34,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "QQEW": {
+    "last": 151.48,
+    "bid": 151.52,
+    "ask": 151.6,
+    "close": 156.4226,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "SPMO": {
+    "last": 136.21,
+    "bid": 136.23,
+    "ask": 136.25,
+    "close": 142.4,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "TQQQ": {
+    "last": 62.1899,
+    "bid": 62.18,
+    "ask": 62.19,
+    "close": 69.26,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "QLD": {
+    "last": 82.7,
+    "bid": 82.72,
+    "ask": 82.73,
+    "close": 88.74,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "XLU": {
+    "last": 43.445,
+    "bid": 43.44,
+    "ask": 43.45,
+    "close": 43.14,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "BOXX": {
+    "last": 118.8299,
+    "bid": 118.82,
+    "ask": 118.83,
+    "close": 118.8,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   },
+   "VIXM": {
+    "last": 13.1767,
+    "bid": 13.16,
+    "ask": 13.17,
+    "close": 12.91,
+    "close_date": "2026-10-29",
+    "last_trade_date": "2026-10-30"
+   }
+  },
+  "vix": 19.6,
+  "positions": {
+   "TQQQ": 3600.999566,
+   "BOXX": 1024.356078,
+   "QLD": 2806.511499
+  },
+  "idle_cash": 43.94,
+  "total_value": 577785.006593314
+ }
+}
