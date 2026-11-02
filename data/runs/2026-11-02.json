@@ -231,7 +231,7 @@
  ],
  "sweep": {},
  "pushes": [],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-11-02",
   "time": "15:51 ET",
@@ -308,5 +308,36 @@
   },
   "idle_cash": 0.0,
   "total_value": 581531.30466147
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "VIXM",
+    "side": "sell",
+    "quantity": 32883.0,
+    "price": 13.28
+   },
+   {
+    "symbol": "VIXM",
+    "side": "sell",
+    "quantity": 0.473879,
+    "price": 13.2821
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 3674.0,
+    "price": 118.8478
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 0.235596,
+    "price": 118.8472
+   }
+  ],
+  "nav_return": 0.003134247776087451,
+  "tier": null,
+  "session_lag": 0
  }
 }
