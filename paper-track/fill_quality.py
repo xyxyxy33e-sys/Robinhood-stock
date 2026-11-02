@@ -23,7 +23,7 @@ LOG_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'fill_quality.c
 # 2026-09-09: 'session_lag' = sessions between the signal session and the
 # fill (0 = same-session 15:5x run, the normal case; 1 = filled the next
 # session, e.g. the watchdog/next-open fallback). The 25bp alarm and the
-# 4bp cost comparison count ONLY lag-0 fills: on a lagged fill most of the
+# cost-model comparison count ONLY lag-0 fills: on a lagged fill most of the
 # number is the overnight gap, not broker execution (overnight_intraday.md),
 # and letting those trip the alarm would cry wolf on exactly the days the
 # fallback rule is used. Lagged fills are still recorded and reported apart.
@@ -33,6 +33,11 @@ FIELDS = ('date', 'symbol', 'side', 'quantity', 'fill_price', 'ref_price',
 # A single fill worse than this is worth calling out in the report. Not a
 # gate -- the trade has already happened by the time this is computed.
 SLIPPAGE_FLAG_BPS = 25.0
+
+# The one-way all-in cost the backtests assume (monte_carlo.COST, monthly_returns.ONE_WAY).
+# 4bp until 2026-11-02; owner moved it to 2bp: fees ~0.1bp a side + half-spread ~0.5-1bp
+# on SPMO/TQQQ/QLD (more on VIXM), with a margin for close-vs-fill timing.
+COST_MODEL_BPS = 2.0
 
 
 def slippage_bps(side, fill_price, ref_price):
@@ -118,7 +123,7 @@ def _wbps(rows):
 
 def cost_estimate_pa(rows=None, path=LOG_PATH, years=None):
     """Annualised drag implied by observed slippage, for comparison with the
-    4bp one-way cost model the backtests assume. Returns None until there is
+    one-way cost model the backtests assume (COST_MODEL_BPS). Returns None until there is
     enough history to be worth quoting."""
     rows = load_log(path) if rows is None else rows
     if not rows or years in (None, 0):

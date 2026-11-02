@@ -31,7 +31,7 @@ paths: macro 50/200 + fast 20/100 classifiers (1% hysteresis), effective
 state map, extension trim v2 with 3-session spell carry (A base 25/75), D
 gate (breadth pct < 0.20 or gap200 < 2%), D ladder, plain 30d vol target
 (20%, cap 1), 5% L1 drift band + zero-leg stubs + regime-change triggers,
-4bp one-way cost, decide at close t / earn t+1. --verify checks it against
+2bp one-way cost (4bp until 2026-11-02), decide at close t / earn t+1. --verify checks it against
 state.py's own functions on the real history, day by day. NOT modelled: the
 VIXM cash sleeve (cash is all T-bill/BOXX), taxes, deposits.
 
@@ -56,7 +56,7 @@ sys.path.insert(0, HERE)
 import state as S  # noqa: E402
 import breadth_tracker as BT  # noqa: E402
 
-COST = 0.0004
+COST = 0.0002   # one-way, all-in; 4bp until 2026-11-02 (owner: fees ~0.1bp + half-spread, with a margin)
 QQQ_DIV, SPY_DIV = 0.006, 0.018          # %/yr dividend accrual on the proxy panel
 XLU_DIV = 0.03                            # flat XLU yield (long_history_backtest), both panels
 FIN_SPREAD, TQQQ_ER, QLD_ER = 0.003, 0.0084, 0.0095

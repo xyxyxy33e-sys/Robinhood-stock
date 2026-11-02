@@ -14,7 +14,7 @@ zero-leg sweep across the whole period. The live account did not exist before
 months are realised performance. Read it for the shape, not as a track record.
 
 MECHANICS. Daily resolution, held weights drift with realised returns between
-rebalances, 4bps one-way cost on realised turnover. Signal is taken on day t's
+rebalances, 2bps one-way cost on realised turnover (4bps until 2026-11-02). Signal is taken on day t's
 close and held into t+1, matching how the live trigger actually trades. A
 month's return runs from the last trading day of the prior month to the last
 trading day of the month, and the sleeve is NOT reset at month boundaries --
@@ -41,7 +41,7 @@ from backtest_overlay_etf import load_daily_csv
 from long_history_backtest import load_px
 
 REPO = '/home/user/robinhood/data/kairos/etf'
-ONE_WAY = 0.0004
+ONE_WAY = 0.0002   # 4bp until 2026-11-02 (owner)
 LEGS = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')
 START = '2024-01-01'
 
@@ -158,7 +158,7 @@ def main():
     for n, k in enumerate(keys):
         prev_close[k] = base_day if n == 0 else months[keys[n - 1]][-1][0]
     tag = ('WITH 20% vol target' if vol_target else 'vol target OFF (multiplier 1.0)') + ('' if d_gate else ', D gate OFF')
-    print(f"Calendar-month returns, current design, real instruments, net of 4bps -- {tag}\n"
+    print(f"Calendar-month returns, current design, real instruments, net of 2bps -- {tag}\n"
           f"{keys[0]} .. {keys[-1]}   ({len(daily)} trading days)\n")
     print(f"{'month':<9}{'strategy':>10}{'QQQ':>9}{'SPMO':>9}{'diff vs QQQ':>13}   states")
     nav = navq = navs = 1.0

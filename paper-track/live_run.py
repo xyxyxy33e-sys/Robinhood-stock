@@ -527,7 +527,7 @@ def cmd_record(inp):
     if inp.get('fills'):
         sm = FQ.summarize()
         out_lines.append(f"fill quality: {sm['n']} same-session fills, notional-weighted {sm['weighted_bps']}bp "
-                         f"vs the 4bp model; {len(sm['flagged'])} over 25bp; {sm['n_lagged']} lagged fills")
+                         f"vs the {FQ.COST_MODEL_BPS:g}bp model; {len(sm['flagged'])} over 25bp; {sm['n_lagged']} lagged fills")
     # 2. closes cache (provisional; the next signal run overwrites with the official close)
     c = load_closes()
     for s, v in closes.items():

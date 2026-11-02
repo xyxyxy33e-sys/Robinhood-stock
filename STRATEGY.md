@@ -378,8 +378,12 @@ are both positive = money lost). `summarize()` reports notional-weighted
 slippage, because a bad fill on a $30k leg is not the same event as a bad
 fill on a $500 stub. It gates nothing and never blocks a trade.
 
-The number to watch is the notional-weighted figure against the **4bp
-one-way cost model the backtests assume**. Persistently worse than that means
+The number to watch is the notional-weighted figure against the **2bp
+one-way cost model the backtests assume** (`fill_quality.COST_MODEL_BPS`;
+4bp until 2026-11-02, when the owner lowered it: regulatory fees are about
+0.1bp a side, half the bid-ask spread is 0.5-1bp on SPMO/TQQQ/QLD and more
+on VIXM, and 2bp keeps a margin for the move between the 15:50 fill and the
+close; the first 84 live fills averaged -10bp, too few to set the model by). Persistently worse than that means
 the live design is not the backtested one, and it is worth more attention
 than any parameter.
 
