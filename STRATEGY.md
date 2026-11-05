@@ -762,8 +762,11 @@ cash. This layer decides what the cash leg holds:
 | off in D2 | no VIXM on an ungated D day in ladder zone D2 (2026-10-22, owner); gated D, D1, D3 keep it | `VIXM_OFF_D_ZONES`, `vixm_blocked` |
 
 `vixm_state(dates, px, vix, vix3m, as_of)` replays the whole VIX/VIX3M history
-every run (no stored state). VIX comes from Robinhood (real time). VIX3M
-(Robinhood has none) via `vol_curve.load_vix_inputs`: the MEDIAN of the fresh
+every run (no stored state). Today's VIX (from 2026-11-05, owner) is the MEDIAN
+of Robinhood's real-time value and the fresh live quotes from CBOE, Google
+Finance and Yahoo; Robinhood alone if none of the others is fresh. On 5 Nov
+Robinhood read ~1.5 points under the other three, which alone would have decided
+the VIX > VIX3M latch. VIX3M (Robinhood has none) via `vol_curve.load_vix_inputs`: the MEDIAN of the fresh
 live quotes from CBOE, Google Finance and Yahoo (all republish CBOE's index;
 fresh = stamped within 30 min), histories from CBOE then FRED; if no live quote
 is fresh, the PROXY 1.32 x SMA63(VIX) (agrees with the real inversion flag on

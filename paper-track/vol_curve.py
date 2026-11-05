@@ -135,9 +135,25 @@ def proxy_vix3m(vix_hist, today, vix_now):
 def load_vix_inputs(today, vix_now, vix3m_now=None):
     """Histories with today's 15:5x readings appended. vix_now: Robinhood's
     live VIX. vix3m_now: pass to override. Returns (vix, vix3m, note); note
-    names every source used and is to be reported verbatim."""
+    names every source used and is to be reported verbatim.
+
+    From 2026-11-05 (owner) today's VIX is the MEDIAN of Robinhood's value and
+    the fresh live quotes from CBOE, Google and Yahoo (same freshness rule as
+    VIX3M): on 5 Nov Robinhood read ~1.5 points under the other three, which
+    alone decided the VIX > VIX3M latch. Robinhood alone if no other is fresh."""
     vix, vsrc = history("VIX")
-    parts = [f"VIX {float(vix_now):.2f} (Robinhood; history {vsrc})"]
+    rh = float(vix_now)
+    try:
+        qv = live_quotes("VIX")
+    except Exception:            # noqa: BLE001
+        qv = []
+    fresh_v = [("Robinhood", rh, 0.0)] + [(s, v, a) for s, v, a in qv if a <= LIVE_MAX_AGE_MIN]
+    vix_now = statistics.median(v for _, v, _ in fresh_v)
+    parts = [f"VIX {vix_now:.2f} = median of " + ", ".join(f"{s} {v:.2f} ({a:.0f}m)" for s, v, a in fresh_v)
+             + f" (history {vsrc})"]
+    stale_v = [s for s, _, a in qv if a > LIVE_MAX_AGE_MIN]
+    if stale_v:
+        parts.append("stale VIX ignored: " + ", ".join(stale_v))
     try:
         vix3m, v3src = history("VIX3M")
         parts.append(f"VIX3M history {v3src}")
