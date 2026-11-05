@@ -1,0 +1,8 @@
+{"date": "2026-11-05",
+ "closes": {"QQQ": 647.77, "QQEW": 141.84, "SPMO": 122.45, "TQQQ": 50.46, "QLD": 72.38, "XLU": 43.325, "BOXX": 118.895, "VIXM": 13.67},
+ "fills": [
+  {"symbol": "VIXM", "side": "sell", "quantity": 33996.0, "price": 13.60},
+  {"symbol": "BOXX", "side": "buy", "quantity": 3888.0, "price": 118.8996},
+  {"symbol": "BOXX", "side": "buy", "quantity": 0.674269, "price": 118.899}
+ ],
+ "session_lag": 0, "total_value": 607820.8362157744}

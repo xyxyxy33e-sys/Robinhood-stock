@@ -228,7 +228,7 @@
  "pushes": [
   "Regime shift: macro D -> E (breakdown)"
  ],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-11-05",
   "time": "15:51 ET",
@@ -305,5 +305,30 @@
   },
   "idle_cash": 34.51,
   "total_value": 608176.0324615
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "VIXM",
+    "side": "sell",
+    "quantity": 33996.0,
+    "price": 13.6
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 3888.0,
+    "price": 118.8996
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 0.674269,
+    "price": 118.899
+   }
+  ],
+  "nav_return": 0.049758533494098756,
+  "tier": 0.1,
+  "session_lag": 0
  }
 }

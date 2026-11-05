@@ -93,3 +93,6 @@ date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,no
 2026-11-04,BOXX,sell,3669.0,118.8727,118.87,signal_session_close,-0.23,436143.94,,0
 2026-11-04,BOXX,sell,0.557232,118.8732,118.87,signal_session_close,-0.27,66.24,,0
 2026-11-04,VIXM,buy,33946.0,12.83,12.825,signal_session_close,3.9,435527.18,,0
+2026-11-05,VIXM,sell,33996.0,13.6,13.67,signal_session_close,51.21,462345.6,,0
+2026-11-05,BOXX,buy,3888.0,118.8996,118.895,signal_session_close,0.39,462281.64,,0
+2026-11-05,BOXX,buy,0.674269,118.899,118.895,signal_session_close,0.34,80.17,,0
