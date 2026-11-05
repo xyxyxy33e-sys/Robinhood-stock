@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -45,7 +45,12 @@ every A spell that starts on or after 2026-10-09** (owner, with the D ladder:
 start** (`A_BASE_FROM_SESSION`; owner, the evening of 10-08: "actually change to 75/25
 tomorrow when market open" — the spell running since 2026-08-04 moves 50/50 →
 25/75 by a one-time rebalance at the 2026-10-09 open; the 15:50 run then holds it).
-**From the 2026-10-30 session every A session holds 20/80 SPMO/TQQQ** (`A_BASE_FROM_SESSION`;
+**From the 2026-11-06 session every A session holds 40/60 SPMO/TQQQ again** (`A_BASE_FROM_SESSION`;
+owner, the evening of 2026-11-05: "change to 40/60", after the re-run through the 5 Nov close: 2026
+year-to-date 40/60 **+19.4%**, 2026 max drawdown **−16.8%**, against 20/80 **+19.5%** / **−19.1%**;
+2022 −8.1% vs −11.1%. 20/80 stays on record in `A_BASE_FROM_SESSION_PRIOR`). The book was in E
+that day, so it takes effect at the next A session.
+**From the 2026-10-30 session every A session held 20/80 SPMO/TQQQ** (`A_BASE_FROM_SESSION`;
 owner: "Change to 20/80", after comparing 0/100 … 50/50 and the drawdown profiles of 20/80 vs
 40/60; the 40/60 override stays on record in `A_BASE_FROM_SESSION_PRIOR`). The book was in D2
 that day, so it takes effect at the next A session. Engine (current design incl. the zone buffer;
@@ -205,6 +210,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-06 | **A base 20/80 → 40/60 for every A session from 2026-11-06** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 20/80 kept in `A_BASE_FROM_SESSION_PRIOR`); book in E on the day, so no trade until the book enters A | **owner decision** ("change to 40/60"); re-run through 2026-11-05, real ETFs with VIXM, 2bp: 2026 YTD 40/60 +19.4% / max DD −16.8% vs 20/80 +19.5% / −19.1%; years 2022 −8.1% vs −11.1%, 2023 +82.5% vs +108.4%, 2024 +79.4% vs +88.1%, 2025 +28.8% vs +27.0% |
 | 2026-10-30 | **A base 40/60 → 20/80 for every A session from 2026-10-30** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 40/60 kept in `A_BASE_FROM_SESSION_PRIOR`); book in D2 on the day, so no trade until the book enters A | **owner decision** ("Change to 20/80"); engine real 47.2% / 1.959 / −18.4% → 53.5% / 1.911 / −20.3%, proxy 30.7% / 1.321 / −22.2% → 33.9% / 1.301 / −26.5%, holdout Sharpe 0.988 → 0.961; −15% drawdowns 3 → 7 real; time >15% down 0.9% → 6.9% real, 9.1% → 14.2% proxy |
 | 2026-10-29 | **D zone buffer ±0.5%** on both ladder lines (`D_ZONE_BUFFER`, `d_zone_step`, `d_zone_series`; `live_target_weights(..., zone=)` required on an ungated D day; VIXM-off-D2 and the shadow tracks follow the buffered zone; engine `cfg['d_buffer']`); no trade on the day (book in D2 both ways) | **owner decision** ("add it then"); `d_zone_buffer_study.py`, pre-registered, passes all four rules: real 43.5% / 1.831 / −18.4% → 44.0% / 1.849 / −18.4%, proxy 30.2% / 1.306 / −24.6% → 30.7% / 1.321 / −22.2%, holdout 0.973 → 0.988, 20 bp +0.030 / +0.027; bootstrap P 0.23 / 0.12 — small, inside noise; engine == `state.py` on 934 proxy D sessions |
 | 2026-10-22 | **VIXM off in ungated D2** (`VIXM_OFF_D_ZONES = ('D2',)`, `vixm_blocked`, applied inside `live_target_weights_with_vixm`); gated D, D1, D3 and every other state keep the sleeve; entering/leaving D2 is already a regime trigger | **owner decision** ("turn off vixm in d2 only"); `vixm_by_state.py`: D2 the only losing state (−1.4%, 2 spells / 19 days); live 47.7% / 2.005 / −18.4% → 47.9% / 2.006 / −18.4%, bootstrap P(not better) 0.40 — inside noise |

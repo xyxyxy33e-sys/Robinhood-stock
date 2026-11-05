@@ -1093,7 +1093,8 @@ A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core,
                ('2026-09-23', (0.40, 0.60)),   # 2026-09-23: 40/60, owner ("make it 40/60"); was 30/70 earlier the same day
                ('2026-10-09', (0.25, 0.75)),   # 2026-10-09: 25/75 with the D ladder, owner ("I will do pick"; next A spell)
                ('2026-10-22', (0.40, 0.60)),   # 2026-10-22: back to 40/60, owner ("change to 40/60")
-               ('2026-10-30', (0.20, 0.80)))   # 2026-10-30: 20/80, owner ("Change to 20/80")
+               ('2026-10-30', (0.20, 0.80)),   # 2026-10-30: 20/80, owner ("Change to 20/80")
+               ('2026-11-06', (0.40, 0.60)))   # 2026-11-06: back to 40/60, owner ("change to 40/60")
 # Session overrides: from each SESSION on, every A session holds that base whatever its spell start.
 # 2026-10-08 evening ET (owner: "actually change to 75/25 tomorrow when market open"): the spell
 # running since 2026-08-04 moved 50/50 -> 25/75 SPMO/TQQQ at the 2026-10-09 session (one-time rebalance).
@@ -1108,8 +1109,12 @@ A_BASE_ROWS = (('0000-00-00', (0.50, 0.50)),   # (first spell-start date, (core,
 # day, so it takes effect at the next A session. Engine, real 2015-11..2026-10 with VIXM: 40/60
 # 47.2% / 1.959 / -18.4% -> 20/80 53.5% / 1.911 / -20.3%; proxy 2001-2026 30.7% / 1.321 / -22.2% ->
 # 33.9% / 1.301 / -26.5%; time >15% under the high 0.9% -> 6.9% of days real, 9.1% -> 14.2% proxy.
-A_BASE_FROM_SESSION_PRIOR = (('2026-10-09', (0.25, 0.75)), ('2026-10-22', (0.40, 0.60)))
-A_BASE_FROM_SESSION = ('2026-10-30', (0.20, 0.80))
+# 2026-11-05 evening (owner: "change to 40/60", after the through-5-Nov re-run: 2026 YTD 40/60
+# +19.4% / 2026 max DD -16.8% vs 20/80 +19.5% / -19.1%; 2022 -8.1% vs -11.1%): every A session
+# from the 2026-11-06 session holds 40/60. The book is in E that day, so it takes effect at the
+# next A session.
+A_BASE_FROM_SESSION_PRIOR = (('2026-10-09', (0.25, 0.75)), ('2026-10-22', (0.40, 0.60)), ('2026-10-30', (0.20, 0.80)))
+A_BASE_FROM_SESSION = ('2026-11-06', (0.40, 0.60))
 
 
 def a_base_row(spell_start):
