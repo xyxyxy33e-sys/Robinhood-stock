@@ -1357,6 +1357,16 @@ that ever changes, the schedule wins on the arithmetic.
 
 ## Known limitations (carry these into every report, don't re-litigate them)
 
+- **VIXM liquidity watch (owner, 2026-11-05).** VIXM trades ~$3.3M/day (6 Oct-4 Nov average);
+  a full sleeve trade (~$440k at the 2026-11 account size) is 4-13% of a day. Fills so far are fine
+  (4 Nov buy +3.9bp, one-cent spreads at 15:5x); the 30 Oct buy needed one re-placement. The risk
+  is a partial fill on an EXIT day: VIXM is regular-hours only, so a remainder waits for the next
+  session, and one session of lag erases most of the sleeve's edge. Switch the sleeve to **VIXY at
+  35% of the cash leg** (same hedge, ~20x the volume; backtest 2015-11..2026-10 54.5% / Sharpe 1.932
+  vs VIXM 75% 54.3% / 1.931) if a VIXM exit-day fill slips more than ~15bp vs the model or leaves
+  shares unfilled, or once the account passes ~$1M. Research record (2026-11-04/05): blends, scaled
+  shares, stress-floor buffers, exit variants and a 2008-2015 out-of-sample check (sleeve on 2.3% of
+  sessions, effect -0.05 pts/yr: the latch kept it out of 2008/2010/2011) all left the sleeve unchanged.
 - Every parameter here is fit on the same ~11-year SPMO window (16+ years
   for the QQQ-only regime signal). One real bear market (2022) in the
   strategy's own live-comparable history — n≈1 for the thing the whole
