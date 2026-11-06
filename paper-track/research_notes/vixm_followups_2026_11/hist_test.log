@@ -1,0 +1,172 @@
+VIX3M CBOE vs FRED on 4267 common days: mean abs diff 0.000, max 0.00; filling 451 earlier days from FRED (from 2007-12-04)
+VIX source CBOE; VIX3M source CBOE + FRED pre-2009-09 (first 2007-12-04); panel 1999-09-15..2026-10-28, COST=0.0002
+proxy vs real VIXM overlap 2011-01-05..2012-12-19 n=493: corr 0.937, annual log-drift gap (VIXM - proxy) -5.45%/yr
+
+GATE DIAGNOSTIC (share of sessions): latch ON | stress (QQQ 30d vol>=20%) | latch&stress | allowed after fade+D2-off | VIX<18 | mean VIX
+  2008: n=253  on  13.4%  stress  96.4%  both   9.9%  allowed   9.9%  VIX<18   3.2%  meanVIX 32.7
+  2009: n=252  on   0.0%  stress  57.9%  both   0.0%  allowed   0.0%  VIX<18   0.0%  meanVIX 31.5
+  2010: n=252  on  24.6%  stress  32.9%  both   0.0%  allowed   0.0%  VIX<18  21.4%  meanVIX 22.5
+  2011: n=251  on  49.4%  stress  41.8%  both   0.0%  allowed   0.0%  VIX<18  32.3%  meanVIX 24.2
+  2012: n=250  on  90.8%  stress  10.0%  both   7.6%  allowed   4.4%  VIX<18  58.8%  meanVIX 17.8
+  2013: n=252  on  95.6%  stress   0.0%  both   0.0%  allowed   0.0%  VIX<18  96.0%  meanVIX 14.2
+  2014: n=252  on  91.3%  stress   2.0%  both   2.0%  allowed   2.0%  VIX<18  92.1%  meanVIX 14.2
+  2015: n=252  on  81.7%  stress  14.7%  both   2.0%  allowed   2.0%  VIX<18  72.6%  meanVIX 16.7
+  2016: n=252  on  82.1%  stress  19.8%  both   5.6%  allowed   5.6%  VIX<18  76.2%  meanVIX 15.8
+  2017: n=251  on  99.2%  stress   0.0%  both   0.0%  allowed   0.0%  VIX<18 100.0%  meanVIX 11.1
+  2018: n=251  on  67.3%  stress  46.6%  both  17.1%  allowed  12.0%  VIX<18  65.3%  meanVIX 16.6
+  2019: n=252  on  88.9%  stress  29.4%  both  22.2%  allowed  15.9%  VIX<18  83.3%  meanVIX 15.4
+  2020: n=253  on  13.0%  stress  79.8%  both   0.0%  allowed   0.0%  VIX<18  13.0%  meanVIX 29.3
+  2021: n=252  on  69.4%  stress  23.8%  both   7.5%  allowed   7.5%  VIX<18  42.5%  meanVIX 19.7
+  2022: n=251  on   6.4%  stress 100.0%  both   6.4%  allowed   6.4%  VIX<18   1.2%  meanVIX 25.6
+  2023: n=250  on  92.0%  stress  25.2%  both  17.2%  allowed  15.6%  VIX<18  63.6%  meanVIX 16.9
+  2024: n=252  on  86.9%  stress  16.3%  both  13.1%  allowed   7.5%  VIX<18  79.4%  meanVIX 15.6
+  2025: n=250  on  77.6%  stress  32.0%  both  12.8%  allowed  12.8%  VIX<18  60.0%  meanVIX 19.0
+  2026: n=207  on  85.0%  stress  43.0%  both  37.7%  allowed  10.1%  VIX<18  61.8%  meanVIX 18.1
+
+======================================================================================================================
+A. OUT-OF-SAMPLE 2008-01..2015-10, proxy panel; VIXM = CFE VX m4-7 roll index to 2011-01-04 (RAW, no fee), real VIXM after
+======================================================================================================================
+  window 2008-01-03..2015-10-30 (1971 sessions); sleeve allowed (after D2-off) on 2.3% of sessions, 7 spells
+  variant                           CAGR  d CAGR  Sharpe   maxDD
+  no sleeve (cash all T-bill)      29.9%   +0.00   1.140  -28.4%
+  VIXM 50% of cash                 29.9%   -0.03   1.139  -28.4%
+  VIXM 75% of cash (live)          29.9%   -0.05   1.137  -28.4%
+  VIXM 100% of cash                29.9%   -0.07   1.135  -28.4%
+  per-year, live(75%) vs no sleeve (% return):
+    2008: +4.5 vs +4.1 (+0.4)  2009: +30.5 vs +30.5 (+0.0)  2010: +76.3 vs +76.3 (+0.0)  2011: -17.6 vs -17.6 (+0.0)  2012: +37.4 vs +38.5 (-1.1)  2013: +75.5 vs +75.5 (+0.0)  2014: +35.1 vs +35.0 (+0.0)  2015: +19.7 vs +19.5 (+0.2)
+  per-spell (75% sleeve): gain = (NAVwith/NAVwithout ratio change over the spell's earning days) in points of the book
+    start       last day     sessions VIX start  gain pts VIXM ret%
+    2008-05-12  2008-05-23          9      17.8     +0.27      +9.4
+    2008-06-06  2008-06-30         16      23.6     +0.15      -2.4
+    2012-06-29  2012-07-13          9      17.1     -0.81      -8.1
+    2012-07-27  2012-07-31          2      16.7     +0.01      +1.4
+    2014-10-28  2014-10-30          2      14.4     +0.00      +1.9
+    2014-10-31  2014-11-05          3      14.0     +0.01      +1.0
+    2015-10-08  2015-10-15          5      17.4     +0.13      -3.0
+  spells: 7, positive 6, negative 1; sum of spell gains -0.24 pts; best 1: +0.27, best 3: +0.54, worst 3: -0.79; total CAGR effect with/without -0.05 pts/yr
+
+======================================================================================================================
+A2. same, but pre-2011 proxy haircut by the measured real-vs-proxy drift gap (-5.45%/yr) -- conservative
+======================================================================================================================
+  window 2008-01-03..2015-10-30 (1971 sessions); sleeve allowed (after D2-off) on 2.3% of sessions, 7 spells
+  variant                           CAGR  d CAGR  Sharpe   maxDD
+  no sleeve (cash all T-bill)      29.9%   +0.00   1.140  -28.4%
+  VIXM 50% of cash                 29.9%   -0.04   1.139  -28.4%
+  VIXM 75% of cash (live)          29.9%   -0.07   1.137  -28.4%
+  VIXM 100% of cash                29.8%   -0.10   1.134  -28.4%
+  per-year, live(75%) vs no sleeve (% return):
+    2008: +4.4 vs +4.1 (+0.2)  2009: +30.5 vs +30.5 (+0.0)  2010: +76.3 vs +76.3 (+0.0)  2011: -17.6 vs -17.6 (+0.0)  2012: +37.4 vs +38.5 (-1.1)  2013: +75.5 vs +75.5 (+0.0)  2014: +35.1 vs +35.0 (+0.0)  2015: +19.7 vs +19.5 (+0.2)
+  per-spell (75% sleeve): gain = (NAVwith/NAVwithout ratio change over the spell's earning days) in points of the book
+    start       last day     sessions VIX start  gain pts VIXM ret%
+    2008-05-12  2008-05-23          9      17.8     +0.26      +9.2
+    2008-06-06  2008-06-30         16      23.6     +0.01      -2.8
+    2012-06-29  2012-07-13          9      17.1     -0.81      -8.1
+    2012-07-27  2012-07-31          2      16.7     +0.01      +1.4
+    2014-10-28  2014-10-30          2      14.4     +0.00      +1.9
+    2014-10-31  2014-11-05          3      14.0     +0.01      +1.0
+    2015-10-08  2015-10-15          5      17.4     +0.13      -3.0
+  spells: 7, positive 6, negative 1; sum of spell gains -0.39 pts; best 1: +0.26, best 3: +0.40, worst 3: -0.80; total CAGR effect with/without -0.07 pts/yr
+
+======================================================================================================================
+B. 2008-01..2010-12 only (proxy index entirely: raw)
+======================================================================================================================
+  window 2008-01-03..2010-12-31 (756 sessions); sleeve allowed (after D2-off) on 3.3% of sessions, 2 spells
+  variant                           CAGR  d CAGR  Sharpe   maxDD
+  no sleeve (cash all T-bill)      33.8%   +0.00   1.678  -17.6%
+  VIXM 50% of cash                 33.9%   +0.12   1.678  -17.5%
+  VIXM 75% of cash (live)          34.0%   +0.17   1.671  -17.5%
+  VIXM 100% of cash                34.0%   +0.21   1.660  -17.5%
+  per-year, live(75%) vs no sleeve (% return):
+    2008: +4.5 vs +4.1 (+0.4)  2009: +30.5 vs +30.5 (+0.0)  2010: +76.3 vs +76.3 (+0.0)
+  per-spell (75% sleeve): gain = (NAVwith/NAVwithout ratio change over the spell's earning days) in points of the book
+    start       last day     sessions VIX start  gain pts VIXM ret%
+    2008-05-12  2008-05-23          9      17.8     +0.27      +9.4
+    2008-06-06  2008-06-30         16      23.6     +0.15      -2.4
+  spells: 2, positive 2, negative 0; sum of spell gains +0.41 pts; best 1: +0.27, best 3: +0.41, worst 3: +0.41; total CAGR effect with/without +0.17 pts/yr
+
+======================================================================================================================
+B2. 2008-01..2010-12 only (proxy index with drift haircut)
+======================================================================================================================
+  window 2008-01-03..2010-12-31 (756 sessions); sleeve allowed (after D2-off) on 3.3% of sessions, 2 spells
+  variant                           CAGR  d CAGR  Sharpe   maxDD
+  no sleeve (cash all T-bill)      33.8%   +0.00   1.678  -17.6%
+  VIXM 50% of cash                 33.9%   +0.08   1.676  -17.6%
+  VIXM 75% of cash (live)          33.9%   +0.10   1.668  -17.6%
+  VIXM 100% of cash                33.9%   +0.12   1.656  -17.7%
+  per-year, live(75%) vs no sleeve (% return):
+    2008: +4.4 vs +4.1 (+0.2)  2009: +30.5 vs +30.5 (+0.0)  2010: +76.3 vs +76.3 (+0.0)
+  per-spell (75% sleeve): gain = (NAVwith/NAVwithout ratio change over the spell's earning days) in points of the book
+    start       last day     sessions VIX start  gain pts VIXM ret%
+    2008-05-12  2008-05-23          9      17.8     +0.26      +9.2
+    2008-06-06  2008-06-30         16      23.6     +0.01      -2.8
+  spells: 2, positive 2, negative 0; sum of spell gains +0.26 pts; best 1: +0.26, best 3: +0.26, worst 3: +0.26; total CAGR effect with/without +0.10 pts/yr
+
+======================================================================================================================
+C. 2011-01..2015-10 with REAL VIXM only (strategy started 2011-01-04)
+======================================================================================================================
+  window 2011-01-05..2015-10-30 (1214 sessions); sleeve allowed (after D2-off) on 1.7% of sessions, 5 spells
+  variant                           CAGR  d CAGR  Sharpe   maxDD
+  no sleeve (cash all T-bill)      27.5%   +0.00   0.968  -28.4%
+  VIXM 50% of cash                 27.4%   -0.12   0.965  -28.4%
+  VIXM 75% of cash (live)          27.3%   -0.17   0.964  -28.4%
+  VIXM 100% of cash                27.3%   -0.23   0.962  -28.4%
+  per-year, live(75%) vs no sleeve (% return):
+    2011: -17.8 vs -17.8 (+0.0)  2012: +37.4 vs +38.5 (-1.1)  2013: +75.5 vs +75.5 (+0.0)  2014: +35.1 vs +35.0 (+0.0)  2015: +19.7 vs +19.5 (+0.2)
+  per-spell (75% sleeve): gain = (NAVwith/NAVwithout ratio change over the spell's earning days) in points of the book
+    start       last day     sessions VIX start  gain pts VIXM ret%
+    2012-06-29  2012-07-13          9      17.1     -0.81      -8.1
+    2012-07-27  2012-07-31          2      16.7     +0.01      +1.4
+    2014-10-28  2014-10-30          2      14.4     +0.00      +1.9
+    2014-10-31  2014-11-05          3      14.0     +0.01      +1.0
+    2015-10-08  2015-10-15          5      17.4     +0.13      -3.0
+  spells: 5, positive 4, negative 1; sum of spell gains -0.65 pts; best 1: +0.13, best 3: +0.15, worst 3: -0.79; total CAGR effect with/without -0.17 pts/yr
+
+======================================================================================================================
+D. SANITY: proxy panel 2015-11..2026-10 (real VIXM; proxy panel other legs)
+======================================================================================================================
+  window 2015-11-03..2026-10-28 (2762 sessions); sleeve allowed (after D2-off) on 8.3% of sessions, 29 spells
+  variant                           CAGR  d CAGR  Sharpe   maxDD
+  no sleeve (cash all T-bill)      50.5%   +0.00   1.760  -23.3%
+  VIXM 50% of cash                 52.9%   +2.45   1.829  -23.4%
+  VIXM 75% of cash (live)          54.1%   +3.66   1.858  -23.6%
+  VIXM 100% of cash                55.4%   +4.94   1.886  -23.7%
+  per-year, live(75%) vs no sleeve (% return):
+    2015: -14.3 vs -14.3 (+0.0)  2016: +7.5 vs +8.4 (-0.8)  2017: +117.6 vs +117.6 (+0.0)  2018: +78.6 vs +63.0 (+15.6)  2019: +85.6 vs +87.5 (-1.9)  2020: +41.0 vs +41.0 (+0.0)  2021: +117.9 vs +119.0 (-1.1)  2022: -17.5 vs -19.9 (+2.4)  2023: +126.3 vs +115.0 (+11.3)  2024: +89.0 vs +78.4 (+10.6)  2025: +25.1 vs +15.0 (+10.1)  2026: +27.1 vs +30.7 (-3.5)
+  per-spell (75% sleeve): gain = (NAVwith/NAVwithout ratio change over the spell's earning days) in points of the book
+    start       last day     sessions VIX start  gain pts VIXM ret%
+    2016-03-01  2016-03-21         14      17.7     -0.75      -7.7
+    2018-02-23  2018-03-01          4      16.5     +1.17      +7.4
+    2018-03-07  2018-03-22         11      17.8     +4.15      +1.8
+    2018-04-16  2018-04-20          4      16.6     -0.45      -2.4
+    2018-05-01  2018-05-09          6      15.5     -1.07      -3.0
+    2018-11-07  2018-11-12          3      16.4     +3.65      +4.9
+    2018-12-03  2018-12-06          2      16.4     +1.95      +6.9
+    2019-01-18  2019-01-22          1      17.8     +0.70      +2.4
+    2019-01-25  2019-02-15         15      17.4     -1.73      -7.2
+    2019-06-04  2019-06-25         15      17.0     -1.20      -0.9
+    2019-08-19  2019-08-23          4      16.9     +1.15      +7.1
+    2019-08-29  2019-09-03          2      17.9     +0.43      +3.5
+    2019-09-04  2019-09-06          2      17.3     -0.28      -2.1
+    2019-09-24  2019-09-25          1      17.1     -0.00      -0.8
+    2021-04-01  2021-04-21         13      17.3     +0.56      -0.5
+    2021-12-23  2022-01-26         22      18.0     +1.92      +2.4
+    2023-02-01  2023-03-29         39      17.9     +5.23      +7.6
+    2024-07-31  2024-08-02          2      16.4     +5.06     +12.8
+    2024-08-14  2024-09-04         14      16.2     +2.28     +10.6
+    2024-09-06  2024-09-09          1      22.4     -1.30      -1.7
+    2024-09-11  2024-09-13          2      17.7     -0.07      -0.3
+    2025-01-15  2025-01-16          1      16.1     -0.05      -1.2
+    2025-01-17  2025-02-04         11      16.0     -0.17      -0.0
+    2025-03-24  2025-03-31          5      17.5     +5.77      +7.8
+    2025-05-15  2025-06-03         12      17.8     +2.41      +5.1
+    2025-11-13  2025-11-18          3      20.0     +0.67      +1.1
+    2026-04-16  2026-05-04         12      17.9     -0.03      +0.7
+    2026-05-05  2026-05-08          3      17.4     -0.52      -0.8
+    2026-06-05  2026-06-15          6      21.5     -2.12      -2.9
+  spells: 29, positive 15, negative 14; sum of spell gains +27.37 pts; best 1: +5.77, best 3: +16.06, worst 3: -5.15; total CAGR effect with/without +3.66 pts/yr
+
+======================================================================================================================
+E. HARNESS CHECK: real ETF panel 2015-11..2026-10 (known: with VIXM 54.3% / 1.931, without 50.6% / 1.829 at 2bp)
+======================================================================================================================
+  share 0.00: CAGR 50.6%  Sharpe 1.829  maxDD -19.4%  (on 8.3%, 29 spells)
+  share 0.75: CAGR 54.3%  Sharpe 1.931  maxDD -20.0%  (on 8.3%, 29 spells)

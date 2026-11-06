@@ -1,0 +1,6 @@
+contracts 106 days 1546 2006-10-24 2012-12-19 skipped 302 days with renormalised weights (month 8 unlisted/missing) 493
+overlap 2011-01-05 2012-12-19 493 daily-return corr 0.937 beta(VIXM on proxy) 0.931
+  2011: n=250 proxy -2.9%  VIXM -7.1%  corr 0.968  gap(VIXM-proxy) -4.2%
+  2012: n=243 proxy -51.3%  VIXM -54.3%  corr 0.887  gap(VIXM-proxy) -2.9%
+total over overlap: proxy -52.7%  VIXM -57.5%  ; ann. drift gap (VIXM-proxy, log) -5.45%/yr
+daily vol ann: proxy 34.7% VIXM 34.4%

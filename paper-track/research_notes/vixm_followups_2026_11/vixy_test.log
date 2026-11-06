@@ -1,0 +1,35 @@
+============================================================================================================================
+VIXY vs VIXM in the cash sleeve -- live design, real ETFs 2015-11-03..2026-10-28, 2bp; same latch/stress/fade/D2-off timing; sleeve allowed 8.3% of sessions
+  Robinhood split-adjusted daily closes for both (VIXY: many reverse splits)
+============================================================================================================================
+  VIXM: buy & hold -11.8%/yr; mean daily return on sleeve days +22.1bp, off-sleeve days -5.2bp
+  VIXY: buy & hold -47.3%/yr; mean daily return on sleeve days +39.3bp, off-sleeve days -20.7bp
+  daily beta of VIXY to VIXM 2.00 (all days)
+
+  sleeve                   CAGR vs live Sharpe   maxDD  Sh 1st  Sh 2nd ex Aug24  tr/yr trade/ADV med    max
+  VIXM 25% of cash        51.9%          1.867  -19.6%   1.943   1.805    52.3%     44          3.2%    49%
+  VIXM 50% of cash        53.1%          1.901  -19.8%   1.965   1.849    53.2%     44          4.1%    98%
+  VIXM 75% of cash        54.3%          1.931  -20.0%   1.983   1.889    54.2%     44          4.6%   146%
+  VIXM 100% of cash       55.5%          1.958  -20.2%   1.999   1.927    55.2%     44          4.8%   195%
+  VIXY 15% of cash        52.3%          1.880  -19.6%   1.961   1.813    52.7%     44          0.0%     0%
+  VIXY 25% of cash        53.4%          1.908  -19.8%   1.985   1.844    53.6%     44          0.1%     0%
+  VIXY 35% of cash        54.5%          1.932  -19.9%   2.006   1.872    54.5%     44          0.1%     1%
+  VIXY 50% of cash        56.2%          1.965  -20.2%   2.032   1.911    56.0%     44          0.1%     1%
+  VIXY 75% of cash        58.8%          1.991  -20.6%   2.058   1.939    58.2%     44          0.1%     1%
+  VIXY 100% of cash       61.5%          1.994  -21.0%   2.069   1.939    60.4%     44          0.1%     2%
+  no sleeve (all BOXX)    50.6%          1.829  -19.4%   1.919   1.755    51.2%     44
+
+  vs live (VIXM 75%): VIXM 25% -2.41, VIXM 50% -1.22, VIXM 75% +0.00, VIXM 100% +1.25, VIXY 15% -1.98, VIXY 25% -0.91, VIXY 35% +0.20, VIXY 50% +1.94, VIXY 75% +4.53, VIXY 100% +7.17
+
+  per sleeve spell: VIXY 35% vs VIXM 75% (log gain vs BOXX, pts of book)
+  spells 29; VIXM won 16, VIXY won 15; VIXY better than VIXM in 12
+    2024-08-01   2d  VIXM  +4.94  VIXY  +6.01
+    2018-03-08  11d  VIXM  +4.07  VIXY  +6.15
+    2025-03-25   5d  VIXM  +5.61  VIXY  +4.56
+    2021-12-27  22d  VIXM  +1.90  VIXY  +7.36
+    2023-02-02  39d  VIXM  +4.95  VIXY  +3.86
+    2018-11-08   3d  VIXM  +3.59  VIXY  +3.59
+    2026-06-08   6d  VIXM  -2.13  VIXY  -3.57
+    2018-12-04   2d  VIXM  +1.95  VIXY  +2.03
+    2025-05-16  12d  VIXM  +2.38  VIXY  +1.18
+    2024-09-09   1d  VIXM  -1.31  VIXY  -2.21

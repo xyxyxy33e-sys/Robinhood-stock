@@ -1,0 +1,74 @@
+============================================================================================================================
+VIXM EXIT-rule variants -- live design, real ETFs 2015-11-03..2026-10-28, 2bp, VIXM 75% of cash (partial = 37.5%); entry unchanged
+  'on %' = share of sessions with any VIXM; flips = on/off changes (full<->half not counted)
+============================================================================================================================
+  rule                                 CAGR vs live Sharpe   maxDD  Sh 1st  Sh 2nd  exAug24  on % flips
+  live (ratio>1.00, fade 25%)         54.3%   +0.00  1.931  -20.0%   1.983   1.889    54.2%  8.3%    58
+  1. latch-off ratio > 0.95           52.8%   -1.46  1.888  -20.0%   1.973   1.818    53.4%  9.3%    62
+  1. latch-off ratio > 0.98           53.7%   -0.56  1.913  -20.0%   1.973   1.865    53.6%  8.8%    60
+  1. latch-off ratio > 1.02           56.9%   +2.65  1.949  -19.7%   1.950   1.955    54.6%  8.5%    58
+  1. latch-off ratio > 1.05           56.2%   +1.88  1.918  -21.0%   1.915   1.925    53.9%  6.8%    52
+  1. latch-off ratio > 1.10           53.3%   -1.05  1.847  -21.8%   1.927   1.784    51.0%  6.1%    46
+  2. latch-off after 2 closes >1.0    56.2%   +1.88  1.930  -19.7%   1.907   1.956    53.9%  8.2%    58
+  3. partial half until fade/stress   54.8%   +0.46  1.920  -19.4%   1.983   1.871    54.3% 11.4%    62
+  3. partial half, max 5 sessions     55.7%   +1.39  1.950  -19.4%   2.026   1.891    55.3%  9.9%    62
+  3. partial half, max 10 sessions    55.7%   +1.36  1.945  -19.4%   2.039   1.871    55.2% 10.7%    64
+  4. fade 15%                         53.8%   -0.55  1.915  -19.9%   1.955   1.884    53.6%  6.4%    56
+  4. fade 20%                         54.5%   +0.18  1.936  -19.9%   1.984   1.897    54.4%  8.1%    56
+  4. fade 30%                         53.6%   -0.69  1.912  -20.0%   1.979   1.857    53.5%  9.6%    58
+  4. fade 35%                         53.9%   -0.42  1.919  -20.0%   1.982   1.868    53.8% 10.8%    60
+  5. VIXM trail stop 8%               54.3%   +0.04  1.932  -20.0%   1.985   1.889    54.2%  8.1%    58
+  5. VIXM trail stop 12%              54.3%   +0.00  1.931  -20.0%   1.983   1.889    54.2%  8.3%    58
+  5. VIXM trail stop 15%              54.3%   +0.00  1.931  -20.0%   1.983   1.889    54.2%  8.3%    58
+  6. time stop 20 sessions            53.9%   -0.37  1.918  -20.0%   1.983   1.866    53.8%  7.5%    58
+  6. time stop 40 sessions            54.3%   +0.00  1.931  -20.0%   1.983   1.889    54.2%  8.3%    58
+  6. time stop 60 sessions            54.3%   +0.00  1.931  -20.0%   1.983   1.889    54.2%  8.3%    58
+
+Bootstrap: 20-day blocks, 3000 draws, paired, Sharpe(variant) - Sharpe(live); 5 best variants by CAGR
+  1. latch-off ratio > 1.02          obs dSharpe +0.0183  boot mean +0.0152  5-95% [-0.0606, +0.0905]  P(not better than live) = 0.354
+  2. latch-off after 2 closes >1.0   obs dSharpe -0.0007  boot mean -0.0043  5-95% [-0.0845, +0.0761]  P(not better than live) = 0.537
+  1. latch-off ratio > 1.05          obs dSharpe -0.0131  boot mean -0.0179  5-95% [-0.1123, +0.0783]  P(not better than live) = 0.628
+  3. partial half, max 5 sessions    obs dSharpe +0.0193  boot mean +0.0188  5-95% [-0.0218, +0.0618]  P(not better than live) = 0.219
+  3. partial half, max 10 sessions   obs dSharpe +0.0147  boot mean +0.0133  5-95% [-0.0292, +0.0557]  P(not better than live) = 0.294
+
+Concentration check (variants beating live CAGR by > 0.5 pt)
+  1. latch-off ratio > 1.02: CAGR vs live +2.65; sum log-diff +0.1863 (in spell windows +0.1875); windows(live-or-variant on)=24, windows with +diff=5, -diff=3
+    halves: CAGR diff 1st -0.60, 2nd +5.81; Sharpe diff 1st -0.033, 2nd +0.066
+    spell 2024-08-01..2024-08-05 (3d): log-diff +0.1563 (83% of in-window total)
+    spell 2025-03-25..2025-04-03 (8d): log-diff +0.0712 (38% of in-window total)
+    spell 2018-11-08..2018-12-06 (19d): log-diff -0.0504 (-27% of in-window total)
+    spell 2016-01-08..2016-01-08 (1d): log-diff +0.0245 (13% of in-window total)
+    spell 2021-12-16..2022-01-26 (28d): log-diff -0.0204 (-11% of in-window total)
+    top-5 by |contribution| sum +0.1812 vs window total +0.1875
+  1. latch-off ratio > 1.05: CAGR vs live +1.88; sum log-diff +0.1326 (in spell windows +0.1344); windows(live-or-variant on)=25, windows with +diff=8, -diff=6
+    halves: CAGR diff 1st -1.09, 2nd +4.76; Sharpe diff 1st -0.069, 2nd +0.037
+    spell 2024-08-01..2024-08-05 (3d): log-diff +0.1563 (116% of in-window total)
+    spell 2025-03-25..2025-04-03 (8d): log-diff +0.0712 (53% of in-window total)
+    spell 2018-11-08..2018-12-06 (19d): log-diff -0.0504 (-37% of in-window total)
+    spell 2023-02-02..2023-03-29 (39d): log-diff -0.0498 (-37% of in-window total)
+    spell 2018-10-17..2018-10-24 (6d): log-diff +0.0467 (35% of in-window total)
+    top-5 by |contribution| sum +0.1740 vs window total +0.1344
+  2. latch-off after 2 closes >1.0: CAGR vs live +1.88; sum log-diff +0.1327 (in spell windows +0.1343); windows(live-or-variant on)=24, windows with +diff=6, -diff=4
+    halves: CAGR diff 1st -2.18, 2nd +5.85; Sharpe diff 1st -0.076, 2nd +0.067
+    spell 2024-08-01..2024-08-05 (3d): log-diff +0.1563 (116% of in-window total)
+    spell 2025-03-25..2025-04-03 (8d): log-diff +0.0712 (53% of in-window total)
+    spell 2018-11-08..2018-12-06 (19d): log-diff -0.0504 (-38% of in-window total)
+    spell 2018-02-26..2018-03-22 (19d): log-diff -0.0438 (-33% of in-window total)
+    spell 2016-01-08..2016-01-08 (1d): log-diff +0.0245 (18% of in-window total)
+    top-5 by |contribution| sum +0.1578 vs window total +0.1343
+  3. partial half, max 5 sessions: CAGR vs live +1.39; sum log-diff +0.0983 (in spell windows +0.0994); windows(live-or-variant on)=26, windows with +diff=10, -diff=2
+    halves: CAGR diff 1st +1.55, 2nd +1.24; Sharpe diff 1st +0.042, 2nd +0.002
+    spell 2025-03-25..2025-04-07 (10d): log-diff +0.0503 (51% of in-window total)
+    spell 2021-12-27..2022-02-01 (26d): log-diff -0.0299 (-30% of in-window total)
+    spell 2024-08-01..2024-08-06 (4d): log-diff +0.0236 (24% of in-window total)
+    spell 2018-10-17..2018-10-25 (7d): log-diff +0.0167 (17% of in-window total)
+    spell 2016-01-08..2016-01-14 (5d): log-diff +0.0164 (17% of in-window total)
+    top-5 by |contribution| sum +0.0772 vs window total +0.0994
+  3. partial half, max 10 sessions: CAGR vs live +1.36; sum log-diff +0.0962 (in spell windows +0.0973); windows(live-or-variant on)=27, windows with +diff=10, -diff=3
+    halves: CAGR diff 1st +2.20, 2nd +0.56; Sharpe diff 1st +0.056, 2nd -0.018
+    spell 2018-12-04..2018-12-20 (12d): log-diff +0.0306 (31% of in-window total)
+    spell 2021-12-27..2022-02-01 (26d): log-diff -0.0299 (-31% of in-window total)
+    spell 2025-03-25..2025-04-09 (12d): log-diff +0.0260 (27% of in-window total)
+    spell 2016-01-08..2016-01-22 (10d): log-diff +0.0243 (25% of in-window total)
+    spell 2024-08-01..2024-08-06 (4d): log-diff +0.0236 (24% of in-window total)
+    top-5 by |contribution| sum +0.0746 vs window total +0.0973
