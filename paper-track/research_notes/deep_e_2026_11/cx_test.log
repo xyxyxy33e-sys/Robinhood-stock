@@ -1,0 +1,144 @@
+============================================================================================================================================
+C-row re-test, live design as of 2026-11-10 (A 40/60, D ladder+gate, vol max10_30 target 0.2, VIXM sleeve real only, deep-E QQQ, VIX-panic QQQ), 2bp; VIX src CBOE
+Mask = EFFECTIVE C (MC._eff == 2: macro C and the fast 20/100 overlay not A); only those sessions are altered; modified C row = core-weight x fractions (vol scaling kept).
+Cash freed in C also feeds the VIXM sleeve (real) and the panic-QQQ leg exactly as in live. No-VIXM proxy. Proxy core IS QQQ: variant (a)/QQQ legs collapse to the base core (identical to base).
+============================================================================================================================================
+
+[REAL] scored 2015-11-03..2026-11-05  (2768 sessions)  base 52.7% / Sharpe 2.039 / maxDD -18.3%  (ex-2020 CAGR 51.3%, Sharpe 1.980; halves 2.216/1.896)
+  macro-C sessions 137 (4.9%): hold the C row 100 (73.0%), fast overlay gives A 37 (27.0%), other 0
+  effective-C sessions 156 = macro-C holding own row 100 + macro-F promoted to C by the fast overlay 56  (the mask includes both: live holds the C row on all of them)
+  effective-C share of all sessions 5.6%; C spells 13 (macro-C spells 10); mean core weight on C days 0.624
+  within effective-C: QQQ >=5% under 200d 88 sessions, >=10% 34; vol>30% 112
+  raw QQQ on effective-C days: +82.6%/yr, vol 26%, n=156
+  raw core on effective-C days: +77.8%/yr, vol 17%, n=156
+
+[PROXY] scored 2001-01-03..2026-11-05  (6498 sessions)  base 33.8% / Sharpe 1.384 / maxDD -23.6%  (ex-2020 CAGR 32.4%, Sharpe 1.335; halves 1.044/1.830)
+  macro-C sessions 445 (6.8%): hold the C row 281 (63.1%), fast overlay gives A 164 (36.9%), other 0
+  effective-C sessions 497 = macro-C holding own row 281 + macro-F promoted to C by the fast overlay 216  (the mask includes both: live holds the C row on all of them)
+  effective-C share of all sessions 7.6%; C spells 56 (macro-C spells 43); mean core weight on C days 0.581
+  within effective-C: QQQ >=5% under 200d 301 sessions, >=10% 199; vol>30% 351
+  raw QQQ on effective-C days: +113.4%/yr, vol 34%, n=497
+  raw core on effective-C days: +114.7%/yr, vol 34%, n=497
+
+--- REAL PANEL ---
+  variant                                        CAGR vs base Sharpe    dSh   maxDD Sh 1st Sh 2nd ex20 CAGR   vs b ex20 Sh lag CAGR lag Sh Csess chg
+  BASE (live)                                   52.7%   +0.00  2.039 +0.000  -18.3%  2.216  1.896     51.3%  +0.00   1.980    52.7%  2.039         0
+  a  100% QQQ                                   52.1%   -0.58  2.005 -0.033  -19.2%  2.216  1.837     50.7%  -0.63   1.944    52.5%  2.018       160
+  b  75% core / 25% QLD                         52.6%   -0.15  2.023 -0.016  -18.3%  2.225  1.860     51.2%  -0.16   1.963    52.8%  2.033       160
+  c  50% core / 50% QLD                         52.3%   -0.38  1.996 -0.043  -22.1%  2.228  1.812     50.9%  -0.41   1.935    52.9%  2.017       160
+  d  75% core / 25% TQQQ                        52.5%   -0.17  2.009 -0.030  -20.6%  2.231  1.832     51.1%  -0.19   1.949    53.0%  2.026       160
+  e  50% core / 50% cash                        52.3%   -0.46  2.031 -0.008  -18.3%  2.178  1.911     50.8%  -0.50   1.971    51.8%  2.017       160
+  f  deep>=5%: 100% QQQ                         52.4%   -0.27  2.018 -0.021  -19.8%  2.231  1.847     51.0%  -0.29   1.957    52.7%  2.031        88
+  f  deep>=5%: 50% core/50% QLD                 52.7%   -0.03  2.013 -0.026  -21.4%  2.256  1.820     51.3%  -0.03   1.953    53.1%  2.033        88
+  f  deep>=5%: 75% core/25% QLD                 52.7%   +0.01  2.030 -0.009  -18.3%  2.237  1.863     51.3%  +0.01   1.970    52.9%  2.039        88
+  f  deep>=5%: 50% core/50% cash                52.4%   -0.32  2.035 -0.004  -18.3%  2.186  1.912     51.0%  -0.35   1.975    52.3%  2.030        88
+  f  shallow(<5%): 50% core/50% cash            52.5%   -0.23  2.032 -0.007  -18.3%  2.206  1.891     51.1%  -0.25   1.973    52.4%  2.029        72
+  f  deep>=5% 50/50 QLD + shallow 50% cash      52.5%   -0.20  2.008 -0.031  -20.1%  2.247  1.817     51.1%  -0.22   1.947    52.8%  2.024       160
+  f  deep>=5% 100% QQQ + shallow 50% cash       52.3%   -0.44  2.013 -0.026  -18.5%  2.222  1.845     50.8%  -0.48   1.952    52.4%  2.021       160
+  f  deep>=10%: 100% QQQ                        52.1%   -0.57  2.017 -0.022  -18.3%  2.216  1.856     50.7%  -0.62   1.956    52.1%  2.015        34
+  f  deep>=10%: 50% core/50% QLD                52.3%   -0.45  2.016 -0.023  -18.3%  2.216  1.856     50.8%  -0.49   1.955    52.3%  2.016        34
+  f  deep>=10%: 75% core/25% QLD                52.5%   -0.19  2.029 -0.009  -18.3%  2.216  1.879     51.1%  -0.21   1.970    52.5%  2.029        34
+  f  deep>=10%: 50% core/50% cash               52.6%   -0.14  2.037 -0.002  -18.3%  2.216  1.892     51.2%  -0.15   1.978    52.5%  2.035        34
+  f  shallow(<10%): 50% core/50% cash           52.4%   -0.32  2.033 -0.006  -18.3%  2.178  1.915     51.0%  -0.35   1.973    51.9%  2.018       126
+  f  deep>=10% 50/50 QLD + shallow 50% cash     51.9%   -0.77  2.010 -0.029  -18.3%  2.178  1.875     50.5%  -0.84   1.949    51.5%  1.995       160
+  f  deep>=10% 100% QQQ + shallow 50% cash      51.8%   -0.89  2.011 -0.028  -18.3%  2.178  1.876     50.3%  -0.97   1.950    51.3%  1.994       160
+  g  vol>30%: 75% core                          52.6%   -0.07  2.040 +0.001  -18.3%  2.221  1.893     51.2%  -0.07   1.981    52.5%  2.035       112
+  g  vol>30%: 50% core                          52.6%   -0.12  2.039 +0.000  -18.3%  2.223  1.890     51.2%  -0.13   1.980    52.3%  2.032       112
+  g  vol>30%: all cash                          52.4%   -0.27  2.032 -0.007  -18.3%  2.219  1.878     51.0%  -0.29   1.973    51.9%  2.019       112
+
+--- PROXY PANEL ---
+  variant                                        CAGR vs base Sharpe    dSh   maxDD Sh 1st Sh 2nd ex20 CAGR   vs b ex20 Sh lag CAGR lag Sh Csess chg
+  BASE (live)                                   33.8%   +0.00  1.384 +0.000  -23.6%  1.044  1.830     32.4%  +0.00   1.335    33.8%  1.384         0
+  a  100% QQQ                                   33.8%   +0.00  1.384 +0.000  -23.6%  1.044  1.830     32.4%  +0.00   1.335    33.8%  1.384       564
+  b  75% core / 25% QLD                         34.0%   +0.27  1.381 -0.004  -24.6%  1.050  1.816     32.7%  +0.28   1.332    34.0%  1.380       564
+  c  50% core / 50% QLD                         34.3%   +0.54  1.374 -0.010  -25.9%  1.055  1.798     33.0%  +0.55   1.326    34.2%  1.374       564
+  d  75% core / 25% TQQQ                        34.3%   +0.56  1.375 -0.009  -25.9%  1.055  1.799     33.0%  +0.57   1.327    34.2%  1.375       564
+  e  50% core / 50% cash                        33.2%   -0.57  1.382 -0.002  -22.1%  1.023  1.850     31.8%  -0.59   1.332    33.2%  1.380       564
+  f  deep>=5%: 100% QQQ                         33.8%   -0.00  1.384 -0.000  -23.6%  1.044  1.830     32.4%  -0.00   1.335    33.8%  1.384       310
+  f  deep>=5%: 50% core/50% QLD                 33.9%   +0.12  1.369 -0.015  -26.2%  1.035  1.811     32.5%  +0.13   1.321    33.8%  1.368       310
+  f  deep>=5%: 75% core/25% QLD                 33.8%   +0.06  1.378 -0.007  -24.9%  1.040  1.822     32.5%  +0.06   1.329    33.8%  1.377       310
+  f  deep>=5%: 50% core/50% cash                33.6%   -0.15  1.391 +0.006  -21.9%  1.049  1.837     32.3%  -0.16   1.341    33.7%  1.391       310
+  f  shallow(<5%): 50% core/50% cash            33.3%   -0.48  1.374 -0.011  -24.1%  1.017  1.840     31.9%  -0.49   1.324    33.2%  1.371       254
+  f  deep>=5% 50/50 QLD + shallow 50% cash      33.4%   -0.33  1.360 -0.025  -26.7%  1.009  1.822     32.1%  -0.34   1.310    33.2%  1.355       564
+  f  deep>=5% 100% QQQ + shallow 50% cash       33.3%   -0.48  1.374 -0.011  -24.1%  1.017  1.840     31.9%  -0.49   1.324    33.2%  1.371       564
+  f  deep>=10%: 100% QQQ                        33.8%   -0.00  1.384 -0.000  -23.6%  1.044  1.830     32.4%  -0.00   1.335    33.8%  1.384       206
+  f  deep>=10%: 50% core/50% QLD                33.6%   -0.14  1.367 -0.017  -25.9%  1.028  1.817     32.3%  -0.14   1.318    33.5%  1.363       206
+  f  deep>=10%: 75% core/25% QLD                33.7%   -0.07  1.376 -0.008  -24.7%  1.036  1.824     32.3%  -0.07   1.327    33.6%  1.374       206
+  f  deep>=10%: 50% core/50% cash               33.9%   +0.16  1.397 +0.013  -21.9%  1.058  1.839     32.6%  +0.17   1.348    34.0%  1.400       206
+  f  shallow(<10%): 50% core/50% cash           33.0%   -0.74  1.369 -0.015  -23.8%  1.009  1.841     31.7%  -0.76   1.319    32.9%  1.364       358
+  f  deep>=10% 50/50 QLD + shallow 50% cash     32.9%   -0.88  1.352 -0.032  -26.1%  0.992  1.828     31.5%  -0.90   1.302    32.6%  1.343       564
+  f  deep>=10% 100% QQQ + shallow 50% cash      33.0%   -0.74  1.369 -0.015  -23.8%  1.009  1.841     31.7%  -0.76   1.319    32.9%  1.364       564
+  g  vol>30%: 75% core                          33.8%   +0.03  1.391 +0.007  -22.7%  1.051  1.836     32.4%  +0.03   1.342    33.8%  1.393       418
+  g  vol>30%: 50% core                          33.8%   +0.03  1.396 +0.012  -21.9%  1.056  1.841     32.4%  +0.03   1.347    33.9%  1.400       418
+  g  vol>30%: all cash                          33.8%   -0.01  1.401 +0.017  -21.9%  1.060  1.843     32.4%  -0.01   1.351    34.0%  1.408       418
+
+(lag = the variant row starts one session after C is first seen: mask & previous-session mask; exits are not delayed.)
+
+============================================================================================================================================
+Selection: variants that beat base on BOTH panels in CAGR and Sharpe (ranked by sum of the two Sharpe gains)
+============================================================================================================================================
+  a  100% QQQ                                  real dCAGR -0.58 dSh -0.033 | proxy dCAGR +0.00 dSh +0.000 | -
+  b  75% core / 25% QLD                        real dCAGR -0.15 dSh -0.016 | proxy dCAGR +0.27 dSh -0.004 | -
+  c  50% core / 50% QLD                        real dCAGR -0.38 dSh -0.043 | proxy dCAGR +0.54 dSh -0.010 | -
+  d  75% core / 25% TQQQ                       real dCAGR -0.17 dSh -0.030 | proxy dCAGR +0.56 dSh -0.009 | -
+  e  50% core / 50% cash                       real dCAGR -0.46 dSh -0.008 | proxy dCAGR -0.57 dSh -0.002 | -
+  f  deep>=5%: 100% QQQ                        real dCAGR -0.27 dSh -0.021 | proxy dCAGR -0.00 dSh -0.000 | -
+  f  deep>=5%: 50% core/50% QLD                real dCAGR -0.03 dSh -0.026 | proxy dCAGR +0.12 dSh -0.015 | -
+  f  deep>=5%: 75% core/25% QLD                real dCAGR +0.01 dSh -0.009 | proxy dCAGR +0.06 dSh -0.007 | -
+  f  deep>=5%: 50% core/50% cash               real dCAGR -0.32 dSh -0.004 | proxy dCAGR -0.15 dSh +0.006 | -
+  f  shallow(<5%): 50% core/50% cash           real dCAGR -0.23 dSh -0.007 | proxy dCAGR -0.48 dSh -0.011 | -
+  f  deep>=5% 50/50 QLD + shallow 50% cash     real dCAGR -0.20 dSh -0.031 | proxy dCAGR -0.33 dSh -0.025 | -
+  f  deep>=5% 100% QQQ + shallow 50% cash      real dCAGR -0.44 dSh -0.026 | proxy dCAGR -0.48 dSh -0.011 | -
+  f  deep>=10%: 100% QQQ                       real dCAGR -0.57 dSh -0.022 | proxy dCAGR -0.00 dSh -0.000 | -
+  f  deep>=10%: 50% core/50% QLD               real dCAGR -0.45 dSh -0.023 | proxy dCAGR -0.14 dSh -0.017 | -
+  f  deep>=10%: 75% core/25% QLD               real dCAGR -0.19 dSh -0.009 | proxy dCAGR -0.07 dSh -0.008 | -
+  f  deep>=10%: 50% core/50% cash              real dCAGR -0.14 dSh -0.002 | proxy dCAGR +0.16 dSh +0.013 | -
+  f  shallow(<10%): 50% core/50% cash          real dCAGR -0.32 dSh -0.006 | proxy dCAGR -0.74 dSh -0.015 | -
+  f  deep>=10% 50/50 QLD + shallow 50% cash    real dCAGR -0.77 dSh -0.029 | proxy dCAGR -0.88 dSh -0.032 | -
+  f  deep>=10% 100% QQQ + shallow 50% cash     real dCAGR -0.89 dSh -0.028 | proxy dCAGR -0.74 dSh -0.015 | -
+  g  vol>30%: 75% core                         real dCAGR -0.07 dSh +0.001 | proxy dCAGR +0.03 dSh +0.007 | -
+  g  vol>30%: 50% core                         real dCAGR -0.12 dSh +0.000 | proxy dCAGR +0.03 dSh +0.012 | -
+  g  vol>30%: all cash                         real dCAGR -0.27 dSh -0.007 | proxy dCAGR -0.01 dSh +0.017 | -
+  NO variant helps on both panels; INFORMATIONAL detail (not qualifying) for the two best by summed Sharpe gain: ['g  vol>30%: 50% core', 'f  deep>=10%: 50% core/50% cash']
+  best (both panels): ['g  vol>30%: 50% core', 'f  deep>=10%: 50% core/50% cash']
+
+############################################################################################################################################
+DETAIL: g  vol>30%: 50% core
+############################################################################################################################################
+[real] block bootstrap (20d, 3000): P(Sharpe not better than base) = 0.491; mean dSharpe +0.001, 5-95% [-0.035, +0.040]
+[real] placebo (150 random circular shifts of the same C-mask, same row): dCAGR mean -0.12 sd 0.28; dSharpe mean +0.001 sd 0.009; real dCAGR -0.12, dSharpe +0.000; share of placebos >= real: CAGR 0.473, Sharpe 0.480
+[proxy] block bootstrap (20d, 3000): P(Sharpe not better than base) = 0.160; mean dSharpe +0.012, 5-95% [-0.008, +0.033]
+[proxy] placebo (150 random circular shifts of the same C-mask, same row): dCAGR mean -0.19 sd 0.19; dSharpe mean +0.000 sd 0.007; real dCAGR +0.03, dSharpe +0.012; share of placebos >= real: CAGR 0.160, Sharpe 0.040
+[proxy] 2000-2002: total return base +22.4% vs variant +21.9%; maxDD base -14.0% vs -12.5%; effective-C sessions in window 152
+[proxy] 2008: total return base -4.9% vs variant -5.4%; maxDD base -21.7% vs -21.2%; effective-C sessions in window 52
+[proxy] 2001-2002 scored: total return base +22.4% vs variant +21.9%; maxDD base -14.0% vs -12.5%; effective-C sessions in window 152
+neighbour grid around: g  vol>30%: 50% core
+  point                                        real CAGR      d     Sh | proxy CAGR      d     Sh
+  vol>20%: 50% core                                52.3%  -0.46  2.031        33.8%  +0.04  1.400
+  vol>25%: 50% core                                52.3%  -0.45  2.030        33.7%  -0.02  1.396
+  vol>30%: 50% core                                52.6%  -0.12  2.039        33.8%  +0.03  1.396
+  vol>35%: 50% core                                52.6%  -0.14  2.036        33.8%  +0.08  1.395
+  vol>40%: 50% core                                52.5%  -0.26  2.032        33.5%  -0.26  1.382
+  vol>50%: 50% core                                52.6%  -0.14  2.035        33.7%  -0.11  1.385
+
+############################################################################################################################################
+DETAIL: f  deep>=10%: 50% core/50% cash
+############################################################################################################################################
+[real] block bootstrap (20d, 3000): P(Sharpe not better than base) = 0.571; mean dSharpe -0.002, 5-95% [-0.018, +0.014]
+[real] placebo (150 random circular shifts of the same C-mask, same row): dCAGR mean -0.08 sd 0.15; dSharpe mean -0.001 sd 0.005; real dCAGR -0.14, dSharpe -0.002; share of placebos >= real: CAGR 0.680, Sharpe 0.547
+[proxy] block bootstrap (20d, 3000): P(Sharpe not better than base) = 0.086; mean dSharpe +0.013, 5-95% [-0.002, +0.030]
+[proxy] placebo (150 random circular shifts of the same C-mask, same row): dCAGR mean -0.06 sd 0.13; dSharpe mean +0.001 sd 0.004; real dCAGR +0.16, dSharpe +0.013; share of placebos >= real: CAGR 0.060, Sharpe 0.007
+[proxy] 2000-2002: total return base +22.4% vs variant +22.9%; maxDD base -14.0% vs -12.9%; effective-C sessions in window 152
+[proxy] 2008: total return base -4.9% vs variant -4.2%; maxDD base -21.7% vs -21.2%; effective-C sessions in window 52
+[proxy] 2001-2002 scored: total return base +22.4% vs variant +22.9%; maxDD base -14.0% vs -12.9%; effective-C sessions in window 152
+neighbour grid around: f  deep>=10%: 50% core/50% cash
+  point                                        real CAGR      d     Sh | proxy CAGR      d     Sh
+  threshold 2.0%                                   52.3%  -0.43  2.032        33.6%  -0.17  1.392
+  threshold 3.0%                                   52.5%  -0.18  2.040        33.6%  -0.16  1.392
+  threshold 5.0%                                   52.4%  -0.32  2.035        33.6%  -0.15  1.391
+  threshold 7.5%                                   52.4%  -0.30  2.032        33.7%  -0.11  1.389
+  threshold 10.0%                                  52.6%  -0.14  2.037        33.9%  +0.16  1.397
+  threshold 15.0%                                  52.7%  +0.03  2.041        33.8%  +0.08  1.393
+  threshold 20.0%                                  52.7%  +0.00  2.039        33.8%  -0.01  1.389
+
+DONE

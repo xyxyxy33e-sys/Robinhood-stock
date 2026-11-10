@@ -1,0 +1,124 @@
+real: base 52.7% / Sharpe 2.039 / maxDD -18.3%  2015-11-03..2026-11-05 n=2768; halves 2.216/1.896; ex-2020 51.3%/1.980
+   effective-B sessions 0.7% of sessions, 3 spells; macro-B sessions 4.8%; fast overlay overrides B (macro-B sessions holding A weights): 116/134 = 86.6%
+proxy: base 33.8% / Sharpe 1.384 / maxDD -23.6%  2001-01-03..2026-11-05 n=6498; halves 1.044/1.830; ex-2020 32.4%/1.335
+   effective-B sessions 1.2% of sessions, 15 spells; macro-B sessions 5.9%; fast overlay overrides B (macro-B sessions holding A weights): 303/381 = 79.5%
+
+======================================================================================================================================================
+(a)-(e) whole effective-B (eff==1) replaced. Base row 75% SPMO / 25% TQQQ (vol-scaled). Deltas vs base. ex2020 = 2020 sessions dropped (delta vs base ex-2020). lag1 = row change applied one session late.
+======================================================================================================================================================
+  a 100% SPMO                                   real CAGR  52.8% (+0.09) Sh 2.043 (+0.004) DD  -18.3% | halves 2.221/1.899 (base 2.216/1.896) | ex2020  51.4% (+0.10) Sh 1.985 (+0.005) | lag1  52.9% (+0.15) Sh 2.045 (+0.006) | rows held  0.7% spells 3
+  a 100% SPMO                                  proxy CAGR  34.1% (+0.32) Sh 1.399 (+0.015) DD  -22.4% | halves 1.064/1.836 (base 1.044/1.830) | ex2020  32.7% (+0.33) Sh 1.350 (+0.015) | lag1  34.1% (+0.31) Sh 1.399 (+0.014) | rows held  1.2% spells 15
+  b 50% SPMO/50% cash                           real CAGR  53.2% (+0.49) Sh 2.054 (+0.015) DD  -18.3% | halves 2.219/1.921 (base 2.216/1.896) | ex2020  51.8% (+0.53) Sh 1.996 (+0.016) | lag1  53.3% (+0.61) Sh 2.057 (+0.018) | rows held  0.7% spells 3
+  b 50% SPMO/50% cash                          proxy CAGR  34.4% (+0.62) Sh 1.412 (+0.027) DD  -22.1% | halves 1.082/1.842 (base 1.044/1.830) | ex2020  33.1% (+0.64) Sh 1.363 (+0.028) | lag1  34.4% (+0.62) Sh 1.411 (+0.027) | rows held  1.2% spells 15
+  c 100% cash                                   real CAGR  53.5% (+0.83) Sh 2.058 (+0.019) DD  -18.3% | halves 2.216/1.932 (base 2.216/1.896) | ex2020  52.2% (+0.90) Sh 2.001 (+0.021) | lag1  53.7% (+1.02) Sh 2.064 (+0.025) | rows held  0.7% spells 3
+  c 100% cash                                  proxy CAGR  34.7% (+0.91) Sh 1.422 (+0.038) DD  -21.9% | halves 1.097/1.845 (base 1.044/1.830) | ex2020  33.3% (+0.93) Sh 1.374 (+0.039) | lag1  34.7% (+0.90) Sh 1.421 (+0.037) | rows held  1.2% spells 15
+  d 75% SPMO/25% QLD                            real CAGR  52.8% (+0.06) Sh 2.042 (+0.003) DD  -18.3% | halves 2.217/1.900 (base 2.216/1.896) | ex2020  51.4% (+0.06) Sh 1.983 (+0.003) | lag1  52.8% (+0.08) Sh 2.042 (+0.003) | rows held  0.7% spells 3
+  d 75% SPMO/25% QLD                           proxy CAGR  33.9% (+0.15) Sh 1.392 (+0.007) DD  -22.6% | halves 1.054/1.833 (base 1.044/1.830) | ex2020  32.6% (+0.16) Sh 1.343 (+0.008) | lag1  33.9% (+0.15) Sh 1.392 (+0.007) | rows held  1.2% spells 15
+  e 50/50 SPMO/TQQQ                             real CAGR  52.6% (-0.10) Sh 2.032 (-0.007) DD  -18.3% | halves 2.208/1.890 (base 2.216/1.896) | ex2020  51.2% (-0.11) Sh 1.973 (-0.007) | lag1  52.5% (-0.17) Sh 2.031 (-0.008) | rows held  0.7% spells 3
+  e 50/50 SPMO/TQQQ                            proxy CAGR  33.4% (-0.33) Sh 1.368 (-0.017) DD  -25.8% | halves 1.022/1.823 (base 1.044/1.830) | ex2020  32.1% (-0.34) Sh 1.318 (-0.017) | lag1  33.4% (-0.33) Sh 1.368 (-0.016) | rows held  1.2% spells 15
+
+(f) split by 50d/200d spread (QQQ SMA50/SMA200-1, negative in B). near = spread > -x ; deep = spread <= -x
+  f near 1% -> a                                real CAGR  53.0% (+0.25) Sh 2.047 (+0.009) DD  -18.3% | halves 2.221/1.907 (base 2.216/1.896) | ex2020  51.6% (+0.27) Sh 1.989 (+0.009) | lag1  52.9% (+0.19) Sh 2.045 (+0.006) | rows held  0.3% spells 3
+  f near 1% -> a                               proxy CAGR  34.1% (+0.37) Sh 1.399 (+0.015) DD  -22.8% | halves 1.063/1.838 (base 1.044/1.830) | ex2020  32.8% (+0.38) Sh 1.350 (+0.015) | lag1  34.1% (+0.35) Sh 1.398 (+0.014) | rows held  0.8% spells 10
+  f near 1% -> b                                real CAGR  53.7% (+1.01) Sh 2.070 (+0.031) DD  -18.3% | halves 2.219/1.950 (base 2.216/1.896) | ex2020  52.4% (+1.11) Sh 2.013 (+0.033) | lag1  53.6% (+0.86) Sh 2.064 (+0.025) | rows held  0.3% spells 3
+  f near 1% -> b                               proxy CAGR  34.5% (+0.71) Sh 1.411 (+0.027) DD  -22.8% | halves 1.080/1.845 (base 1.044/1.830) | ex2020  33.1% (+0.73) Sh 1.363 (+0.028) | lag1  34.4% (+0.68) Sh 1.410 (+0.026) | rows held  0.8% spells 10
+  f near 1% -> c                                real CAGR  54.5% (+1.75) Sh 2.087 (+0.048) DD  -18.3% | halves 2.216/1.985 (base 2.216/1.896) | ex2020  53.2% (+1.91) Sh 2.032 (+0.053) | lag1  54.2% (+1.49) Sh 2.079 (+0.040) | rows held  0.3% spells 3
+  f near 1% -> c                               proxy CAGR  34.8% (+1.04) Sh 1.423 (+0.039) DD  -22.8% | halves 1.095/1.852 (base 1.044/1.830) | ex2020  33.5% (+1.07) Sh 1.375 (+0.040) | lag1  34.8% (+1.00) Sh 1.421 (+0.037) | rows held  0.8% spells 10
+  f deep 1% -> a                                real CAGR  52.6% (-0.09) Sh 2.037 (-0.002) DD  -18.3% | halves 2.216/1.891 (base 2.216/1.896) | ex2020  51.2% (-0.10) Sh 1.977 (-0.002) | lag1  52.7% (-0.05) Sh 2.038 (-0.001) | rows held  0.3% spells 1
+  f deep 1% -> a                               proxy CAGR  33.7% (-0.05) Sh 1.384 (+0.000) DD  -22.4% | halves 1.045/1.829 (base 1.044/1.830) | ex2020  32.4% (-0.05) Sh 1.335 (+0.000) | lag1  33.7% (-0.04) Sh 1.385 (+0.000) | rows held  0.4% spells 9
+  f deep 1% -> b                                real CAGR  52.2% (-0.47) Sh 2.025 (-0.014) DD  -18.3% | halves 2.216/1.870 (base 2.216/1.896) | ex2020  50.8% (-0.51) Sh 1.965 (-0.015) | lag1  52.5% (-0.25) Sh 2.032 (-0.007) | rows held  0.3% spells 1
+  f deep 1% -> b                               proxy CAGR  33.7% (-0.09) Sh 1.384 (-0.000) DD  -22.1% | halves 1.046/1.826 (base 1.044/1.830) | ex2020  32.3% (-0.09) Sh 1.335 (-0.000) | lag1  33.7% (-0.07) Sh 1.385 (+0.001) | rows held  0.4% spells 9
+  f deep 1% -> c                                real CAGR  51.9% (-0.86) Sh 2.011 (-0.028) DD  -18.3% | halves 2.216/1.845 (base 2.216/1.896) | ex2020  50.4% (-0.93) Sh 1.950 (-0.030) | lag1  52.3% (-0.45) Sh 2.024 (-0.015) | rows held  0.3% spells 1
+  f deep 1% -> c                               proxy CAGR  33.6% (-0.15) Sh 1.383 (-0.001) DD  -22.2% | halves 1.046/1.824 (base 1.044/1.830) | ex2020  32.3% (-0.15) Sh 1.333 (-0.002) | lag1  33.7% (-0.11) Sh 1.384 (-0.000) | rows held  0.4% spells 9
+  f near 2% -> a                                real CAGR  52.8% (+0.09) Sh 2.043 (+0.004) DD  -18.3% | halves 2.221/1.899 (base 2.216/1.896) | ex2020  51.4% (+0.10) Sh 1.985 (+0.005) | lag1  52.9% (+0.15) Sh 2.045 (+0.006) | rows held  0.7% spells 3
+  f near 2% -> a                               proxy CAGR  34.2% (+0.39) Sh 1.401 (+0.016) DD  -22.4% | halves 1.068/1.836 (base 1.044/1.830) | ex2020  32.8% (+0.40) Sh 1.352 (+0.017) | lag1  34.2% (+0.39) Sh 1.400 (+0.016) | rows held  1.2% spells 14
+  f near 2% -> b                                real CAGR  53.2% (+0.49) Sh 2.054 (+0.015) DD  -18.3% | halves 2.219/1.921 (base 2.216/1.896) | ex2020  51.8% (+0.53) Sh 1.996 (+0.016) | lag1  53.3% (+0.61) Sh 2.057 (+0.018) | rows held  0.7% spells 3
+  f near 2% -> b                               proxy CAGR  34.5% (+0.75) Sh 1.415 (+0.031) DD  -22.1% | halves 1.088/1.842 (base 1.044/1.830) | ex2020  33.2% (+0.77) Sh 1.366 (+0.031) | lag1  34.5% (+0.75) Sh 1.414 (+0.030) | rows held  1.2% spells 14
+  f near 2% -> c                                real CAGR  53.5% (+0.83) Sh 2.058 (+0.019) DD  -18.3% | halves 2.216/1.932 (base 2.216/1.896) | ex2020  52.2% (+0.90) Sh 2.001 (+0.021) | lag1  53.7% (+1.02) Sh 2.064 (+0.025) | rows held  0.7% spells 3
+  f near 2% -> c                               proxy CAGR  34.8% (+1.08) Sh 1.427 (+0.042) DD  -21.9% | halves 1.106/1.845 (base 1.044/1.830) | ex2020  33.5% (+1.11) Sh 1.379 (+0.044) | lag1  34.9% (+1.10) Sh 1.427 (+0.042) | rows held  1.2% spells 14
+  f deep 2% -> a                                real CAGR  52.7% (+0.00) Sh 2.039 (+0.000) DD  -18.3% | halves 2.216/1.896 (base 2.216/1.896) | ex2020  51.3% (+0.00) Sh 1.980 (+0.000) | lag1  52.7% (+0.00) Sh 2.039 (+0.000) | rows held  0.0% spells 0
+  f deep 2% -> a                               proxy CAGR  33.7% (-0.07) Sh 1.383 (-0.002) DD  -23.6% | halves 1.041/1.830 (base 1.044/1.830) | ex2020  32.3% (-0.07) Sh 1.333 (-0.002) | lag1  33.7% (-0.08) Sh 1.382 (-0.002) | rows held  0.0% spells 1
+  f deep 2% -> b                                real CAGR  52.7% (+0.00) Sh 2.039 (+0.000) DD  -18.3% | halves 2.216/1.896 (base 2.216/1.896) | ex2020  51.3% (+0.00) Sh 1.980 (+0.000) | lag1  52.7% (+0.00) Sh 2.039 (+0.000) | rows held  0.0% spells 0
+  f deep 2% -> b                               proxy CAGR  33.6% (-0.12) Sh 1.381 (-0.003) DD  -23.6% | halves 1.038/1.830 (base 1.044/1.830) | ex2020  32.3% (-0.12) Sh 1.332 (-0.003) | lag1  33.6% (-0.13) Sh 1.381 (-0.004) | rows held  0.0% spells 1
+  f deep 2% -> c                                real CAGR  52.7% (+0.00) Sh 2.039 (+0.000) DD  -18.3% | halves 2.216/1.896 (base 2.216/1.896) | ex2020  51.3% (+0.00) Sh 1.980 (+0.000) | lag1  52.7% (+0.00) Sh 2.039 (+0.000) | rows held  0.0% spells 0
+  f deep 2% -> c                               proxy CAGR  33.6% (-0.18) Sh 1.379 (-0.005) DD  -23.6% | halves 1.035/1.830 (base 1.044/1.830) | ex2020  32.2% (-0.18) Sh 1.330 (-0.005) | lag1  33.6% (-0.20) Sh 1.379 (-0.005) | rows held  0.0% spells 1
+
+(g) B by age (session # within an effective-B spell, spells measured on the full proxy timeline)
+  g first 5 -> a                                real CAGR  52.8% (+0.04) Sh 2.041 (+0.002) DD  -18.3% | halves 2.221/1.895 (base 2.216/1.896) | ex2020  51.4% (+0.05) Sh 1.982 (+0.002) | lag1  52.9% (+0.21) Sh 2.046 (+0.007) | rows held  0.3% spells 3
+  g first 5 -> a                               proxy CAGR  34.0% (+0.23) Sh 1.395 (+0.011) DD  -22.4% | halves 1.060/1.833 (base 1.044/1.830) | ex2020  32.7% (+0.24) Sh 1.346 (+0.011) | lag1  34.0% (+0.23) Sh 1.395 (+0.011) | rows held  0.8% spells 15
+  g first 5 -> b                                real CAGR  52.7% (-0.06) Sh 2.037 (-0.001) DD  -18.3% | halves 2.219/1.891 (base 2.216/1.896) | ex2020  51.3% (-0.06) Sh 1.978 (-0.001) | lag1  52.9% (+0.20) Sh 2.045 (+0.006) | rows held  0.3% spells 3
+  g first 5 -> b                               proxy CAGR  34.2% (+0.47) Sh 1.404 (+0.020) DD  -22.1% | halves 1.074/1.835 (base 1.044/1.830) | ex2020  32.9% (+0.48) Sh 1.356 (+0.021) | lag1  34.2% (+0.46) Sh 1.404 (+0.020) | rows held  0.8% spells 15
+  g first 5 -> c                                real CAGR  52.5% (-0.17) Sh 2.033 (-0.006) DD  -18.3% | halves 2.216/1.885 (base 2.216/1.896) | ex2020  51.1% (-0.19) Sh 1.974 (-0.006) | lag1  52.9% (+0.18) Sh 2.043 (+0.005) | rows held  0.3% spells 3
+  g first 5 -> c                               proxy CAGR  34.4% (+0.68) Sh 1.412 (+0.028) DD  -21.9% | halves 1.087/1.836 (base 1.044/1.830) | ex2020  33.1% (+0.70) Sh 1.364 (+0.029) | lag1  34.4% (+0.67) Sh 1.412 (+0.027) | rows held  0.8% spells 15
+  g later 5 -> a                                real CAGR  52.8% (+0.04) Sh 2.041 (+0.002) DD  -18.3% | halves 2.216/1.899 (base 2.216/1.896) | ex2020  51.4% (+0.04) Sh 1.982 (+0.002) | lag1  52.7% (-0.04) Sh 2.039 (-0.000) | rows held  0.3% spells 1
+  g later 5 -> a                               proxy CAGR  33.9% (+0.09) Sh 1.388 (+0.004) DD  -23.6% | halves 1.049/1.834 (base 1.044/1.830) | ex2020  32.5% (+0.09) Sh 1.339 (+0.004) | lag1  33.8% (+0.08) Sh 1.388 (+0.004) | rows held  0.4% spells 4
+  g later 5 -> b                                real CAGR  53.3% (+0.55) Sh 2.055 (+0.016) DD  -18.3% | halves 2.216/1.926 (base 2.216/1.896) | ex2020  51.9% (+0.60) Sh 1.998 (+0.018) | lag1  53.2% (+0.44) Sh 2.052 (+0.013) | rows held  0.3% spells 1
+  g later 5 -> b                               proxy CAGR  33.9% (+0.15) Sh 1.391 (+0.007) DD  -23.6% | halves 1.051/1.837 (base 1.044/1.830) | ex2020  32.6% (+0.15) Sh 1.342 (+0.007) | lag1  33.9% (+0.15) Sh 1.391 (+0.007) | rows held  0.4% spells 4
+  g later 5 -> c                                real CAGR  53.7% (+0.99) Sh 2.063 (+0.025) DD  -18.3% | halves 2.216/1.942 (base 2.216/1.896) | ex2020  52.4% (+1.09) Sh 2.007 (+0.027) | lag1  53.6% (+0.86) Sh 2.060 (+0.021) | rows held  0.3% spells 1
+  g later 5 -> c                               proxy CAGR  34.0% (+0.21) Sh 1.394 (+0.009) DD  -23.6% | halves 1.054/1.839 (base 1.044/1.830) | ex2020  32.6% (+0.22) Sh 1.345 (+0.009) | lag1  34.0% (+0.22) Sh 1.393 (+0.009) | rows held  0.4% spells 4
+  g first 10 -> a                               real CAGR  52.7% (+0.01) Sh 2.040 (+0.001) DD  -18.3% | halves 2.221/1.894 (base 2.216/1.896) | ex2020  51.3% (+0.01) Sh 1.981 (+0.001) | lag1  52.7% (+0.01) Sh 2.040 (+0.001) | rows held  0.5% spells 3
+  g first 10 -> a                              proxy CAGR  34.0% (+0.20) Sh 1.395 (+0.010) DD  -22.4% | halves 1.060/1.832 (base 1.044/1.830) | ex2020  32.6% (+0.21) Sh 1.346 (+0.010) | lag1  33.9% (+0.16) Sh 1.393 (+0.009) | rows held  1.0% spells 15
+  g first 10 -> b                               real CAGR  52.4% (-0.27) Sh 2.032 (-0.007) DD  -18.3% | halves 2.219/1.880 (base 2.216/1.896) | ex2020  51.0% (-0.29) Sh 1.972 (-0.008) | lag1  52.5% (-0.20) Sh 2.033 (-0.006) | rows held  0.5% spells 3
+  g first 10 -> b                              proxy CAGR  34.2% (+0.40) Sh 1.403 (+0.019) DD  -22.1% | halves 1.074/1.834 (base 1.044/1.830) | ex2020  32.8% (+0.42) Sh 1.355 (+0.019) | lag1  34.1% (+0.32) Sh 1.400 (+0.016) | rows held  1.0% spells 15
+  g first 10 -> c                               real CAGR  52.2% (-0.55) Sh 2.021 (-0.018) DD  -18.3% | halves 2.216/1.864 (base 2.216/1.896) | ex2020  50.7% (-0.60) Sh 1.961 (-0.019) | lag1  52.3% (-0.42) Sh 2.025 (-0.014) | rows held  0.5% spells 3
+  g first 10 -> c                              proxy CAGR  34.3% (+0.58) Sh 1.410 (+0.026) DD  -21.9% | halves 1.085/1.834 (base 1.044/1.830) | ex2020  33.0% (+0.60) Sh 1.361 (+0.026) | lag1  34.2% (+0.46) Sh 1.405 (+0.021) | rows held  1.0% spells 15
+  g later 10 -> a                               real CAGR  52.8% (+0.09) Sh 2.042 (+0.003) DD  -18.3% | halves 2.216/1.901 (base 2.216/1.896) | ex2020  51.4% (+0.09) Sh 1.983 (+0.003) | lag1  52.9% (+0.14) Sh 2.044 (+0.005) | rows held  0.1% spells 1
+  g later 10 -> a                              proxy CAGR  33.9% (+0.10) Sh 1.388 (+0.004) DD  -23.6% | halves 1.048/1.834 (base 1.044/1.830) | ex2020  32.5% (+0.11) Sh 1.339 (+0.004) | lag1  33.9% (+0.14) Sh 1.389 (+0.005) | rows held  0.2% spells 3
+  g later 10 -> b                               real CAGR  53.5% (+0.76) Sh 2.061 (+0.022) DD  -18.3% | halves 2.216/1.936 (base 2.216/1.896) | ex2020  52.1% (+0.83) Sh 2.004 (+0.024) | lag1  53.5% (+0.81) Sh 2.063 (+0.024) | rows held  0.1% spells 1
+  g later 10 -> b                              proxy CAGR  34.0% (+0.21) Sh 1.392 (+0.008) DD  -23.6% | halves 1.052/1.838 (base 1.044/1.830) | ex2020  32.6% (+0.21) Sh 1.343 (+0.008) | lag1  34.0% (+0.28) Sh 1.395 (+0.010) | rows held  0.2% spells 3
+  g later 10 -> c                               real CAGR  54.1% (+1.40) Sh 2.076 (+0.037) DD  -18.3% | halves 2.216/1.965 (base 2.216/1.896) | ex2020  52.8% (+1.52) Sh 2.020 (+0.040) | lag1  54.2% (+1.47) Sh 2.078 (+0.039) | rows held  0.1% spells 1
+  g later 10 -> c                              proxy CAGR  34.1% (+0.31) Sh 1.396 (+0.011) DD  -23.6% | halves 1.055/1.841 (base 1.044/1.830) | ex2020  32.7% (+0.32) Sh 1.347 (+0.012) | lag1  34.2% (+0.42) Sh 1.399 (+0.015) | rows held  0.2% spells 3
+
+Variants improving BOTH Sharpe and CAGR on BOTH panels (ranked by min dSharpe): f near 1% -> c (+0.039); f near 1% -> b (+0.027); f near 2% -> c (+0.019); c 100% cash (+0.019); f near 2% -> b (+0.015); b 50% SPMO/50% cash (+0.015); g later 10 -> c (+0.011); g later 5 -> c (+0.009); f near 1% -> a (+0.009); g later 10 -> b (+0.008); g later 5 -> b (+0.007); f near 2% -> a (+0.004); a 100% SPMO (+0.004); g later 10 -> a (+0.003); d 75% SPMO/25% QLD (+0.003); g later 5 -> a (+0.002); g first 5 -> a (+0.002); g first 10 -> a (+0.001)
+Variants improving Sharpe only on both panels: NONE
+Deep-dive on: f near 1% -> c, f near 1% -> b
+
+############################################################################################################################################
+DEEP DIVE: f near 1% -> c  row (0, 0, 0, 0, 1)
+############################################################################################################################################
+  [real] block bootstrap (20d, 3000 draws): P(Sharpe not better than base) = 0.141; mean dSharpe +0.052; 5-95% [-0.006, +0.142]
+  [real] placebo (mask rolled by random 250+ session offset, kept to A/B/C sessions, 300 draws): actual dSharpe +0.048 vs placebo mean -0.003 sd 0.015; share of placebos >= actual dSharpe 0.010; actual dCAGR +1.75 vs placebo mean -0.17, share >= 0.003
+  [proxy] block bootstrap (20d, 3000 draws): P(Sharpe not better than base) = 0.007; mean dSharpe +0.039; 5-95% [+0.012, +0.071]
+  [proxy] placebo (mask rolled by random 250+ session offset, kept to A/B/C sessions, 300 draws): actual dSharpe +0.039 vs placebo mean -0.004 sd 0.013; share of placebos >= actual dSharpe 0.000; actual dCAGR +1.04 vs placebo mean -0.20, share >= 0.000
+  neighbour grid -- row interpolation lam (0 = live B row, 1 = candidate row, >1 extrapolated and clipped at >=0):
+    lam 0.00 row (0.75, 0.25, 0.0, 0.0, 0.0): real CAGR  52.7% (+0.03) Sh 2.040 (+0.001) DD -18.3% | proxy CAGR  33.8% (+0.00) Sh 1.384 (+0.000) DD -23.6%
+    lam 0.25 row (0.562, 0.188, 0.0, 0.0, 0.25): real CAGR  53.2% (+0.48) Sh 2.054 (+0.015) DD -18.3% | proxy CAGR  34.0% (+0.27) Sh 1.395 (+0.011) DD -22.9%
+    lam 0.50 row (0.375, 0.125, 0.0, 0.0, 0.5): real CAGR  53.6% (+0.91) Sh 2.067 (+0.028) DD -18.3% | proxy CAGR  34.3% (+0.53) Sh 1.405 (+0.021) DD -22.8%
+    lam 0.75 row (0.188, 0.062, 0.0, 0.0, 0.75): real CAGR  54.0% (+1.33) Sh 2.078 (+0.039) DD -18.3% | proxy CAGR  34.6% (+0.79) Sh 1.414 (+0.030) DD -22.8%
+    lam 1.00 row (0.0, 0.0, 0.0, 0.0, 1.0): real CAGR  54.5% (+1.75) Sh 2.087 (+0.048) DD -18.3% | proxy CAGR  34.8% (+1.04) Sh 1.423 (+0.039) DD -22.8%
+    lam 1.25 row (0.0, 0.0, 0.0, 0.0, 1.0): real CAGR  54.5% (+1.75) Sh 2.087 (+0.048) DD -18.3% | proxy CAGR  34.8% (+1.04) Sh 1.423 (+0.039) DD -22.8%
+  neighbour grid -- threshold:
+    spread threshold 0.5%: real CAGR  53.3% (+0.58) Sh 2.053 (+0.015) held 0.1% | proxy CAGR  33.8% (+0.01) Sh 1.386 (+0.001) held 0.2%
+    spread threshold 1.0%: real CAGR  54.5% (+1.75) Sh 2.087 (+0.048) held 0.3% | proxy CAGR  34.8% (+1.04) Sh 1.423 (+0.039) held 0.8%
+    spread threshold 1.5%: real CAGR  53.6% (+0.84) Sh 2.060 (+0.021) held 0.4% | proxy CAGR  34.9% (+1.09) Sh 1.426 (+0.041) held 1.0%
+    spread threshold 2.0%: real CAGR  53.5% (+0.83) Sh 2.058 (+0.019) held 0.7% | proxy CAGR  34.8% (+1.08) Sh 1.427 (+0.042) held 1.2%
+    spread threshold 3.0%: real CAGR  53.5% (+0.83) Sh 2.058 (+0.019) held 0.7% | proxy CAGR  34.7% (+0.91) Sh 1.422 (+0.038) held 1.2%
+    spread threshold 5.0%: real CAGR  53.5% (+0.83) Sh 2.058 (+0.019) held 0.7% | proxy CAGR  34.7% (+0.91) Sh 1.422 (+0.038) held 1.2%
+  [proxy 2001-2002] variant return +25.5% maxDD -13.8% | base return +22.4% maxDD -14.0% | effective-B sessions in window 2/499; variant-mask sessions 2
+  [proxy 2008] variant return -1.6% maxDD -20.9% | base return -4.9% maxDD -21.7% | effective-B sessions in window 10/253; variant-mask sessions 4
+
+############################################################################################################################################
+DEEP DIVE: f near 1% -> b  row (0.5, 0, 0, 0, 0.5)
+############################################################################################################################################
+  [real] block bootstrap (20d, 3000 draws): P(Sharpe not better than base) = 0.124; mean dSharpe +0.033; 5-95% [-0.004, +0.089]
+  [real] placebo (mask rolled by random 250+ session offset, kept to A/B/C sessions, 300 draws): actual dSharpe +0.031 vs placebo mean -0.002 sd 0.013; share of placebos >= actual dSharpe 0.020; actual dCAGR +1.01 vs placebo mean -0.10, share >= 0.013
+  [proxy] block bootstrap (20d, 3000 draws): P(Sharpe not better than base) = 0.005; mean dSharpe +0.027; 5-95% [+0.008, +0.049]
+  [proxy] placebo (mask rolled by random 250+ session offset, kept to A/B/C sessions, 300 draws): actual dSharpe +0.027 vs placebo mean -0.001 sd 0.011; share of placebos >= actual dSharpe 0.007; actual dCAGR +0.71 vs placebo mean -0.12, share >= 0.007
+  neighbour grid -- row interpolation lam (0 = live B row, 1 = candidate row, >1 extrapolated and clipped at >=0):
+    lam 0.00 row (0.75, 0.25, 0.0, 0.0, 0.0): real CAGR  52.7% (+0.03) Sh 2.040 (+0.001) DD -18.3% | proxy CAGR  33.8% (+0.00) Sh 1.384 (+0.000) DD -23.6%
+    lam 0.25 row (0.688, 0.188, 0.0, 0.0, 0.125): real CAGR  53.0% (+0.28) Sh 2.048 (+0.009) DD -18.3% | proxy CAGR  33.9% (+0.18) Sh 1.392 (+0.007) DD -23.2%
+    lam 0.50 row (0.625, 0.125, 0.0, 0.0, 0.25): real CAGR  53.2% (+0.53) Sh 2.056 (+0.017) DD -18.3% | proxy CAGR  34.1% (+0.36) Sh 1.399 (+0.014) DD -22.8%
+    lam 0.75 row (0.562, 0.062, 0.0, 0.0, 0.375): real CAGR  53.5% (+0.77) Sh 2.063 (+0.024) DD -18.3% | proxy CAGR  34.3% (+0.53) Sh 1.405 (+0.021) DD -22.8%
+    lam 1.00 row (0.5, 0.0, 0.0, 0.0, 0.5): real CAGR  53.7% (+1.01) Sh 2.070 (+0.031) DD -18.3% | proxy CAGR  34.5% (+0.71) Sh 1.411 (+0.027) DD -22.8%
+    lam 1.25 row (0.438, 0.0, 0.0, 0.0, 0.562): real CAGR  53.8% (+1.11) Sh 2.072 (+0.033) DD -18.3% | proxy CAGR  34.5% (+0.75) Sh 1.413 (+0.029) DD -22.8%
+  neighbour grid -- threshold:
+    spread threshold 0.5%: real CAGR  53.0% (+0.24) Sh 2.046 (+0.007) held 0.1% | proxy CAGR  33.8% (+0.01) Sh 1.386 (+0.001) held 0.2%
+    spread threshold 1.0%: real CAGR  53.7% (+1.01) Sh 2.070 (+0.031) held 0.3% | proxy CAGR  34.5% (+0.71) Sh 1.411 (+0.027) held 0.8%
+    spread threshold 1.5%: real CAGR  53.2% (+0.47) Sh 2.053 (+0.015) held 0.4% | proxy CAGR  34.5% (+0.74) Sh 1.414 (+0.029) held 1.0%
+    spread threshold 2.0%: real CAGR  53.2% (+0.49) Sh 2.054 (+0.015) held 0.7% | proxy CAGR  34.5% (+0.75) Sh 1.415 (+0.031) held 1.2%
+    spread threshold 3.0%: real CAGR  53.2% (+0.49) Sh 2.054 (+0.015) held 0.7% | proxy CAGR  34.4% (+0.62) Sh 1.412 (+0.027) held 1.2%
+    spread threshold 5.0%: real CAGR  53.2% (+0.49) Sh 2.054 (+0.015) held 0.7% | proxy CAGR  34.4% (+0.62) Sh 1.412 (+0.027) held 1.2%
+  [proxy 2001-2002] variant return +24.5% maxDD -13.8% | base return +22.4% maxDD -14.0% | effective-B sessions in window 2/499; variant-mask sessions 2
+  [proxy 2008] variant return -2.6% maxDD -20.9% | base return -4.9% maxDD -21.7% | effective-B sessions in window 10/253; variant-mask sessions 4
+
+done

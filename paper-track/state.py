@@ -313,7 +313,7 @@ SAT_WEIGHT_35 = dict(A=0.35, B=0.35, C=0.0, D=0.15, E=0.15, F=0.0)
 # discovery -- it is bought with drawdown, and the owner priced it.
 TARGET_WEIGHTS = {
     'A': (0.50, 0.50, 0.00, 0.00, 0.00),   # 2026-09-07: REVERTED from (0.40, 0.60). The 09-06 step up spent the step-1/3 trim's Sharpe gain on leverage; the owner stepped back after the block bootstrap showed real-instrument Sharpe falls monotonically as A leverage rises and only the trim itself survives a persistence-respecting test. Earlier: (0.70, 0.30), (0.80, 0.20)
-    'B': (0.75, 0.25, 0.00, 0.00, 0.00),   # 2026-09-02: was (0.25, 0.75, ...) -- the one EDGE found, see block above
+    'B': (0.50, 0.00, 0.00, 0.00, 0.50),   # 2026-11-11 (owner, "change b"): was (0.75, 0.25, ...) -- research_notes/deep_e_2026_11/bx_test.log; 2026-09-02: was (0.25, 0.75, ...)
     'C': (1.00, 0.00, 0.00, 0.00, 0.00),
     'D': (0.00, 0.00, 1.00, 0.00, 0.00),   # 2026-09-06: was (0,0,0.85,0,0.15) -- frontier step 2; 2026-09-02: was (0,0,0.70,0,0.30)
     'E': (0.00, 0.00, 0.00, 0.00, 1.00),   # 2026-09-19 (owner decision): was (0,0,0,0.50,0.50) -- XLU leg dropped from E; see the block below
@@ -333,6 +333,14 @@ TARGET_WEIGHTS = {
 # to slightly better tail, recorded as such. The XLU column stays in the
 # weight tuple (weight 0) so every harness, log and guard keeps its shape;
 # DEFENSIVE_INSTRUMENT is retained for the same reason.
+# 2026-11-11, STATE B -> 50% SPMO / 50% CASH (owner decision 2026-11-10, "change b"). On the
+# effective-B sessions that hold the B row (0.7% of real sessions, 3 spells; 1.2% proxy, 15 spells --
+# the fast overlay turns 80-87% of macro-B days into A), holding less helped on both panels and grew
+# monotonically toward cash: 75/25 SPMO/TQQQ -> 50% SPMO / 50% cash, on the design with deep-E and
+# VIX-panic, real 52.7% / 2.039 / -18.3% -> 53.2% / 2.054 / -18.3%, proxy 33.8% / 1.384 / -23.6% ->
+# 34.4% / 1.412 / -22.1%; holds ex-2020 and one session late; proxy 2001-02 and 2008 both better.
+# Thin: the real evidence is 3 spells and the gain is small because the row rarely binds. 100% cash
+# scored a little higher and was not taken. B's history: QQQ -11.6%/yr while in it.
 # Canonical copy, taken at import (2026-09-23). Several research modules
 # (d_substate_fresh and everything that imports it: drawdown_study,
 # fall_protection_*) re-pin TARGET_WEIGHTS['E'] to the old 50% XLU row for

@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E and VIX-panic QQQ legs 2026-11-11)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E and VIX-panic QQQ legs and B 50% SPMO / 50% cash 2026-11-11)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -27,7 +27,7 @@ C row when the fast read is A/B/C.
 | Effective state | Row | Exposure |
 |---|---|---|
 | A | 50% SPMO / 50% TQQQ | 2.0x |
-| B | 75% SPMO / 25% TQQQ | 1.5x |
+| B | 50% SPMO / 50% BOXX | 0.50x |
 | C | 100% SPMO | 1.0x |
 | D1 (above the 100d) | 50% SPMO / 50% QLD | 1.5x |
 | D2 (100d-150d) | 50% TQQQ / 50% QLD | 2.5x |
@@ -210,6 +210,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-11 | **B row 75% SPMO / 25% TQQQ → 50% SPMO / 50% BOXX** (`TARGET_WEIGHTS['B']`, `monte_carlo.LIVE`) | **owner decision** ("change b", 2026-11-10); on the design with deep-E and VIX-panic: real 52.7% / 2.039 / −18.3% → 53.2% / 2.054 / −18.3%, proxy 33.8% / 1.384 / −23.6% → 34.4% / 1.412 / −22.1%; monotone toward cash on both panels, holds ex-2020 and one session late; thin — the B row binds on 0.7% of real sessions (3 spells), 1.2% proxy (15) (`research_notes/deep_e_2026_11/bx_test.log`) |
 | 2026-11-11 | **VIX-panic QQQ leg**: a latch ON at a VIX close >= 30, OFF below 25; while ON 25% of the cash leg is QQQ, in any state, after VIXM and deep-E (shared QQQ slot, 75% cap); a flip is a regime trigger (`VIX_PANIC_*`, `vix_panic_series`, `vixm_state()['panic']`) | **owner decision** ("QQQ with 25% of the cash leg when VIX >= 30", 2026-11-10); on top of deep-E: real 50.35% / 2.021 / −18.3% → 52.03% / 2.022 / −18.3%, proxy 32.38% / 1.372 / −22.1% → 33.76% / 1.384 / −23.6%; ex-2020 +1.14 / +1.19; lag +1.72 / +1.37; bootstrap not significant (risk scales with return); buys spikes down a bear (`research_notes/deep_e_2026_11/bp_test.log`) |
 | 2026-11-11 | **Deep-E QQQ leg**: on an effective-E day with QQQ at least 5% under its 200-day, 50% of the cash leg (BOXX + VIXM) is held in QQQ, after the VIXM sleeve takes its share; off when either condition ends; a flip is a regime trigger (`DEEP_E_*`, `deep_e_active`, `apply_deep_e`, `live_target_weights7`, 7-leg `live_run.LEGS7`) | **owner decision** ("50%", instrument QQQ, 2026-11-10); real 2015-11..2026-11 46.6% / 1.928 / −18.3% → 50.4% / 2.021 / −18.3%, proxy 2001–2026 30.5% / 1.314 / −24.3% → 32.4% / 1.372 / −22.1%; ex-2020 +1.75 real / +1.13 proxy; random-E placebos P 0.000; ~54% of the real gain is 2020; E days 2–5% under the 200-day lose; one session of lag → +1.5 real (`research_notes/deep_e_2026_11/`) |
 | 2026-11-06 | **A base 20/80 → 40/60 for every A session from 2026-11-06** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 20/80 kept in `A_BASE_FROM_SESSION_PRIOR`); book in E on the day, so no trade until the book enters A | **owner decision** ("change to 40/60"); re-run through 2026-11-05, real ETFs with VIXM, 2bp: 2026 YTD 40/60 +19.4% / max DD −16.8% vs 20/80 +19.5% / −19.1%; years 2022 −8.1% vs −11.1%, 2023 +82.5% vs +108.4%, 2024 +79.4% vs +88.1%, 2025 +28.8% vs +27.0% |
@@ -436,7 +437,7 @@ State = f(price>50dma, price>200dma, 50dma>200dma). Implementation:
 | State | Core | TQQQ (3x) | QLD (2x) | XLU | Cash (BOXX) | Effective exposure |
 |---|---|---|---|---|---|---|
 | A | 50% | 50% | 0% | 0% | 0% | 2.0x |
-| B | 75% | 25% | 0% | 0% | 0% | 1.5x |
+| B | 50% | 0% | 0% | 0% | 50% | 0.50x |
 | C | 100% | 0% | 0% | 0% | 0% | 1.0x |
 | D1 (above the 100d) | 50% | 0% | 50% | 0% | 0% | 1.5x |
 | D2 (100d-150d) | 0% | 50% | 50% | 0% | 0% | 2.5x |

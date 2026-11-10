@@ -69,7 +69,7 @@ LETTERS = 'ABCDEF'
 # Rows are (core, tqqq, qld, xlu, cash) before the vol target.
 LIVE = dict(
     name='2026-10-09 live (A 25/75 + D ladder)',
-    rows={'B': (0.75, 0.25, 0, 0, 0), 'C': (1, 0, 0, 0, 0), 'D': (0, 0, 1, 0, 0),
+    rows={'B': (0.50, 0, 0, 0, 0.50), 'C': (1, 0, 0, 0, 0), 'D': (0, 0, 1, 0, 0),   # B 75/25 until 2026-11-11
           'E': (0, 0, 0, 0, 1), 'F': (0, 0, 0, 0, 1)},
     a_base=A_BASE,
     fast=True,            # 20/100 re-entry overlay on B/C/F
