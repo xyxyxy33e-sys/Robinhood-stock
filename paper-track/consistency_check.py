@@ -1331,3 +1331,59 @@ def json_copy(x):
 
 
 check_margin_funding()
+
+
+def check_deep_e():
+    """Deep-E QQQ leg (owner 2026-11-10, live from the 2026-11-11 session): on an effective-E day
+    with QQQ >= 5% under its 200-day, 50% of the cash leg (BOXX + VIXM) is QQQ, after VIXM takes
+    its share; off otherwise; off before DEEP_E_FROM_SESSION; 7-leg plumbing in live_run."""
+    import state as S, live_run as L, deposit_plan as DP, cash_sweep as CS
+    assert S.DEEP_E_ENABLED and S.DEEP_E_GAP200 == -0.05 and S.DEEP_E_CASH_SHARE == 0.50
+    assert S.DEEP_E_FROM_SESSION == '2026-11-11'
+    deep = {100: -0.09, 150: -0.08, 200: -0.06}
+    shallow = {100: -0.05, 150: -0.04, 200: -0.04}
+    assert S.deep_e_active('E', 'F', deep, '2026-11-11') and S.deep_e_active('E', 'E', {200: -0.05}, '2026-11-12')
+    assert not S.deep_e_active('E', 'F', shallow, '2026-11-11'), "needs the gap at or below -5%"
+    assert not S.deep_e_active('E', 'F', deep, '2026-11-10'), "not before the go-live session"
+    assert not S.deep_e_active('F', 'F', deep, '2026-11-11') and not S.deep_e_active('D', 'D', deep, '2026-11-11')
+    assert not S.deep_e_active('E', 'F', {200: None}, '2026-11-11')
+    off = dict(allowed=False, available=True); on = dict(allowed=True, available=True)
+    w = S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), off, session='2026-11-11')
+    assert w == (0, 0, 0, 0, 0.0, 0.5, 0.5), w
+    S.validate_weights_live7('E', *w)
+    w = S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), on, session='2026-11-11')
+    assert w == (0, 0, 0, 0, 0.75, 0.25, 0.0), "VIXM first, QQQ takes what VIXM leaves, up to 50%"
+    S.validate_weights_live7('E', *w)
+    w = S.live_target_weights7('E', False, 0.40, 'F', shallow, 0.5, _at('E'), off, session='2026-11-11')
+    assert w == (0, 0, 0, 0, 0.0, 0.0, 1.0)
+    try:
+        S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), off)
+    except S.MissingOverlayInputs:
+        pass
+    else:
+        raise AssertionError("live_target_weights7 accepted a missing session")
+    try:
+        S.validate_weights_live7('E', 0, 0, 0, 0, 0, 0.6, 0.4)
+    except S.WeightSanityError:
+        pass
+    else:
+        raise AssertionError("validate_weights_live7 accepted QQQ above 50% of the cash leg")
+    assert L.LEGS == L.LEGS7 == ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')
+    assert L.to7([0.1, 0.2, 0.3, 0.0, 0.25, 0.15]) == [0.1, 0.2, 0.3, 0.0, 0.25, 0.0, 0.15], "old 6-leg run files"
+    t = DP.dollar_targets((0, 0, 0, 0, 0, 0.5, 0.5), 1000.0, 0.0)
+    assert t['QQQ'] == 500.0 and t['BOXX'] == 500.0 and t['VIXM'] == 0.0
+    h = DP.held_weights(dict(QQQ=500.0, BOXX=400.0), 100.0, 1000.0, 0.0, with_vixm=True, with_qqq=True)
+    assert h == (0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5)
+    q = {s: dict(last=100.0, bid=99.9, ask=100.1) for s in L.LEGS7}
+    orders = L.plan_orders((0, 0, 0, 0, 0, 0.5, 0.5), dict(BOXX=1000.0), dict(BOXX=10.0), q, 1000.0)
+    assert [o['symbol'] for o in orders if o['side'] == 'sell'] == ['BOXX'] and \
+        any(o['symbol'] == 'QQQ' and o['side'] == 'buy' for o in orders)
+    sw, _ = CS.plan_sweep((0, 0, 0, 0, 0, 0.5, 0.5), dict(QQQ=4000.0, BOXX=4800.0), 200.0, 9000.0)
+    assert set(sw) == {'QQQ'} and abs(sum(sw.values()) - 200.0) < 0.02, sw
+    do, _, why = S.needs_rebalance((0, 0, 0, 0, 0, 0.0, 1.0), (0, 0, 0, 0, 0, 0.02, 0.98), False)
+    assert do and 'qqq' in why, "a leftover QQQ stub after deep-E ends is sold"
+    print("OK: deep-E QQQ -- effective E and 200d gap <= -5% puts 50% of the cash leg in QQQ after VIXM, off "
+          "otherwise and before 2026-11-11; 7-leg targets/held/orders/sweep/stub-sale; old 6-leg run files padded")
+
+
+check_deep_e()

@@ -37,7 +37,8 @@ MIN_ORDER = 1.0              # Robinhood's dollar-based order minimum
 UNEXPECTED_FRACTION = 0.20   # daily prompt 2a: ask the owner above this
 LEGS = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')
 LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')   # live_target_weights_with_vixm order (2026-10-08)
-FIELDS = ['date', 'idle_cash', 'total_value', 'SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX', 'note', 'VIXM']
+LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')   # live_target_weights7 order (2026-11-11, deep-E QQQ)
+FIELDS = ['date', 'idle_cash', 'total_value', 'SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX', 'note', 'VIXM', 'QQQ']
 
 
 def plan_sweep(weights, values, idle_cash, total_value, plan_active=False):
@@ -52,7 +53,7 @@ def plan_sweep(weights, values, idle_cash, total_value, plan_active=False):
     if idle_cash > UNEXPECTED_FRACTION * total_value:
         return {}, 'idle cash above 20% of the account: ask the owner (section 2a)'
     short = {l: max(0.0, w * total_value - values.get(l, 0.0))
-             for l, w in zip(LEGS6 if len(weights) == 6 else LEGS, weights) if w > 0}
+             for l, w in zip({7: LEGS7, 6: LEGS6}.get(len(weights), LEGS), weights) if w > 0}
     short = {l: s for l, s in short.items() if s > 0}
     while short:
         tot = sum(short.values())
@@ -73,7 +74,7 @@ def log_sweep(date, idle_cash, total_value, orders, note='', path=LOG_PATH):
         with open(path) as f:
             rows = [r for r in csv.DictReader(f) if r['date'] != date]
     row = dict(date=date, idle_cash=round(idle_cash, 2), total_value=round(total_value, 2), note=note)
-    row.update({l: round(orders.get(l, 0.0), 2) for l in LEGS6})
+    row.update({l: round(orders.get(l, 0.0), 2) for l in LEGS7})
     rows.append(row)
     rows.sort(key=lambda r: r['date'])
     with open(path, 'w', newline='') as f:

@@ -1,0 +1,316 @@
+============================================================================================================================================
+DEEP-E (QQQ with part of the cash leg when effective state E and QQQ >= X% under its 200d) -- live design, 2bp, research only
+============================================================================================================================================
+real panel 2015-10-12..2026-11-05 (2784 sessions); proxy panel 1999-09-15..2026-11-05, scored from 2001-01-02; classifier valid from session 200 = 2000-06-28
+E sessions: real 5.4%, proxy 5.6%; deep-E (gap<=-5%) real 56 sessions (2.0%), proxy 105 (1.5%)
+
+EPISODES : real panel, deep-E (E & gap200<=-5%), QQQ 50% of cash, scored from 2015-11-02. Gain = sum of daily (variant - base) return, points of book.
+  start       end          sess gap@entry  QQQ ret gain pts   state on exit day / next non-E state
+  2016-01-13  2016-01-13      1     -6.6%     2.1%    +1.04   E / F
+  2016-01-15  2016-01-21      4     -7.5%     2.9%    +1.43   E / F
+  2016-01-25  2016-01-28      4     -6.2%     1.9%    +0.92   E / F
+  2016-02-02  2016-02-03      2     -6.1%    -0.5%    -0.27   F / F
+  2016-06-27  2016-06-27      1     -5.0%     2.2%    +1.08   F / F
+  2018-10-29  2018-10-29      1     -5.2%     1.6%    +0.80   E / D
+  2018-11-19  2018-11-27      6     -5.9%     4.1%    +2.00   E / C
+  2020-03-12  2020-03-12      1    -11.1%     8.5%    +4.21   E / D
+  2020-03-16  2020-03-25      8    -15.1%    13.3%    +6.65   E / D
+  2020-03-27  2020-03-27      1     -7.2%     3.6%    +1.80   E / D
+  2020-04-01  2020-04-03      3     -8.7%     7.8%    +3.86   E / D
+  2022-01-25  2022-01-27      3     -5.6%     1.9%    +1.00   E / F
+  2022-02-11  2022-02-14      2     -5.4%     2.6%    +1.28   E / F
+  2022-02-17  2022-02-28      7     -5.9%    -1.1%    -0.57   F / F
+  2025-03-13  2025-03-13      1     -5.0%     2.4%    +1.18   E / F
+  2025-03-28  2025-03-31      2     -5.2%     0.8%    +0.37   E / F
+  2025-04-03  2025-04-11      7     -8.8%     1.5%    +0.91   F / F
+  2026-03-27  2026-03-30      2     -5.3%     2.6%    +1.26   E / D
+  spells 18; wins 16 losses 2; sum gain +28.98 pts; sum wins +29.82, sum losses -0.84
+  top 3 spells (2020-03-16, 2020-03-12, 2020-04-01) = +14.73 pts = 51% of total
+  next non-E state after spell: {'F': 11, 'D': 6, 'C': 1}
+  spells starting in 2020: 4, gain +16.53 pts; ex-2020 spells +12.45 pts
+
+EPISODES : proxy panel, deep-E (E & gap200<=-5%), QQQ 50% of cash, scored from 2001-01-02. Gain = sum of daily (variant - base) return, points of book.
+  start       end          sess gap@entry  QQQ ret gain pts   state on exit day / next non-E state
+  2003-01-27  2003-01-27      1     -5.7%     1.0%    +0.49   E / F
+  2003-01-30  2003-01-31      2     -5.1%    -0.2%    -0.13   E / F
+  2003-02-04  2003-02-11      6     -5.9%    -1.5%    -0.79   F / F
+  2005-04-15  2005-04-18      2     -5.3%     0.7%    +0.32   E / F
+  2005-04-20  2005-04-20      1     -5.4%     2.6%    +1.30   E / F
+  2006-06-07  2006-06-13      5     -5.3%    -2.2%    -1.14   F / F
+  2008-01-16  2008-01-31     11     -6.0%    -1.0%    -0.55   F / F
+  2008-06-26  2008-06-30      3     -5.4%     0.4%    +0.15   E / F
+  2008-07-02  2008-07-07      3     -7.2%     2.8%    +1.37   F / F
+  2010-06-30  2010-07-06      4     -5.6%     2.9%    +1.44   E / C
+  2011-08-08  2011-08-11      4     -9.8%     5.9%    +2.96   E / F
+  2012-11-15  2012-11-15      1     -5.2%     0.4%    +0.20   E / C
+  2015-08-24  2015-08-25      2     -7.9%     4.6%    +2.31   E / F
+  2015-09-01  2015-09-01      1     -5.5%     2.8%    +1.39   E / F
+  2015-09-28  2015-09-29      2     -6.5%     1.8%    +0.87   F / F
+  2016-01-13  2016-01-13      1     -6.6%     2.1%    +1.04   E / F
+  2016-01-15  2016-01-21      4     -7.5%     2.9%    +1.43   E / F
+  2016-01-25  2016-01-28      4     -6.2%     1.9%    +0.92   E / F
+  2016-02-02  2016-02-03      2     -6.1%    -0.5%    -0.27   F / F
+  2016-06-27  2016-06-27      1     -5.0%     2.2%    +1.08   F / F
+  2018-10-29  2018-10-29      1     -5.2%     1.6%    +0.80   E / D
+  2018-11-19  2018-11-27      6     -5.9%     4.1%    +2.00   E / C
+  2020-03-12  2020-03-12      1    -11.1%     8.5%    +4.21   E / D
+  2020-03-16  2020-03-25      8    -15.1%    13.3%    +6.65   E / D
+  2020-03-27  2020-03-27      1     -7.2%     3.6%    +1.80   E / D
+  2020-04-01  2020-04-03      3     -8.7%     7.8%    +3.86   E / D
+  2022-01-25  2022-01-27      3     -5.6%     1.9%    +0.96   E / F
+  2022-02-11  2022-02-14      2     -5.4%     2.6%    +1.28   E / F
+  2022-02-17  2022-02-28      7     -5.9%    -1.1%    -0.57   F / F
+  2025-03-13  2025-03-13      1     -5.0%     2.4%    +1.18   E / F
+  2025-03-28  2025-03-31      2     -5.2%     0.8%    +0.36   E / F
+  2025-04-03  2025-04-11      7     -8.8%     1.5%    +0.91   F / F
+  2026-03-27  2026-03-30      2     -5.3%     2.6%    +1.26   E / D
+  spells 33; wins 27 losses 6; sum gain +39.09 pts; sum wins +42.54, sum losses -3.45
+  top 3 spells (2020-03-16, 2020-03-12, 2020-04-01) = +14.73 pts = 38% of total
+  next non-E state after spell: {'F': 24, 'C': 3, 'D': 6}
+  spells starting in 2020: 4, gain +16.53 pts; ex-2020 spells +22.57 pts
+
+PER-YEAR real: base / deep-E 50% / diff (pts) / deep-E sessions
+  year      base   deepE    diff  sess
+  2015    -10.2%  -10.2%   +0.00     0
+  2016     15.9%   20.7%   +4.81    12
+  2017     89.5%   89.5%   +0.00     0
+  2018     65.0%   69.5%   +4.57     7
+  2019     71.5%   71.5%   +0.00     0
+  2020     36.5%   60.2%  +23.77    13
+  2021     98.8%   98.8%   +0.00     0
+  2022     -8.1%   -6.6%   +1.49    12
+  2023     82.5%   82.5%   +0.00     0
+  2024     79.4%   79.4%   +0.00     0
+  2025     28.8%   31.6%   +2.80    10
+  2026     13.7%   15.1%   +1.41     2
+  all days                         base CAGR  46.6% Sharpe 1.928 maxDD -18.3%  |  deepE CAGR  50.4% (+3.76) Sharpe 2.021 maxDD -18.3%
+  2020 removed (other days only)   base CAGR  47.7% Sharpe 1.907 maxDD -18.3%  |  deepE CAGR  49.4% (+1.75) Sharpe 1.948 maxDD -18.3%
+
+PER-YEAR proxy: base / deep-E 50% / diff (pts) / deep-E sessions
+  year      base   deepE    diff  sess
+  2001     10.7%   10.7%   +0.00     0
+  2002      1.3%    1.3%   +0.00     0
+  2003     41.6%   40.8%   -0.71     9
+  2004     20.5%   20.5%   +0.00     0
+  2005    -11.2%   -9.8%   +1.41     3
+  2006     28.3%   26.8%   -1.49     5
+  2007     25.9%   25.9%   +0.00     0
+  2008     -1.0%   -0.1%   +0.87    17
+  2009     32.1%   32.1%   +0.00     0
+  2010     62.7%   65.0%   +2.31     4
+  2011    -13.2%  -10.7%   +2.52     4
+  2012     33.3%   33.6%   +0.24     1
+  2013     64.2%   64.2%   +0.00     0
+  2014     32.4%   32.4%   +0.00     0
+  2015      9.2%   14.2%   +4.97     5
+  2016      9.2%   13.7%   +4.53    12
+  2017     93.6%   93.6%   +0.00     0
+  2018     51.0%   55.2%   +4.19     7
+  2019     78.7%   78.7%   +0.00     0
+  2020     40.2%   64.6%  +24.42    13
+  2021    100.5%  100.5%   +0.00     0
+  2022    -18.1%  -16.8%   +1.29    12
+  2023     95.9%   95.9%   +0.00     0
+  2024     66.4%   66.4%   +0.00     0
+  2025     16.4%   18.9%   +2.52    10
+  2026     19.2%   20.6%   +1.47     2
+  all days                         base CAGR  30.5% Sharpe 1.314 maxDD -24.3%  |  deepE CAGR  32.4% (+1.91) Sharpe 1.372 maxDD -22.1%
+  2020 removed (other days only)   base CAGR  30.1% Sharpe 1.287 maxDD -24.3%  |  deepE CAGR  31.2% (+1.13) Sharpe 1.321 maxDD -22.1%
+
+============================================================================================================================================
+2. BEAR-MARKET CHECK
+============================================================================================================================================
+proxy panel starts 1999-09-15; the 200d SMA (and the classifier) first exists on 2000-06-28; the 2000 top (Mar-2000) and the Apr-Jun 2000 crash are NOT classified. Headline proxy scoring starts 2001-01-02.
+
+Proxy full strategy scored from 2000-07-03 (state noise from classifier warm-up possible in the first months): base CAGR 29.3% Sharpe 1.276 maxDD -24.3%; deep-E 50% CAGR 31.3% Sharpe 1.337 maxDD -22.1%
+  2000-07..2002  base cum    +0.5% maxDD  -19.0% | deep-E cum    +3.5% maxDD  -17.7% | diff +2.92 pts
+  2007..2009     base cum   +64.6% maxDD  -20.8% | deep-E cum   +66.0% maxDD  -20.8% | diff +1.44 pts
+  2022           base cum   -18.1% maxDD  -19.7% | deep-E cum   -16.8% maxDD  -19.3% | diff +1.29 pts
+  per-year (base / deep-E / diff pts / deep-E sessions): 2000 -10.4/-7.8/+2.60/1; 2001 +10.8/+10.8/+0.00/0; 2002 +1.3/+1.3/+0.00/0; 2003 +41.6/+40.8/-0.71/9; 2007 +25.9/+25.9/+0.00/0; 2008 -1.0/-0.1/+0.87/17; 2009 +32.1/+32.1/+0.00/0
+
+  deep-E spells on the proxy 2000-07..2003 and 2007..2010 (gain = sum of daily diff vs base, pts; QQQ price return over spell; QQQ min vs spell-entry close):
+  start       end          sess gap@entry  QQQ ret QQQ worst gain pts   next non-E
+  2000-09-21  2000-09-21      1     -7.3%     5.9%      5.9%    +2.93   F
+  2003-01-27  2003-01-27      1     -5.7%     1.0%      1.0%    +0.49   F
+  2003-01-30  2003-01-31      2     -5.1%    -0.2%     -0.4%    -0.13   F
+  2003-02-04  2003-02-11      6     -5.9%    -1.5%     -1.6%    -0.79   F
+  2008-01-16  2008-01-31     11     -6.0%    -1.0%     -4.5%    -0.55   F
+  2008-06-26  2008-06-30      3     -5.4%     0.4%     -1.1%    +0.15   F
+  2008-07-02  2008-07-07      3     -7.2%     2.8%     -0.2%    +1.37   F
+  2010-06-30  2010-07-06      4     -5.6%     2.9%     -0.6%    +1.44   C
+
+  E-state spells (all, not only deep) in the bears: start, end, sessions, QQQ gap at start, QQQ return over spell
+  2000-07-28  2000-08-04      6 sess  gap@start   -3.5%  QQQ ret    +6.2%  min gap in spell -4.1%  deep sessions 0
+  2000-08-10  2000-08-11      2 sess  gap@start   -1.7%  QQQ ret    +3.5%  min gap in spell -1.7%  deep sessions 0
+  2000-09-11  2000-09-21      9 sess  gap@start   -1.4%  QQQ ret    +0.1%  min gap in spell -7.3%  deep sessions 1
+  2003-01-24  2003-02-11     13 sess  gap@start   -4.7%  QQQ ret    -4.0%  min gap in spell -6.9%  deep sessions 9
+  2003-02-28  2003-03-12      9 sess  gap@start   +0.1%  QQQ ret    +1.8%  min gap in spell -4.3%  deep sessions 0
+  2008-01-07  2008-01-31     18 sess  gap@start   -1.5%  QQQ ret    -5.4%  min gap in spell -10.2%  deep sessions 11
+  2008-06-25  2008-07-07      8 sess  gap@start   -1.4%  QQQ ret    -3.4%  min gap in spell -7.3%  deep sessions 6
+
+QQQ-ONLY version on the NDX price index (data/NDX_index_daily.csv from 1985-10-01; same classifier + fast overlay; the deep-E leg = 50% in NDX (price only, no dividends) and 50% T-bill vs 100% T-bill; 2bp each way on the NDX share). Scored from 1987-02-02.
+  state E sessions 5.5% of sessions, deep-E 156 sessions in 42 spells
+  start       end          sess gap@entry  NDX ret  tbill gain pts   next non-E
+  1987-10-19  1987-11-04     13    -17.5%    -1.7%   0.3%    -0.99   F
+  1990-01-26  1990-02-01      5     -6.1%     1.2%   0.2%    +0.49   F
+  1990-08-06  1990-08-08      3     -8.6%     3.8%   0.1%    +1.85   F
+  1990-08-10  1990-09-04     17     -6.2%    -6.0%   0.6%    -3.31   F
+  1994-04-14  1994-04-20      5     -5.3%     0.4%   0.1%    +0.13   F
+  1994-05-11  1994-05-12      2     -5.7%    -0.1%   0.0%    -0.08   F
+  1997-12-23  1997-12-24      2     -5.1%     0.5%   0.0%    +0.19   D
+  1998-01-09  1998-01-09      1     -5.3%     1.6%   0.0%    +0.74   C
+  1998-10-07  1998-10-08      2     -6.1%     4.1%   0.0%    +2.00   D
+  2000-05-23  2000-05-23      1     -8.5%     5.2%   0.0%    +2.57   D
+  2000-05-25  2000-05-26      2     -6.4%    10.2%   0.1%    +5.02   D
+  2000-09-18  2000-09-18      1     -5.2%     4.8%   0.0%    +2.35   F
+  2003-01-27  2003-01-27      1     -5.6%     1.5%   0.0%    +0.74   F
+  2003-01-30  2003-01-31      2     -5.2%     0.2%   0.0%    +0.05   F
+  2003-02-04  2003-02-12      7     -6.0%    -2.0%   0.0%    -1.05   F
+  2005-04-20  2005-04-20      1     -5.0%     2.9%   0.0%    +1.42   F
+  2006-06-07  2006-06-14      6     -5.1%     0.5%   0.1%    +0.18   F
+  2008-01-16  2008-01-31     11     -6.0%    -0.9%   0.1%    -0.53   F
+  2008-06-26  2008-06-30      3     -5.4%     0.4%   0.0%    +0.17   F
+  2008-07-02  2008-07-03      2     -7.3%     0.6%   0.0%    +0.26   F
+  2010-06-30  2010-07-06      4     -5.4%     2.9%   0.0%    +1.43   C
+  2011-08-08  2011-08-11      4     -9.8%     5.9%   0.0%    +2.93   F
+  2012-11-15  2012-11-15      1     -5.3%     0.4%   0.0%    +0.17   C
+  2015-08-24  2015-08-25      2     -7.8%     4.5%   0.0%    +2.22   F
+  2015-09-01  2015-09-01      1     -5.5%     2.7%   0.0%    +1.35   F
+  2015-09-28  2015-09-29      2     -6.4%     1.9%   0.0%    +0.93   F
+  2016-01-13  2016-01-13      1     -6.5%     2.1%   0.0%    +1.05   F
+  2016-01-15  2016-01-21      4     -7.4%     2.9%   0.0%    +1.41   F
+  2016-01-25  2016-01-28      4     -6.1%     2.0%   0.0%    +0.96   F
+  2016-02-02  2016-02-03      2     -6.0%    -0.6%   0.0%    -0.32   F
+  2018-11-19  2018-11-27      6     -6.1%     4.1%   0.1%    +1.99   C
+  2020-03-12  2020-03-12      1    -11.2%    10.1%   0.0%    +5.02   D
+  2020-03-16  2020-03-25      8    -14.2%    12.5%   0.0%    +6.22   D
+  2020-03-27  2020-03-27      1     -7.3%     4.0%   0.0%    +1.96   D
+  2020-04-01  2020-04-03      3     -8.6%     8.0%   0.0%    +3.96   D
+  2022-01-25  2022-01-27      3     -5.7%     2.2%   0.0%    +1.06   F
+  2022-02-11  2022-02-14      2     -5.3%     2.6%   0.0%    +1.27   F
+  2022-02-17  2022-03-01      8     -6.0%     0.5%   0.0%    +0.23   F
+  2025-03-13  2025-03-13      1     -5.1%     2.5%   0.0%    +1.22   F
+  2025-03-28  2025-03-31      2     -5.1%     0.8%   0.0%    +0.36   F
+  2025-04-03  2025-04-11      7     -8.8%     1.5%   0.1%    +0.66   F
+  2026-03-27  2026-03-30      2     -5.2%     2.6%   0.0%    +1.27   D
+  total +49.54 pts (sum of spell gains, simple); wins 36 losses 6
+  era 1987-1999  spells  9  sessions   50  gain   +1.03 pts  wins 6/9
+  era 2000-2002  spells  3  sessions    4  gain   +9.94 pts  wins 3/3
+  era 2003-2006  spells  5  sessions   17  gain   +1.33 pts  wins 4/5
+  era 2007-2009  spells  3  sessions   16  gain   -0.10 pts  wins 2/3
+  era 2010-2019  spells 11  sessions   31  gain  +14.13 pts  wins 10/11
+  era 2020       spells  4  sessions   13  gain  +17.16 pts  wins 4/4
+  era 2021-2026  spells  7  sessions   25  gain   +6.06 pts  wins 7/7
+  overlay-only increment per year (pts of book, additive, net of 2bp): 1987 +0.20  1990 -0.84  1994 +0.09  1997 +0.20  1998 +2.80  2000 +9.94  2003 -0.26  2005 +1.42  2006 +0.21  2008 -0.04  2010 +1.44  2011 +3.00  2012 +0.17  2015 +4.52  2016 +3.13  2018 +1.99  2020 +17.20  2022 +2.64  2025 +2.72  2026 +1.29
+  cumulative additive: +51.82 pts over 39.6 years; worst single-spell -3.31 pts
+  NDX-only entry gap<=-3%: 60 spells, 261 sessions, total +46.00 pts, wins 46/60; 2000-2002 +12.47, 2007-2009 -0.01
+  NDX-only entry gap<=-7%: 26 spells, 82 sessions, total +40.45 pts, wins 24/26; 2000-2002 +2.57, 2007-2009 +0.55
+  NDX-only entry gap<=-10%: 9 spells, 37 sessions, total +16.97 pts, wins 7/9; 2000-2002 +0.00, 2007-2009 +1.44
+
+============================================================================================================================================
+3. RULE VARIANTS (all keep E required; share = fraction of the cash leg; instrument QQQ unless stated)
+============================================================================================================================================
+
+VARIANTS -- REAL panel
+  variant                                                    CAGR vs base Sharpe   maxDD dCAGR x20 Sh x20 tr/yr +tr/yr days on
+  base                                                      46.6%   +0.00  1.928  -18.3%     +0.00  1.907    46   +0.0        
+  entry gap<=-4%, exit when gap>-4% or E ends (orig)        49.9%   +3.33  2.006  -18.3%     +1.62  1.942    49   +2.8      68
+  entry gap<=-5%, exit when gap>-5% or E ends (orig)        50.4%   +3.76  2.021  -18.3%     +1.75  1.948    49   +2.9      56
+  entry gap<=-6%, exit when gap>-6% or E ends (orig)        50.4%   +3.78  2.025  -18.3%     +1.77  1.951    49   +2.5      38
+  entry gap<=-7%, exit when gap>-7% or E ends (orig)        49.8%   +3.18  2.007  -18.3%     +1.02  1.929    48   +2.1      29
+  entry -5%, exit gap>-3%                                   48.5%   +1.94  1.952  -18.3%     +1.37  1.932    48   +1.7      68
+  entry -5%, exit gap>-2%                                   48.6%   +2.00  1.953  -18.3%     +1.44  1.934    47   +1.5      79
+  entry -5%, exit gap>-1%                                   49.2%   +2.60  1.971  -18.3%     +1.95  1.949    47   +1.4      87
+  entry -5%, exit E ends only                               49.0%   +2.38  1.963  -18.3%     +1.61  1.936    47   +0.9     106
+  share 25% QQQ, entry -5% (orig exit)                      48.5%   +1.88  1.982  -18.3%     +0.87  1.931    49   +2.9      56
+  share 50% QQQ, entry -5% (orig exit)                      50.4%   +3.76  2.021  -18.3%     +1.75  1.948    49   +2.9      56
+  share 75% QQQ, entry -5% (orig exit)                      52.2%   +5.64  2.044  -18.3%     +2.64  1.957    49   +2.9      56
+  share 100% QQQ, entry -5% (orig exit)                     54.1%   +7.51  2.053  -18.3%     +3.52  1.958    49   +2.9      56
+  SPMO 50%, entry -5%                                       49.4%   +2.77  1.986  -18.3%     +0.60  1.912    49   +2.9      56
+  TQQQ 15%, entry -5%                                       49.9%   +3.26  2.012  -18.3%     +1.57  1.945    49   +3.1      56
+  TQQQ 25%, entry -5%                                       52.0%   +5.43  2.043  -18.3%     +2.55  1.956    50   +3.6      56
+  QLD 25%, entry -5%                                        50.4%   +3.77  2.021  -18.3%     +1.76  1.948    49   +3.2      56
+  QLD 50%, entry -5%                                        54.1%   +7.50  2.054  -18.3%     +3.40  1.957    49   +3.4      56
+
+VARIANTS -- PROXY panel
+  variant                                                    CAGR vs base Sharpe   maxDD dCAGR x20 Sh x20 tr/yr +tr/yr days on
+  base                                                      30.5%   +0.00  1.314  -24.3%     +0.00  1.287    42   +0.0        
+  entry gap<=-4%, exit when gap>-4% or E ends (orig)        32.1%   +1.66  1.362  -23.9%     +0.99  1.315    45   +2.4     143
+  entry gap<=-5%, exit when gap>-5% or E ends (orig)        32.4%   +1.91  1.372  -22.1%     +1.13  1.321    45   +2.2     105
+  entry gap<=-6%, exit when gap>-6% or E ends (orig)        32.4%   +1.88  1.372  -21.8%     +1.10  1.321    44   +1.8      66
+  entry gap<=-7%, exit when gap>-7% or E ends (orig)        32.0%   +1.57  1.362  -21.8%     +0.75  1.309    44   +1.3      48
+  entry -5%, exit gap>-3%                                   31.7%   +1.28  1.347  -22.1%     +1.05  1.317    44   +1.4     126
+  entry -5%, exit gap>-2%                                   31.8%   +1.31  1.347  -22.1%     +1.08  1.317    44   +1.2     149
+  entry -5%, exit gap>-1%                                   32.0%   +1.50  1.354  -22.1%     +1.23  1.322    43   +1.1     167
+  entry -5%, exit E ends only                               31.6%   +1.17  1.341  -23.1%     +0.85  1.308    43   +0.7     215
+  share 25% QQQ, entry -5% (orig exit)                      31.4%   +0.96  1.345  -23.2%     +0.57  1.305    45   +2.2     105
+  share 50% QQQ, entry -5% (orig exit)                      32.4%   +1.91  1.372  -22.1%     +1.13  1.321    45   +2.2     105
+  share 75% QQQ, entry -5% (orig exit)                      33.3%   +2.85  1.392  -21.8%     +1.69  1.333    45   +2.2     105
+  share 100% QQQ, entry -5% (orig exit)                     34.3%   +3.79  1.408  -22.4%     +2.25  1.342    45   +2.2     105
+  TQQQ 15%, entry -5%                                       32.2%   +1.72  1.367  -22.4%     +1.04  1.318    45   +2.3     105
+  TQQQ 25%, entry -5%                                       33.4%   +2.90  1.394  -21.8%     +1.72  1.334    45   +2.6     105
+  QLD 25%, entry -5%                                        32.4%   +1.93  1.372  -22.1%     +1.16  1.321    45   +2.3     105
+  QLD 50%, entry -5%                                        34.3%   +3.81  1.409  -22.3%     +2.26  1.343    45   +2.4     105
+
+============================================================================================================================================
+4. TIMING AND COST (candidate = QQQ 50%, entry -5%, orig exit)
+============================================================================================================================================
+
+TIMING/COST REAL cost 2bp
+  variant                                                    CAGR vs base Sharpe   maxDD dCAGR x20 Sh x20 tr/yr +tr/yr days on
+  base                                                      46.6%   +0.00  1.928  -18.3%     +0.00  1.907    46   +0.0        
+  candidate, signal at close t, trade close t (as modelled)  50.4%   +3.76  2.021  -18.3%     +1.75  1.948    49   +2.9      56
+  candidate, one session LATE (act at close t+1)            48.1%   +1.48  1.949  -18.3%     +2.12  1.959    49   +3.0      56
+  candidate 25% share                                       48.5%   +1.88  1.982  -18.3%     +0.87  1.931    49   +2.9      56
+
+TIMING/COST REAL cost 10bp
+  variant                                                    CAGR vs base Sharpe   maxDD dCAGR x20 Sh x20 tr/yr +tr/yr days on
+  base                                                      43.1%   +0.00  1.813  -18.6%     +0.00  1.790    46   +0.0        
+  candidate, signal at close t, trade close t (as modelled)  46.4%   +3.30  1.896  -18.6%     +1.39  1.822    49   +2.9      56
+  candidate, one session LATE (act at close t+1)            44.2%   +1.09  1.823  -18.6%     +1.76  1.834    49   +3.0      56
+  candidate 25% share                                       44.7%   +1.64  1.861  -18.6%     +0.69  1.809    49   +2.9      56
+  episodes per year: 1.63 spells over the whole panel; each = 1 buy + 1 sell of the QQQ share
+
+TIMING/COST PROXY cost 2bp
+  variant                                                    CAGR vs base Sharpe   maxDD dCAGR x20 Sh x20 tr/yr +tr/yr days on
+  base                                                      30.5%   +0.00  1.314  -24.3%     +0.00  1.287    42   +0.0        
+  candidate, signal at close t, trade close t (as modelled)  32.4%   +1.91  1.372  -22.1%     +1.13  1.321    45   +2.2     105
+  candidate, one session LATE (act at close t+1)            31.4%   +0.89  1.337  -23.3%     +1.09  1.319    45   +2.5     105
+  candidate 25% share                                       31.4%   +0.96  1.345  -23.2%     +0.57  1.305    45   +2.2     105
+
+TIMING/COST PROXY cost 10bp
+  variant                                                    CAGR vs base Sharpe   maxDD dCAGR x20 Sh x20 tr/yr +tr/yr days on
+  base                                                      27.7%   +0.00  1.217  -25.8%     +0.00  1.190    42   +0.0        
+  candidate, signal at close t, trade close t (as modelled)  29.3%   +1.60  1.266  -23.8%     +0.86  1.215    45   +2.2     105
+  candidate, one session LATE (act at close t+1)            28.3%   +0.61  1.231  -25.0%     +0.83  1.214    45   +2.5     105
+  candidate 25% share                                       28.5%   +0.81  1.244  -24.8%     +0.43  1.204    45   +2.2     105
+  episodes per year: 1.26 spells over the whole panel; each = 1 buy + 1 sell of the QQQ share
+
+============================================================================================================================================
+5. ROBUSTNESS
+============================================================================================================================================
+  candidate                                     panel   CAGR vs base  Sharpe   base P(not better) 5th pct dSh median dSh  | ex-2020:  dCAGR  Sharpe   base P(not better)
+  C1 QQQ 50%, entry -5%, orig exit              real          +3.76    2.021  1.928         0.003      +0.002     +0.005  |            +1.75   1.948  1.907         0.015
+  C2 QQQ 25%, entry -5%, orig exit              real          +1.88    1.982  1.928         0.001      +0.001     +0.003  |            +0.87   1.931  1.907         0.003
+  C3 QQQ 50%, entry -5%, exit gap>-2% (hyst)    real          +2.00    1.953  1.928         0.215      -0.002     +0.002  |            +1.44   1.934  1.907         0.167
+  C1 QQQ 50%, entry -5%, orig exit              proxy         +1.91    1.372  1.314         0.000      +0.001     +0.004  |            +1.13   1.321  1.287         0.001
+  C2 QQQ 25%, entry -5%, orig exit              proxy         +0.96    1.345  1.314         0.000      +0.001     +0.002  |            +0.57   1.305  1.287         0.000
+  C3 QQQ 50%, entry -5%, exit gap>-2% (hyst)    proxy         +1.31    1.347  1.314         0.024      +0.000     +0.002  |            +1.08   1.317  1.287         0.023
+
+PLACEBOS (candidate C1: QQQ 50% of cash; real panel and proxy panel)
+
+  real: actual deep-E 56 sessions of 150 E sessions: dCAGR +3.76 dSharpe +0.094 dMaxDD -0.0
+   placebo random E days (same count): dCAGR mean +0.51 5-95% [-1.40,+2.13] max +3.61; dSharpe mean -0.002 95th +0.051; P(placebo dCAGR >= actual) 0.000, P(placebo dSharpe >= actual) 0.000  (300 draws)
+   placebo random E spells (same lengths, anywhere in E runs): dCAGR mean +0.61 5-95% [-0.59,+1.75] max +2.60; dSharpe mean +0.008 95th +0.043; P(placebo dCAGR >= actual) 0.000, P(placebo dSharpe >= actual) 0.000  (300 draws)
+   E & gap in (-2%,0]                 sessions    38  dCAGR  +0.84  Sharpe 1.953 (base 1.928)  maxDD -18.3%  tr/yr 47
+   E & gap in (-5%,-2%]               sessions    51  dCAGR  -2.67  Sharpe 1.821 (base 1.928)  maxDD -18.9%  tr/yr 50
+   E & gap > 0 (E above the 200d)     sessions     5  dCAGR  -0.34  Sharpe 1.916 (base 1.928)  maxDD -18.3%  tr/yr 46
+   E & gap<=-5% (candidate)           sessions    56  dCAGR  +3.76  Sharpe 2.021 (base 1.928)  maxDD -18.3%  tr/yr 49
+
+  proxy: actual deep-E 104 sessions of 363 E sessions: dCAGR +1.91 dSharpe +0.057 dMaxDD +2.2
+   placebo random E days (same count): dCAGR mean -0.02 5-95% [-0.81,+0.71] max +1.16; dSharpe mean -0.006 95th +0.020; P(placebo dCAGR >= actual) 0.000, P(placebo dSharpe >= actual) 0.000  (300 draws)
+   placebo random E spells (same lengths, anywhere in E runs): dCAGR mean +0.16 5-95% [-0.38,+0.72] max +1.01; dSharpe mean +0.002 95th +0.021; P(placebo dCAGR >= actual) 0.000, P(placebo dSharpe >= actual) 0.000  (300 draws)
+   E & gap in (-2%,0]                 sessions   107  dCAGR  +0.03  Sharpe 1.313 (base 1.314)  maxDD -23.3%  tr/yr 44
+   E & gap in (-5%,-2%]               sessions   123  dCAGR  -1.39  Sharpe 1.258 (base 1.314)  maxDD -27.2%  tr/yr 46
+   E & gap > 0 (E above the 200d)     sessions    29  dCAGR  -0.35  Sharpe 1.302 (base 1.314)  maxDD -24.8%  tr/yr 43
+   E & gap<=-5% (candidate)           sessions   104  dCAGR  +1.91  Sharpe 1.372 (base 1.314)  maxDD -22.1%  tr/yr 45

@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E QQQ leg 2026-11-11)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -210,6 +210,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-11 | **Deep-E QQQ leg**: on an effective-E day with QQQ at least 5% under its 200-day, 50% of the cash leg (BOXX + VIXM) is held in QQQ, after the VIXM sleeve takes its share; off when either condition ends; a flip is a regime trigger (`DEEP_E_*`, `deep_e_active`, `apply_deep_e`, `live_target_weights7`, 7-leg `live_run.LEGS7`) | **owner decision** ("50%", instrument QQQ, 2026-11-10); real 2015-11..2026-11 46.6% / 1.928 / −18.3% → 50.4% / 2.021 / −18.3%, proxy 2001–2026 30.5% / 1.314 / −24.3% → 32.4% / 1.372 / −22.1%; ex-2020 +1.75 real / +1.13 proxy; random-E placebos P 0.000; ~54% of the real gain is 2020; E days 2–5% under the 200-day lose; one session of lag → +1.5 real (`research_notes/deep_e_2026_11/`) |
 | 2026-11-06 | **A base 20/80 → 40/60 for every A session from 2026-11-06** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 20/80 kept in `A_BASE_FROM_SESSION_PRIOR`); book in E on the day, so no trade until the book enters A | **owner decision** ("change to 40/60"); re-run through 2026-11-05, real ETFs with VIXM, 2bp: 2026 YTD 40/60 +19.4% / max DD −16.8% vs 20/80 +19.5% / −19.1%; years 2022 −8.1% vs −11.1%, 2023 +82.5% vs +108.4%, 2024 +79.4% vs +88.1%, 2025 +28.8% vs +27.0% |
 | 2026-10-30 | **A base 40/60 → 20/80 for every A session from 2026-10-30** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 40/60 kept in `A_BASE_FROM_SESSION_PRIOR`); book in D2 on the day, so no trade until the book enters A | **owner decision** ("Change to 20/80"); engine real 47.2% / 1.959 / −18.4% → 53.5% / 1.911 / −20.3%, proxy 30.7% / 1.321 / −22.2% → 33.9% / 1.301 / −26.5%, holdout Sharpe 0.988 → 0.961; −15% drawdowns 3 → 7 real; time >15% down 0.9% → 6.9% real, 9.1% → 14.2% proxy |
 | 2026-10-29 | **D zone buffer ±0.5%** on both ladder lines (`D_ZONE_BUFFER`, `d_zone_step`, `d_zone_series`; `live_target_weights(..., zone=)` required on an ungated D day; VIXM-off-D2 and the shadow tracks follow the buffered zone; engine `cfg['d_buffer']`); no trade on the day (book in D2 both ways) | **owner decision** ("add it then"); `d_zone_buffer_study.py`, pre-registered, passes all four rules: real 43.5% / 1.831 / −18.4% → 44.0% / 1.849 / −18.4%, proxy 30.2% / 1.306 / −24.6% → 30.7% / 1.321 / −22.2%, holdout 0.973 → 0.988, 20 bp +0.030 / +0.027; bootstrap P 0.23 / 0.12 — small, inside noise; engine == `state.py` on 934 proxy D sessions |
@@ -751,6 +752,31 @@ eight extension regimes (2003, 2009–10, 2011, 2020–21, 2023, 2024, 2025,
 2026). Trim size is monotone — ×0.75 through ×0.0 all improve — so 0.5 was
 a deliberately non-corner pick and step ⅓ is the graded equivalent; do not
 push it toward full cash at one vote on the strength of that monotonicity.
+
+## Deep-E QQQ leg in the cash leg (APPLIED 2026-11-11, owner decision)
+
+**Rule.** On an effective-E session (QQQ below its 50- and 200-day, the 50-day still above the 200-day)
+with QQQ's 200-day gap at or below **−5%**, **50% of the cash leg** (BOXX + VIXM) is held in **QQQ**,
+after the VIXM sleeve takes its share: `qqq = min(0.5 × cash leg, what VIXM left in BOXX)`, so with
+VIXM allowed the split is 75% VIXM / 25% QQQ. It leaves as soon as the state is no longer E or the gap
+recovers above −5% (no hysteresis). Turning on or off is a regime trigger. Live from the 2026-11-11
+session (`DEEP_E_FROM_SESSION`); `DEEP_E_ENABLED = False` removes it alone.
+
+**Evidence** (`paper-track/research_notes/deep_e_2026_11/`; live design, 2bp):
+real ETFs 2015-11..2026-11 **46.6% / 1.928 / −18.3% → 50.4% / 2.021 / −18.3%**; proxy 2001–2026
+**30.5% / 1.314 / −24.3% → 32.4% / 1.372 / −22.1%**. 16 of 18 real and 27 of 33 proxy spells won;
+entry depths 4–7% all positive; 300 random-E placebos never matched it (P 0.000); with 2020 removed
++1.75 real (Sharpe 1.907 → 1.948) and +1.13 proxy. NDX-only check 1987–2026: 42 spells, 36 won, worst
+−3.3 points of the book (Aug 1990); it bought bounces in 2000 but stayed out of 2001–02 and autumn 2008,
+because the classifier was already in F. About +3 trades a year; 10bp costs → +3.3 real.
+
+**Costs, stated.** About 54% of the real gain (41% proxy) is 2020; the top three spells are all 2020.
+The depth profile is a cliff: E days 2–5% under the 200-day *lose* (−2.7 points real), so the edge is
+only in the deepest layer, and the −5% was chosen after a first look — treat +3.8 as the upper bound.
+One session of lag cuts the real gain to +1.5, so it must trade in the same 15:5x window. Holding
+longer (exit at −2%, or only when E ends) roughly halves the gain; leverage (TQQQ/QLD) only scales the
+risk. QQQ was chosen over QLD 25% (same exposure, same backtest) to keep clear of the October QLD loss
+wash-sale window (through 2026-11-29).
 
 ## VIXM sleeve in the cash leg (APPLIED 2026-10-08, owner decision)
 

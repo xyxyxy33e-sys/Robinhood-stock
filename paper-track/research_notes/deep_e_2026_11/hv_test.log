@@ -1,0 +1,60 @@
+==================================================================================================================================
+High-volatility ideas -- live design, 2bp; VIX source CBOE; real panel 2015-10-12..2026-11-05
+==================================================================================================================================
+
+#1 SHORT VOLATILITY after a spike (real 2015-11.., -1x VIXY daily, 0.95%/yr fee)
+  variant                                                      CAGR vs base Sharpe   maxDD  Sh 1st  Sh 2nd tr/yr
+  base (live, VIXM sleeve)                                    46.6%   +0.00  1.928  -18.3%   2.069   1.821    46
+  #1 short vol 10% of cash when VIX>=18 & VIX<VIX3M           48.9%   +2.33  1.967  -18.6%   2.083   1.880    60
+  #1 short vol 25% of cash when VIX>=18 & VIX<VIX3M           52.4%   +5.82  1.965  -19.1%   2.033   1.917    62
+  #1 short vol 50% of cash when VIX>=18 & VIX<VIX3M           57.9%  +11.29  1.856  -26.8%   1.863   1.858    64
+  #1 short vol 10% of cash when VIX>=20 & VIX<VIX3M           48.4%   +1.79  1.957  -18.6%   2.074   1.870    58
+  #1 short vol 25% of cash when VIX>=20 & VIX<VIX3M           50.9%   +4.35  1.944  -19.0%   2.013   1.895    60
+  #1 short vol 50% of cash when VIX>=20 & VIX<VIX3M           54.9%   +8.36  1.830  -22.8%   1.830   1.836    61
+  #1 short vol 10% of cash when VIX>=25 & VIX<VIX3M           48.0%   +1.39  1.958  -18.3%   2.106   1.843    54
+  #1 short vol 25% of cash when VIX>=25 & VIX<VIX3M           50.1%   +3.55  1.974  -18.3%   2.124   1.857    54
+  #1 short vol 50% of cash when VIX>=25 & VIX<VIX3M           53.4%   +6.78  1.927  -19.0%   2.072   1.810    55
+  #1 short vol 25% of cash when VIX>=20 & ratio<0.95          47.7%   +1.11  1.878  -18.3%   2.025   1.765    58
+  days on (VIX>=20 & VIX<VIX3M, sleeve off): 21.5% of sessions; short-vol worst day -43.1%, worst 5-day -60.8%
+
+#3 INVERSE QQQ in the downtrend -- REAL 2015-11..
+  variant                                                      CAGR vs base Sharpe   maxDD  Sh 1st  Sh 2nd tr/yr
+  base                                                        46.6%   +0.00  1.928  -18.3%   2.069   1.821    46
+  #3 PSQ (-1x QQQ) 25% of cash in F                           46.3%   -0.32  1.908  -18.3%   2.053   1.800    46
+  #3 PSQ (-1x QQQ) 50% of cash in F                           46.0%   -0.63  1.874  -18.3%   2.032   1.758    46
+  #3 PSQ (-1x QQQ) 100% of cash in F                          45.1%   -1.50  1.762  -23.0%   1.959   1.626    46
+  #3 SQQQ (-3x QQQ) 10% of cash in F                          46.2%   -0.35  1.904  -18.3%   2.056   1.789    46
+  #3 SQQQ (-3x QQQ) 25% of cash in F                          45.8%   -0.84  1.831  -18.4%   2.005   1.706    48
+  #3 PSQ 50% of cash in E and F                               43.5%   -3.12  1.747  -19.0%   1.792   1.716    47
+  F share of sessions 5.9%, E 5.4%
+
+#3 INVERSE QQQ in the downtrend -- PROXY 2001.. (no VIXM)
+  variant                                                      CAGR vs base Sharpe   maxDD  Sh 1st  Sh 2nd tr/yr
+  base                                                        30.5%   +0.00  1.314  -24.3%   0.997   1.732    42
+  #3 PSQ (-1x QQQ) 25% of cash in F                           30.9%   +0.47  1.315  -26.2%   1.016   1.715    43
+  #3 PSQ (-1x QQQ) 50% of cash in F                           31.2%   +0.78  1.286  -28.0%   0.998   1.687    43
+  #3 PSQ (-1x QQQ) 100% of cash in F                          31.4%   +0.92  1.167  -31.7%   0.902   1.595    42
+  #3 SQQQ (-3x QQQ) 10% of cash in F                          31.1%   +0.59  1.313  -26.7%   1.017   1.711    44
+  #3 SQQQ (-3x QQQ) 25% of cash in F                          31.7%   +1.19  1.240  -29.7%   0.964   1.652    47
+  #3 PSQ 50% of cash in E and F                               30.3%   -0.14  1.240  -30.9%   0.988   1.584    43
+  F share of sessions 13.3%, E 5.6%
+
+#4 EQUITY IN E (buy the panic) -- REAL 2015-11..
+  variant                                                      CAGR vs base Sharpe   maxDD  Sh 1st  Sh 2nd tr/yr
+  base                                                        46.6%   +0.00  1.928  -18.3%   2.069   1.821    46
+  #4 QQQ 25% of cash in E                                     47.3%   +0.75  1.941  -18.3%   2.114   1.806    46
+  #4 QQQ 50% of cash in E                                     48.3%   +1.76  1.936  -18.3%   2.109   1.794    46
+  #4 QQQ 100% of cash in E                                    50.2%   +3.58  1.857  -20.5%   1.996   1.733    46
+  #4 core (SPMO real / QQQ proxy) 50% of cash in E            47.9%   +1.32  1.918  -18.3%   2.046   1.813    46
+  #4 TQQQ 25% of cash in E                                    48.4%   +1.86  1.887  -20.3%   2.062   1.737    48
+  #4 QQQ 50% of cash in E only when >=5% under the 200d       50.4%   +3.76  2.021  -18.3%   2.248   1.842    49
+
+#4 EQUITY IN E (buy the panic) -- PROXY 2001.. (no VIXM)
+  variant                                                      CAGR vs base Sharpe   maxDD  Sh 1st  Sh 2nd tr/yr
+  base                                                        30.5%   +0.00  1.314  -24.3%   0.997   1.732    42
+  #4 QQQ 25% of cash in E                                     30.7%   +0.20  1.317  -23.9%   0.991   1.744    42
+  #4 QQQ 50% of cash in E                                     30.9%   +0.39  1.310  -23.7%   0.981   1.736    42
+  #4 QQQ 100% of cash in E                                    31.1%   +0.66  1.268  -28.4%   0.950   1.664    42
+  #4 core (SPMO real / QQQ proxy) 50% of cash in E            30.9%   +0.41  1.310  -23.7%   0.981   1.736    42
+  #4 TQQQ 25% of cash in E                                    30.9%   +0.48  1.291  -26.1%   0.966   1.704    43
+  #4 QQQ 50% of cash in E only when >=5% under the 200d       32.4%   +1.91  1.372  -22.1%   1.025   1.823    45

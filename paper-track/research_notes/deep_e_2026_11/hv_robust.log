@@ -1,0 +1,46 @@
+========================================================================================================================
+ROBUSTNESS: #1 short vol and #4 deep-E (real 2015-11.. unless stated)
+========================================================================================================================
+  variant                                                CAGR vs base Sharpe   maxDD P(not better) worst day
+  #1 short vol 10% when VIX>=16 & VIX<VIX3M             48.3%   +1.76  1.942  -18.6%          0.41     -7.5%
+  #1 short vol 25% when VIX>=16 & VIX<VIX3M             51.0%   +4.37  1.898  -19.4%          0.68     -7.8%
+  #1 short vol 10% when VIX>=18 & VIX<VIX3M             48.9%   +2.33  1.967  -18.6%          0.17     -7.4%
+  #1 short vol 25% when VIX>=18 & VIX<VIX3M             52.4%   +5.82  1.965  -19.1%          0.39     -7.8%
+  #1 short vol 10% when VIX>=20 & VIX<VIX3M             48.4%   +1.79  1.957  -18.6%          0.23     -7.4%
+  #1 short vol 25% when VIX>=20 & VIX<VIX3M             50.9%   +4.35  1.944  -19.0%          0.48     -7.8%
+  #1 short vol 10% when VIX>=22 & VIX<VIX3M             47.9%   +1.29  1.948  -18.3%          0.24     -7.4%
+  #1 short vol 25% when VIX>=22 & VIX<VIX3M             49.8%   +3.17  1.933  -18.3%          0.48     -7.8%
+  #1 short vol 10% when VIX>=25 & VIX<VIX3M             48.0%   +1.39  1.958  -18.3%          0.09     -7.4%
+  #1 short vol 25% when VIX>=25 & VIX<VIX3M             50.1%   +3.55  1.974  -18.3%          0.22     -7.6%
+  #1 short vol 10% when VIX>=30 & VIX<VIX3M             47.8%   +1.25  1.964  -18.3%          0.00     -7.4%
+  #1 short vol 25% when VIX>=30 & VIX<VIX3M             49.7%   +3.10  2.010  -18.3%          0.01     -7.4%
+  #1 short vol 25% VIX>=25 (again, for years)           50.1%   +3.55  1.974  -18.3%          0.22     -7.6%
+  years, #1 25% VIX>=25 minus base (pts): 2015 +0.0  2016 +1.0  2017 +0.0  2018 +0.0  2019 +0.0  2020 +13.4  2021 +16.7  2022 +5.0  2023 +0.0  2024 +0.0  2025 +0.2  2026 +3.0
+  8 worst short-vol days and whether #1 (VIX>=25) / (VIX>=18) was on the previous close: 2024-08-05 -43% off/off, 2020-03-16 -39% off/off, 2018-02-05 -34% off/off, 2020-06-11 -34% ON/ON, 2020-03-09 -27% off/off, 2021-11-26 -25% off/ON, 2025-04-03 -25% off/off, 2018-02-08 -24% off/off
+
+  #4 QQQ 25% of cash in E when 200d gap <= 0%           47.5%   +0.91  1.946  -18.3%          0.16     -7.4%
+  #4 QQQ 50% of cash in E when 200d gap <= 0%           48.7%   +2.09  1.947  -18.3%          0.32     -7.4%
+  #4 QQQ 100% of cash in E when 200d gap <= 0%          50.8%   +4.24  1.880  -20.5%          0.68    -12.0%
+  #4 QQQ 25% of cash in E when 200d gap <= -2%          47.1%   +0.51  1.933  -18.3%          0.36     -7.4%
+  #4 QQQ 50% of cash in E when 200d gap <= -2%          47.8%   +1.16  1.920  -18.3%          0.59     -7.4%
+  #4 QQQ 100% of cash in E when 200d gap <= -2%         48.9%   +2.29  1.831  -20.3%          0.85    -12.0%
+  #4 QQQ 25% of cash in E when 200d gap <= -3%          47.3%   +0.72  1.941  -18.3%          0.19     -7.4%
+  #4 QQQ 50% of cash in E when 200d gap <= -3%          48.1%   +1.53  1.937  -18.3%          0.41     -7.4%
+  #4 QQQ 100% of cash in E when 200d gap <= -3%         49.6%   +3.02  1.874  -20.4%          0.76    -12.0%
+  #4 QQQ 25% of cash in E when 200d gap <= -5%          48.5%   +1.88  1.982  -18.3%          0.00     -7.4%
+  #4 QQQ 50% of cash in E when 200d gap <= -5%          50.4%   +3.76  2.021  -18.3%          0.00     -7.4%
+  #4 QQQ 100% of cash in E when 200d gap <= -5%         54.1%   +7.51  2.053  -18.3%          0.04     -7.4%
+  #4 QQQ 25% of cash in E when 200d gap <= -7%          48.2%   +1.60  1.974  -18.3%          0.01     -7.4%
+  #4 QQQ 50% of cash in E when 200d gap <= -7%          49.8%   +3.18  2.007  -18.3%          0.01     -7.4%
+  #4 QQQ 100% of cash in E when 200d gap <= -7%         52.9%   +6.33  2.034  -19.3%          0.06     -7.4%
+  #4 QQQ 25% of cash in E when 200d gap <= -10%         47.7%   +1.10  1.960  -18.3%          0.03     -7.4%
+  #4 QQQ 50% of cash in E when 200d gap <= -10%         48.8%   +2.19  1.983  -18.3%          0.03     -7.4%
+  #4 QQQ 100% of cash in E when 200d gap <= -10%        50.9%   +4.33  2.002  -18.3%          0.04     -7.4%
+  PROXY 2001..:
+  #4 PROXY QQQ 50% of cash in E when 200d gap <= -3%    31.4%   +0.90  1.332  -24.7%          0.11     -9.1%
+  #4 PROXY QQQ 50% of cash in E when 200d gap <= -5%    32.4%   +1.91  1.372  -22.1%          0.00     -9.1%
+  #4 PROXY QQQ 50% of cash in E when 200d gap <= -7%    32.0%   +1.57  1.362  -21.8%          0.00     -9.1%
+  #4 PROXY QQQ 50% of cash in E when 200d gap <= -10%   31.4%   +0.89  1.341  -24.3%          0.01     -9.1%
+  years, #4 deep-E 50% minus base (pts): 2015 +0.0  2016 +4.8  2017 +0.0  2018 +4.6  2019 +0.0  2020 +23.8  2021 +0.0  2022 +1.5  2023 +0.0  2024 +0.0  2025 +2.8  2026 +1.4
+  years PROXY, #4 deep-E 50% minus base (pts): 2003 -0.7  2005 +1.4  2006 -1.5  2008 +0.9  2010 +2.3  2011 +2.5  2012 +0.2  2015 +5.0  2016 +4.5  2018 +4.2  2020 +24.4  2022 +1.3  2025 +2.5  2026 +1.5
+  deep-E (gap<=-5%) share of sessions: real 2.0%, proxy 1.5%

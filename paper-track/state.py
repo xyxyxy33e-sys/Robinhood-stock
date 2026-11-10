@@ -848,7 +848,7 @@ def needs_rebalance(target, held, regime_changed, band=REBALANCE_DRIFT_BAND,
         stubs = [i for i, (t, h) in enumerate(zip(target, held))
                  if t == 0.0 and h > zero_leg_eps]
         if stubs:
-            legs = LIVE_LEGS if len(target) == 6 else TARGET_WEIGHT_LEGS
+            legs = LIVE_LEGS7 if len(target) == 7 else LIVE_LEGS if len(target) == 6 else TARGET_WEIGHT_LEGS
             names = ', '.join(f'{legs[i]} {held[i]*100:.2f}%' for i in stubs)
             return True, drift, (f'zero-target leg held: {names} '
                                  f'(drift {drift*100:.1f}% was within band)')
@@ -1836,6 +1836,68 @@ def live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, br
     if vixm_blocked(state, fast_state, gaps, breadth_pct, zone if D_ZONE_BUFFER_ENABLED else None):
         return apply_vixm(w5, dict(vixm, allowed=False))
     return apply_vixm(w5, vixm)
+
+
+# DEEP-E QQQ LEG -- APPLIED 2026-11-11 (owner decision 2026-11-10: "50%", instrument QQQ).
+# On an effective-E day with QQQ at least 5% below its 200-day (gaps[200] <= DEEP_E_GAP200),
+# DEEP_E_CASH_SHARE (50%) of the cash leg (BOXX + VIXM) is held in QQQ instead, after the VIXM
+# sleeve takes its share: qqq = min(0.5 x cash leg, what VIXM left in BOXX). It leaves as soon as
+# either condition ends (no hysteresis: the hysteresis exit tested worse). A flip is a regime
+# trigger. Evidence (research_notes/deep_e_2026_11/, live design, 2bp): real 2015-11..2026-11
+# 46.6% / 1.928 / -18.3% -> 50.4% / 2.021 / -18.3%; proxy 2001-2026 30.5% / 1.314 / -24.3% ->
+# 32.4% / 1.372 / -22.1%; ex-2020 +1.75 real / +1.13 proxy; 16/18 real and 27/33 proxy spells
+# won; random-E placebos never matched it (P 0.000, 300 draws); entry 4-7% all positive. Costs,
+# stated: ~54% of the real gain is 2020; E days 2-5% under the 200-day LOSE (-2.7 pts), so the
+# edge sits in the deepest layer only and the 5% was picked after a first look; one session of
+# lag cuts the real gain to +1.5. NDX 1987-2026 QQQ-only check: 42 spells, 36 won, worst -3.3 pts
+# (Aug 1990); it stayed out of 2001-02 and autumn 2008 (the classifier was in F by then).
+DEEP_E_ENABLED = True
+DEEP_E_GAP200 = -0.05
+DEEP_E_CASH_SHARE = 0.50
+DEEP_E_FROM_SESSION = '2026-11-11'
+LIVE_LEGS7 = ('core', 'tqqq', 'qld', 'xlu', 'vixm', 'qqq', 'cash')
+
+
+def deep_e_active(state, fast_state, gaps, session=None):
+    """True when the deep-E QQQ leg is on for this reading: effective state E and
+    QQQ's 200-day gap at or below DEEP_E_GAP200, from DEEP_E_FROM_SESSION on."""
+    if not DEEP_E_ENABLED or not isinstance(gaps, dict):
+        return False
+    if session is not None and session < DEEP_E_FROM_SESSION:
+        return False
+    g = gaps.get(200)
+    if g is None or g != g:
+        return False
+    return effective_state(state, fast_state) == 'E' and g <= DEEP_E_GAP200
+
+
+def apply_deep_e(weights6, active):
+    """6-leg LIVE_LEGS tuple -> 7-leg LIVE_LEGS7 tuple (QQQ before cash)."""
+    core, tqqq, qld, xlu, vixm, cash = weights6
+    q = min(DEEP_E_CASH_SHARE * (vixm + cash), cash) if active else 0.0
+    return (core, tqqq, qld, xlu, vixm, q, cash - q)
+
+
+def live_target_weights7(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm, *,
+                         zone=None, session=None):
+    """THE live weight function from 2026-11-11: live_target_weights_with_vixm() (every guard and
+    overlay, unchanged) followed by apply_deep_e(). Returns 7 legs in LIVE_LEGS7 order.
+    `session` (the reading's date) is REQUIRED so a replay of a day before
+    DEEP_E_FROM_SESSION keeps the 6-leg design."""
+    if session is None:
+        raise MissingOverlayInputs("session is required: pass the reading's date")
+    w6 = live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm,
+                                       zone=zone)
+    return apply_deep_e(w6, deep_e_active(state, fast_state, gaps, session))
+
+
+def validate_weights_live7(state, core, tqqq, qld, xlu, vixm, qqq, cash, tol=0.005):
+    """7-leg validator for live_target_weights7()'s output."""
+    validate_weights_live(state, core, tqqq, qld, xlu, vixm, qqq + cash, tol=tol)
+    if not (-tol <= qqq <= 1.0 + tol) or not (-tol <= cash <= 1.0 + tol):
+        raise WeightSanityError(f"qqq {qqq!r} / cash {cash!r} out of [0,1] for state {state}")
+    if qqq > tol and qqq > (vixm + qqq + cash) * DEEP_E_CASH_SHARE + tol:
+        raise WeightSanityError(f"qqq {qqq:.4f} exceeds {DEEP_E_CASH_SHARE:.0%} of the cash leg")
 
 
 def validate_weights_live(state, core, tqqq, qld, xlu, vixm, cash, tol=0.005):

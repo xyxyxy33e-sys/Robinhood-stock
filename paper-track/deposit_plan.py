@@ -129,7 +129,7 @@ def next_release(plan, session_dates, today):
     return (k + 1, k * plan['every_sessions'] - n)
 
 
-def held_weights(values, idle_cash, total_value, res, with_vixm=False):
+def held_weights(values, idle_cash, total_value, res, with_vixm=False, with_qqq=False):
     """values: dict SPMO/TQQQ/QLD/XLU/(VIXM/)BOXX -> market value. Returns the
     held weights of the INVESTABLE account (reserve removed from the cash leg):
     the 5-tuple, or with_vixm=True the 6-tuple in state.LIVE_LEGS order
@@ -140,6 +140,8 @@ def held_weights(values, idle_cash, total_value, res, with_vixm=False):
     cash_leg = values.get('BOXX', 0.0) + idle_cash - res
     head = (values.get('SPMO', 0.0) / inv, values.get('TQQQ', 0.0) / inv,
             values.get('QLD', 0.0) / inv, values.get('XLU', 0.0) / inv)
+    if with_qqq:      # 7-tuple, state.LIVE_LEGS7 order (deep-E QQQ before cash, 2026-11-11)
+        return head + (values.get('VIXM', 0.0) / inv, values.get('QQQ', 0.0) / inv, cash_leg / inv)
     if with_vixm:
         return head + (values.get('VIXM', 0.0) / inv, cash_leg / inv)
     return head + (cash_leg / inv,)
@@ -151,8 +153,8 @@ def dollar_targets(weights, total_value, res):
     leg; BOXX carries the reserve on top of its strategy weight. Sums to
     total_value, i.e. no idle cash is left."""
     inv = total_value - res
-    legs = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX') if len(weights) == 6 else \
-        ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')
+    legs = {7: ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX'),
+            6: ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')}.get(len(weights), ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX'))
     out = {l: w * inv for l, w in zip(legs, weights)}
     out['BOXX'] += res
     return out

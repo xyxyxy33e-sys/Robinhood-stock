@@ -53,9 +53,11 @@ import vol_curve as VC            # noqa: E402
 ROOT = os.path.dirname(HERE)
 CLOSES_CSV = os.path.join(ROOT, 'data', 'live_closes.csv')
 RUNS_DIR = os.path.join(ROOT, 'data', 'runs')
-LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')     # == state.LIVE_LEGS order
+LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')     # == state.LIVE_LEGS order (run files to 2026-11-10)
+LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')   # == state.LIVE_LEGS7 order (deep-E QQQ, 2026-11-11)
+LEGS = LEGS7                                               # the live legs
 LEGS5 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')             # shadow tracks / old NAV
-SYMS = ('QQQ', 'QQEW') + LEGS6
+SYMS = ('QQQ', 'QQEW') + tuple(l for l in LEGS if l not in ('QQQ', 'QQEW'))
 # Funding-policy triggers (drawdown tiers, D/E/F -> A/B/C turn) and their margin draws:
 # OFF from 2026-10-19 (owner: "remove the funding trigger"). The drawdown log still
 # records the tiers (drawdown_tracker); nothing is pushed and nothing is borrowed.
@@ -104,7 +106,7 @@ def _yahoo(sym):
 def ensure_history(c, prev_session, notes):
     """QQQ and QQEW must have every session up to prev_session. Fill gaps (missed
     runs, weekends of no runs) from Yahoo; raise Guard if still missing."""
-    for s in ('QQQ', 'QQEW') + LEGS6:
+    for s in SYMS:
         if prev_session in c[s]:
             continue
         try:
@@ -159,6 +161,18 @@ def weights6(r, vx):
                                            r['breadth_pct'], r['a_trim'], vx, zone=_zone(r))
 
 
+def weights7(r, vx):
+    """The live weights from 2026-11-11 (deep-E QQQ leg), LEGS7 order."""
+    return S.live_target_weights7(r['state'], r['micro'], r['vol'], r['fast'], r['gaps'],
+                                  r['breadth_pct'], r['a_trim'], vx, zone=_zone(r), session=r['date'])
+
+
+def to7(w):
+    """A stored target in LEGS7 order: run files to 2026-11-10 hold 6 legs (no QQQ)."""
+    w = list(w)
+    return w[:5] + [0.0] + w[5:] if len(w) == 6 else w
+
+
 def _zone(r):
     """The reading's ladder zone. Run files written before 2026-10-29 hold the plain zone
     under d_zone (what that day traded); recompute it from gaps if a D-day file lacks it."""
@@ -201,7 +215,7 @@ def plan_orders(target, values, qty, quotes, tv, res=0.0):
     going to 0% is a market sell of the full quantity."""
     tgt = DP.dollar_targets(target, tv, res)
     sells, buys = [], []
-    for sym in LEGS6:
+    for sym in tgt:
         delta = tgt[sym] - values.get(sym, 0.0)
         if abs(delta) < 1.0:
             continue
@@ -255,7 +269,7 @@ def _draw_push(led, got, msg, tv, today):
 
 
 def _fmt_w(w):
-    return ' / '.join(f'{l} {x * 100:.1f}%' for l, x in zip(LEGS6, w))
+    return ' / '.join(f'{l} {x * 100:.1f}%' for l, x in zip(LEGS7 if len(w) == 7 else LEGS6, w))
 
 
 def _ser(x):
@@ -317,9 +331,9 @@ def cmd_signal(inp, write=True):
     vx, vx_prev, vnote = vixm_pair(dates, qqq, today, prev, float(inp['vix']), notes)
 
     # account
-    qty = {s: float(inp['positions'].get(s, 0.0)) for s in LEGS6}
-    extra = {s: v for s, v in inp['positions'].items() if s not in LEGS6 and float(v) > 0}
-    values = {s: qty[s] * float(q[s]['last']) for s in LEGS6}
+    qty = {s: float(inp['positions'].get(s, 0.0)) for s in LEGS}
+    extra = {s: v for s, v in inp['positions'].items() if s not in LEGS and float(v) > 0}
+    values = {s: qty[s] * float(q[s]['last']) for s in LEGS}
     idle, tv = float(inp['idle_cash']), float(inp['total_value'])
     implied = sum(values.values()) + idle
     plan = DP.load()
@@ -336,8 +350,8 @@ def cmd_signal(inp, write=True):
             raise Guard(f'positions outside the strategy legs: {extra} -- ask the owner (XLU/IAU dust is sold by '
                         f'the band; anything else is not this strategy)')
         S.circuit_breaker_check(tv, implied)
-        w6 = weights6(r, vx)
-        S.validate_weights_live(r['state'], *w6)
+        w6 = weights7(r, vx)          # 7 legs from 2026-11-11 (name kept: the code below is leg-count agnostic)
+        S.validate_weights_live7(r['state'], *w6)
         # margin loan (margin_funding.py): settle a sent repay, flag a due one, size the cash hold
         repay_new = False
         if led and led.get('status') == 'repay_due':
@@ -372,8 +386,8 @@ def cmd_signal(inp, write=True):
         hold_all = hold + net_plan['hold']
         w_eff = w6
         if net_plan['T'] or net_plan['hold'] or net_plan['gap']:
-            nd = MF.net_dollar_targets(w6, LEGS6, tv - hold_all, imag, net_plan)
-            w_eff = tuple(nd[s] / (tv - hold_all) for s in LEGS6)
+            nd = MF.net_dollar_targets(w6, LEGS, tv - hold_all, imag, net_plan)
+            w_eff = tuple(nd[s] / (tv - hold_all) for s in LEGS)
             lines.append(f"margin netting: BOXX {w6[-1]*100:.1f}% of the imaginary account ${imag:,.0f} -> "
                          f"${net_plan['T']:,.0f} netted against the loan, BOXX held ${nd['BOXX']:,.0f}"
                          + (f", ${net_plan['hold']:,.0f} kept as cash for the transfer" if net_plan['hold'] else '')
@@ -385,15 +399,15 @@ def cmd_signal(inp, write=True):
                 raise Guard('deposit plan active and idle cash present: follow STRATEGY.md "Staged deposit" '
                             'arrival step by hand, then re-run')
             res = DP.reserve(plan, sess, today)
-            held = DP.held_weights(values, idle, tv, res, with_vixm=True)
+            held = DP.held_weights(values, idle, tv, res, with_vixm=True, with_qqq=True)
             lines.append(DP.summary_line(plan, sess, today))
         else:
             res = 0.0
             inv = tv - hold_all
             if inv <= 0:
                 raise Guard(f'margin repay hold ${hold_all:,.0f} >= account ${tv:,.0f}')
-            held = tuple(values[s] / inv for s in LEGS6[:-1]) + ((values['BOXX'] + idle - hold_all) / inv,)
-        w6_prev = weights6(rp, vx_prev)
+            held = tuple(values[s] / inv for s in LEGS[:-1]) + ((values['BOXX'] + idle - hold_all) / inv,)
+        w6_prev = weights7(rp, vx_prev)
         changed = []
         if r['eff'] != rp['eff']:
             changed.append(f"effective state {rp['eff']}->{r['eff']}")
@@ -407,6 +421,9 @@ def cmd_signal(inp, write=True):
             changed.append(f"D zone {rp.get('d_zone')}->{r.get('d_zone')}")
         if bool(vx.get('allowed')) != bool(vx_prev.get('allowed')):
             changed.append(f"VIXM {'in' if vx.get('allowed') else 'out'}")
+        de, de_prev = (S.deep_e_active(x['state'], x['fast'], x['gaps'], x['date']) for x in (r, rp))
+        if de != de_prev:
+            changed.append(f"deep-E QQQ {'in' if de else 'out'}")
         if hold and idle < hold:
             changed.append(f"margin repay: raise ${hold:,.0f} cash")
         if net_plan['hold'] and idle < hold_all:
@@ -415,7 +432,7 @@ def cmd_signal(inp, write=True):
         orders = plan_orders(w_eff, values, qty, q, tv - hold_all, res) if do else []
         sweep = {}
         if not do:
-            sweep, swhy = CS.plan_sweep(w_eff, {s: values[s] for s in LEGS6}, idle - hold_all, tv - hold_all,
+            sweep, swhy = CS.plan_sweep(w_eff, {s: values[s] for s in LEGS}, idle - hold_all, tv - hold_all,
                                         plan_active=plan_active)
             if sweep:
                 lines.append(f'idle-cash sweep (${idle:,.2f}): ' + ', '.join(f'{k} ${v:,.2f}' for k, v in sweep.items()))
@@ -428,8 +445,8 @@ def cmd_signal(inp, write=True):
                           f"suggested deposit ${amt:,.0f}")
             dd = DT.current_drawdown()
             led, got, msg = MF.request_draw(led, today, 'turn', amt, tv, dd[1], dd[2], dd[4],
-                                            weights=dict(zip(LEGS6, w6)),
-                                            prices={s: float(q[s]['last']) for s in LEGS6})
+                                            weights=dict(zip(LEGS, w6)),
+                                            prices={s: float(q[s]['last']) for s in LEGS})
             led_dirty = True
             pushes.append(_draw_push(led, got, msg, tv, today))
         if repay_new:
@@ -477,6 +494,10 @@ def cmd_signal(inp, write=True):
         hi = f", VIX high since entry {vz['vix_high']:.2f}" if vz.get('vix_high') else ''
         print(f"      latch {'ON' if vz['on'] else 'off'}, stress {'yes' if vz['stress'] else 'no'}, "
               f"allowed {'YES' if vz['allowed'] else 'no'}{', faded' if vz.get('faded') else ''}{hi}")
+    de_on = S.deep_e_active(r['state'], r['fast'], g, r['date'])
+    print(f"deep-E QQQ: {'ON' if de_on else 'off'} (effective {r['eff']}, 200d gap {g[200]*100:+.1f}% vs "
+          f"{S.DEEP_E_GAP200*100:.0f}% line" + ('' if r['date'] >= S.DEEP_E_FROM_SESSION else
+                                                f"; live from {S.DEEP_E_FROM_SESSION}") + ")")
     for n in notes:
         print(f"note: {n}")
     for l in lines:
@@ -537,17 +558,17 @@ def cmd_record(inp):
     prev = max(d for d in c['QQQ'] if d < date)
     pr = _load_run(prev)
     if pr and pr.get('target'):
-        w_prev = pr['target']
+        w_prev = to7(pr['target'])
     else:
         qqq = {d: v for d, v in c['QQQ'].items() if d <= prev}
         qqew = {d: v for d, v in c['QQEW'].items() if d <= prev}
         dts = sorted(qqq)
         rp = reading(dts, qqq, qqew, prev)
         vx = run['vixm_prev'] if run and run.get('vixm_prev') else S.vixm_unavailable('no run file')
-        w_prev = list(weights6(rp, vx))
+        w_prev = list(weights7(rp, vx))
         out_lines.append(f'NAV weights for {prev} recomputed (no run file)')
-    rets = {s: closes[s] / c[s][prev] - 1 for s in LEGS6 if c[s].get(prev)}
-    daily = sum(w * rets.get(s, 0.0) for w, s in zip(w_prev, LEGS6))
+    rets = {s: closes[s] / c[s][prev] - 1 for s in LEGS if c[s].get(prev)}
+    daily = sum(w * rets.get(s, 0.0) for w, s in zip(w_prev, LEGS))
     before = DT.load_log()
     after = DT.record_return(date, daily)
     dd = DT.current_drawdown(after)
@@ -576,9 +597,9 @@ def cmd_record(inp):
                       f"account ${tv:,.0f}; suggested deposit ${amt:,.0f}")
         prior = [x for x in after if x[0] < date]
         pk = DT.current_drawdown(prior) if prior else dd
-        tw = (run or {}).get('target') or w_prev
+        tw = to7((run or {}).get('target') or w_prev)
         led, got, msg = MF.request_draw(led, date, f'tier-{int(tier*100)}', amt, tv, pk[1], pk[2], after[-1][2],
-                                        weights=dict(zip(LEGS6, tw)), prices={s: closes[s] for s in LEGS6})
+                                        weights=dict(zip(LEGS, tw)), prices={s: closes[s] for s in LEGS})
         MF.save(led)
         pushes.append(_draw_push(led, got, msg, tv, date))
     # 4. shadow tracks + breadth D log, on the inputs the book traded on

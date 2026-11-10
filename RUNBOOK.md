@@ -119,7 +119,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
 - **Realized column in the positions table** (added 2026-10-22, owner): on a day with any sell, refresh it from
   `get_pnl_trade_history(account_number='576391551', span='all')`: per-symbol sums of `realized_gain` for SPMO, QLD,
-  TQQQ, VIXM, BOXX; the "closed earlier" row is everything else (gold, the 31 Aug stock mirror, pre-strategy trades);
+  TQQQ, VIXM, QQQ (deep-E leg, from 2026-11-11), BOXX; the "closed earlier" row is everything else (gold, the 31 Aug stock mirror, pre-strategy trades);
   the total must equal `get_realized_pnl(span='all', asset_classes=['equity'])['total_returns']`. Sum in code, never
   by hand. Robinhood's figures are before wash-sale deferral; keep the note saying so.
 - **Cumulative return section** (added 2026-10-22, owner): `dashboard_figures.py` prints a `cumulative since ...` block.
@@ -172,6 +172,7 @@ This is not a strategy review and changes nothing.
   `live_run.py` fills price gaps from Yahoo and recomputes a missing prior-day target.
   Run `record` for a missed date by hand if its NAV row matters.
 - **Rollback.** The pre-2026-10-08 prompts are saved in `paper-track/trigger_prompts/archive-2026-10-08/`.
-  Re-creating the old Routines from them restores the old workflow exactly. `state.VIXM_OVERLAY_ENABLED = False` removes VIXM alone.
+  Re-creating the old Routines from them restores the old workflow exactly. `state.VIXM_OVERLAY_ENABLED = False` removes VIXM alone;
+  `state.DEEP_E_ENABLED = False` removes the deep-E QQQ leg alone (2026-11-11).
 - **Same account, other Routines.** The 0DTE/7DTE options Routines also name this account. They are dry-run.
   If they ever go live, their buying power must be fenced from this strategy first.
