@@ -1,0 +1,230 @@
+================================================================================================================================================================
+Short-vol variants A-F -- live design incl. deep-E QQQ leg, 2bp; VIX CBOE; real panel 2015-10-12..2026-11-05; scored from 2015-11-02
+BASE (live + VIXM sleeve + deep-E QQQ): CAGR 50.35%  Sharpe 2.021  maxDD -18.3%  Sharpe 1st/2nd half 2.248/1.842  CAGR ex 2020-03..2021-12 44.77%
+columns: vs b = CAGR minus base (pts); exW d = (CAGR ex 2020-03-01..2021-12-31) minus base on same days; lag d / lagEx d = same two deltas with 1-session lag;
+worst = worst daily return of the leg itself on days it is held (synthetic -1x VIXY 1.35%/yr, or -1x VIXM 1.35%/yr for D); days = sessions held; F = only when QQQ effective state is A/B/C
+days: scored sessions 2768; VIXM sleeve allowed days 232; A/B/C sessions 2057
+================================================================================================================================================================
+
+[no trend filter]
+  variant                                             sz   CAGR   vs b  Shrp  maxDD   Sh1   Sh2  exW d  lag d lagEx d  worst  days
+  orig VIX>=20 & VIX<VIX3M (ref)                      5%  51.3%  +0.91 2.038 -18.4%  2.25  1.87  +0.64  +0.43   +0.02 -33.6%   599
+  orig VIX>=20 & VIX<VIX3M (ref)                     10%  52.2%  +1.81 2.046 -18.6%  2.25  1.89  +1.24  +0.84   +0.00 -33.6%   599
+  orig VIX>=20 & VIX<VIX3M (ref)                     25%  54.8%  +4.42 2.027 -19.0%  2.17  1.91  +3.14  +2.02   +0.02 -33.6%   599
+
+  A post-spike -20% off 20d high & <VIX3M             5%  50.7%  +0.31 2.019 -18.3%  2.24  1.85  +0.11  +0.26   +0.04 -33.6%  1668
+  A post-spike -20% off 20d high & <VIX3M            10%  51.0%  +0.65 2.010 -18.3%  2.22  1.85  +0.25  +0.52   +0.04 -33.6%  1668
+  A post-spike -20% off 20d high & <VIX3M            25%  51.7%  +1.37 1.940 -22.2%  2.10  1.81  +0.47  +1.14   -0.04 -33.6%  1668
+
+  A post-spike -30% off 20d high & <VIX3M             5%  50.8%  +0.42 2.027 -18.3%  2.26  1.84  +0.21  +0.40   +0.15 -33.6%  1039
+  A post-spike -30% off 20d high & <VIX3M            10%  51.2%  +0.81 2.026 -18.3%  2.27  1.84  +0.40  +0.77   +0.25 -33.6%  1039
+  A post-spike -30% off 20d high & <VIX3M            25%  52.3%  +1.97 2.003 -18.3%  2.25  1.81  +0.98  +1.80   +0.55 -33.6%  1039
+
+  B V3/VIX>=1.10                                      5%  50.0%  -0.35 2.002 -18.3%  2.24  1.81  -0.30  -0.33   -0.33 -25.0%  1685
+  B V3/VIX>=1.10                                     10%  49.7%  -0.67 1.979 -18.3%  2.24  1.78  -0.56  -0.57   -0.61 -25.0%  1685
+  B V3/VIX>=1.10                                     25%  48.6%  -1.72 1.886 -21.2%  2.18  1.65  -1.41  -1.31   -1.47 -25.0%  1685
+
+  B V3/VIX>=1.15                                      5%  49.7%  -0.68 1.997 -18.3%  2.23  1.81  -0.43  -0.60   -0.62 -25.0%  1235
+  B V3/VIX>=1.15                                     10%  49.1%  -1.24 1.972 -18.3%  2.21  1.79  -0.77  -1.09   -1.15 -25.0%  1235
+  B V3/VIX>=1.15                                     25%  47.5%  -2.83 1.887 -22.5%  2.13  1.70  -1.81  -2.51   -2.74 -25.0%  1235
+
+  B V3/VIX>=1.20                                      5%  49.9%  -0.42 2.009 -18.3%  2.24  1.83  -0.27  -0.00   -0.06 -16.2%   663
+  B V3/VIX>=1.20                                     10%  49.5%  -0.82 1.994 -18.3%  2.22  1.81  -0.52  +0.00   -0.08 -16.2%   663
+  B V3/VIX>=1.20                                     25%  48.4%  -1.99 1.945 -18.3%  2.16  1.77  -1.26  +0.06   -0.17 -16.2%   663
+
+  C calm VIX<15 & <VIX3M                              5%  50.0%  -0.37 2.009 -18.3%  2.23  1.83  -0.42  -0.68   -0.79 -18.1%   936
+  C calm VIX<15 & <VIX3M                             10%  49.6%  -0.74 1.994 -18.3%  2.21  1.82  -0.85  -1.37   -1.59 -18.1%   936
+  C calm VIX<15 & <VIX3M                             25%  48.5%  -1.86 1.944 -18.3%  2.15  1.78  -2.16  -3.63   -4.19 -18.1%   936
+
+  C calm VIX<13 & <VIX3M                              5%  50.1%  -0.25 2.015 -18.3%  2.24  1.84  -0.29  -0.34   -0.40 -18.1%   499
+  C calm VIX<13 & <VIX3M                             10%  49.9%  -0.46 2.008 -18.3%  2.23  1.83  -0.53  -0.66   -0.76 -18.1%   499
+  C calm VIX<13 & <VIX3M                             25%  49.3%  -1.08 1.986 -18.3%  2.21  1.81  -1.25  -1.60   -1.85 -18.1%   499
+
+  D -1x VIXM orig VIX>=20 & <VIX3M                    5%  50.5%  +0.13 2.021 -18.4%  2.24  1.85  +0.29  -0.10   -0.01 -13.8%   599
+  D -1x VIXM orig VIX>=20 & <VIX3M                   10%  50.6%  +0.28 2.020 -18.5%  2.22  1.86  +0.54  -0.19   -0.04 -13.8%   599
+  D -1x VIXM orig VIX>=20 & <VIX3M                   25%  51.0%  +0.66 2.007 -18.7%  2.17  1.88  +1.30  -0.49   -0.18 -13.8%   599
+
+  D -1x VIXM A -20% off 20d high                      5%  50.2%  -0.16 2.012 -18.3%  2.23  1.84  -0.01  -0.20   -0.06 -13.8%  1668
+  D -1x VIXM A -20% off 20d high                     10%  50.1%  -0.25 2.003 -18.3%  2.21  1.84  +0.02  -0.35   -0.13 -13.8%  1668
+  D -1x VIXM A -20% off 20d high                     25%  49.8%  -0.58 1.968 -18.3%  2.14  1.83  +0.08  -0.87   -0.38 -13.8%  1668
+
+  D -1x VIXM A -30% off 20d high                      5%  50.3%  -0.01 2.019 -18.3%  2.25  1.84  +0.04  -0.06   +0.01 -13.8%  1039
+  D -1x VIXM A -30% off 20d high                     10%  50.3%  -0.01 2.015 -18.3%  2.24  1.83  +0.08  -0.13   -0.04 -13.8%  1039
+  D -1x VIXM A -30% off 20d high                     25%  50.3%  -0.02 1.998 -18.3%  2.22  1.82  +0.18  -0.33   -0.17 -13.8%  1039
+
+  E after latch off, <VIX3M, hold<=10                 5%  50.5%  +0.14 2.025 -18.3%  2.24  1.85  +0.16  -0.14   -0.17 -12.0%    26
+  E after latch off, <VIX3M, hold<=10                10%  50.6%  +0.28 2.027 -18.3%  2.23  1.86  +0.33  -0.29   -0.33 -12.0%    26
+  E after latch off, <VIX3M, hold<=10                25%  51.1%  +0.74 2.034 -18.3%  2.21  1.89  +0.86  -0.67   -0.78 -12.0%    26
+
+  E after latch off, <VIX3M, hold<=20                 5%  50.3%  -0.01 2.019 -18.3%  2.24  1.84  -0.01  -0.18   -0.20 -13.3%    34
+  E after latch off, <VIX3M, hold<=20                10%  50.3%  -0.02 2.016 -18.3%  2.23  1.84  -0.02  -0.36   -0.41 -13.3%    34
+  E after latch off, <VIX3M, hold<=20                25%  50.4%  +0.02 2.005 -18.3%  2.21  1.84  +0.03  -0.85   -0.98 -13.3%    34
+
+
+[F: risk-on only (state A/B/C)]
+  variant                                             sz   CAGR   vs b  Shrp  maxDD   Sh1   Sh2  exW d  lag d lagEx d  worst  days
+  orig VIX>=20 & VIX<VIX3M (ref) +F                   5%  51.0%  +0.61 2.033 -18.3%  2.26  1.85  +0.50  +0.52   +0.32 -33.6%   352
+  orig VIX>=20 & VIX<VIX3M (ref) +F                  10%  51.6%  +1.23 2.042 -18.3%  2.27  1.86  +0.99  +1.03   +0.61 -33.6%   352
+  orig VIX>=20 & VIX<VIX3M (ref) +F                  25%  53.3%  +2.92 2.042 -18.3%  2.23  1.88  +2.45  +2.48   +1.48 -33.6%   352
+
+  A post-spike -20% off 20d high & <VIX3M +F          5%  50.7%  +0.39 2.026 -18.3%  2.24  1.86  +0.39  +0.38   +0.33 -33.6%  1385
+  A post-spike -20% off 20d high & <VIX3M +F         10%  51.2%  +0.83 2.028 -18.3%  2.23  1.87  +0.83  +0.74   +0.64 -33.6%  1385
+  A post-spike -20% off 20d high & <VIX3M +F         25%  52.3%  +1.96 2.007 -18.3%  2.14  1.90  +2.08  +1.65   +1.46 -33.6%  1385
+
+  A post-spike -30% off 20d high & <VIX3M +F          5%  50.6%  +0.28 2.025 -18.3%  2.26  1.84  +0.25  +0.38   +0.29 -33.6%   886
+  A post-spike -30% off 20d high & <VIX3M +F         10%  50.9%  +0.54 2.025 -18.3%  2.27  1.83  +0.49  +0.70   +0.52 -33.6%   886
+  A post-spike -30% off 20d high & <VIX3M +F         25%  51.7%  +1.34 2.012 -18.3%  2.26  1.81  +1.26  +1.59   +1.21 -33.6%   886
+
+  B V3/VIX>=1.10 +F                                   5%  50.0%  -0.36 2.003 -18.3%  2.23  1.82  -0.14  -0.37   -0.22 -25.0%  1515
+  B V3/VIX>=1.10 +F                                  10%  49.7%  -0.68 1.984 -18.3%  2.22  1.80  -0.24  -0.68   -0.40 -25.0%  1515
+  B V3/VIX>=1.10 +F                                  25%  48.6%  -1.74 1.905 -18.3%  2.15  1.71  -0.60  -1.62   -0.97 -25.0%  1515
+
+  B V3/VIX>=1.15 +F                                   5%  49.7%  -0.62 2.000 -18.3%  2.23  1.82  -0.21  -0.62   -0.51 -25.0%  1142
+  B V3/VIX>=1.15 +F                                  10%  49.2%  -1.11 1.979 -18.3%  2.20  1.81  -0.35  -1.15   -0.94 -25.0%  1142
+  B V3/VIX>=1.15 +F                                  25%  47.9%  -2.50 1.907 -18.5%  2.11  1.75  -0.75  -2.69   -2.24 -25.0%  1142
+
+  B V3/VIX>=1.20 +F                                   5%  50.0%  -0.40 2.010 -18.3%  2.24  1.83  -0.24  +0.00   -0.03 -16.2%   632
+  B V3/VIX>=1.20 +F                                  10%  49.6%  -0.78 1.996 -18.3%  2.23  1.81  -0.46  +0.00   -0.04 -16.2%   632
+  B V3/VIX>=1.20 +F                                  25%  48.5%  -1.90 1.950 -18.3%  2.18  1.77  -1.11  +0.05   -0.08 -16.2%   632
+
+  C calm VIX<15 & <VIX3M +F                           5%  50.0%  -0.33 2.010 -18.3%  2.24  1.83  -0.38  -0.71   -0.82 -18.1%   892
+  C calm VIX<15 & <VIX3M +F                          10%  49.7%  -0.65 1.997 -18.3%  2.22  1.82  -0.75  -1.43   -1.65 -18.1%   892
+  C calm VIX<15 & <VIX3M +F                          25%  48.7%  -1.64 1.953 -18.3%  2.17  1.78  -1.90  -3.77   -4.35 -18.1%   892
+
+  C calm VIX<13 & <VIX3M +F                           5%  50.1%  -0.25 2.015 -18.3%  2.24  1.84  -0.29  -0.34   -0.40 -18.1%   486
+  C calm VIX<13 & <VIX3M +F                          10%  49.9%  -0.45 2.008 -18.3%  2.23  1.83  -0.53  -0.65   -0.76 -18.1%   486
+  C calm VIX<13 & <VIX3M +F                          25%  49.3%  -1.08 1.986 -18.3%  2.21  1.81  -1.25  -1.60   -1.85 -18.1%   486
+
+  D -1x VIXM orig VIX>=20 & <VIX3M +F                 5%  50.3%  -0.01 2.018 -18.3%  2.24  1.84  +0.21  -0.03   +0.14 -13.8%   352
+  D -1x VIXM orig VIX>=20 & <VIX3M +F                10%  50.4%  +0.02 2.016 -18.3%  2.23  1.85  +0.39  -0.03   +0.26 -13.8%   352
+  D -1x VIXM orig VIX>=20 & <VIX3M +F                25%  50.4%  +0.04 2.002 -18.3%  2.19  1.86  +0.95  -0.09   +0.60 -13.8%   352
+
+  D -1x VIXM A -20% off 20d high +F                   5%  50.2%  -0.13 2.015 -18.3%  2.23  1.84  +0.10  -0.10   +0.11 -13.8%  1385
+  D -1x VIXM A -20% off 20d high +F                  10%  50.2%  -0.17 2.010 -18.3%  2.22  1.85  +0.27  -0.16   +0.21 -13.8%  1385
+  D -1x VIXM A -20% off 20d high +F                  25%  50.0%  -0.34 1.988 -18.3%  2.16  1.85  +0.73  -0.43   +0.48 -13.8%  1385
+
+  D -1x VIXM A -30% off 20d high +F                   5%  50.3%  -0.07 2.018 -18.3%  2.25  1.84  +0.05  -0.02   +0.10 -13.8%   886
+  D -1x VIXM A -30% off 20d high +F                  10%  50.2%  -0.11 2.014 -18.3%  2.25  1.83  +0.11  -0.08   +0.13 -13.8%   886
+  D -1x VIXM A -30% off 20d high +F                  25%  50.1%  -0.26 1.998 -18.3%  2.23  1.81  +0.29  -0.28   +0.22 -13.8%   886
+
+  E after latch off, <VIX3M, hold<=10 +F              5%  50.4%  +0.02 2.022 -18.3%  2.25  1.84  +0.02  +0.00   +0.00  -0.8%     5
+  E after latch off, <VIX3M, hold<=10 +F             10%  50.4%  +0.05 2.023 -18.3%  2.25  1.84  +0.05  +0.01   +0.01  -0.8%     5
+  E after latch off, <VIX3M, hold<=10 +F             25%  50.5%  +0.12 2.025 -18.3%  2.26  1.84  +0.14  +0.02   +0.02  -0.8%     5
+
+  E after latch off, <VIX3M, hold<=20 +F              5%  50.4%  +0.02 2.022 -18.3%  2.25  1.84  +0.02  +0.00   +0.00  -0.8%     5
+  E after latch off, <VIX3M, hold<=20 +F             10%  50.4%  +0.05 2.023 -18.3%  2.25  1.84  +0.05  +0.01   +0.01  -0.8%     5
+  E after latch off, <VIX3M, hold<=20 +F             25%  50.5%  +0.12 2.025 -18.3%  2.26  1.84  +0.14  +0.02   +0.02  -0.8%     5
+
+
+[RANKING] best by ex-window gain (exW d) per distinct rule+filter (any size), top 12; star = survives 1-session lag with both full and ex-window gain > 0
+  variant                                             sz   CAGR   vs b  Shrp  maxDD   Sh1   Sh2  exW d  lag d lagEx d  worst  days
+  orig VIX>=20 & VIX<VIX3M (ref) *                   25%  54.8%  +4.42 2.027 -19.0%  2.17  1.91  +3.14  +2.02   +0.02 -33.6%   599
+  orig VIX>=20 & VIX<VIX3M (ref) +F *                25%  53.3%  +2.92 2.042 -18.3%  2.23  1.88  +2.45  +2.48   +1.48 -33.6%   352
+  A post-spike -20% off 20d high & <VIX3M +F *       25%  52.3%  +1.96 2.007 -18.3%  2.14  1.90  +2.08  +1.65   +1.46 -33.6%  1385
+  D -1x VIXM orig VIX>=20 & <VIX3M                   25%  51.0%  +0.66 2.007 -18.7%  2.17  1.88  +1.30  -0.49   -0.18 -13.8%   599
+  A post-spike -30% off 20d high & <VIX3M +F *       25%  51.7%  +1.34 2.012 -18.3%  2.26  1.81  +1.26  +1.59   +1.21 -33.6%   886
+  A post-spike -30% off 20d high & <VIX3M *          25%  52.3%  +1.97 2.003 -18.3%  2.25  1.81  +0.98  +1.80   +0.55 -33.6%  1039
+  D -1x VIXM orig VIX>=20 & <VIX3M +F                25%  50.4%  +0.04 2.002 -18.3%  2.19  1.86  +0.95  -0.09   +0.60 -13.8%   352
+  E after latch off, <VIX3M, hold<=10                25%  51.1%  +0.74 2.034 -18.3%  2.21  1.89  +0.86  -0.67   -0.78 -12.0%    26
+  D -1x VIXM A -20% off 20d high +F                  25%  50.0%  -0.34 1.988 -18.3%  2.16  1.85  +0.73  -0.43   +0.48 -13.8%  1385
+  A post-spike -20% off 20d high & <VIX3M            25%  51.7%  +1.37 1.940 -22.2%  2.10  1.81  +0.47  +1.14   -0.04 -33.6%  1668
+  D -1x VIXM A -30% off 20d high +F                  25%  50.1%  -0.26 1.998 -18.3%  2.23  1.81  +0.29  -0.28   +0.22 -13.8%   886
+  D -1x VIXM A -30% off 20d high                     25%  50.3%  -0.02 1.998 -18.3%  2.22  1.82  +0.18  -0.33   -0.17 -13.8%  1039
+
+[RANKING at 10% size]
+  variant                                             sz   CAGR   vs b  Shrp  maxDD   Sh1   Sh2  exW d  lag d lagEx d  worst  days
+  orig VIX>=20 & VIX<VIX3M (ref) *                   10%  52.2%  +1.81 2.046 -18.6%  2.25  1.89  +1.24  +0.84   +0.00 -33.6%   599
+  orig VIX>=20 & VIX<VIX3M (ref) +F *                10%  51.6%  +1.23 2.042 -18.3%  2.27  1.86  +0.99  +1.03   +0.61 -33.6%   352
+  A post-spike -20% off 20d high & <VIX3M +F *       10%  51.2%  +0.83 2.028 -18.3%  2.23  1.87  +0.83  +0.74   +0.64 -33.6%  1385
+  D -1x VIXM orig VIX>=20 & <VIX3M                   10%  50.6%  +0.28 2.020 -18.5%  2.22  1.86  +0.54  -0.19   -0.04 -13.8%   599
+  A post-spike -30% off 20d high & <VIX3M +F *       10%  50.9%  +0.54 2.025 -18.3%  2.27  1.83  +0.49  +0.70   +0.52 -33.6%   886
+  A post-spike -30% off 20d high & <VIX3M *          10%  51.2%  +0.81 2.026 -18.3%  2.27  1.84  +0.40  +0.77   +0.25 -33.6%  1039
+  D -1x VIXM orig VIX>=20 & <VIX3M +F                10%  50.4%  +0.02 2.016 -18.3%  2.23  1.85  +0.39  -0.03   +0.26 -13.8%   352
+  E after latch off, <VIX3M, hold<=10                10%  50.6%  +0.28 2.027 -18.3%  2.23  1.86  +0.33  -0.29   -0.33 -12.0%    26
+
+TOP 3 chosen for deep tests: orig VIX>=20 & VIX<VIX3M (ref) @ 25%; orig VIX>=20 & VIX<VIX3M (ref) +F @ 25%; A post-spike -20% off 20d high & <VIX3M +F @ 25%
+variants surviving lag (full and ex-window both > 0), best size per rule, by lag-ex gain: orig VIX>=20 & VIX<VIX3M (ref) +F @ 25% lagEx +1.48; A post-spike -20% off 20d high & <VIX3M +F @ 25% lagEx +1.46; A post-spike -30% off 20d high & <VIX3M +F @ 25% lagEx +1.21; A post-spike -30% off 20d high & <VIX3M @ 25% lagEx +0.55; E after latch off, <VIX3M, hold<=10 +F @ 25% lagEx +0.02; E after latch off, <VIX3M, hold<=20 +F @ 25% lagEx +0.02; orig VIX>=20 & VIX<VIX3M (ref) @ 25% lagEx +0.02
+
+[REAL INSTRUMENTS] top-3 with real SVXY (2x share after 2018-02-28, same share before) and SVIX hybrid (real from 2022-03-31, synthetic before)
+  variant                                             sz   CAGR   vs b  Shrp  maxDD   Sh1   Sh2  exW d  lag d lagEx d  worst  days
+  orig VIX>=20 & VIX<VIX3M (ref) [syn]               25%  54.8%  +4.42 2.027 -19.0%  2.17  1.91  +3.14  +2.02   +0.02 -33.6%   599
+  orig VIX>=20 & VIX<VIX3M (ref) [svxy]              25%  54.5%  +4.18 2.020 -19.0%  2.16  1.91  +2.96  +0.94   -0.87 -16.9%   599
+  orig VIX>=20 & VIX<VIX3M (ref) [svix]              25%  54.6%  +4.28 2.025 -19.0%  2.17  1.91  +2.97  +0.89   -1.28 -33.6%   599
+  orig VIX>=20 & VIX<VIX3M (ref) [syn]               25%  53.3%  +2.92 2.042 -18.3%  2.23  1.88  +2.45  +2.48   +1.48 -33.6%   352
+  orig VIX>=20 & VIX<VIX3M (ref) [svxy]              25%  53.2%  +2.80 2.037 -18.3%  2.22  1.88  +2.43  +2.03   +1.41 -16.9%   352
+  orig VIX>=20 & VIX<VIX3M (ref) [svix]              25%  53.3%  +2.94 2.043 -18.3%  2.23  1.88  +2.47  +2.45   +1.46 -33.6%   352
+  A post-spike -20% off 20d high & <VIX3M [syn]      25%  52.3%  +1.96 2.007 -18.3%  2.14  1.90  +2.08  +1.65   +1.46 -33.6%  1385
+  A post-spike -20% off 20d high & <VIX3M [svxy]     25%  52.0%  +1.68 1.997 -18.3%  2.12  1.90  +1.98  +1.14   +1.32 -18.3%  1385
+  A post-spike -20% off 20d high & <VIX3M [svix]     25%  52.3%  +1.93 2.007 -18.3%  2.14  1.90  +2.04  +1.56   +1.36 -33.6%  1385
+  (also window 2022-04..: leg contribution CAGR pts vs base, syn / SVIX / SVXY2x)
+  orig VIX>=20 & VIX<VIX3M (ref) 25%: syn +5.88  svix +5.55  svxy +5.67  (base CAGR since 2022-04 39.6%)
+  orig VIX>=20 & VIX<VIX3M (ref) +F 25%: syn +3.37  svix +3.42  svxy +3.36  (base CAGR since 2022-04 39.6%)
+  A post-spike -20% off 20d high & <VIX3M +F 25%: syn +4.09  svix +4.03  svxy +4.04  (base CAGR since 2022-04 39.6%)
+
+[BOOTSTRAP] 20-day blocks, 3000 draws, paired with base: P(Sharpe not better than base); delta-Sharpe 5/50/95
+  orig VIX>=20 & VIX<VIX3M (ref) 25%: full P= 53.7% dSh -0.153/-0.009/+0.122 | ex-window P= 42.3% dSh -0.114/+0.015/+0.124 | lag1 full P= 80.6%
+  orig VIX>=20 & VIX<VIX3M (ref) +F 25%: full P= 36.5% dSh -0.083/+0.019/+0.106 | ex-window P=  0.2% dSh +0.026/+0.062/+0.106 | lag1 full P= 42.2%
+  A post-spike -20% off 20d high & <VIX3M +F 25%: full P= 59.3% dSh -0.144/-0.016/+0.094 | ex-window P= 29.6% dSh -0.064/+0.031/+0.122 | lag1 full P= 64.5%
+
+[NEIGHBOUR GRID] cells: CAGR vs base / ex-window delta / lag-1 ex-window delta (pts) per size 5/10/25%
+
+  orig VIX>=20 & VIX<VIX3M (ref)
+    param                                      size 5%                          size 10%                          size 25%
+    VIX>=18                 +1.20 /  +1.09 /  +0.57           +2.39 /  +2.17 /  +1.03           +5.92 /  +5.61 /  +2.51   
+    VIX>=20                 +0.91 /  +0.64 /  +0.02           +1.81 /  +1.24 /  +0.00           +4.42 /  +3.14 /  +0.02   
+    VIX>=22                 +0.65 /  +0.21 /  +0.36           +1.30 /  +0.42 /  +0.72           +3.22 /  +1.14 /  +1.89   
+    VIX>=25                 +0.71 /  +0.26 /  -0.19           +1.41 /  +0.50 /  -0.38           +3.60 /  +1.37 /  -0.84   
+    VIX>=28                 +1.00 /  +0.42 /  +0.10           +2.01 /  +0.83 /  +0.19           +5.01 /  +2.05 /  +0.44   
+    VIX>=30                 +0.65 /  +0.30 /  +0.13           +1.28 /  +0.60 /  +0.26           +3.18 /  +1.49 /  +0.63   
+
+  orig VIX>=20 & VIX<VIX3M (ref) +F
+    param                                      size 5%                          size 10%                          size 25%
+    VIX>=18                 +0.77 /  +0.79 /  +0.62           +1.56 /  +1.60 /  +1.17           +3.69 /  +4.03 /  +2.81   
+    VIX>=20                 +0.61 /  +0.50 /  +0.32           +1.23 /  +0.99 /  +0.61           +2.92 /  +2.45 /  +1.48   
+    VIX>=22                 +0.67 /  +0.30 /  +0.21           +1.35 /  +0.61 /  +0.44           +3.27 /  +1.54 /  +1.12   
+    VIX>=25                 +0.57 /  +0.11 /  -0.02           +1.14 /  +0.22 /  -0.03           +2.81 /  +0.54 /  -0.08   
+    VIX>=28                 +0.63 /  +0.02 /  +0.02           +1.26 /  +0.04 /  +0.05           +3.15 /  +0.11 /  +0.12   
+    VIX>=30                 +0.39 /  +0.00 /  +0.00           +0.76 /  +0.00 /  +0.00           +1.88 /  +0.00 /  +0.00   
+
+  A post-spike -20% off 20d high & <VIX3M +F
+    param                                      size 5%                          size 10%                          size 25%
+    d=0.15 w=10             +0.25 /  +0.25 /  +0.38           +0.62 /  +0.63 /  +0.86           +1.68 /  +1.75 /  +2.31   
+    d=0.20 w=10             +0.47 /  +0.44 /  +0.42           +1.06 /  +0.99 /  +0.81           +2.79 /  +2.66 /  +1.98   
+    d=0.25 w=10             +0.36 /  +0.34 /  +0.45           +0.73 /  +0.68 /  +0.81           +1.85 /  +1.71 /  +1.92   
+    d=0.30 w=10             +0.10 /  +0.13 /  +0.21           +0.27 /  +0.30 /  +0.38           +0.79 /  +0.82 /  +0.90   
+    d=0.35 w=10             +0.09 /  -0.01 /  +0.03           +0.21 /  -0.00 /  -0.03           +0.56 /  +0.03 /  -0.19   
+    d=0.15 w=20             +0.27 /  +0.26 /  +0.38           +0.60 /  +0.58 /  +0.80           +1.38 /  +1.44 /  +1.92   
+    d=0.20 w=20             +0.39 /  +0.39 /  +0.33           +0.83 /  +0.83 /  +0.64           +1.96 /  +2.08 /  +1.46   
+    d=0.25 w=20             +0.43 /  +0.32 /  +0.21           +0.84 /  +0.65 /  +0.35           +2.07 /  +1.68 /  +0.80   
+    d=0.30 w=20             +0.28 /  +0.25 /  +0.29           +0.54 /  +0.49 /  +0.52           +1.34 /  +1.26 /  +1.21   
+    d=0.35 w=20             -0.11 /  +0.05 /  +0.10           -0.18 /  +0.12 /  +0.12           -0.41 /  +0.34 /  +0.19   
+    d=0.15 w=30             +0.30 /  +0.35 /  +0.40           +0.60 /  +0.70 /  +0.75           +1.32 /  +1.68 /  +1.70   
+    d=0.20 w=30             +0.48 /  +0.55 /  +0.36           +0.92 /  +1.05 /  +0.66           +2.10 /  +2.54 /  +1.46   
+    d=0.25 w=30             +0.52 /  +0.58 /  +0.39           +1.01 /  +1.11 /  +0.66           +2.39 /  +2.67 /  +1.45   
+    d=0.30 w=30             +0.50 /  +0.57 /  +0.47           +1.01 /  +1.15 /  +0.88           +2.49 /  +2.89 /  +2.04   
+    d=0.35 w=30             +0.31 /  +0.47 /  +0.46           +0.60 /  +0.92 /  +0.78           +1.47 /  +2.22 /  +1.71   
+
+[SHOCK] Feb-2018-style: leg weight x -90%, in pts of book. weight = share of cash leg actually held (capped by cash left after VIXM sleeve and deep-E QQQ)
+  orig VIX>=20 & VIX<VIX3M (ref) 25%: max leg wt 25.0% of book -> -22.50% ; mean wt when on 17.0% -> -15.26% ; worst leg day while on -33.6% ; base-case backtest worst book day -7.80% vs base -7.40%; maxDD -19.0% vs -18.3%
+      size 5%: max wt 5.0% (shock -4.50% of book)
+      size 10%: max wt 10.0% (shock -9.00% of book)
+      size 25%: max wt 25.0% (shock -22.50% of book)
+  orig VIX>=20 & VIX<VIX3M (ref) +F 25%: max leg wt 22.7% of book -> -20.47% ; mean wt when on 15.1% -> -13.56% ; worst leg day while on -33.6% ; base-case backtest worst book day -7.80% vs base -7.40%; maxDD -18.3% vs -18.3%
+      size 5%: max wt 4.5% (shock -4.09% of book)
+      size 10%: max wt 9.1% (shock -8.19% of book)
+      size 25%: max wt 22.7% (shock -20.47% of book)
+  A post-spike -20% off 20d high & <VIX3M +F 25%: max leg wt 22.7% of book -> -20.47% ; mean wt when on 7.4% -> -6.66% ; worst leg day while on -33.6% ; base-case backtest worst book day -7.80% vs base -7.40%; maxDD -18.3% vs -18.3%
+      size 5%: max wt 4.5% (shock -4.09% of book)
+      size 10%: max wt 9.1% (shock -8.19% of book)
+      size 25%: max wt 22.7% (shock -20.47% of book)
+
+[EXTRA BOOTSTRAP] as above plus lag-1 ex-window; added: A -30% with and without F at 25% and 10%
+  orig VIX>=20 & VIX<VIX3M (ref) 25%: full P= 53.7% | ex-window P= 42.3% | lag1 full P= 80.6% dSh -0.234/-0.076/+0.068 | lag1 ex-window P= 82.6% dSh -0.243/-0.079/+0.055
+  orig VIX>=20 & VIX<VIX3M (ref) +F 25%: full P= 36.5% | ex-window P=  0.2% | lag1 full P= 42.2% dSh -0.089/+0.011/+0.096 | lag1 ex-window P= 17.1% dSh -0.027/+0.035/+0.087
+  A post-spike -20% off 20d high & <VIX3M +F 25%: full P= 59.3% | ex-window P= 29.6% | lag1 full P= 64.5% dSh -0.166/-0.029/+0.091 | lag1 ex-window P= 45.6% dSh -0.117/+0.009/+0.117
+  A post-spike -30% off 20d high & <VIX3M 10%: full P= 42.8% | ex-window P= 45.2% | lag1 full P= 45.3% dSh -0.044/+0.004/+0.047 | lag1 ex-window P= 51.1% dSh -0.046/-0.001/+0.038
+  A post-spike -30% off 20d high & <VIX3M 25%: full P= 61.0% | ex-window P= 56.5% | lag1 full P= 63.1% dSh -0.148/-0.023/+0.088 | lag1 ex-window P= 63.4% dSh -0.141/-0.022/+0.080
+  A post-spike -30% off 20d high & <VIX3M +F 10%: full P= 42.8% | ex-window P= 20.4% | lag1 full P= 33.9% dSh -0.031/+0.009/+0.044 | lag1 ex-window P= 23.6% dSh -0.017/+0.013/+0.038
+  A post-spike -30% off 20d high & <VIX3M +F 25%: full P= 57.3% | ex-window P= 27.3% | lag1 full P= 51.0% dSh -0.107/-0.002/+0.085 | lag1 ex-window P= 31.6% dSh -0.056/+0.022/+0.085
+
+DONE

@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E QQQ leg 2026-11-11)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E and VIX-panic QQQ legs 2026-11-11)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -210,6 +210,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-11 | **VIX-panic QQQ leg**: a latch ON at a VIX close >= 30, OFF below 25; while ON 25% of the cash leg is QQQ, in any state, after VIXM and deep-E (shared QQQ slot, 75% cap); a flip is a regime trigger (`VIX_PANIC_*`, `vix_panic_series`, `vixm_state()['panic']`) | **owner decision** ("QQQ with 25% of the cash leg when VIX >= 30", 2026-11-10); on top of deep-E: real 50.35% / 2.021 / −18.3% → 52.03% / 2.022 / −18.3%, proxy 32.38% / 1.372 / −22.1% → 33.76% / 1.384 / −23.6%; ex-2020 +1.14 / +1.19; lag +1.72 / +1.37; bootstrap not significant (risk scales with return); buys spikes down a bear (`research_notes/deep_e_2026_11/bp_test.log`) |
 | 2026-11-11 | **Deep-E QQQ leg**: on an effective-E day with QQQ at least 5% under its 200-day, 50% of the cash leg (BOXX + VIXM) is held in QQQ, after the VIXM sleeve takes its share; off when either condition ends; a flip is a regime trigger (`DEEP_E_*`, `deep_e_active`, `apply_deep_e`, `live_target_weights7`, 7-leg `live_run.LEGS7`) | **owner decision** ("50%", instrument QQQ, 2026-11-10); real 2015-11..2026-11 46.6% / 1.928 / −18.3% → 50.4% / 2.021 / −18.3%, proxy 2001–2026 30.5% / 1.314 / −24.3% → 32.4% / 1.372 / −22.1%; ex-2020 +1.75 real / +1.13 proxy; random-E placebos P 0.000; ~54% of the real gain is 2020; E days 2–5% under the 200-day lose; one session of lag → +1.5 real (`research_notes/deep_e_2026_11/`) |
 | 2026-11-06 | **A base 20/80 → 40/60 for every A session from 2026-11-06** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 20/80 kept in `A_BASE_FROM_SESSION_PRIOR`); book in E on the day, so no trade until the book enters A | **owner decision** ("change to 40/60"); re-run through 2026-11-05, real ETFs with VIXM, 2bp: 2026 YTD 40/60 +19.4% / max DD −16.8% vs 20/80 +19.5% / −19.1%; years 2022 −8.1% vs −11.1%, 2023 +82.5% vs +108.4%, 2024 +79.4% vs +88.1%, 2025 +28.8% vs +27.0% |
 | 2026-10-30 | **A base 40/60 → 20/80 for every A session from 2026-10-30** (`A_BASE_ROWS`, `A_BASE_FROM_SESSION`; 40/60 kept in `A_BASE_FROM_SESSION_PRIOR`); book in D2 on the day, so no trade until the book enters A | **owner decision** ("Change to 20/80"); engine real 47.2% / 1.959 / −18.4% → 53.5% / 1.911 / −20.3%, proxy 30.7% / 1.321 / −22.2% → 33.9% / 1.301 / −26.5%, holdout Sharpe 0.988 → 0.961; −15% drawdowns 3 → 7 real; time >15% down 0.9% → 6.9% real, 9.1% → 14.2% proxy |
@@ -752,6 +753,25 @@ eight extension regimes (2003, 2009–10, 2011, 2020–21, 2023, 2024, 2025,
 2026). Trim size is monotone — ×0.75 through ×0.0 all improve — so 0.5 was
 a deliberately non-corner pick and step ⅓ is the graded equivalent; do not
 push it toward full cash at one vote on the strength of that monotonicity.
+
+## VIX-panic QQQ leg in the cash leg (APPLIED 2026-11-11, owner decision)
+
+**Rule.** A latch on VIX closes (the same median-of-four VIX the VIXM sleeve reads): **ON** when VIX
+closes at or above **30**, **OFF** when it closes below **25**. While ON, **25% of the cash leg**
+(BOXX + VIXM) is held in **QQQ**, in any state, after the VIXM sleeve and the deep-E leg take their
+shares (deep-E and VIX-panic share the QQQ slot: at most 75% of the cash leg). A flip is a regime
+trigger. Live from the 2026-11-11 session; `VIX_PANIC_ENABLED = False` removes it alone.
+
+**Evidence** (`paper-track/research_notes/deep_e_2026_11/bp_test.log`, measured ON TOP of the design
+with deep-E, 2bp): real 2015-11..2026-11 **50.35% / 2.021 / −18.3% → 52.03% / 2.022 / −18.3%**;
+proxy 2001–2026 **32.38% / 1.372 / −22.1% → 33.76% / 1.384 / −23.6%**; with 2020 removed +1.14 real /
++1.19 proxy; one session of lag +1.72 / +1.37; random-day placebos below it. Larger sizes earn more
+but cost Sharpe and drawdown (100%: real 1.867 / −22.4%, proxy 1.251 / −45.9%), which is why 25%.
+
+**Costs, stated.** The bootstrap does not call it better on Sharpe (P not better 0.82 real / 0.91
+proxy at 100%): the extra return comes with matching risk. It buys VIX spikes all the way down a
+bear: in 2008 on the proxy the 100% version lost 22 points of the book (about 5.5 at 25%), and it is
+on for long stretches then (905 proxy sessions, ~14% of days, mostly 2008–09 and 2020).
 
 ## Deep-E QQQ leg in the cash leg (APPLIED 2026-11-11, owner decision)
 

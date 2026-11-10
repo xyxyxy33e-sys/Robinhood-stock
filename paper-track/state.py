@@ -1785,6 +1785,7 @@ def vixm_state(dates, px, vix, vix3m, as_of=None, backfill=True):
     res = dict(out[as_of])
     res['as_of'] = as_of
     res['available'] = True
+    res['panic'] = vix_panic_series(idx_dates, vix).get(as_of, False)     # VIX >= 30 QQQ leg (2026-11-11)
     return res
 
 
@@ -1792,7 +1793,7 @@ def vixm_unavailable(reason):
     """Explicit 'no VIXM today' input: the cash leg stays 100% BOXX (the
     pre-2026-10-08 design). Use ONLY when the index data cannot be fetched;
     the run must report `reason`."""
-    return dict(available=False, allowed=False, reason=str(reason))
+    return dict(available=False, allowed=False, panic=False, reason=str(reason))
 
 
 def apply_vixm(weights5, vixm):
@@ -1857,6 +1858,45 @@ DEEP_E_CASH_SHARE = 0.50
 DEEP_E_FROM_SESSION = '2026-11-11'
 LIVE_LEGS7 = ('core', 'tqqq', 'qld', 'xlu', 'vixm', 'qqq', 'cash')
 
+# VIX-PANIC QQQ LEG -- APPLIED 2026-11-11 (owner decision 2026-11-10: "QQQ with 25% of the cash leg
+# when VIX >= 30"). A latch on VIX closes: ON when VIX closes at or above VIX_PANIC_ON (30), OFF when
+# it closes below VIX_PANIC_OFF (25). While ON, VIX_PANIC_CASH_SHARE (25%) of the cash leg is QQQ, in
+# any state, after VIXM and the deep-E leg take theirs (it shares the QQQ slot). A flip is a regime
+# trigger. Evidence (research_notes/deep_e_2026_11/bp_test.log, on top of the design with deep-E, 2bp):
+# real 2015-11..2026-11 50.35% / 2.021 / -18.3% -> 52.03% / 2.022 / -18.3%; proxy 2001-2026 32.38% /
+# 1.372 / -22.1% -> 33.76% / 1.384 / -23.6%; ex-2020 +1.14 real / +1.19 proxy; one session of lag
+# +1.72 / +1.37; random-day placebos below it. Costs, stated: bootstrap P(Sharpe not better) is high
+# (0.82 real / 0.91 proxy at 100%; the extra return comes with matching risk); it buys VIX spikes all
+# the way down a bear (2008 on the proxy cost -22 pts at 100%, so about -5.5 at 25%); on 905 proxy
+# sessions (~14% of days), most of them in 2008-09 and 2020.
+VIX_PANIC_ENABLED = True
+VIX_PANIC_ON = 30.0
+VIX_PANIC_OFF = 25.0
+VIX_PANIC_CASH_SHARE = 0.25
+VIX_PANIC_FROM_SESSION = '2026-11-11'
+
+
+def vix_panic_series(dates, vix):
+    """Replay the VIX-panic latch over `dates`: {date: bool}. Days without a VIX close are skipped."""
+    on, out = False, {}
+    for d in dates:
+        v = vix.get(d)
+        if v is None:
+            continue
+        if on and v < VIX_PANIC_OFF:
+            on = False
+        elif not on and v >= VIX_PANIC_ON:
+            on = True
+        out[d] = on
+    return out
+
+
+def vix_panic_active(vixm, session=None):
+    """True when the VIX-panic QQQ leg is on: the latch (vixm_state()['panic']) from VIX_PANIC_FROM_SESSION on."""
+    if not VIX_PANIC_ENABLED or not isinstance(vixm, dict) or not vixm.get('panic'):
+        return False
+    return session is None or session >= VIX_PANIC_FROM_SESSION
+
 
 def deep_e_active(state, fast_state, gaps, session=None):
     """True when the deep-E QQQ leg is on for this reading: effective state E and
@@ -1871,11 +1911,15 @@ def deep_e_active(state, fast_state, gaps, session=None):
     return effective_state(state, fast_state) == 'E' and g <= DEEP_E_GAP200
 
 
-def apply_deep_e(weights6, active):
-    """6-leg LIVE_LEGS tuple -> 7-leg LIVE_LEGS7 tuple (QQQ before cash)."""
+def apply_deep_e(weights6, active, panic=False):
+    """6-leg LIVE_LEGS tuple -> 7-leg LIVE_LEGS7 tuple (QQQ before cash). The QQQ slot takes the
+    deep-E share first, then the VIX-panic share, each of the whole cash leg (BOXX + VIXM), each
+    capped by what is still in BOXX."""
     core, tqqq, qld, xlu, vixm, cash = weights6
-    q = min(DEEP_E_CASH_SHARE * (vixm + cash), cash) if active else 0.0
-    return (core, tqqq, qld, xlu, vixm, q, cash - q)
+    leg = vixm + cash
+    q1 = min(DEEP_E_CASH_SHARE * leg, cash) if active else 0.0
+    q2 = min(VIX_PANIC_CASH_SHARE * leg, cash - q1) if panic else 0.0
+    return (core, tqqq, qld, xlu, vixm, q1 + q2, cash - q1 - q2)
 
 
 def live_target_weights7(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm, *,
@@ -1888,7 +1932,7 @@ def live_target_weights7(state, micro_agrees, vol, fast_state, gaps, breadth_pct
         raise MissingOverlayInputs("session is required: pass the reading's date")
     w6 = live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm,
                                        zone=zone)
-    return apply_deep_e(w6, deep_e_active(state, fast_state, gaps, session))
+    return apply_deep_e(w6, deep_e_active(state, fast_state, gaps, session), vix_panic_active(vixm, session))
 
 
 def validate_weights_live7(state, core, tqqq, qld, xlu, vixm, qqq, cash, tol=0.005):
@@ -1896,8 +1940,9 @@ def validate_weights_live7(state, core, tqqq, qld, xlu, vixm, qqq, cash, tol=0.0
     validate_weights_live(state, core, tqqq, qld, xlu, vixm, qqq + cash, tol=tol)
     if not (-tol <= qqq <= 1.0 + tol) or not (-tol <= cash <= 1.0 + tol):
         raise WeightSanityError(f"qqq {qqq!r} / cash {cash!r} out of [0,1] for state {state}")
-    if qqq > tol and qqq > (vixm + qqq + cash) * DEEP_E_CASH_SHARE + tol:
-        raise WeightSanityError(f"qqq {qqq:.4f} exceeds {DEEP_E_CASH_SHARE:.0%} of the cash leg")
+    cap = DEEP_E_CASH_SHARE + VIX_PANIC_CASH_SHARE
+    if qqq > tol and qqq > (vixm + qqq + cash) * cap + tol:
+        raise WeightSanityError(f"qqq {qqq:.4f} exceeds {cap:.0%} of the cash leg")
 
 
 def validate_weights_live(state, core, tqqq, qld, xlu, vixm, cash, tol=0.005):

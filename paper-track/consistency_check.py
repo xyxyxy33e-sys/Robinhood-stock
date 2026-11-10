@@ -1363,11 +1363,11 @@ def check_deep_e():
     else:
         raise AssertionError("live_target_weights7 accepted a missing session")
     try:
-        S.validate_weights_live7('E', 0, 0, 0, 0, 0, 0.6, 0.4)
+        S.validate_weights_live7('E', 0, 0, 0, 0, 0, 0.8, 0.2)
     except S.WeightSanityError:
         pass
     else:
-        raise AssertionError("validate_weights_live7 accepted QQQ above 50% of the cash leg")
+        raise AssertionError("validate_weights_live7 accepted QQQ above 75% of the cash leg (deep-E 50% + VIX-panic 25%)")
     assert L.LEGS == L.LEGS7 == ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')
     assert L.to7([0.1, 0.2, 0.3, 0.0, 0.25, 0.15]) == [0.1, 0.2, 0.3, 0.0, 0.25, 0.0, 0.15], "old 6-leg run files"
     t = DP.dollar_targets((0, 0, 0, 0, 0, 0.5, 0.5), 1000.0, 0.0)
@@ -1387,3 +1387,31 @@ def check_deep_e():
 
 
 check_deep_e()
+
+
+def check_vix_panic():
+    """VIX-panic QQQ leg (owner 2026-11-10, live from 2026-11-11): latch on at a VIX close >= 30, off
+    below 25; 25% of the cash leg in QQQ after VIXM and deep-E; in any state; off before go-live."""
+    import state as S
+    assert S.VIX_PANIC_ENABLED and (S.VIX_PANIC_ON, S.VIX_PANIC_OFF, S.VIX_PANIC_CASH_SHARE) == (30.0, 25.0, 0.25)
+    ds = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6']
+    ser = S.vix_panic_series(ds, dict(d1=24, d2=31, d3=27, d4=25, d5=24.9, d6=29.9))
+    assert [ser[d] for d in ds] == [False, True, True, True, False, False], ser
+    p_on = dict(allowed=False, available=True, panic=True)
+    shallow = {100: -0.05, 150: -0.04, 200: -0.04}; deep = {100: -0.09, 150: -0.08, 200: -0.06}
+    w = S.live_target_weights7('E', False, 0.40, 'F', shallow, 0.5, _at('E'), p_on, session='2026-11-11')
+    assert w == (0, 0, 0, 0, 0.0, 0.25, 0.75), w
+    w = S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), p_on, session='2026-11-11')
+    assert w == (0, 0, 0, 0, 0.0, 0.75, 0.25), "deep-E 50% + panic 25% share the QQQ slot"
+    S.validate_weights_live7('E', *w)
+    both = dict(allowed=True, available=True, panic=True)
+    w = S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), both, session='2026-11-11')
+    assert w == (0, 0, 0, 0, 0.75, 0.25, 0.0), "VIXM first, then deep-E; nothing left for panic"
+    w = S.live_target_weights7('E', False, 0.40, 'F', shallow, 0.5, _at('E'), p_on, session='2026-11-10')
+    assert w[5] == 0.0, "not before go-live"
+    assert S.vix_panic_active(S.vixm_unavailable('x'), '2026-11-12') is False
+    print("OK: VIX-panic QQQ -- latch in at VIX >= 30, out below 25; 25% of the cash leg in QQQ after VIXM and "
+          "deep-E (shared QQQ slot, 75% cap), any state, off before 2026-11-11 and when VIX data is unavailable")
+
+
+check_vix_panic()

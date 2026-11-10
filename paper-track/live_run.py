@@ -424,6 +424,9 @@ def cmd_signal(inp, write=True):
         de, de_prev = (S.deep_e_active(x['state'], x['fast'], x['gaps'], x['date']) for x in (r, rp))
         if de != de_prev:
             changed.append(f"deep-E QQQ {'in' if de else 'out'}")
+        vp, vp_prev = S.vix_panic_active(vx, r['date']), S.vix_panic_active(vx_prev, rp['date'])
+        if vp != vp_prev:
+            changed.append(f"VIX-panic QQQ {'in' if vp else 'out'}")
         if hold and idle < hold:
             changed.append(f"margin repay: raise ${hold:,.0f} cash")
         if net_plan['hold'] and idle < hold_all:
@@ -498,6 +501,10 @@ def cmd_signal(inp, write=True):
     print(f"deep-E QQQ: {'ON' if de_on else 'off'} (effective {r['eff']}, 200d gap {g[200]*100:+.1f}% vs "
           f"{S.DEEP_E_GAP200*100:.0f}% line" + ('' if r['date'] >= S.DEEP_E_FROM_SESSION else
                                                 f"; live from {S.DEEP_E_FROM_SESSION}") + ")")
+    vp_on = S.vix_panic_active(vx, r['date'])
+    print(f"VIX-panic QQQ: {'ON' if vp_on else 'off'} (latch {'on' if vx.get('panic') else 'off'}: in at VIX >= "
+          f"{S.VIX_PANIC_ON:g}, out below {S.VIX_PANIC_OFF:g}" + ('' if r['date'] >= S.VIX_PANIC_FROM_SESSION else
+                                                                f"; live from {S.VIX_PANIC_FROM_SESSION}") + ")")
     for n in notes:
         print(f"note: {n}")
     for l in lines:

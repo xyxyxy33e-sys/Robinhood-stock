@@ -13,3 +13,10 @@ Scripts ran from the session scratchpad (`MC.DATA` = a copy of `data/` extended 
 | #4 deep E: QQQ 50% of the cash leg in E when QQQ <= -5% vs its 200-day | `hv_robust`, `de_test` | **Applied 2026-11-11** (owner: "50%"). Real 46.6% / 1.928 -> 50.4% / 2.021, max DD unchanged; proxy 30.5% / 1.314 / -24.3% -> 32.4% / 1.372 / -22.1%; placebos P 0.000; ex-2020 +1.75 / +1.13; ~54% of the real gain is 2020; E days 2-5% under the 200-day lose; one session of lag -> +1.5 real |
 
 STRATEGY.md "Deep-E QQQ leg in the cash leg" is the decision record; `state.py` `DEEP_E_*` the code.
+
+## Follow-ups, 2026-11-10 (on top of the design with deep-E)
+
+| Batch | Files | Verdict |
+|---|---|---|
+| Short volatility, six more variants (post-spike, steep curve, calm carry, short VIXM, after a VIXM exit, uptrend filter) | `sv2_test` | Rejected: none survives one session of lag + 2020-21 removed + the bootstrap together; steep-curve and calm-carry lose in every cell |
+| Buy the panic, six more families (deep F, deep gated D, 5-day oversold, VIX level / turn / backwardation, 252-day drawdown, deep-E refinements) | `bp_test` | Only the VIX-spike entries add on both panels. **Applied: QQQ 25% of the cash leg while VIX latch >= 30 / < 25** (owner, 2026-11-11). The rest add nothing robust or lose on the proxy |
