@@ -1,0 +1,236 @@
+WASH-SALE-AWARE SUBSTITUTE TEST -- real panel 2015-11-03..2026-11-11, BASE = live design + L1 (engine reproduces 53.0%/2.139).
+Tax: $600k start book; ST 50.3% (37+13.3), LT 37.1% (20+3.8+13.3); netting + $3k ordinary offset + carryforward; tax paid each 15 Apr (first session on/after) from BOXX first, then pro-rata;
+wash rule: same ticker +-30 calendar days, share-for-share, disallowed loss -> replacement basis + holding period; fwd and bwd windows; 2bp/side; price-only returns; BOXX = capital asset (gain on sale).
+End wealth = account value minus liquidation tax (all lots, per-lot ST/LT). After-tax CAGR = (liq/600k)^(252/n)-1. wash$ = cumulative disallowed events (chains re-count a loss each time it is re-washed).
+Substitute blocked-test: a pending loss sale of the security (>= 0.05% of NAV) within the prior 30 calendar days. Switch-back: see README at bottom. NOT TAX ADVICE.
+
+=== FIFO lots, TQQQ/QLD/QQQ distinct securities
+BASE                       pre  52.9% 2.136  -16.6% (d +0.0pp +0.000 +0.0pp) | wash$  11.97M | AT  29.7% (liq  10.49M) | reb/yr  47.3 (+0.0) orders/yr 143.8 subdays    0 xs-short 0.00x
+S1L                        pre  52.4% 2.135  -16.6% (d -0.5pp -0.001 +0.1pp) | wash$   6.78M | AT  29.4% (liq  10.19M) | reb/yr  47.7 (+0.5) orders/yr 145.0 subdays  236 xs-short 0.16x
+S1                         pre  51.8% 2.107  -16.6% (d -1.1pp -0.029 +0.1pp) | wash$   4.32M | AT  29.0% (liq   9.85M) | reb/yr  49.0 (+1.7) orders/yr 150.1 subdays  538 xs-short 0.07x
+S1m                        pre  51.4% 2.100  -16.6% (d -1.5pp -0.037 -0.0pp) | wash$   3.64M | AT  28.7% (liq   9.67M) | reb/yr  49.5 (+2.2) orders/yr 152.5 subdays  588 xs-short 0.07x
+S2                         pre  48.8% 2.092  -16.1% (d -4.2pp -0.044 +0.5pp) | wash$   2.96M | AT  27.3% (liq   8.52M) | reb/yr  47.6 (+0.4) orders/yr 142.1 subdays  234 xs-short 0.55x
+S3                         pre  51.8% 2.109  -16.6% (d -1.1pp -0.027 +0.1pp) | wash$   3.83M | AT  29.0% (liq   9.86M) | reb/yr  49.0 (+1.7) orders/yr 149.8 subdays  557 xs-short 0.08x
+S3L                        pre  52.4% 2.137  -16.6% (d -0.5pp +0.001 +0.1pp) | wash$   6.29M | AT  29.4% (liq  10.21M) | reb/yr  47.7 (+0.5) orders/yr 144.7 subdays  249 xs-short 0.18x
+
+=== HIFO lots, TQQQ/QLD/QQQ distinct securities
+BASE                       pre  52.9% 2.136  -16.6% (d +0.0pp +0.000 +0.0pp) | wash$  12.52M | AT  29.8% (liq  10.59M) | reb/yr  47.3 (+0.0) orders/yr 143.8 subdays    0 xs-short 0.00x
+S1L                        pre  52.4% 2.136  -16.6% (d -0.5pp -0.001 +0.1pp) | wash$   7.56M | AT  29.5% (liq  10.29M) | reb/yr  47.7 (+0.5) orders/yr 145.0 subdays  241 xs-short 0.16x
+S1                         pre  51.9% 2.109  -16.6% (d -1.1pp -0.027 +0.1pp) | wash$   5.05M | AT  29.1% (liq   9.97M) | reb/yr  48.8 (+1.5) orders/yr 149.6 subdays  564 xs-short 0.07x
+S1m                        pre  51.6% 2.105  -16.6% (d -1.4pp -0.032 -0.0pp) | wash$   4.43M | AT  29.0% (liq   9.84M) | reb/yr  49.0 (+1.7) orders/yr 150.5 subdays  580 xs-short 0.07x
+S2                         pre  48.8% 2.093  -16.1% (d -4.2pp -0.044 +0.5pp) | wash$   3.08M | AT  27.4% (liq   8.60M) | reb/yr  47.6 (+0.4) orders/yr 142.1 subdays  234 xs-short 0.55x
+S3                         pre  51.9% 2.111  -16.6% (d -1.1pp -0.026 +0.1pp) | wash$   4.21M | AT  29.1% (liq   9.97M) | reb/yr  48.8 (+1.5) orders/yr 149.4 subdays  578 xs-short 0.08x
+S3L                        pre  52.4% 2.137  -16.6% (d -0.5pp +0.001 +0.1pp) | wash$   6.97M | AT  29.5% (liq  10.30M) | reb/yr  47.7 (+0.5) orders/yr 144.7 subdays  249 xs-short 0.18x
+
+=== FIFO lots, PESSIMISTIC: TQQQ==QLD identical
+BASE                       pre  52.9% 2.136  -16.6% (d +0.0pp +0.000 +0.0pp) | wash$  13.46M | AT  29.7% (liq  10.53M) | reb/yr  47.3 (+0.0) orders/yr 143.8 subdays    0 xs-short 0.00x
+S1L                        pre  52.9% 2.136  -16.6% (d +0.0pp +0.000 +0.0pp) | wash$  13.46M | AT  29.7% (liq  10.53M) | reb/yr  47.3 (+0.0) orders/yr 143.8 subdays    0 xs-short 0.00x
+S1                         pre  52.3% 2.108  -16.6% (d -0.6pp -0.028 -0.0pp) | wash$  10.76M | AT  29.3% (liq  10.17M) | reb/yr  48.5 (+1.3) orders/yr 149.2 subdays  359 xs-short 0.00x
+S2                         pre  50.6% 2.141  -16.5% (d -2.3pp +0.004 +0.1pp) | wash$   6.89M | AT  28.4% (liq   9.37M) | reb/yr  47.5 (+0.3) orders/yr 141.5 subdays  190 xs-short 0.76x
+S3                         pre  50.1% 2.118  -16.4% (d -2.9pp -0.018 +0.2pp) | wash$   3.94M | AT  28.1% (liq   9.11M) | reb/yr  48.7 (+1.5) orders/yr 145.6 subdays  494 xs-short 0.27x
+S3L                        pre  50.6% 2.141  -16.5% (d -2.3pp +0.004 +0.1pp) | wash$   6.89M | AT  28.4% (liq   9.37M) | reb/yr  47.5 (+0.3) orders/yr 141.5 subdays  190 xs-short 0.76x
+
+=== HIFO lots, PESSIMISTIC: TQQQ==QLD identical
+BASE                       pre  52.9% 2.136  -16.6% (d +0.0pp +0.000 +0.0pp) | wash$  14.85M | AT  29.9% (liq  10.62M) | reb/yr  47.3 (+0.0) orders/yr 143.8 subdays    0 xs-short 0.00x
+S1L                        pre  52.9% 2.136  -16.6% (d +0.0pp +0.000 +0.0pp) | wash$  14.85M | AT  29.9% (liq  10.62M) | reb/yr  47.3 (+0.0) orders/yr 143.8 subdays    0 xs-short 0.00x
+S1                         pre  52.4% 2.110  -16.6% (d -0.6pp -0.027 +0.0pp) | wash$  12.13M | AT  29.5% (liq  10.28M) | reb/yr  48.5 (+1.2) orders/yr 148.9 subdays  369 xs-short 0.00x
+S2                         pre  50.4% 2.145  -14.8% (d -2.5pp +0.009 +1.9pp) | wash$   6.50M | AT  28.3% (liq   9.34M) | reb/yr  47.5 (+0.2) orders/yr 141.5 subdays  216 xs-short 0.71x
+S3                         pre  49.4% 2.107  -15.2% (d -3.6pp -0.029 +1.4pp) | wash$   3.50M | AT  27.7% (liq   8.83M) | reb/yr  48.6 (+1.4) orders/yr 145.9 subdays  519 xs-short 0.25x
+S3L                        pre  50.4% 2.145  -14.8% (d -2.5pp +0.009 +1.9pp) | wash$   6.50M | AT  28.3% (liq   9.34M) | reb/yr  47.5 (+0.2) orders/yr 141.5 subdays  216 xs-short 0.71x
+
+=== switch-back variant: EAGER (switch the day the primary is unblocked) vs GUARD, FIFO distinct
+S1 eager                   pre  51.6% 2.102  -16.6% (d -1.4pp -0.034 +0.1pp) | wash$   4.33M | AT  28.8% (liq   9.70M) | reb/yr  48.9 (+1.6) orders/yr 150.5 subdays  505 xs-short 0.08x
+S1 guard                   pre  51.8% 2.107  -16.6% (d -1.1pp -0.029 +0.1pp) | wash$   4.32M | AT  29.0% (liq   9.85M) | reb/yr  49.0 (+1.7) orders/yr 150.1 subdays  538 xs-short 0.07x
+S3 eager                   pre  51.5% 2.103  -16.6% (d -1.4pp -0.034 +0.1pp) | wash$   3.60M | AT  28.8% (liq   9.71M) | reb/yr  48.9 (+1.6) orders/yr 150.1 subdays  519 xs-short 0.10x
+S3 guard                   pre  51.8% 2.109  -16.6% (d -1.1pp -0.027 +0.1pp) | wash$   3.83M | AT  29.0% (liq   9.86M) | reb/yr  49.0 (+1.7) orders/yr 149.8 subdays  557 xs-short 0.08x
+
+Reference: BASE with wash rule switched OFF (upper bound) AT 29.9%, paid 9.0M
+
+Per-year -- BASE FIFO  (ST/LT realized net after wash adj, $; wash = disallowed in that sale-year, $; tax = paid the following April, $; acct = year-end value before that April tax, $)
+  2015 ST        -53083 LT            0 wash        93510 tax(paid 2016)            0 acct         543629
+  2016 ST        123952 LT            0 wash        51758 tax(paid 2017)        37156 acct         658448
+  2017 ST        279421 LT           26 wash           40 tax(paid 2018)       140559 acct        1130294
+  2018 ST        922331 LT        45048 wash       157810 tax(paid 2019)       480645 acct        1762825
+  2019 ST        716955 LT            0 wash       556625 tax(paid 2020)       360628 acct        2269701
+  2020 ST       1616688 LT            0 wash       119560 tax(paid 2021)       813194 acct        3280135
+  2021 ST       2521689 LT        -1695 wash       578694 tax(paid 2022)      1267557 acct        4723335
+  2022 ST          5033 LT            0 wash       266897 tax(paid 2023)         2532 acct        3627768
+  2023 ST       3111035 LT            0 wash       646253 tax(paid 2024)      1564851 acct        6899077
+  2024 ST       5613534 LT        11927 wash      1652298 tax(paid 2025)      2828033 acct       10902540
+  2025 ST       3313912 LT            0 wash      1430430 tax(paid 2026)      1666898 acct       10627423
+  2026 ST       1657812 LT            0 wash      6417728 tax(paid 2027)            0 acct       11329757
+  end carryforwards [0, 0]  liquidation tax 836754
+
+Per-year -- BASE HIFO  (ST/LT realized net after wash adj, $; wash = disallowed in that sale-year, $; tax = paid the following April, $; acct = year-end value before that April tax, $)
+  2015 ST        -53083 LT            0 wash        94104 tax(paid 2016)            0 acct         543629
+  2016 ST        123005 LT            0 wash        55612 tax(paid 2017)        36679 acct         658448
+  2017 ST        268228 LT           77 wash          215 tax(paid 2018)       134947 acct        1131013
+  2018 ST        907104 LT        72995 wash       144486 tax(paid 2019)       483354 acct        1770172
+  2019 ST        717479 LT            0 wash       574408 tax(paid 2020)       360892 acct        2278189
+  2020 ST       1573864 LT            0 wash       132499 tax(paid 2021)       791654 acct        3293828
+  2021 ST       2597608 LT        -2500 wash       570518 tax(paid 2022)      1305339 acct        4781244
+  2022 ST         -2479 LT         -177 wash       264376 tax(paid 2023)            0 acct        3651177
+  2023 ST       3113885 LT        12712 wash       714502 tax(paid 2024)      1571000 acct        6948909
+  2024 ST       5617506 LT        41641 wash      1831550 tax(paid 2025)      2841054 acct       10990655
+  2025 ST       3024973 LT            0 wash      1456863 tax(paid 2026)      1521561 acct       10726447
+  2026 ST       2048738 LT            0 wash      6680901 tax(paid 2027)            0 acct       11624311
+  end carryforwards [0, 0]  liquidation tax 1033721
+
+Per-year -- S3 FIFO  (ST/LT realized net after wash adj, $; wash = disallowed in that sale-year, $; tax = paid the following April, $; acct = year-end value before that April tax, $)
+  2015 ST        -37057 LT            0 wash        13971 tax(paid 2016)            0 acct         550454
+  2016 ST         93819 LT            0 wash        22024 tax(paid 2017)        30060 acct         654579
+  2017 ST        277649 LT            0 wash            0 tax(paid 2018)       139657 acct        1120310
+  2018 ST        890247 LT        45040 wash        46399 tax(paid 2019)       464504 acct        1722334
+  2019 ST        772585 LT            0 wash       290239 tax(paid 2020)       388610 acct        2220575
+  2020 ST       1496965 LT            0 wash        67366 tax(paid 2021)       752973 acct        3162373
+  2021 ST       2391809 LT        -2375 wash       162464 tax(paid 2022)      1201886 acct        4644307
+  2022 ST       -278862 LT            0 wash        34969 tax(paid 2023)            0 acct        3284310
+  2023 ST       2925352 LT            0 wash       572325 tax(paid 2024)      1332693 acct        6361663
+  2024 ST       5133532 LT            0 wash       376678 tax(paid 2025)      2582167 acct       10126245
+  2025 ST       2660494 LT            0 wash       995589 tax(paid 2026)      1338229 acct        9997988
+  2026 ST       2246543 LT            0 wash      1252944 tax(paid 2027)            0 acct       10993020
+  end carryforwards [0, 0]  liquidation tax 1132547
+
+Per-year -- S1 FIFO  (ST/LT realized net after wash adj, $; wash = disallowed in that sale-year, $; tax = paid the following April, $; acct = year-end value before that April tax, $)
+  2015 ST        -37057 LT            0 wash        13971 tax(paid 2016)            0 acct         550454
+  2016 ST         93819 LT            0 wash        22024 tax(paid 2017)        30060 acct         654579
+  2017 ST        277649 LT            0 wash            0 tax(paid 2018)       139657 acct        1120310
+  2018 ST        873038 LT        45040 wash        49763 tax(paid 2019)       455848 acct        1704914
+  2019 ST        765739 LT            0 wash       288012 tax(paid 2020)       385167 acct        2203561
+  2020 ST       1485632 LT            0 wash        66851 tax(paid 2021)       747273 acct        3138754
+  2021 ST       2373989 LT        -2356 wash       161252 tax(paid 2022)      1192931 acct        4609738
+  2022 ST       -276787 LT            0 wash        34709 tax(paid 2023)            0 acct        3259871
+  2023 ST       2903588 LT            0 wash       568068 tax(paid 2024)      1322790 acct        6314341
+  2024 ST       5095338 LT            0 wash       373876 tax(paid 2025)      2562955 acct       10050902
+  2025 ST       2640699 LT            0 wash       988181 tax(paid 2026)      1328272 acct        9923599
+  2026 ST       2354400 LT            0 wash      1752606 tax(paid 2027)            0 acct       11035856
+  end carryforwards [0, 0]  liquidation tax 1186808
+
+=== LIVE CHECK (fills ledger data/fill_quality.csv 2026-09-08..11-11; pre-ledger inventory reconstructed from run-file positions, basis ASSUMED = 2026-08-31 close; estimate only)
+Loss sales since 2026-08-31 (ledger fills 2026-09-08..11-11; FIFO; pre-ledger lots basis assumed 08-31 close):
+  2026-10-09 SPMO      136.7 sh  realized        -121  washed (est)        -121
+  2026-10-16 SPMO      872.9 sh  realized      -9,210  washed (est)      -9,210
+  2026-10-16 TQQQ     1598.8 sh  realized      -7,280  washed (est)      -7,280
+  2026-10-21 TQQQ     3286.1 sh  realized     -20,424  washed (est)     -20,424
+  2026-10-22 SPMO     2166.5 sh  realized      -9,841  washed (est)      -9,725
+  2026-10-22 QLD       378.2 sh  realized        -524  washed (est)        -524
+  2026-10-29 SPMO     1837.4 sh  realized      -1,062  washed (est)      -1,062
+  2026-10-30 TQQQ     3601.0 sh  realized     -24,376  washed (est)     -24,376
+  2026-10-30 QLD      2686.5 sh  realized     -14,796  washed (est)      -8,360
+total loss slices -87636, est disallowed -81083
+open lots end:
+   TQQQ 4298.0 60.51 2026-11-11
+   TQQQ 0.573 60.53 2026-11-11
+   BOXX 1896.384 118.9 2026-11-05
+   BOXX 0.674 118.899 2026-11-05
+   VIXY 7156.0 17.0 2026-11-11
+   VIXY 0.985 17.0 2026-11-11
+11 Nov under S3: TQQQ blocked until 2026-11-29 (30 Oct loss sale, est. -$24k on my reconstruction; owner's Robinhood figure -$31.4k), QLD also blocked (30 Oct loss, est. -$14.8k, buys through 11-29 would wash it). Target D3 = 42.8% TQQQ / 20% VIXY / 37.2% BOXX.
+  S3 => QQQ at up to 3x weight, dollar-limited: QQQ 80% (42.8% freed TQQQ dollars + the 37.2% BOXX), VIXY 20%, BOXX 0 => ~0.80x exposure vs 1.28x (shortfall ~0.48x) until 2026-11-30, then switch QQQ -> TQQQ (guard: if QQQ lots are at a loss > 0.05% NAV, hold up to 45 days).
+  (VIXY also had its own buy 11-11; VIXM was sold at a gain 11-02/11-05, no VIXY loss pending -> not blocked.)
+SWITCH-BACK RULE (guard): when the primary is unblocked (>=31 days after its last pending loss sale) and the target still wants it, sell the substitute and buy the primary, UNLESS the substitute lots are at an unrealized loss > 0.05% of NAV (that sale would create a fresh loss on a ticker the strategy also trades -> likely new wash); then keep the substitute until the loss is gone, the primary target goes to 0, or 45 days pass. 'eager' = always switch on day 31.
+
+=== 2027 FORECAST
+2027 CAPITAL-GAIN FORECAST by historical-year replay. BASE (live design + L1), FIFO, $608,122 book, no deposits, no tax payments (gains are pre-tax $; wash rule applied).
+Each calendar year Y: buy the target at the first session of Y (all lots short-term, basis = price), run to the last session of Y. Variants: plain; seed (+$31.4k deferred TQQQ loss added to first TQQQ lot basis);
+today (every year starts from 42.8% TQQQ / 20% VIXY / 37.2% BOXX instead of the date target); today+seed. Real = 2016-2025 (10 yrs, VIXY sleeve in). Proxy = 2002-2025 (24 yrs, QQQ-based legs, NO VIX sleeve).
+
+======== REAL 2016-2025
+  per year: start-state, TQQQ full exits, VIXY on/off switches, rebalances | plain: ST LT total wash$ endUnreal pendingLoss | seed total | today total
+  2016 D exits  6 vixsw  2 reb  41 | ST    158331 LT        0 tot    158331 wash    57889 unreal    -15845 pend     726 | seed tot    126931 | today tot    149995
+  2017 A exits  1 vixsw  0 reb   9 | ST    268988 LT        0 tot    268988 wash        0 unreal    206999 pend       0 | seed tot    237588 | today tot    256769
+  2018 A exits  8 vixsw 12 reb  55 | ST    382138 LT        0 tot    382138 wash    88704 unreal     12132 pend   42346 | seed tot    350738 | today tot    371269
+  2019 F exits  9 vixsw 14 reb  57 | ST    272187 LT        0 tot    272187 wash   247473 unreal    129949 pend       0 | seed tot    240787 | today tot    243711
+  2020 A exits  3 vixsw  0 reb  53 | ST    356936 LT        0 tot    356936 wash    30641 unreal     13880 pend     138 | seed tot    325536 | today tot    356137
+  2021 A exits  8 vixsw  3 reb  56 | ST    546918 LT        0 tot    546918 wash   113827 unreal    -42546 pend    8752 | seed tot    515518 | today tot    547743
+  2022 A exits  2 vixsw  1 reb  52 | ST      3676 LT        0 tot      3676 wash    31472 unreal      1995 pend   10516 | seed tot    -27724 | today tot      2397
+  2023 F exits  5 vixsw  2 reb  40 | ST    528870 LT        0 tot    528870 wash   103436 unreal     19288 pend       0 | seed tot    497470 | today tot    529154
+  2024 A exits  8 vixsw  6 reb  48 | ST    632783 LT        0 tot    632783 wash   182561 unreal      6520 pend     194 | seed tot    601383 | today tot    650995
+  2025 A exits  5 vixsw 10 reb  51 | ST    246925 LT        0 tot    246925 wash    90813 unreal    -53243 pend     750 | seed tot    215525 | today tot    251508
+REAL 2016-2025 / plain             n=10  p10..p90 (10/25/50/75/90):
+    net ST      142865    252441    314561    492187    555504
+    net LT           0         0         0         0         0
+    total       142865    252441    314561    492187    555504
+    P(net realized loss)=0%  share of years ST>=50% of positive gains=100%  mean total 339775
+REAL 2016-2025 / seed              n=10  p10..p90 (10/25/50/75/90):
+    net ST      111465    221041    283161    460787    524104
+    net LT           0         0         0         0         0
+    total       111465    221041    283161    460787    524104
+    P(net realized loss)=10%  share of years ST>=50% of positive gains=90%  mean total 308375
+REAL 2016-2025 / today             n=10  p10..p90 (10/25/50/75/90):
+    net ST      135235    245660    306453    489683    558068
+    net LT           0         0         0         0         0
+    total       135235    245660    306453    489683    558068
+    P(net realized loss)=0%  share of years ST>=50% of positive gains=100%  mean total 335968
+REAL 2016-2025 / today+seed        n=10  p10..p90 (10/25/50/75/90):
+    net ST      103835    214260    275053    458283    526668
+    net LT           0         0         0         0         0
+    total       103835    214260    275053    458283    526668
+    P(net realized loss)=10%  share of years ST>=50% of positive gains=90%  mean total 304568
+REAL 2016-2025 / starts in D: n=1 [(2016, 158331)]
+REAL 2016-2025 / starts in A (plain) n= 7  p10..p90 (10/25/50/75/90):
+    net ST      149625    257957    356936    464528    581264
+    net LT           0         0         0         0         0
+    total       149625    257957    356936    464528    581264
+    P(net realized loss)=0%  share of years ST>=50% of positive gains=100%  mean total 348338
+  timing of GROSS positive realized gains by quarter (share): Q1 24% Q2 27% Q3 20% Q4 29%
+  median TQQQ full exits/yr 6 ; median VIXY switches/yr 2 ; median rebalances/yr 52 ; median end-of-year unrealized (ST+LT) 9326 ; median pending/open wash loss at year end 460
+
+======== PROXY 2002-2025
+  per year: start-state, TQQQ full exits, VIXY on/off switches, rebalances | plain: ST LT total wash$ endUnreal pendingLoss | seed total | today total
+  2002 C exits  2 vixsw  0 reb  31 | ST     20184 LT        0 tot     20184 wash     9760 unreal     -8962 pend   10287 | seed tot    -11216 | today tot     37175
+  2003 F exits  3 vixsw  0 reb  64 | ST    250253 LT        0 tot    250253 wash    37985 unreal     10342 pend      88 | seed tot    218853 | today tot    259846
+  2004 A exits  4 vixsw  0 reb  33 | ST    103848 LT        0 tot    103848 wash    65116 unreal     18115 pend       0 | seed tot     72448 | today tot    117076
+  2005 A exits  9 vixsw  0 reb  34 | ST      -904 LT        0 tot      -904 wash   150242 unreal     22321 pend       0 | seed tot    -32304 | today tot    -12411
+  2006 A exits  6 vixsw  0 reb  26 | ST     78791 LT        0 tot     78791 wash    28241 unreal     17207 pend       0 | seed tot     47391 | today tot     73916
+  2007 A exits  7 vixsw  0 reb  48 | ST    179991 LT        0 tot    179991 wash   191432 unreal    -36942 pend       0 | seed tot    148591 | today tot    193737
+  2008 D exits  2 vixsw  0 reb  55 | ST     67722 LT        0 tot     67722 wash    73837 unreal    -47976 pend   12821 | seed tot     36322 | today tot     70388
+  2009 C exits  1 vixsw  0 reb  51 | ST    172474 LT        0 tot    172474 wash    60988 unreal      9371 pend       0 | seed tot    141074 | today tot    172684
+  2010 A exits  6 vixsw  0 reb  44 | ST    390001 LT        0 tot    390001 wash    81743 unreal     39596 pend       0 | seed tot    358601 | today tot    389748
+  2011 A exits  5 vixsw  0 reb  56 | ST    -34449 LT        0 tot    -34449 wash   205841 unreal     -1082 pend   45315 | seed tot    -65849 | today tot    -29909
+  2012 D exits  3 vixsw  0 reb  34 | ST    195367 LT        0 tot    195367 wash   157942 unreal      -823 pend    5124 | seed tot    163967 | today tot    199860
+  2013 B exits  2 vixsw  0 reb  15 | ST     90934 LT        0 tot     90934 wash     2775 unreal    291236 pend       0 | seed tot     66926 | today tot     87580
+  2014 A exits  8 vixsw  0 reb  32 | ST    150974 LT        0 tot    150974 wash   160819 unreal     46857 pend       0 | seed tot    119574 | today tot    154645
+  2015 A exits  9 vixsw  0 reb  41 | ST    142570 LT        0 tot    142570 wash    49154 unreal    -45894 pend     461 | seed tot    111170 | today tot    150565
+  2016 D exits  6 vixsw  0 reb  40 | ST    139511 LT        0 tot    139511 wash    83708 unreal    -26604 pend    1166 | seed tot    108111 | today tot    137737
+  2017 A exits  1 vixsw  0 reb   9 | ST    280632 LT        0 tot    280632 wash        0 unreal    206754 pend       0 | seed tot    249232 | today tot    278830
+  2018 A exits  8 vixsw  0 reb  56 | ST    266941 LT        0 tot    266941 wash    96162 unreal     10738 pend   35482 | seed tot    235541 | today tot    260858
+  2019 F exits  9 vixsw  0 reb  48 | ST    288319 LT        0 tot    288319 wash   258932 unreal    159202 pend       0 | seed tot    256919 | today tot    250422
+  2020 A exits  3 vixsw  0 reb  53 | ST    361941 LT        0 tot    361941 wash    30632 unreal     24470 pend     136 | seed tot    330541 | today tot    353208
+  2021 A exits  8 vixsw  0 reb  55 | ST    571539 LT        0 tot    571539 wash   107043 unreal    -30465 pend     480 | seed tot    540139 | today tot    581035
+  2022 A exits  2 vixsw  0 reb  55 | ST    -96159 LT        0 tot    -96159 wash    52245 unreal      1603 pend   20682 | seed tot   -127559 | today tot    -91831
+  2023 F exits  5 vixsw  0 reb  35 | ST    602952 LT        0 tot    602952 wash    97959 unreal     21358 pend       0 | seed tot    571552 | today tot    609834
+  2024 A exits  8 vixsw  0 reb  46 | ST    540802 LT        0 tot    540802 wash   163892 unreal      8328 pend       0 | seed tot    509402 | today tot    550381
+  2025 A exits  5 vixsw  0 reb  45 | ST    175090 LT        0 tot    175090 wash    85196 unreal    -47615 pend     651 | seed tot    143690 | today tot    187428
+PROXY 2002-2025 / plain            n=24  p10..p90 (10/25/50/75/90):
+    net ST        5422     87898    173782    282553    495562
+    net LT           0         0         0         0         0
+    total         5422     87898    173782    282553    495562
+    P(net realized loss)=12%  share of years ST>=50% of positive gains=88%  mean total 205805
+PROXY 2002-2025 / seed             n=24  p10..p90 (10/25/50/75/90):
+    net ST      -25978     62042    142382    251153    464162
+    net LT           0         0         0         0         0
+    total       -25978     62042    142382    251153    464162
+    P(net realized loss)=17%  share of years ST>=50% of positive gains=83%  mean total 174713
+PROXY 2002-2025 / today            n=24  p10..p90 (10/25/50/75/90):
+    net ST        2465     84164    180056    265351    502191
+    net LT           0         0         0         0         0
+    total         2465     84164    180056    265351    502191
+    P(net realized loss)=12%  share of years ST>=50% of positive gains=88%  mean total 207617
+PROXY 2002-2025 / today+seed       n=24  p10..p90 (10/25/50/75/90):
+    net ST      -28935     64082    148656    233951    470791
+    net LT           0         0         0         0         0
+    total       -28935     64082    148656    233951    470791
+    P(net realized loss)=12%  share of years ST>=50% of positive gains=88%  mean total 176846
+PROXY 2002-2025 / starts in D (plain) n= 3  p10..p90 (10/25/50/75/90):
+    net ST       82080    103616    139511    167439    184196
+    net LT           0         0         0         0         0
+    total        82080    103616    139511    167439    184196
+    P(net realized loss)=0%  share of years ST>=50% of positive gains=100%  mean total 134200
+PROXY 2002-2025 / starts in A (plain) n=15  p10..p90 (10/25/50/75/90):
+    net ST      -21031     91320    175090    321286    480482
+    net LT           0         0         0         0         0
+    total       -21031     91320    175090    321286    480482
+    P(net realized loss)=20%  share of years ST>=50% of positive gains=80%  mean total 207441
+  timing of GROSS positive realized gains by quarter (share): Q1 19% Q2 29% Q3 19% Q4 34%
+  median TQQQ full exits/yr 5 ; median VIXY switches/yr 0 ; median rebalances/yr 44 ; median end-of-year unrealized (ST+LT) 9857 ; median pending/open wash loss at year end 44
