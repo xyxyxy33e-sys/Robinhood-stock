@@ -66,6 +66,27 @@ the orders. It also writes `data/runs/<today>.json`, which every later step read
 1.5 **Stop.** Fills, records, report and push all belong to the post-close run.
 Only after the orders are placed: one short line to the session ("traded / no trade, why").
 
+## 1.6 Trade-status check — 15:55, Mon–Fri (added 2026-11-11, owner)
+
+A separate scheduled task in a fresh session. **Read-only:** never place, modify or cancel an order, never
+edit or commit anything, never run `live_run.py signal`/`record`. Its only output is one push notification,
+and only when something is wrong. The 16:10 post-close run still owns the fallback (2.2).
+
+1. **Holiday check.** `get_equity_quotes` for QQQ. If it did not trade today, stop silently.
+2. **Repo.** `git pull --ff-only` (clone if missing). Read `data/runs/<today>.json` if present: `decision`,
+   `orders` (symbol, side, kind), `sweep`, `status`, `why`. The trade run commits it at about 15:51–15:55, so a
+   missing file alone is not a failure.
+3. **Broker.** `get_equity_orders(account_number='576391551', created_at_gte=<today 00:00 UTC>, placed_agent='agentic')`,
+   and `get_trade_approvals` if the tool exists (orders can wait for the owner's approval in the app).
+4. **Push one line (< 200 characters) only if one of these holds**, else stop silently:
+   - no run file AND no agentic orders today: "15:55 check: trade run has not run or not pushed — no orders placed".
+   - the run file says a guard tripped: "15:55 check: guard tripped — <why>".
+   - `decision` is TRADE (or a sweep is printed) and a printed order's symbol/side has no matching agentic order
+     today: "15:55 check: <n> printed orders missing: <SYM side, ...>".
+   - any agentic order today is rejected, failed or cancelled: name it.
+   - an order is waiting for approval in the app: "15:55 check: <SYM side> awaiting your approval".
+   Orders still working (queued/confirmed/partially filled) at 15:55 are normal and are not reported.
+
 ## 2. Post-close run — 16:10, Mon–Fri
 
 2.1 **Holiday check.** Read the QQQ quote. If today did not trade, stop; send no push.
