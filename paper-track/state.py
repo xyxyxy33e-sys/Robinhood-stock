@@ -1731,7 +1731,7 @@ def circuit_breaker_check(actual_total_value, implied_total_value, tol=0.02):
 # same 15:5x window as everything else, never "tomorrow".
 VIXM_OVERLAY_ENABLED = True
 # 2026-11-11, owner ("add the 2.0x cap and VIXY swap"): the sleeve trades VIXY (1-month VIX futures,
-# ~2x VIXM's daily moves, ~100x its volume, extended-hours tradable) at 35% of the cash leg instead of
+# ~2x VIXM's daily moves, ~100x its volume; on Robinhood regular hours only, like VIXM) at 35% of the cash leg instead of
 # VIXM at 75%: the same latch / stress / fade / D2-off timing. Evidence (vixm_followups_2026_11/
 # vixy_test.py; review_2026_11/followup_risk_exec.py): real 2015-11..2026-11 53.6% / 2.068 / -18.3% ->
 # 53.1% / 2.055 / -18.3%, 2022 -3.3% -> +2.2%; the sleeve's NAV share drops from up to 75% to up to 35%,

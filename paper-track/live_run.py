@@ -531,7 +531,7 @@ def cmd_signal(inp, write=True):
         if any(o['symbol'] == 'VIXM' for o in orders):
             print("  VIXM: regular hours ONLY (no extended-hours trading); it must fill now or wait for the next open.")
         if any(o['symbol'] == S.VIXM_INSTRUMENT for o in orders) and S.VIXM_INSTRUMENT != 'VIXM':
-            print(f"  {S.VIXM_INSTRUMENT}: the volatility sleeve (35% of the cash leg); fill it in the same window as the rest.")
+            print(f"  {S.VIXM_INSTRUMENT}: regular hours ONLY on Robinhood (no extended hours); it must fill now or wait for the next open.")
     else:
         print(f"\nDECISION: NO TRADE ({why})")
         if sweep:

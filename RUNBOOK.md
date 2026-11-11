@@ -59,7 +59,7 @@ the orders. It also writes `data/runs/<today>.json`, which every later step read
 - `MARKET dollar-based` and `MARKET` stub lines are regular-hours market orders.
 - If a buy exceeds buying power, wait for the sells to fill.
 - Target 15:54–15:57; never place after 15:59.
-- **The VIXY sleeve fills in this window like every other leg** (one session of lag erases most of its value). If it cannot fill, report it.
+- **VIXY trades in regular hours only on Robinhood (like VIXM before it).** It must fill in this window; if it cannot, it waits for the next open; report that.
 - **Gross cap 2.0x (2026-11-11):** `live_run.py` already applies it; trade the printed orders as they are.
 
 **If `NO TRADE`** and an idle-cash sweep is printed, place those dollar-based buys. Otherwise do nothing.
@@ -80,7 +80,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - **No run file, or a non-guard failure:** that is the FALLBACK. Refetch per 1.1 and run
   `live_run.py signal` on it; it computes on the close. Then place the orders.
   - After 16:00, extended hours: WHOLE-SHARE limit orders only, `market_hours='extended_hours'`, at most 0.3% through the touch.
-  - Fractional stubs (and any VIXM line, legacy) wait for the next regular session. List them in the push.
+  - Fractional stubs and every VIXY (or legacy VIXM) line wait for the next regular session. List them in the push.
   - Lose the overnight, never the signal.
 - **Guard tripped in the trade run:** do not override it. It leads the push.
 
