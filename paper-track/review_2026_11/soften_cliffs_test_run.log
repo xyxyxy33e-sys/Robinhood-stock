@@ -1,0 +1,74 @@
+checks: variant(1%,50,2%) == MC.signals; live run == harness.run on 3 periods; S1 == live off D
+S1: sessions with L1 target diff > 1% vs live:   3.9% (on D:  28.1%), mean L1 diff 0.017
+S2: sessions with L1 target diff > 1% vs live:  15.6% (on D:  32.0%), mean L1 diff 0.054
+S3: sessions with L1 target diff > 1% vs live:  18.7% (on D:  53.8%), mean L1 diff 0.071
+
+MAIN TABLE  (CAGR / Sharpe (ex-cash Sharpe) / maxDD, trades/yr)
+
+-- cost 2 bp, lag 0
+arm                                           real                                       proxy                                     holdout
+live    53.6% / 2.068 (ex 1.961) /  -18.3%   50t/y  34.8% / 1.425 (ex 1.344) /  -22.1%   45t/y  24.7% / 1.096 (ex 1.030) /  -22.1%   43t/y
+S1      51.5% / 2.031 (ex 1.923) /  -19.2%   53t/y  33.1% / 1.390 (ex 1.307) /  -22.1%   51t/y  23.1% / 1.059 (ex 0.992) /  -22.1%   51t/y
+S2      51.4% / 2.023 (ex 1.915) /  -17.8%   63t/y  32.1% / 1.344 (ex 1.262) /  -22.0%   62t/y  21.5% / 0.985 (ex 0.918) /  -22.0%   62t/y
+S3      49.2% / 1.983 (ex 1.873) /  -19.2%   67t/y  30.3% / 1.305 (ex 1.221) /  -23.3%   67t/y  19.9% / 0.944 (ex 0.875) /  -23.3%   69t/y
+
+-- cost 2 bp, lag 1
+arm                                           real                                       proxy                                     holdout
+live    46.2% / 1.835 (ex 1.729) /  -20.8%   51t/y  29.7% / 1.254 (ex 1.173) /  -28.6%   46t/y  20.7% / 0.951 (ex 0.885) /  -27.2%   44t/y
+S1      44.3% / 1.797 (ex 1.689) /  -22.2%   55t/y  29.2% / 1.249 (ex 1.167) /  -28.2%   52t/y  21.0% / 0.973 (ex 0.906) /  -27.2%   52t/y
+S2      43.8% / 1.770 (ex 1.663) /  -20.9%   64t/y  26.9% / 1.167 (ex 1.085) /  -27.3%   63t/y  18.0% / 0.855 (ex 0.788) /  -26.9%   63t/y
+S3      41.9% / 1.729 (ex 1.620) /  -22.4%   68t/y  26.5% / 1.162 (ex 1.080) /  -27.1%   69t/y  18.4% / 0.880 (ex 0.812) /  -26.9%   71t/y
+
+-- cost 10 bp, lag 0
+arm                                           real                                       proxy                                     holdout
+live    49.5% / 1.948 (ex 1.841) /  -18.6%   50t/y  31.7% / 1.324 (ex 1.243) /  -22.8%   45t/y  22.0% / 0.996 (ex 0.930) /  -22.8%   43t/y
+S1      47.5% / 1.909 (ex 1.801) /  -19.9%   53t/y  30.1% / 1.288 (ex 1.205) /  -22.8%   51t/y  20.4% / 0.959 (ex 0.892) /  -22.8%   51t/y
+S2      47.4% / 1.901 (ex 1.793) /  -18.1%   63t/y  29.0% / 1.241 (ex 1.159) /  -24.0%   62t/y  18.8% / 0.883 (ex 0.816) /  -24.0%   62t/y
+S3      45.4% / 1.860 (ex 1.750) /  -19.9%   67t/y  27.4% / 1.202 (ex 1.118) /  -24.9%   67t/y  17.3% / 0.842 (ex 0.773) /  -24.9%   69t/y
+
+-- cost 10 bp, lag 1
+arm                                           real                                       proxy                                     holdout
+live    42.4% / 1.716 (ex 1.609) /  -21.6%   51t/y  26.7% / 1.153 (ex 1.071) /  -30.9%   46t/y  18.0% / 0.851 (ex 0.785) /  -28.7%   44t/y
+S1      40.6% / 1.675 (ex 1.568) /  -22.7%   55t/y  26.2% / 1.147 (ex 1.065) /  -30.4%   52t/y  18.4% / 0.874 (ex 0.807) /  -28.7%   52t/y
+S2      40.0% / 1.649 (ex 1.542) /  -21.4%   64t/y  24.0% / 1.063 (ex 0.981) /  -30.7%   63t/y  15.3% / 0.752 (ex 0.685) /  -30.7%   63t/y
+S3      38.2% / 1.607 (ex 1.498) /  -22.9%   68t/y  23.6% / 1.059 (ex 0.976) /  -29.4%   69t/y  15.8% / 0.778 (ex 0.711) /  -28.4%   71t/y
+
+VERDICT (Sharpe over {real,proxy,holdout} x {lag0,lag1})
+-- 2 bp (PRIMARY): live min 0.951 median 1.340
+   S1: min 0.973 (+0.022)  median 1.319 (-0.020, |diff|<=0.05: True)  -> MORE ROBUST
+   S2: min 0.855 (-0.096)  median 1.255 (-0.084, |diff|<=0.05: False)  -> not more robust
+   S3: min 0.880 (-0.072)  median 1.234 (-0.106, |diff|<=0.05: False)  -> not more robust
+-- 10 bp (secondary): live min 0.851 median 1.238
+   S1: min 0.874 (+0.023)  median 1.217 (-0.021, |diff|<=0.05: True)  -> MORE ROBUST
+   S2: min 0.752 (-0.100)  median 1.152 (-0.086, |diff|<=0.05: False)  -> not more robust
+   S3: min 0.778 (-0.073)  median 1.130 (-0.108, |diff|<=0.05: False)  -> not more robust
+
+SENSITIVITY (2 bp, lag 0): Sharpe real / proxy / holdout
+
+-- live: rows gate threshold T, cols buffer b (macro MA 50)
+  T \ b                      0.5%                     1.0%                     1.5%
+    1%     1.883 / 1.337 / 1.052   1.968 / 1.411 / 1.138   1.907 / 1.320 / 1.013
+    2%     1.960 / 1.329 / 0.995   2.068 / 1.425 / 1.096   2.022 / 1.345 / 0.980
+    3%     1.831 / 1.173 / 0.800   1.938 / 1.277 / 0.912   1.885 / 1.203 / 0.811
+  real     spread (max-min) 0.237  centre 2.068  centre - mean(neighbours) +0.144
+  proxy    spread (max-min) 0.252  centre 1.425  centre - mean(neighbours) +0.126
+  holdout  spread (max-min) 0.338  centre 1.096  centre - mean(neighbours) +0.133
+  1-D macro MA slice (T=2%, b=1%):
+    M=40: 1.952 / 1.319 / 0.991
+    M=50: 2.068 / 1.425 / 1.096
+    M=60: 1.973 / 1.330 / 0.992
+
+-- S3: rows gate threshold T, cols buffer b (macro MA 50)
+  T \ b                      0.5%                     1.0%                     1.5%
+    1%     1.991 / 1.339 / 0.996   1.977 / 1.350 / 1.021   1.952 / 1.318 / 0.980
+    2%     1.997 / 1.289 / 0.910   1.983 / 1.305 / 0.944   1.958 / 1.276 / 0.907
+    3%     1.959 / 1.236 / 0.850   1.945 / 1.258 / 0.894   1.917 / 1.230 / 0.860
+  real     spread (max-min) 0.080  centre 1.983  centre - mean(neighbours) +0.021
+  proxy    spread (max-min) 0.120  centre 1.305  centre - mean(neighbours) +0.018
+  holdout  spread (max-min) 0.171  centre 0.944  centre - mean(neighbours) +0.016
+  1-D macro MA slice (T=2%, b=1%):
+    M=40: 1.918 / 1.282 / 0.958
+    M=50: 1.983 / 1.305 / 0.944
+    M=60: 1.935 / 1.271 / 0.919
+
+SUMMARY verdict @2bp: S1: MORE ROBUST, S2: not more robust, S3: not more robust

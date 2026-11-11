@@ -1,0 +1,71 @@
+Untouched-data test, run 2026-11-11. VIX source: CBOE, first 1990-01-02. VIXM off. Breadth half of D gate inert. Cost 2bp/side.
+Columns: CAGR, Sharpe = mean/sd, exSh = excess-of-cash Sharpe, MaxDD, vol, worst calendar year (* partial), rebalances/yr.
+
+=== (a) NASDAQ-100: scored 1987-06-01 -> 2000-12-29 (3434 sessions; data from 1985-10-01) ===
+  core = NDX + 0.6%/yr; synthetic 3x/2x; VIX-panic on from 1990-01-02; breadth inert.
+  largest |daily| signal-index moves (data sanity): 1987-10-19 -15.1%, 1987-10-26 -11.7%, 2000-12-05 +11.7%
+                                  CAGR  Sharpe    exSh    MaxDD     vol  worst year      reb/yr
+  buy&hold NDX+0.6%              21.2%   0.832   0.634   -52.8%   27.7%  2000* -36.5%    
+  11 Nov live lag 0              15.5%   0.709   0.487   -34.7%   24.7%  1997 -16.9%         51
+  11 Nov live lag 1              14.9%   0.661   0.457   -55.4%   26.9%  1987* -42.2%        52
+    11 Nov live time in effective state: A 63%, B 1%, C 7%, D 18%, E 5%, F 6%; D gated 3.1% of days; deepE on 1.6%; panic on 7.2%
+  bare lag 0                     18.8%   0.682   0.518   -43.8%   33.5%  1990 -21.6%         59
+  bare lag 1                     15.7%   0.595   0.438   -56.3%   34.8%  1990 -33.6%         62
+    bare time in effective state: A 57%, B 5%, C 7%, D 18%, E 5%, F 9%
+
+=== (c) CRUDE momentum core (Mkt + 0.5 UMD) on NDX signals: scored 1987-06-01 -> 2000-12-29 (3434 sessions; data from 1985-10-01) ===
+  CRUDE factor core, no costs on the UMD leg; 3x/2x and QQQ legs = NDX; 0 NDX dates without FF data set to 0.
+  largest |daily| signal-index moves (data sanity): 1987-10-19 -15.1%, 1987-10-26 -11.7%, 2000-12-05 +11.7%
+                                  CAGR  Sharpe    exSh    MaxDD     vol  worst year      reb/yr
+  buy&hold Mkt+0.5UMD            20.9%   1.135   0.834   -37.4%   18.2%  1987* -16.0%    
+  buy&hold NDX+0.6%              21.2%   0.832   0.634   -52.8%   27.7%  2000* -36.5%    
+  11 Nov live lag 0              15.6%   0.741   0.505   -35.1%   23.2%  1987* -16.1%        52
+  11 Nov live lag 1              15.2%   0.692   0.478   -55.8%   25.5%  1987* -43.7%        53
+    11 Nov live time in effective state: A 63%, B 1%, C 7%, D 18%, E 5%, F 6%; D gated 3.1% of days; deepE on 1.6%; panic on 7.2%
+  bare lag 0                     17.2%   0.663   0.488   -39.6%   31.3%  1990 -22.2%         60
+  bare lag 1                     14.8%   0.589   0.421   -55.0%   32.7%  1990 -31.3%         64
+    bare time in effective state: A 57%, B 5%, C 7%, D 18%, E 5%, F 9%
+
+=== (b) Nikkei 225: scored 1971-09-16 -> 2026-10-30 (13551 sessions; data from 1970-01-05) ===
+  own signals, core = index (no dividend added), synthetic 3x/2x financed at USD T-bill+0.3% (KF RF before 1981-09); VIX-panic off; breadth inert.
+  largest |daily| signal-index moves (data sanity): 1987-10-20 -14.9%, 2008-10-14 +14.2%, 1990-10-02 +13.2%
+                                  CAGR  Sharpe    exSh    MaxDD     vol  worst year      reb/yr
+  buy&hold ^N225                  6.3%   0.398   0.180   -81.9%   20.9%  2008 -42.1%     
+  11 Nov live lag 0               3.8%   0.289   0.065   -65.9%   20.3%  2016 -29.3%         39
+  11 Nov live lag 1               3.7%   0.280   0.063   -61.5%   21.0%  2011 -33.6%         40
+    11 Nov live time in effective state: A 51%, B 1%, C 11%, D 14%, E 6%, F 16%; D gated 3.7% of days; deepE on 1.3%; panic on 0.0%
+  bare lag 0                      6.0%   0.363   0.176   -70.4%   24.4%  2018 -35.4%         33
+  bare lag 1                      6.1%   0.364   0.184   -70.9%   25.2%  1973 -35.0%         34
+    bare time in effective state: A 42%, B 7%, C 10%, D 14%, E 6%, F 20%
+
+=== (b) DAX (total-return index): scored 1989-09-01 -> 2026-10-30 (9401 sessions; data from 1987-12-30) ===
+  own signals, core = index (no dividend added), synthetic 3x/2x financed at USD T-bill+0.3% (KF RF before 1981-09); VIX-panic off; breadth inert.
+  largest |daily| signal-index moves (data sanity): 1989-10-16 -13.1%, 2020-03-12 -12.2%, 2008-10-13 +11.4%
+                                  CAGR  Sharpe    exSh    MaxDD     vol  worst year      reb/yr
+  buy&hold ^GDAXI                 7.7%   0.451   0.320   -72.7%   21.8%  2002 -43.9%     
+  11 Nov live lag 0               6.1%   0.372   0.250   -51.9%   23.4%  2011 -25.5%         42
+  11 Nov live lag 1               5.6%   0.349   0.227   -54.1%   23.3%  2011 -24.5%         44
+    11 Nov live time in effective state: A 58%, B 1%, C 10%, D 15%, E 4%, F 12%; D gated 3.3% of days; deepE on 1.0%; panic on 0.0%
+  bare lag 0                     10.1%   0.494   0.389   -48.1%   27.1%  2002 -23.2%         37
+  bare lag 1                     10.8%   0.513   0.408   -47.6%   27.3%  2022 -23.8%         38
+    bare time in effective state: A 50%, B 6%, C 9%, D 15%, E 4%, F 17%
+
+=== (b) FTSE 100: scored 1985-08-30 -> 2026-10-30 (10399 sessions; data from 1984-01-03) ===
+  own signals, core = index (no dividend added), synthetic 3x/2x financed at USD T-bill+0.3% (KF RF before 1981-09); VIX-panic off; breadth inert.
+  largest |daily| signal-index moves (data sanity): 1987-10-20 -12.2%, 2020-03-12 -10.9%, 1987-10-19 -10.8%
+                                  CAGR  Sharpe    exSh    MaxDD     vol  worst year      reb/yr
+  buy&hold ^FTSE                  5.2%   0.381   0.191   -52.6%   17.0%  2008 -31.3%     
+  11 Nov live lag 0              -1.0%   0.051  -0.111   -94.0%   20.0%  2000 -37.5%         32
+  11 Nov live lag 1              -0.7%   0.072  -0.085   -92.1%   20.6%  2000 -44.7%         33
+    11 Nov live time in effective state: A 54%, B 1%, C 9%, D 16%, E 7%, F 12%; D gated 6.1% of days; deepE on 0.7%; panic on 0.0%
+  bare lag 0                     -1.0%   0.060  -0.091   -89.7%   21.5%  2000 -45.0%         23
+  bare lag 1                     -1.0%   0.067  -0.079   -87.5%   22.1%  2000 -43.0%         23
+    bare time in effective state: A 46%, B 7%, C 9%, D 16%, E 7%, F 16%
+
+In-sample reference: real 2015-2026 excess Sharpe 1.96.
+  set         CUR exSh lag0    lag1  BARE lag0    lag1  CUR/1.96
+  a                   0.487   0.457      0.518   0.438      0.25
+  c                   0.505   0.478      0.488   0.421      0.26
+  ^N225               0.065   0.063      0.176   0.184      0.03
+  ^GDAXI              0.250   0.227      0.389   0.408      0.13
+  ^FTSE              -0.111  -0.085     -0.091  -0.079     -0.06

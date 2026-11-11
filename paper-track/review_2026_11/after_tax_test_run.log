@@ -1,0 +1,39 @@
+Panel 2015-11-03..2026-11-10  n=2771  rebalances 548
+SANITY IRA vs harness.run(real=True): ending 111.699311 vs 111.699311  rel diff -3.66e-15  max |daily diff| 4.44e-16  -> PASS
+
+All $ figures per $1 initial. Taxes% = (taxes paid + end liability) / IRA pre-tax gain.
+case                           CAGR acct  CAGR liq mult liq   MaxDD    paid liab end   defer tax%gain ST share wash n  wash $
+-----------------------------------------------------------------------------------------------------------------------------
+IRA (no tax)                       53.6%     53.6%   111.70  -18.3%    0.00     0.00    0.00     0.0%        -      -       -
+S1 fed 35/15 BOXX deferred         36.2%     35.8%    29.01  -28.5%   16.77     0.95    0.00    16.0%    99.8%   1309  43.114
+S1 fed 35/15 BOXX ordinary         36.2%     35.8%    28.96  -28.5%   16.74     0.95   -0.01    16.0%    99.8%   1727  43.621
+S1 fed 35/15 BOXX free             36.5%     36.1%    29.67  -28.5%   16.45     0.89    0.00    15.7%    99.8%    750  43.414
+S2 37+CA/20+CA BOXX deferred       30.7%     30.2%    18.21  -34.6%   16.49     0.76    0.00    15.6%    99.8%   1300  30.173
+S2 37+CA/20+CA BOXX ordinary       30.7%     30.2%    18.18  -34.6%   16.45     0.76   -0.01    15.5%    99.8%   1728  30.500
+S2 37+CA/20+CA BOXX free           31.0%     30.6%    18.79  -34.7%   16.22     0.71    0.00    15.3%    99.8%    752  30.453
+
+Buy-and-hold references (taxable, sold at end at LT; pre-tax = IRA):
+  QQQ   pre-tax CAGR  17.5%  mult   5.89  MaxDD -35.6% | S1 fed 35/15: after-tax  15.7% (mult  4.97) | S2 37+CA/20+CA: after-tax  14.1% (mult  4.27)
+  SPMO  pre-tax CAGR  15.7%  mult   4.95  MaxDD -31.3% | S1 fed 35/15: after-tax  14.0% (mult  4.21) | S2 37+CA/20+CA: after-tax  12.5% (mult  3.64)
+
+Headline (S1, BOXX deferred) realized by year [ST, LT, ordinary] after wash adjustments:
+  2015: ST    -0.108  LT    +0.000  ord  +0.000
+  2016: ST    +0.231  LT    +0.000  ord  +0.000
+  2017: ST    +0.511  LT    +0.000  ord  +0.000
+  2018: ST    +1.741  LT    +0.090  ord  +0.000
+  2019: ST    +1.422  LT    +0.000  ord  +0.000
+  2020: ST    +3.388  LT    +0.000  ord  +0.000
+  2021: ST    +6.571  LT    -0.006  ord  +0.000
+  2022: ST    -0.625  LT    -0.007  ord  +0.000
+  2023: ST    +7.591  LT    +0.000  ord  +0.000
+  2024: ST   +13.350  LT    +0.018  ord  +0.000
+  2025: ST    +9.146  LT    -0.046  ord  +0.000
+  2026: ST    +2.459  LT    +0.000  ord  +0.000
+  gross positive realized gains: ST 59.00  LT 0.11; end carryforwards [0.0, 0.0]
+
+POST-HOC drivers (S1, BOXX deferred unless stated; liquidation-basis CAGR):
+  as registered                                  35.8%  mult  29.01
+  all realized gains taxed at the LT rate 18.8%     45.2%  mult  60.28   (character effect)
+  wash-sale rule switched off                      36.0%  mult  29.48   (wash effect)
+  S1 fed 35/15: same gains, all ST, but tax deferred to the end    46.9%  mult  68.75   (pay-annually effect)
+  S2 37+CA/20+CA: same gains, all ST, but tax deferred to the end    44.3%  mult  56.24   (pay-annually effect)
