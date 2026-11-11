@@ -1,0 +1,22 @@
+====================================================================================================
+followup_risk_exec (2026-11-11)
+====================================================================================================
+
+(a) two risk reducers
+  real  live         53.6% / 2.068 (ex 1.961) /  -18.3%  vol 21.9%  worst day  -7.4%  worst 5d  -14.4%  2022 -3.3%  2020 +66.5%  | lag1   46.2% / 1.835 (ex 1.729) /  -20.8%
+  real  2.0x cap     49.5% / 2.070 (ex 1.956) /  -16.5%  vol 20.4%  worst day  -7.0%  worst 5d  -13.1%  2022 -3.3%  2020 +65.7%  | lag1   42.9% / 1.839 (ex 1.725) /  -19.4%
+  real  VIXY 35%     53.1% / 2.055 (ex 1.948) /  -18.3%  vol 21.9%  worst day  -7.4%  worst 5d  -14.4%  2022 +2.2%  2020 +66.5%  | lag1   46.3% / 1.833 (ex 1.727) /  -20.9%
+  real  both         49.1% / 2.058 (ex 1.943) /  -16.5%  vol 20.4%  worst day  -7.0%  worst 5d  -13.1%  2022 +2.2%  2020 +65.7%  | lag1   43.0% / 1.836 (ex 1.722) /  -19.5%
+  proxy live         34.8% / 1.425 (ex 1.344) /  -22.1%  vol 22.8%  worst day  -9.1%  worst 5d  -15.4%  2022 -14.0%  2020 +69.9%  | lag1   29.7% / 1.254 (ex 1.173) /  -28.6%
+  proxy 2.0x cap     31.9% / 1.410 (ex 1.323) /  -22.1%  vol 21.2%  worst day  -8.3%  worst 5d  -14.1%  2022 -14.0%  2020 +69.0%  | lag1   27.5% / 1.252 (ex 1.165) /  -26.7%
+  share of real days above 2.0x exposure: 40%; mean exposure 1.19x -> 1.10x
+
+(b) slipped trades (random share of rebalance days executed one session late; 200 draws)
+  real  no slips:   53.6% / 2.068 /  -18.3% (engine   53.6% / 2.068 /  -18.3%)
+  real   5% of rebalances a day late: CAGR 53.2% (5-95: 51.8..54.7), Sharpe 2.056 (2.010..2.103), max DD median -18.3% worst -21.3%
+  real  10% of rebalances a day late: CAGR 52.9% (5-95: 50.9..54.6), Sharpe 2.045 (1.981..2.096), max DD median -18.3% worst -22.2%
+  real  25% of rebalances a day late: CAGR 51.5% (5-95: 48.7..54.3), Sharpe 2.004 (1.918..2.086), max DD median -18.6% worst -24.8%
+  proxy no slips:   34.8% / 1.425 /  -22.1% (engine   34.8% / 1.425 /  -22.1%)
+  proxy  5% of rebalances a day late: CAGR 34.6% (5-95: 33.8..35.3), Sharpe 1.417 (1.391..1.439), max DD median -22.1% worst -25.4%
+  proxy 10% of rebalances a day late: CAGR 34.3% (5-95: 33.3..35.2), Sharpe 1.408 (1.376..1.440), max DD median -22.3% worst -27.7%
+  proxy 25% of rebalances a day late: CAGR 33.7% (5-95: 32.2..35.0), Sharpe 1.389 (1.340..1.429), max DD median -23.7% worst -28.7%
