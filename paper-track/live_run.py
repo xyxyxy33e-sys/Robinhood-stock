@@ -174,19 +174,29 @@ def reading(dates, qqq, qqew, as_of, qqq_high=None):
                 raw_votes=S.extension_votes(eff, gaps), a_trim=a_trim)
 
 
+def _wgaps(r):
+    """gaps for the target: in macro D the gap200 is the gate's reading (max of the 15:50
+    price and the day's high, 2026-11-11), so the row agrees with r['d_gate']. Outside D the
+    gate does not act and every gap stays on the 15:50 price."""
+    g = r['gaps']
+    if r.get('state') == 'D' and r.get('gap200_gate') is not None and r['gap200_gate'] != g.get(200):
+        g = dict(g); g[200] = r['gap200_gate']
+    return g
+
+
 def weights5(r):
-    return S.live_target_weights(r['state'], r['micro'], r['vol'], r['fast'], r['gaps'],
+    return S.live_target_weights(r['state'], r['micro'], r['vol'], r['fast'], _wgaps(r),
                                  r['breadth_pct'], r['a_trim'], zone=_zone(r))
 
 
 def weights6(r, vx):
-    return S.live_target_weights_with_vixm(r['state'], r['micro'], r['vol'], r['fast'], r['gaps'],
+    return S.live_target_weights_with_vixm(r['state'], r['micro'], r['vol'], r['fast'], _wgaps(r),
                                            r['breadth_pct'], r['a_trim'], vx, zone=_zone(r))
 
 
 def weights7(r, vx):
     """The live weights from 2026-11-11 (deep-E QQQ leg), LEGS7 order."""
-    return S.live_target_weights7(r['state'], r['micro'], r['vol'], r['fast'], r['gaps'],
+    return S.live_target_weights7(r['state'], r['micro'], r['vol'], r['fast'], _wgaps(r),
                                   r['breadth_pct'], r['a_trim'], vx, zone=_zone(r), session=r['date'])
 
 
