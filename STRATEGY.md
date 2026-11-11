@@ -113,7 +113,9 @@ and D3 (3.0x) when the vol target has not already cut them (~40% of real days). 
 53.6% / 2.068 / −18.3% → 49.5% / 2.070 / −16.5%; proxy 34.8% / 1.425 / −22.1% → 31.9% / 1.410 / −22.1%;
 a −20% QQQ day costs at most −40% instead of up to −60%. Sharpe-neutral, ~3–4 pp CAGR a year: a risk
 choice (it missed the review's pre-registered 3 pp bootstrap-drawdown bar). Both together: 49.1% / 2.058 /
-−16.5% real (`review_2026_11/followup_risk_exec.py`).
+−16.5% real (`review_2026_11/followup_risk_exec.py`, VIXY closes to 11-04); re-run on 11-11 with VIXY closes
+extended to 11-10 (the 11-05 VIX spike, +30% VIXY, falls on a sleeve day): **50.4% / 2.080 / −16.5%**, vol 20.7%,
+against 53.6% / 2.068 / −18.3% before; this run feeds the published pages (`review_2026_11/page_series.py`).
 
 **State E → 100% BOXX (2026-09-19, owner decision):** the 50% XLU leg was
 dropped after the E pair/union study showed every feasible E row (all cash,
