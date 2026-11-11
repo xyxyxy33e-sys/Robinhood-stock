@@ -165,6 +165,7 @@ This is not a strategy review and changes nothing.
   - a regime change not traded in the same session is MATERIAL
   - drift above 5% not traded by the next session is MATERIAL
 - **Fills.** `fill_quality.summarize()` against the 4bp cost model.
+- **D gate on the day's high.** Run `python3 paper-track/l1_tracker.py` and copy its table into the report: the sessions where the gate opened on the day high (shut on the 15:50 price alone) and what QQQ did after 1, 5 and 20 sessions. Report it; change nothing.
 - **Report.**
   - Gap within about 1.5pp per month or 3pp cumulative, and nothing material: one paragraph.
   - Otherwise: find the dates, check the Routines' `last_run`, and report the cause. Change nothing.
