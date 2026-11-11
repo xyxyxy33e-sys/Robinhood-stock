@@ -126,9 +126,29 @@ def ensure_history(c, prev_session, notes):
                         f'and add it to data/live_closes.csv, then re-run')
 
 
+HIGHS = os.path.join(ROOT, 'data', 'qqq_highs.csv')
+
+
+def load_highs():
+    """QQQ intraday high up to each run (D gate on the high, 2026-11-11)."""
+    out = {}
+    if os.path.exists(HIGHS):
+        for row in csv.DictReader(open(HIGHS)):
+            out[row['date']] = float(row['high_to_run'])
+    return out
+
+
+def save_highs(h):
+    with open(HIGHS, 'w') as f:
+        f.write('date,high_to_run\n')
+        for d in sorted(h):
+            f.write(f'{d},{h[d]:.4f}\n')
+
+
 # ------------------------------------------------------------------ readings
-def reading(dates, qqq, qqew, as_of):
-    """Every step-1 input for one session, from the given closes series."""
+def reading(dates, qqq, qqew, as_of, qqq_high=None):
+    """Every step-1 input for one session, from the given closes series.
+    qqq_high: QQQ intraday high up to the run (D gate on the high, 2026-11-11)."""
     i = dates.index(as_of)
     state = S.compute_states(dates, qqq)[i]
     fast = S.compute_fast_states(dates, qqq)[as_of]
@@ -141,13 +161,15 @@ def reading(dates, qqq, qqew, as_of):
         raise Guard(f'breadth pct is None for {as_of}: too little QQEW history')
     a_trim = S.a_trim_state(dates, qqq, as_of=as_of)
     eff = S.effective_state(state, fast)
-    gate = S.d_gate_active(state, br['pct'], gaps[200])
+    g200 = S.gate_gap200(gaps[200], qqq[as_of], qqq_high, as_of)
+    gate = S.d_gate_active(state, br['pct'], g200)
     zone = S.d_zone_series(dates[:i + 1], qqq)[as_of] if eff == 'D' and not gate else None
     return dict(date=as_of, state=state, fast=fast, eff=eff, gaps=gaps, micro=micro, vol=vol,
                 d_zone=zone,                                      # buffered (2026-10-29)
                 d_zone_plain=S.d_zone(gaps) if eff == 'D' and not gate else None,
                 mult=S.vol_target_multiplier(vol), breadth_pct=br['pct'], x60=br['x60'],
-                d_flags=S.d_gate_flags(br['pct'], gaps[200]),
+                d_flags=S.d_gate_flags(br['pct'], g200),
+                qqq_high=qqq_high, gap200_gate=g200,
                 d_gate=gate,
                 raw_votes=S.extension_votes(eff, gaps), a_trim=a_trim)
 
@@ -326,9 +348,16 @@ def cmd_signal(inp, write=True):
     qqq[today], qqew[today] = float(q['QQQ']['last']), float(q['QQEW']['last'])
     dates = sorted(qqq)
 
-    r = reading(dates, qqq, qqew, today)
+    hi = load_highs()
+    if inp.get('qqq_high') is not None:
+        hi[today] = max(float(inp['qqq_high']), qqq[today])
+        if write:
+            save_highs(hi)
+    elif today >= S.DGATE_HIGH_FROM_SESSION and S.DGATE_HIGH_ENABLED:
+        notes.append('qqq_high missing from the input: D gate read on the 15:50 price only')
+    r = reading(dates, qqq, qqew, today, qqq_high=hi.get(today))
     rp = reading(dates[:-1], {d: v for d, v in qqq.items() if d != today},
-                 {d: v for d, v in qqew.items() if d != today}, prev)
+                 {d: v for d, v in qqew.items() if d != today}, prev, qqq_high=hi.get(prev))
     vx, vx_prev, vnote = vixm_pair(dates, qqq, today, prev, float(inp['vix']), notes)
 
     # account
@@ -484,7 +513,10 @@ def cmd_signal(inp, write=True):
           f"{r['raw_votes']} held {r['a_trim']['held']} (prev {rp['a_trim']['held']}); A spell from "
           f"{r['a_trim']['spell_start']}, base {r['a_trim']['base']}")
     bf, gf = r['d_flags']
-    print(f"breadth pct {r['breadth_pct']:.2f}, 200d gap {g[200]*100:+.1f}%, D gate "
+    hg = r.get('gap200_gate')
+    hs = (f" (gate reads {hg*100:+.2f}% on the day high ${r['qqq_high']:.2f})"
+          if r.get('qqq_high') is not None and hg is not None and hg > g[200] else '')
+    print(f"breadth pct {r['breadth_pct']:.2f}, 200d gap {g[200]*100:+.1f}%{hs}, D gate "
           f"{'ON (' + ('both' if bf and gf else 'breadth' if bf else 'gap200') + ')' if r['d_gate'] else 'off'}"
           f"{'' if r['state'] == 'D' else ' (informational outside D)'}")
     if r['eff'] == 'D':

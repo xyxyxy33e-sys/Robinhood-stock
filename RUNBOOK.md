@@ -34,10 +34,14 @@ Account `576391551` only. Everything below is US/Eastern.
 
 ## 1. Trade run — 15:50, Mon–Fri
 
-1.1 **Fetch** (three calls, nothing else):
+1.1 **Fetch** (four calls, nothing else):
 - `get_equity_quotes` for `QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY` (the volatility sleeve trades VIXY from 2026-11-11; VIXM before)
 - `get_index_quotes` for VIX, id `3b912aa2-88f9-4682-8ae3-e39520bdf4db`
 - `get_equity_positions` and `get_portfolio` for `576391551`
+- `get_equity_historicals` for `["QQQ"]`, interval `30minute`, start_time `<today>T14:30:00Z` (regular session):
+  `qqq_high` = the largest `high_price` across today's bars (the D gate reads the day's high from
+  2026-11-11, owner decision "Embed L1"). If the call fails, omit `qqq_high`: the run falls back to the
+  15:50 price and notes it.
 
 1.2 **Write** `data/runs/in/<today>.json`:
 ```json
@@ -46,6 +50,7 @@ Account `576391551` only. Everything below is US/Eastern.
                       "close": <close.price>, "close_date": "<close.date>",
                       "last_trade_date": "<date of venue_last_trade_time, ET>"}, "...": "all 8"},
  "vix": <VIX value>,
+ "qqq_high": <QQQ intraday high so far, from the historicals call>,
  "positions": {"<SYM>": <quantity>},
  "idle_cash": <portfolio cash>, "total_value": <portfolio total_value>}
 ```

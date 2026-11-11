@@ -1,0 +1,143 @@
+Baseline check (target real 53.1%/2.053/-18.3%; proxy 34.4%/1.411/-22.1%)
+REAL
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0                                  53.1%   2.053  -18.3%   51.0  2.22  1.92  
+PROXY
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0                                  34.4%   1.411  -22.1%   46.3  1.08  1.84  
+
+=== TEST 1: SCALE-IN GATE (partial weight between lo and hi above 200d; full-cash below lo; breadth gate unchanged)
+REAL
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0                                  53.1%   2.053  -18.3%   51.0  2.22  1.92  
+50% in 2-3%                         50.7%   2.001  -18.3%   51.6  2.14  1.89  18 sess / 15 spells
+50% in 1.5-2.5%                     52.4%   2.033  -21.0%   51.7  2.24  1.87  18 sess / 17 spells
+50% in 2-4%                         49.2%   1.988  -16.8%   51.7  2.07  1.92  58 sess / 33 spells
+ramp 2->4%                          49.1%   1.977  -16.9%   52.9  2.08  1.90  58 sess / 33 spells
+ramp 2->3%                          51.8%   2.029  -18.3%   51.7  2.18  1.91  18 sess / 15 spells
+PROXY
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0                                  34.4%   1.411  -22.1%   46.3  1.08  1.84  
+50% in 2-3%                         31.7%   1.347  -22.1%   47.1  1.00  1.79  74 sess / 54 spells
+50% in 1.5-2.5%                     33.4%   1.386  -23.6%   47.2  1.05  1.82  60 sess / 45 spells
+50% in 2-4%                         30.7%   1.333  -24.2%   47.9  0.99  1.77  176 sess / 93 spells
+ramp 2->4%                          30.0%   1.305  -27.1%   49.7  0.94  1.76  176 sess / 93 spells
+ramp 2->3%                          32.1%   1.357  -22.1%   47.6  1.00  1.82  74 sess / 54 spells
+
+=== TEST 2: GENTLER FIRST LEG (TQQQ in D row replaced for first N ungated sessions after a gate clear, D spell that began from effective E/F)
+REAL
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0                                  53.1%   2.053  -18.3%   51.0  2.22  1.92  
+50/50 TQQQ/QLD N=5                  53.2%   2.055  -18.3%   51.0  2.22  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (7, 2, 2)
+50/50 TQQQ/QLD N=10                 53.2%   2.055  -18.3%   51.0  2.22  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (9, 2, 2)
+50/50 TQQQ/QLD N=20                 53.2%   2.055  -18.3%   51.0  2.22  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (9, 2, 2)
+50/50 TQQQ/QLD N=100d               53.2%   2.055  -18.3%   51.0  2.22  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (2, 2, 1)
+100% QLD N=5                        53.2%   2.056  -18.3%   51.0  2.23  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (7, 2, 2)
+100% QLD N=10                       53.2%   2.056  -18.3%   51.0  2.23  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (9, 2, 2)
+100% QLD N=20                       53.2%   2.056  -18.3%   51.0  2.23  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (9, 2, 2)
+100% QLD N=100d                     53.2%   2.056  -18.3%   51.0  2.23  1.92  2 sess / 1 spells  | flagged sess/with-TQQQ-in-row/spells (2, 2, 1)
+PROXY
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0                                  34.4%   1.411  -22.1%   46.3  1.08  1.84  
+50/50 TQQQ/QLD N=5                  34.4%   1.411  -22.1%   46.3  1.08  1.84  5 sess / 3 spells  | flagged sess/with-TQQQ-in-row/spells (14, 5, 5)
+50/50 TQQQ/QLD N=10                 34.4%   1.411  -22.1%   46.3  1.08  1.84  5 sess / 3 spells  | flagged sess/with-TQQQ-in-row/spells (16, 5, 5)
+50/50 TQQQ/QLD N=20                 34.4%   1.411  -22.1%   46.3  1.08  1.84  5 sess / 3 spells  | flagged sess/with-TQQQ-in-row/spells (16, 5, 5)
+50/50 TQQQ/QLD N=100d               34.3%   1.411  -22.1%   46.3  1.08  1.84  4 sess / 2 spells  | flagged sess/with-TQQQ-in-row/spells (4, 4, 2)
+100% QLD N=5                        34.3%   1.411  -22.1%   46.3  1.08  1.84  5 sess / 3 spells  | flagged sess/with-TQQQ-in-row/spells (14, 5, 5)
+100% QLD N=10                       34.3%   1.411  -22.1%   46.3  1.08  1.84  5 sess / 3 spells  | flagged sess/with-TQQQ-in-row/spells (16, 5, 5)
+100% QLD N=20                       34.3%   1.411  -22.1%   46.3  1.08  1.84  5 sess / 3 spells  | flagged sess/with-TQQQ-in-row/spells (16, 5, 5)
+100% QLD N=100d                     34.3%   1.410  -22.1%   46.3  1.08  1.84  4 sess / 2 spells  | flagged sess/with-TQQQ-in-row/spells (4, 4, 2)
+
+=== TEST 3: V1 enter-on-high with realistic fills (fill F; extra = row*lev*(close/F-1); +2 one-way trades on a false close)
+REAL
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0 close (no V1)                    53.1%   2.053  -18.3%   51.0  2.22  1.92  
+V1 fill at line (hl_test)           54.5%   2.083  -19.2%   51.9  2.23  1.96  15 triggers, 5 close back under line
+V1 line+5bp                         54.3%   2.077  -19.3%   51.9  2.23  1.95  15 triggers, 5 close back under line
+V1 line+10bp                        54.1%   2.070  -19.4%   51.9  2.23  1.95  15 triggers, 5 close back under line
+V1 line+20bp                        53.6%   2.058  -19.6%   51.9  2.22  1.93  15 triggers, 5 close back under line
+V1 15min: max(o,l)*(1+.25(h/l-1))   53.3%   2.050  -19.6%   51.9  2.21  1.92  15 triggers, 5 close back under line
+V1 line+10bp capped at high         54.1%   2.070  -19.4%   51.9  2.23  1.95  15 triggers, 5 close back under line
+PROXY
+variant                              CAGR  Sharpe   maxDD  tr/yr Sh h1 Sh h2  sessions/spells changed vs V0
+V0 close (no V1)                    34.4%   1.411  -22.1%   46.3  1.08  1.84  
+V1 fill at line (hl_test)           35.0%   1.425  -22.1%   47.5  1.08  1.87  43 triggers, 15 close back under line
+V1 line+5bp                         34.8%   1.417  -22.6%   47.5  1.07  1.86  43 triggers, 15 close back under line
+V1 line+10bp                        34.5%   1.409  -23.6%   47.5  1.06  1.86  43 triggers, 15 close back under line
+V1 line+20bp                        34.0%   1.392  -25.7%   47.5  1.04  1.85  43 triggers, 15 close back under line
+V1 15min: max(o,l)*(1+.25(h/l-1))   33.9%   1.391  -25.1%   47.5  1.05  1.84  43 triggers, 15 close back under line
+V1 line+10bp capped at high         34.5%   1.409  -23.6%   47.5  1.06  1.86  43 triggers, 15 close back under line
+
+=== TEST 4: GATE NEIGHBOURS (gate line x breadth floor)
+REAL CAGR %: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   51.0   51.0   49.3
+   1.5%   51.8   51.9   50.1
+   2.0%   53.1   53.1   51.4   <- live row
+   2.5%   52.5   52.5   51.3
+   3.0%   47.9   48.0   47.2
+REAL Sharpe: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%  1.928  1.947  1.906
+   1.5%  1.958  1.977  1.936
+   2.0%  2.032  2.053  2.012   <- live row
+   2.5%  2.021  2.042  2.014
+   3.0%  1.901  1.921  1.904
+REAL maxDD %: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%  -29.4  -29.4  -29.4
+   1.5%  -29.4  -29.4  -29.4
+   2.0%  -18.3  -18.3  -20.6   <- live row
+   2.5%  -19.3  -18.3  -20.6
+   3.0%  -19.3  -18.3  -20.6
+REAL trades/yr: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   51.5   51.4   51.1
+   1.5%   51.3   51.2   50.9
+   2.0%   51.1   51.0   50.7   <- live row
+   2.5%   50.8   50.7   50.4
+   3.0%   50.8   50.7   50.4
+REAL Sharpe half1: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   2.26   2.17   2.20
+   1.5%   2.35   2.25   2.28
+   2.0%   2.31   2.22   2.25   <- live row
+   2.5%   2.31   2.21   2.24
+   3.0%   2.13   2.03   2.08
+REAL Sharpe half2: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   1.66   1.77   1.68
+   1.5%   1.65   1.76   1.66
+   2.0%   1.80   1.92   1.82   <- live row
+   2.5%   1.79   1.91   1.84
+   3.0%   1.71   1.83   1.76
+PROXY CAGR %: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   34.2   34.6   33.6
+   1.5%   34.2   34.3   33.4
+   2.0%   34.2   34.4   33.4   <- live row
+   2.5%   32.4   32.4   31.6
+   3.0%   28.7   28.9   28.2
+PROXY Sharpe: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%  1.370  1.393  1.370
+   1.5%  1.377  1.392  1.368
+   2.0%  1.396  1.411  1.387   <- live row
+   2.5%  1.350  1.359  1.339
+   3.0%  1.245  1.259  1.242
+PROXY maxDD %: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%  -30.6  -30.6  -30.6
+   1.5%  -30.6  -30.6  -30.6
+   2.0%  -22.1  -22.1  -22.1   <- live row
+   2.5%  -22.2  -22.2  -23.0
+   3.0%  -30.6  -30.6  -31.2
+PROXY trades/yr: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   46.9   46.7   46.3
+   1.5%   46.6   46.4   46.1
+   2.0%   46.5   46.3   45.9   <- live row
+   2.5%   46.0   45.8   45.4
+   3.0%   45.5   45.4   45.0
+PROXY Sharpe half1: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   1.09   1.12   1.12
+   1.5%   1.08   1.09   1.09
+   2.0%   1.06   1.08   1.08   <- live row
+   2.5%   0.98   0.99   0.98
+   3.0%   0.87   0.89   0.88
+PROXY Sharpe half2: rows=line, cols=breadth floor [0.15, 0.2, 0.25]
+   1.0%   1.73   1.74   1.69
+   1.5%   1.76   1.77   1.73
+   2.0%   1.83   1.84   1.79   <- live row
+   2.5%   1.82   1.83   1.80
+   3.0%   1.71   1.73   1.70

@@ -1287,6 +1287,33 @@ def d_gate_flags(breadth_pct, gap200):
     return b, g
 
 
+# D GATE ON THE DAY'S HIGH ("L1") -- APPLIED 2026-11-11, owner decision ("Embed L1",
+# live from the 11 Nov 15:50 run). The gap200 half of the gate reads the better of the
+# 15:50 price and QQQ's intraday HIGH up to the run (regular session, from
+# get_equity_historicals), each against the same 200-day SMA (which includes the 15:50
+# price, as before): the gap flag clears when the day's high has been 2% above the
+# 200-day, even if the 15:50 price is back under it. The trade still fills at 15:50.
+# Breadth half, ladder zone and every other rule unchanged. Research (daily H/L,
+# fill at the close; research_notes/deep_e_2026_11 gx4 notes): real 53.1% / 2.053 /
+# -18.3% -> 56.0% / 2.109 / -18.3%, proxy 34.4% / 1.411 / -22.1% -> 37.1% / 1.485 /
+# -22.9%; 12 extra entries on real (2015-), 33 on proxy. CAVEATS: the daily high in the
+# research includes 15:50-16:00 (a look-ahead the live run does not have; a crude cut
+# kept ~80% of the gain with maxDD -20.4% / -24.5%), the sample is small, and it was
+# the best of several variants tested on the same data. Rollback: DGATE_HIGH_ENABLED = False.
+DGATE_HIGH_ENABLED = True
+DGATE_HIGH_FROM_SESSION = '2026-11-11'
+
+
+def gate_gap200(gap200, close, high, session):
+    """gap200 used by the D gate: max(close gap, intraday-high gap) from
+    DGATE_HIGH_FROM_SESSION; the plain close gap before it, or with no high."""
+    if (not DGATE_HIGH_ENABLED or high is None or gap200 is None or close is None
+            or session < DGATE_HIGH_FROM_SESSION):
+        return gap200
+    sma = close / (1.0 + gap200)
+    return max(gap200, float(high) / sma - 1.0)
+
+
 def d_gate_active(state, breadth_pct, gap200):
     """True when the D row must be held as 100% cash. A change in THIS value
     is a regime change for needs_rebalance() (it moves the whole row)."""
