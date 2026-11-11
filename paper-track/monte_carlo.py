@@ -294,6 +294,10 @@ def target_weights(sig, cfg=LIVE):
     vt = cfg.get('vol_target', S.VOL_TARGET_PA)
     mult = np.where(np.isnan(v) | (v <= 0), 1.0, np.minimum(1.0, vt / np.where(v > 0, v, 1)))
     w[..., :4] *= mult[..., None]
+    gc = cfg.get('gross_cap')                  # live from 2026-11-11 (state.GROSS_CAP); None = no cap
+    if gc:
+        gross = (w[..., :4] * np.array(S.GROSS_EXPOSURE)).sum(-1)
+        w[..., :4] *= np.where(gross > gc, gc / np.maximum(gross, 1e-12), 1.0)[..., None]
     w[..., 4] = 1.0 - w[..., :4].sum(-1)
     return w
 

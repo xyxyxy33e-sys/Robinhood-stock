@@ -9,7 +9,7 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 # Part I — Live design
 
-## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E and VIX-panic QQQ legs and B 50% SPMO / 50% cash 2026-11-11)
+## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E and VIX-panic QQQ legs and B 50% SPMO / 50% cash 2026-11-11; gross cap 2.0x and VIXY sleeve 2026-11-11)
 
 **Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
@@ -101,7 +101,19 @@ A latch turns ON when VIX closes below 18 and OFF when VIX closes above VIX3M
 **75% of the cash leg is held as VIXM** instead of BOXX; VIXM is sold early
 when VIX falls 25% below its high since entry. `live_target_weights_with_vixm`
 (6 legs: core, tqqq, qld, xlu, vixm, cash) is the live call; section "VIXM
-sleeve in the cash leg" below.
+sleeve in the cash leg" below. **From 2026-11-11 the sleeve trades VIXY at 35% of the cash leg**
+(owner: "add the 2.0x cap and VIXY swap"; `VIXM_INSTRUMENT = 'VIXY'`, `VIXM_CASH_SHARE = 0.35`): same latch,
+stress, fade and D2-off timing; VIXY moves ~2x VIXM, so 35% carries about the same hedge with half the
+NAV share and ~100x the volume. Real 2015-11..2026-11: 53.6% / 2.068 / −18.3% → 53.1% / 2.055 / −18.3%.
+
+**Gross exposure cap 2.0x (APPLIED 2026-11-11, owner decision):** after the vol target, any target
+above 2.0x exposure (SPMO 1x, TQQQ 3x, QLD 2x per $) is scaled down to 2.0x and the rest goes to cash
+(`GROSS_CAP`, `apply_gross_cap`; the engine's `cfg['gross_cap']`). It binds in A 40/60 (2.2x), D2 (2.5x)
+and D3 (3.0x) when the vol target has not already cut them (~40% of real days). Real 2015-11..2026-11
+53.6% / 2.068 / −18.3% → 49.5% / 2.070 / −16.5%; proxy 34.8% / 1.425 / −22.1% → 31.9% / 1.410 / −22.1%;
+a −20% QQQ day costs at most −40% instead of up to −60%. Sharpe-neutral, ~3–4 pp CAGR a year: a risk
+choice (it missed the review's pre-registered 3 pp bootstrap-drawdown bar). Both together: 49.1% / 2.058 /
+−16.5% real (`review_2026_11/followup_risk_exec.py`).
 
 **State E → 100% BOXX (2026-09-19, owner decision):** the 50% XLU leg was
 dropped after the E pair/union study showed every feasible E row (all cash,
@@ -210,6 +222,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-11 | **Gross cap 2.0x** (`GROSS_CAP`, `apply_gross_cap`, passed by `live_target_weights`; engine `cfg['gross_cap']`) and **volatility sleeve VIXM 75% → VIXY 35% of the cash leg** (`VIXM_INSTRUMENT`, `VIXM_CASH_SHARE`; the leg keeps its internal name `vixm`; `live_run`/`cash_sweep`/`deposit_plan` use the ticker; `live_closes.csv` keeps the VIXM column and adds VIXY); book 100% BOXX on the day, no trade | **owner decision** ("add the 2.0x cap and VIXY swap") after the independent review; real 53.6% / 2.068 / −18.3% → cap 49.5% / 2.070 / −16.5%, VIXY 53.1% / 2.055 / −18.3%, both 49.1% / 2.058 / −16.5%; proxy cap 31.9% / 1.410 / −22.1%; `review_2026_11/` |
 | 2026-11-11 | **B row 75% SPMO / 25% TQQQ → 50% SPMO / 50% BOXX** (`TARGET_WEIGHTS['B']`, `monte_carlo.LIVE`) | **owner decision** ("change b", 2026-11-10); on the design with deep-E and VIX-panic: real 52.7% / 2.039 / −18.3% → 53.2% / 2.054 / −18.3%, proxy 33.8% / 1.384 / −23.6% → 34.4% / 1.412 / −22.1%; monotone toward cash on both panels, holds ex-2020 and one session late; thin — the B row binds on 0.7% of real sessions (3 spells), 1.2% proxy (15) (`research_notes/deep_e_2026_11/bx_test.log`) |
 | 2026-11-11 | **VIX-panic QQQ leg**: a latch ON at a VIX close >= 30, OFF below 25; while ON 25% of the cash leg is QQQ, in any state, after VIXM and deep-E (shared QQQ slot, 75% cap); a flip is a regime trigger (`VIX_PANIC_*`, `vix_panic_series`, `vixm_state()['panic']`) | **owner decision** ("QQQ with 25% of the cash leg when VIX >= 30", 2026-11-10); on top of deep-E: real 50.35% / 2.021 / −18.3% → 52.03% / 2.022 / −18.3%, proxy 32.38% / 1.372 / −22.1% → 33.76% / 1.384 / −23.6%; ex-2020 +1.14 / +1.19; lag +1.72 / +1.37; bootstrap not significant (risk scales with return); buys spikes down a bear (`research_notes/deep_e_2026_11/bp_test.log`) |
 | 2026-11-11 | **Deep-E QQQ leg**: on an effective-E day with QQQ at least 5% under its 200-day, 50% of the cash leg (BOXX + VIXM) is held in QQQ, after the VIXM sleeve takes its share; off when either condition ends; a flip is a regime trigger (`DEEP_E_*`, `deep_e_active`, `apply_deep_e`, `live_target_weights7`, 7-leg `live_run.LEGS7`) | **owner decision** ("50%", instrument QQQ, 2026-11-10); real 2015-11..2026-11 46.6% / 1.928 / −18.3% → 50.4% / 2.021 / −18.3%, proxy 2001–2026 30.5% / 1.314 / −24.3% → 32.4% / 1.372 / −22.1%; ex-2020 +1.75 real / +1.13 proxy; random-E placebos P 0.000; ~54% of the real gain is 2020; E days 2–5% under the 200-day lose; one session of lag → +1.5 real (`research_notes/deep_e_2026_11/`) |

@@ -20,12 +20,12 @@ signal input (all numbers straight from the MCP tools; see RUNBOOK.md):
    "time": "15:51",                           # ET wall clock of the snapshot
    "quotes": {SYM: {"last": x, "bid": x, "ask": x,
                     "close": x, "close_date": "YYYY-MM-DD",   # official prior close
-                    "last_trade_date": "YYYY-MM-DD"}}         # for QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXM
+                    "last_trade_date": "YYYY-MM-DD"}}         # for QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY (VIXM until 2026-11-10)
    "vix": x,                                  # get_index_quotes VIX value
    "positions": {SYM: qty},                   # get_equity_positions quantity (0s may be omitted)
    "idle_cash": x, "total_value": x}          # get_portfolio cash / total_value
 record input:
-  {"date": ..., "closes": {SYM: last_trade_price after 16:00, for the 8 symbols},
+  {"date": ..., "closes": {SYM: last_trade_price after 16:00, for the 8 symbols (VIXY, not VIXM, from 2026-11-11)},
    "fills": [{"symbol":, "side": "buy"|"sell", "quantity":, "price":}], "session_lag": 0,
    "total_value": x}
 """
@@ -54,10 +54,11 @@ ROOT = os.path.dirname(HERE)
 CLOSES_CSV = os.path.join(ROOT, 'data', 'live_closes.csv')
 RUNS_DIR = os.path.join(ROOT, 'data', 'runs')
 LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')     # == state.LIVE_LEGS order (run files to 2026-11-10)
-LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')   # == state.LIVE_LEGS7 order (deep-E QQQ, 2026-11-11)
+LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', S.VIXM_INSTRUMENT, 'QQQ', 'BOXX')   # == state.LIVE_LEGS7 order; the sleeve's ticker is state.VIXM_INSTRUMENT (VIXY from 2026-11-11)
 LEGS = LEGS7                                               # the live legs
 LEGS5 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')             # shadow tracks / old NAV
 SYMS = ('QQQ', 'QQEW') + tuple(l for l in LEGS if l not in ('QQQ', 'QQEW'))
+SYMS = SYMS + tuple(l for l in ('VIXM',) if l not in SYMS)       # keep the VIXM closes column (sleeve until 2026-11-10)
 # Funding-policy triggers (drawdown tiers, D/E/F -> A/B/C turn) and their margin draws:
 # OFF from 2026-10-19 (owner: "remove the funding trigger"). The drawdown log still
 # records the tiers (drawdown_tracker); nothing is pushed and nothing is borrowed.
@@ -529,6 +530,8 @@ def cmd_signal(inp, write=True):
                 print(f"  SELL {o['symbol']:5} {o['quantity']} sh  MARKET (regular hours) -- {o['note']}")
         if any(o['symbol'] == 'VIXM' for o in orders):
             print("  VIXM: regular hours ONLY (no extended-hours trading); it must fill now or wait for the next open.")
+        if any(o['symbol'] == S.VIXM_INSTRUMENT for o in orders) and S.VIXM_INSTRUMENT != 'VIXM':
+            print(f"  {S.VIXM_INSTRUMENT}: the volatility sleeve (35% of the cash leg); fill it in the same window as the rest.")
     else:
         print(f"\nDECISION: NO TRADE ({why})")
         if sweep:

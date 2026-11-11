@@ -35,7 +35,7 @@ Account `576391551` only. Everything below is US/Eastern.
 ## 1. Trade run — 15:50, Mon–Fri
 
 1.1 **Fetch** (three calls, nothing else):
-- `get_equity_quotes` for `QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXM`
+- `get_equity_quotes` for `QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY` (the volatility sleeve trades VIXY from 2026-11-11; VIXM before)
 - `get_index_quotes` for VIX, id `3b912aa2-88f9-4682-8ae3-e39520bdf4db`
 - `get_equity_positions` and `get_portfolio` for `576391551`
 
@@ -59,7 +59,8 @@ the orders. It also writes `data/runs/<today>.json`, which every later step read
 - `MARKET dollar-based` and `MARKET` stub lines are regular-hours market orders.
 - If a buy exceeds buying power, wait for the sells to fill.
 - Target 15:54–15:57; never place after 15:59.
-- **VIXM trades in regular hours only.** If it cannot fill now, it waits for the next open; report that.
+- **The VIXY sleeve fills in this window like every other leg** (one session of lag erases most of its value). If it cannot fill, report it.
+- **Gross cap 2.0x (2026-11-11):** `live_run.py` already applies it; trade the printed orders as they are.
 
 **If `NO TRADE`** and an idle-cash sweep is printed, place those dollar-based buys. Otherwise do nothing.
 
@@ -79,13 +80,13 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - **No run file, or a non-guard failure:** that is the FALLBACK. Refetch per 1.1 and run
   `live_run.py signal` on it; it computes on the close. Then place the orders.
   - After 16:00, extended hours: WHOLE-SHARE limit orders only, `market_hours='extended_hours'`, at most 0.3% through the touch.
-  - Fractional stubs and every VIXM line wait for the next regular session. List them in the push.
+  - Fractional stubs (and any VIXM line, legacy) wait for the next regular session. List them in the push.
   - Lose the overnight, never the signal.
 - **Guard tripped in the trade run:** do not override it. It leads the push.
 
 2.3 **Record.** Write `data/runs/in/<today>-record.json`:
 ```json
-{"date": "<today>", "closes": {"<SYM>": <last_trade_price now, for all 8>},
+{"date": "<today>", "closes": {"<SYM>": <last_trade_price now, for all 8: QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY>},
  "fills": [{"symbol": "...", "side": "buy|sell", "quantity": <cumulative_quantity>, "price": <average_price>}],
  "session_lag": 0, "total_value": <get_portfolio total_value>}
 ```
@@ -119,7 +120,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
 - **Realized column in the positions table** (added 2026-10-22, owner): on a day with any sell, refresh it from
   `get_pnl_trade_history(account_number='576391551', span='all')`: per-symbol sums of `realized_gain` for SPMO, QLD,
-  TQQQ, VIXM, QQQ (deep-E leg, from 2026-11-11), BOXX; the "closed earlier" row is everything else (gold, the 31 Aug stock mirror, pre-strategy trades);
+  TQQQ, VIXM (sleeve until 2026-11-10), VIXY (sleeve from 2026-11-11), QQQ (deep-E leg, from 2026-11-11), BOXX; the "closed earlier" row is everything else (gold, the 31 Aug stock mirror, pre-strategy trades);
   the total must equal `get_realized_pnl(span='all', asset_classes=['equity'])['total_returns']`. Sum in code, never
   by hand. Robinhood's figures are before wash-sale deferral; keep the note saying so.
 - **Cumulative return section** (added 2026-10-22, owner): `dashboard_figures.py` prints a `cumulative since ...` block.

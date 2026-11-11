@@ -37,8 +37,9 @@ MIN_ORDER = 1.0              # Robinhood's dollar-based order minimum
 UNEXPECTED_FRACTION = 0.20   # daily prompt 2a: ask the owner above this
 LEGS = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')
 LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')   # live_target_weights_with_vixm order (2026-10-08)
-LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')   # live_target_weights7 order (2026-11-11, deep-E QQQ)
-FIELDS = ['date', 'idle_cash', 'total_value', 'SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX', 'note', 'VIXM', 'QQQ']
+from state import VIXM_INSTRUMENT  # noqa: E402  the sleeve's ticker (VIXY from 2026-11-11)
+LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', VIXM_INSTRUMENT, 'QQQ', 'BOXX')   # live_target_weights7 order
+FIELDS = ['date', 'idle_cash', 'total_value', 'SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX', 'note', 'VIXM', 'QQQ', 'VIXY']
 
 
 def plan_sweep(weights, values, idle_cash, total_value, plan_active=False):

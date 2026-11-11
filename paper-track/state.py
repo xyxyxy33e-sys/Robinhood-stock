@@ -1419,8 +1419,34 @@ def d_ladder_row(gaps, zone=None):
     return (c, t, q, 0.0, 1.0 - c - t - q)
 
 
+# 2026-11-11, owner ("add the 2.0x cap and VIXY swap"): gross exposure cap. After the vol target,
+# a 5-leg target whose exposure (SPMO 1x + TQQQ 3x + QLD 2x + XLU 1x per $) exceeds GROSS_CAP is
+# scaled down to GROSS_CAP; the rest goes to the cash leg. Binds in A 40/60 (2.2x), D2 (2.5x) and
+# D3 (3.0x) when the vol target has not already cut them. Evidence (review_2026_11/
+# followup_risk_exec.py and review_tests_2568.py, 11 Nov design, 2 bp): real 2015-11..2026-11
+# 53.6% / 2.068 / -18.3% -> 49.5% / 2.070 / -16.5%; proxy 2001-2026 34.8% / 1.425 / -22.1% ->
+# 31.9% / 1.410 / -22.1%; bootstrap median 10-year max DD -21.4% -> -19.9% real, -25.2% -> -23.7%
+# proxy; a -20% QQQ day costs at most -40% instead of up to -60% (D3). Missed the pre-registered
+# 3 pp bootstrap bar (1.4-1.5 pp): an owner risk choice, Sharpe-neutral, ~3-4 pp CAGR a year.
+# The deep-E / VIX-panic QQQ legs come out of the cash leg after the cap (as tested).
+GROSS_CAP_ENABLED = True
+GROSS_CAP = 2.0
+GROSS_EXPOSURE = (1.0, 3.0, 2.0, 1.0)        # per $ of core, tqqq, qld, xlu
+
+
+def apply_gross_cap(w5, cap=GROSS_CAP):
+    """5-leg (core, tqqq, qld, xlu, cash) with exposure scaled down to `cap` when above it."""
+    core, tqqq, qld, xlu, cash = w5
+    gross = sum(w * m for w, m in zip((core, tqqq, qld, xlu), GROSS_EXPOSURE))
+    if cap is None or gross <= cap:
+        return w5
+    f = cap / gross
+    core, tqqq, qld, xlu = (x * f for x in (core, tqqq, qld, xlu))
+    return (core, tqqq, qld, xlu, 1.0 - core - tqqq - qld - xlu)
+
+
 def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap200=None, gaps=None,
-                                  d_gate=None, a_trim=None, d_ladder=None, d_zone=None):
+                                  d_gate=None, a_trim=None, d_ladder=None, d_zone=None, gross_cap=None):
     """THE LIVE WEIGHT FUNCTION as of 2026-09-01. target_weights_with_micro(),
     then scaled by the volatility-target multiplier.
 
@@ -1481,7 +1507,8 @@ def target_weights_with_voltarget(state, micro_agrees, vol, fast_state=None, gap
         core, tqqq, qld, xlu = (x * EXTENSION_SCALE for x in (core, tqqq, qld, xlu))
     mult = vol_target_multiplier(vol)
     risky = core + tqqq + qld + xlu
-    return (core * mult, tqqq * mult, qld * mult, xlu * mult, 1.0 - risky * mult)
+    w5 = (core * mult, tqqq * mult, qld * mult, xlu * mult, 1.0 - risky * mult)
+    return apply_gross_cap(w5, gross_cap) if gross_cap is not None else w5
 
 
 class MissingOverlayInputs(ValueError):
@@ -1568,7 +1595,8 @@ def live_target_weights(state, micro_agrees, vol, fast_state, gaps, breadth_pct,
             "zone is required on an ungated D day (zone buffer): pass d_zone_series(dates, px)[<date>]")
     return target_weights_with_voltarget(
         state, micro_agrees, vol, fast_state=fast_state, gaps=gaps, d_gate=gate, a_trim=a_trim,
-        d_ladder=D_LADDER_ENABLED, d_zone=zone if D_ZONE_BUFFER_ENABLED else None)
+        d_ladder=D_LADDER_ENABLED, d_zone=zone if D_ZONE_BUFFER_ENABLED else None,
+        gross_cap=GROSS_CAP if GROSS_CAP_ENABLED else None)
 
 STATE_LABEL = dict(
     A='established uptrend', B='reclaim', C='bounce in downtrend',
@@ -1702,11 +1730,19 @@ def circuit_breaker_check(actual_total_value, implied_total_value, tol=0.02):
 # (Sharpe 1.80, recent half 1.40 == live): the VIXM leg must trade in the
 # same 15:5x window as everything else, never "tomorrow".
 VIXM_OVERLAY_ENABLED = True
-VIXM_INSTRUMENT = 'VIXM'
+# 2026-11-11, owner ("add the 2.0x cap and VIXY swap"): the sleeve trades VIXY (1-month VIX futures,
+# ~2x VIXM's daily moves, ~100x its volume, extended-hours tradable) at 35% of the cash leg instead of
+# VIXM at 75%: the same latch / stress / fade / D2-off timing. Evidence (vixm_followups_2026_11/
+# vixy_test.py; review_2026_11/followup_risk_exec.py): real 2015-11..2026-11 53.6% / 2.068 / -18.3% ->
+# 53.1% / 2.055 / -18.3%, 2022 -3.3% -> +2.2%; the sleeve's NAV share drops from up to 75% to up to 35%,
+# and the 30 Oct VIXM buy (4-13% of its day's volume) becomes <1% of VIXY's. Research engines still
+# read data/vixm_daily.csv as the sleeve: use the VIXY file for studies of the live sleeve from here.
+# The 'vixm' leg name is kept internally (LIVE_LEGS); VIXM_INSTRUMENT is the ticker it trades.
+VIXM_INSTRUMENT = 'VIXY'
 VIXM_ENTRY_VIX = 18.0
 VIXM_EXIT_RATIO = 1.0
 VIXM_MIN_VOL = 0.20          # == VOL_TARGET_PA; frozen
-VIXM_CASH_SHARE = 0.75
+VIXM_CASH_SHARE = 0.35          # 2026-11-11: VIXY at 35% (was VIXM at 75%)
 VIXM_FADE = 0.25
 LIVE_LEGS = ('core', 'tqqq', 'qld', 'xlu', 'vixm', 'cash')
 

@@ -345,6 +345,12 @@ def check_strategy_md_matches_code():
     print("OK: STRATEGY.md Part I weight tables match state.py")
 
 
+def _capped(w5):
+    """The live 2.0x gross cap (state.apply_gross_cap) applied to an expected 5-leg target."""
+    import state
+    return state.apply_gross_cap(tuple(w5)) if state.GROSS_CAP_ENABLED else tuple(w5)
+
+
 def _at(eff, held=0, base=(0.50, 0.50)):
     """A minimal a_trim dict (extension trim v2) for unit checks."""
     if eff == 'A':
@@ -469,6 +475,7 @@ def check_d_ladder():
             m = vol_target_multiplier(vol)
             w = live_target_weights('D', False, vol, 'D', gp, 0.5, _at('D'), zone=name)
             want = (c * m, t * m, q * m, 0.0, 1.0 - (c + t + q) * m)
+            want = _capped(want)          # 2.0x gross cap from 2026-11-11
             assert all(abs(a - b) < 1e-12 for a, b in zip(w, want)), (name, vol, w, want)
             assert abs(sum(w) - 1.0) < 1e-12
         assert d_ladder_row(gp)[:3] == (c, t, q)
@@ -510,7 +517,7 @@ def check_d_ladder():
     assert a_base_for('2026-08-04', '2027-01-04') == (0.40, 0.60) and a_base_for('2026-11-09', '2026-11-09') == (0.40, 0.60)
     w = live_target_weights('A', False, 0.15, 'A', {100: 0.0, 150: 0.0, 200: 0.0}, 0.5,
                             _at('A', base=a_base_row('2026-10-12')))
-    assert w == (0.25, 0.75, 0.0, 0.0, 0.0), w
+    assert all(abs(x - y) < 1e-12 for x, y in zip(w, _capped((0.25, 0.75, 0.0, 0.0, 0.0)))), w   # 2.5x -> capped 2.0x
     print("OK: D ladder -- D1 above the 100d 50/0/50, D2 100-150d 0/50/50, D3 below the 150d 0/100/0 "
           "(SPMO/TQQQ/QLD), gate wins, vol-scaled, other states untouched; A at 25/75 from the 2026-10-09 session, "
           "40/60 from the 2026-10-22 session, 20/80 from the 2026-10-30 session, 40/60 from the 2026-11-06 session (running spell included)")
@@ -1108,7 +1115,8 @@ def check_vixm_overlay():
         [s[d]['allowed'] for d in days]
     assert s['f3']['faded'], "a 25% fade from the high must block VIXM"
     # --- the split
-    assert S.apply_vixm((0.25, 0, 0, 0, 0.75), dict(allowed=True, available=True)) == (0.25, 0, 0, 0, 0.5625, 0.1875)
+    assert S.VIXM_CASH_SHARE == 0.35 and S.VIXM_INSTRUMENT == 'VIXY', "owner 2026-11-11: VIXY at 35% of the cash leg"
+    assert all(abs(x - y) < 1e-12 for x, y in zip(S.apply_vixm((0.25, 0, 0, 0, 0.75), dict(allowed=True, available=True)), (0.25, 0, 0, 0, 0.2625, 0.4875)))
     assert S.apply_vixm((0.25, 0, 0, 0, 0.75), dict(allowed=False, available=True))[4] == 0.0
     assert S.apply_vixm((0.5, 0.5, 0, 0, 0.0), dict(allowed=True, available=True))[4] == 0.0, "no cash, no VIXM"
     assert S.apply_vixm((0, 0, 0, 0, 1.0), S.vixm_unavailable('test'))[4] == 0.0
@@ -1123,10 +1131,10 @@ def check_vixm_overlay():
             raise AssertionError(f"live_target_weights_with_vixm accepted vixm={bad!r}")
     on = dict(allowed=True, available=True)
     w6 = S.live_target_weights_with_vixm('E', False, 0.30, 'E', good, 0.5, _at('E'), on)
-    assert w6 == (0, 0, 0, 0, 0.75, 0.25), w6
+    assert all(abs(x - y) < 1e-12 for x, y in zip(w6, (0, 0, 0, 0, 0.35, 0.65))), w6
     w5 = S.live_target_weights('A', False, 0.30, 'A', good, 0.5, _at('A'))
     w6 = S.live_target_weights_with_vixm('A', False, 0.30, 'A', good, 0.5, _at('A'), on)
-    assert w6[:4] == w5[:4] and abs(w6[4] + w6[5] - w5[4]) < 1e-12 and abs(w6[4] - 0.75 * w5[4]) < 1e-12
+    assert w6[:4] == w5[:4] and abs(w6[4] + w6[5] - w5[4]) < 1e-12 and abs(w6[4] - S.VIXM_CASH_SHARE * w5[4]) < 1e-12
     S.validate_weights_live('A', *w6)
     # --- 2026-10-22 (owner): VIXM off in ungated D2 only; D1, D3 and a gated D day keep it
     assert S.VIXM_OFF_D_ZONES == ('D2',), "owner: VIXM off in D2 only"
@@ -1140,14 +1148,14 @@ def check_vixm_overlay():
         S.validate_weights_live('D', *w6)
     gated = dict(d2); gated[200] = 0.01
     w6 = S.live_target_weights_with_vixm('D', False, 0.30, 'D', gated, 0.5, _at('D'), on)
-    assert w6 == (0, 0, 0, 0, 0.75, 0.25), "a gated D2 day is all cash, and the sleeve stays on"
+    assert all(abs(x - y) < 1e-12 for x, y in zip(w6, (0, 0, 0, 0, 0.35, 0.65))), "a gated D2 day is all cash, and the sleeve stays on"
     assert not S.vixm_blocked('A', 'A', d2, 0.5) and S.vixm_blocked('D', 'D', d2, 0.5)
     try:
         S.validate_weights_live('E', 0, 0, 0, 0, 0.9, 0.1)
     except S.WeightSanityError:
         pass
     else:
-        raise AssertionError("validate_weights_live accepted VIXM above 75% of the cash leg")
+        raise AssertionError("validate_weights_live accepted the sleeve above its share of the cash leg")
     try:
         S.vixm_state(['2026-01-02'], {'2026-01-02': 1.0}, {}, {}, as_of='2026-01-02')
     except S.MissingOverlayInputs:
@@ -1164,7 +1172,7 @@ def check_vixm_overlay():
     o, _ = CS.plan_sweep((0, 0, 0, 0, 0.75, 0.25), dict(VIXM=74000.0, BOXX=25000.0), 1000.0, 100000.0)
     assert set(o) == {'VIXM'} and abs(o['VIXM'] - 1000.0) < 0.01, o
     print("OK: VIXM sleeve -- latch on VIX<18 / off on VIX>VIX3M, only with QQQ vol >= 20%, 25% fade blocks "
-          "until stress resets, 75% of cash, off in ungated D2 (2026-10-22), strict live entry point, 6-leg validator/rebalance/deposit/sweep paths")
+          "until stress resets, VIXY at 35% of cash (VIXM 75% until 2026-11-10), off in ungated D2 (2026-10-22), strict live entry point, 6-leg validator/rebalance/deposit/sweep paths")
 
 
 check_vixm_overlay()
@@ -1352,7 +1360,7 @@ def check_deep_e():
     assert w == (0, 0, 0, 0, 0.0, 0.5, 0.5), w
     S.validate_weights_live7('E', *w)
     w = S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), on, session='2026-11-11')
-    assert w == (0, 0, 0, 0, 0.75, 0.25, 0.0), "VIXM first, QQQ takes what VIXM leaves, up to 50%"
+    assert all(abs(x - y) < 1e-12 for x, y in zip(w, (0, 0, 0, 0, 0.35, 0.5, 0.15))), "sleeve first, QQQ takes up to 50% of what is left"
     S.validate_weights_live7('E', *w)
     w = S.live_target_weights7('E', False, 0.40, 'F', shallow, 0.5, _at('E'), off, session='2026-11-11')
     assert w == (0, 0, 0, 0, 0.0, 0.0, 1.0)
@@ -1368,10 +1376,11 @@ def check_deep_e():
         pass
     else:
         raise AssertionError("validate_weights_live7 accepted QQQ above 75% of the cash leg (deep-E 50% + VIX-panic 25%)")
-    assert L.LEGS == L.LEGS7 == ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'QQQ', 'BOXX')
+    assert L.LEGS == L.LEGS7 == ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXY', 'QQQ', 'BOXX')
+    assert 'VIXM' in L.SYMS, "keep the VIXM closes column (sleeve until 2026-11-10)"
     assert L.to7([0.1, 0.2, 0.3, 0.0, 0.25, 0.15]) == [0.1, 0.2, 0.3, 0.0, 0.25, 0.0, 0.15], "old 6-leg run files"
     t = DP.dollar_targets((0, 0, 0, 0, 0, 0.5, 0.5), 1000.0, 0.0)
-    assert t['QQQ'] == 500.0 and t['BOXX'] == 500.0 and t['VIXM'] == 0.0
+    assert t['QQQ'] == 500.0 and t['BOXX'] == 500.0 and t['VIXY'] == 0.0
     h = DP.held_weights(dict(QQQ=500.0, BOXX=400.0), 100.0, 1000.0, 0.0, with_vixm=True, with_qqq=True)
     assert h == (0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5)
     q = {s: dict(last=100.0, bid=99.9, ask=100.1) for s in L.LEGS7}
@@ -1406,7 +1415,7 @@ def check_vix_panic():
     S.validate_weights_live7('E', *w)
     both = dict(allowed=True, available=True, panic=True)
     w = S.live_target_weights7('E', False, 0.40, 'F', deep, 0.5, _at('E'), both, session='2026-11-11')
-    assert w == (0, 0, 0, 0, 0.75, 0.25, 0.0), "VIXM first, then deep-E; nothing left for panic"
+    assert all(abs(x - y) < 1e-12 for x, y in zip(w, (0, 0, 0, 0, 0.35, 0.65, 0.0))), "sleeve, then deep-E 50%, panic gets the 15% left"
     w = S.live_target_weights7('E', False, 0.40, 'F', shallow, 0.5, _at('E'), p_on, session='2026-11-10')
     assert w[5] == 0.0, "not before go-live"
     assert S.vix_panic_active(S.vixm_unavailable('x'), '2026-11-12') is False
@@ -1415,3 +1424,40 @@ def check_vix_panic():
 
 
 check_vix_panic()
+
+
+def check_gross_cap():
+    """2.0x gross exposure cap (owner 2026-11-11): after the vol target, a target above 2.0x
+    (SPMO 1x, TQQQ 3x, QLD 2x, XLU 1x) is scaled to 2.0x, the rest to cash; the engine's
+    cfg['gross_cap'] matches state.apply_gross_cap; research calls without it are uncapped."""
+    import state as S
+    import monte_carlo as MC
+    import numpy as np
+    assert S.GROSS_CAP_ENABLED and S.GROSS_CAP == 2.0 and S.GROSS_EXPOSURE == (1.0, 3.0, 2.0, 1.0)
+    for w5, want in (((0.4, 0.6, 0, 0, 0), 2.0), ((0, 1.0, 0, 0, 0), 2.0), ((0, 0.5, 0.5, 0, 0), 2.0),
+                     ((0.5, 0, 0.5, 0, 0), 1.5), ((0.5, 0, 0, 0, 0.5), 0.5), ((0, 0, 0, 0, 1.0), 0.0)):
+        c = S.apply_gross_cap(w5)
+        gross = sum(x * m for x, m in zip(c[:4], S.GROSS_EXPOSURE))
+        assert abs(gross - want) < 1e-12 and abs(sum(c) - 1.0) < 1e-12 and min(c) >= -1e-12, (w5, c)
+        if want < 2.0: assert c == w5, "below the cap nothing changes"
+    good = {100: 0.0, 150: 0.0, 200: 0.0}
+    w = S.live_target_weights('A', False, 0.10, 'A', good, 0.5, _at('A', base=(0.40, 0.60)))
+    assert all(abs(x - y) < 1e-12 for x, y in zip(w, (0.4 / 1.1 * 1.0, 0.6 / 1.1, 0, 0, 1 - 1.0 / 1.1))), w
+    unc = S.target_weights_with_voltarget('A', False, 0.10, fast_state='A', gaps=good, a_trim=_at('A', base=(0.40, 0.60)))
+    assert unc == (0.4, 0.6, 0.0, 0.0, 0.0), "research path (no gross_cap) stays uncapped"
+    w = S.live_target_weights('A', False, 0.30, 'A', good, 0.5, _at('A', base=(0.40, 0.60)))
+    assert sum(x * m for x, m in zip(w[:4], S.GROSS_EXPOSURE)) <= 2.0 + 1e-12   # vol target already below the cap
+    # engine == state on random 5-leg targets
+    rng = np.random.default_rng(1)
+    for _ in range(200):
+        a = rng.dirichlet(np.ones(5))
+        a[3] = 0.0; a /= a.sum()
+        w = a[None, None, :].copy(); gc = 2.0
+        gross = (w[..., :4] * np.array(S.GROSS_EXPOSURE)).sum(-1)
+        w[..., :4] *= np.where(gross > gc, gc / np.maximum(gross, 1e-12), 1.0)[..., None]; w[..., 4] = 1 - w[..., :4].sum(-1)
+        assert np.allclose(w[0, 0], S.apply_gross_cap(tuple(a))), (a, w)
+    print("OK: gross cap 2.0x -- live rows above 2.0x scaled to 2.0x (A 40/60, D2, D3), rest to cash; below the cap "
+          "unchanged; research path uncapped; engine formula == state.apply_gross_cap")
+
+
+check_gross_cap()
