@@ -255,7 +255,7 @@
  "pushes": [
   "Regime shift: macro E -> D (pullback in uptrend)"
  ],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-11-11",
   "time": "15:50 ET",
@@ -332,5 +332,48 @@
   },
   "idle_cash": 0.0,
   "total_value": 608236.95685086
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "BOXX",
+    "side": "sell",
+    "quantity": 3211.0,
+    "price": 118.985
+   },
+   {
+    "symbol": "BOXX",
+    "side": "sell",
+    "quantity": 0.86587,
+    "price": 118.9832
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "buy",
+    "quantity": 4298.0,
+    "price": 60.51
+   },
+   {
+    "symbol": "TQQQ",
+    "side": "buy",
+    "quantity": 0.572611,
+    "price": 60.5297
+   },
+   {
+    "symbol": "VIXY",
+    "side": "buy",
+    "quantity": 7156.0,
+    "price": 17.0
+   },
+   {
+    "symbol": "VIXY",
+    "side": "buy",
+    "quantity": 0.985299,
+    "price": 16.9999
+   }
+  ],
+  "nav_return": 8.404773911574459e-05,
+  "tier": null,
+  "session_lag": 0
  }
 }
