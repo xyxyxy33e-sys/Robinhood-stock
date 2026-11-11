@@ -118,6 +118,13 @@ Only after the orders are placed: one short line to the session ("traded / no tr
     basis that the next sale will release. Add the change since last Friday, and the 2027 projection range from
     `paper-track/research_notes/tax_2026_11/` until January, then the projection for the year in progress.
     Robinhood's numbers are before its own wash-sale adjustments; say so. Not tax advice.
+  - **December year-end wash check** (owner 2026-11-11; every Friday report from the first Friday of December
+    through the last Friday of January). List each loss sale in the prior 30 days that is still open to a wash
+    (symbol, date, shares, realized loss, the date its 30-day window closes) and say, for each, whether the
+    current target holds or would buy that symbol, so a re-buy would push the loss across the year boundary
+    (a December loss washed by a January buy lands in the next tax year). Flag any such loss above $5k at the
+    top of the entry. Report only: the run still trades exactly the printed orders; the owner decides whether
+    to ask for a substitute (research: `research_notes/tax_2026_11/`, December-only substitute rules rejected).
   - the shadow-track summary line and verdict
   - the standing limitations (STRATEGY.md "Known limitations")
 

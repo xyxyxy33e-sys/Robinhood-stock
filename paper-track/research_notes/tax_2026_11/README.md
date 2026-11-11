@@ -23,3 +23,10 @@ Proxy 2002-2025 (no VIX sleeve): total p10 $5k / median $174k / p90 $496k; net l
 Gains are almost all short-term (positions rarely live a year); by quarter roughly evenly spread
 (Q4 slightly heaviest). A deferred wash loss carried in the TQQQ basis lowers 2027 dollar for dollar
 when released. Path-dependent: a range, not a point estimate.
+
+## December-only substitutes: rejected (2026-11-11)
+Substitutes only for re-buys in Dec (D1), 1 Dec-30 Jan (D2), or D2 for losses over $5k (D3).
+After tax: BASE 29.7%, D1 29.9% (noise; its 2 Jan switch-back can push a loss across the year,
+$567k in 2025), D2 29.4%, D3 29.4%. BASE strands a loss across a year boundary in 4 of 11
+year-ends (median $0, max $62k in 2022). Replaced by a report-only December wash check in the
+weekly report (RUNBOOK 2.4). Log: `wash_dec.log`.
