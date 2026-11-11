@@ -1,0 +1,71 @@
+==============================================================================================================
+review_tests_2568 (2026-11-11): items 2, 5, 6, 8 of the independent review (pre-registered)
+==============================================================================================================
+
+ITEM 2 -- restated expectations
+  real 2015-11..   lag0   53.6% / 2.068 (ex 1.961) /  -18.3%   lag1   46.2% / 1.835 (ex 1.729) /  -20.8%
+  proxy 2001..     lag0   34.8% / 1.425 (ex 1.344) /  -22.1%   lag1   29.7% / 1.254 (ex 1.173) /  -28.6%
+  holdout 2001-15  lag0   24.7% / 1.096 (ex 1.030) /  -22.1%   lag1   20.7% / 0.951 (ex 0.885) /  -27.2%
+  bootstrap 10-year paths (real): max DD median -21.7%, 10th pct -29.5%, 5th pct -31.8%; Sharpe 5/50/95 pct 1.57 / 2.06 / 2.58
+  bootstrap 10-year paths (proxy): max DD median -25.6%, 10th pct -34.5%, 5th pct -38.5%; Sharpe 5/50/95 pct 0.93 / 1.42 / 1.90
+  live NAV since 31 Aug: -4.2% to 2026-11-10; current design replayed -1.9% (replayed design is the 11 Nov one, not what was live each day)
+
+ITEM 5 -- VIXM sleeve size (real panel only; the proxy has no VIXM)
+  live V75      real    53.6% / 2.068 (ex 1.961) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.10%  50 tr/yr
+  V-cap25       real    51.2% / 2.015 (ex 1.907) /  -19.4%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.10%  50 tr/yr
+  V25           real    50.6% / 1.989 (ex 1.881) /  -19.4%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.11%  50 tr/yr
+  VIXY35        real    53.1% / 2.055 (ex 1.948) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.10%  50 tr/yr
+  V0            real    49.2% / 1.940 (ex 1.833) /  -20.9%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.14%  48 tr/yr
+  live: max VIXM weight 75% of NAV; days with VIXM > 25% of NAV: 3.8%
+  verdict V-cap25: dSh -0.053, worst day -7.4% -> -7.4%, worst 5d -14.4% -> -14.4%  => reject
+  verdict V25: dSh -0.079, worst day -7.4% -> -7.4%, worst 5d -14.4% -> -14.4%  => reject
+  verdict VIXY35: dSh -0.012, worst day -7.4% -> -7.4%, worst 5d -14.4% -> -14.4%  => reject
+
+ITEM 6 -- gross exposure cap 2.0x
+  live          real    53.6% / 2.068 (ex 1.961) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.10%  50 tr/yr
+  live          proxy   34.8% / 1.425 (ex 1.344) /  -22.1%  worst day  -9.1%  worst 5d  -15.4%  5th-pct day -2.29%  45 tr/yr
+  G-scale       real    49.5% / 2.070 (ex 1.956) /  -16.5%  worst day  -7.0%  worst 5d  -13.1%  5th-pct day -1.96%  47 tr/yr
+  G-scale       proxy   31.9% / 1.410 (ex 1.323) /  -22.1%  worst day  -8.3%  worst 5d  -14.1%  5th-pct day -2.13%  42 tr/yr
+  G-ladder      real    49.5% / 2.021 (ex 1.909) /  -17.4%  worst day  -7.4%  worst 5d  -14.4%  5th-pct day -2.06%  50 tr/yr
+  G-ladder      proxy   32.4% / 1.385 (ex 1.301) /  -22.1%  worst day  -9.1%  worst 5d  -15.4%  5th-pct day -2.25%  45 tr/yr
+  G-scale-all   real    47.6% / 2.043 (ex 1.926) /  -16.2%  worst day  -6.7%  worst 5d  -13.1%  5th-pct day -1.94%  48 tr/yr
+  G-scale-all   proxy   31.1% / 1.397 (ex 1.309) /  -22.1%  worst day  -8.3%  worst 5d  -14.1%  5th-pct day -2.13%  43 tr/yr
+  instantaneous book loss on a QQQ day of -12% / -20% (core and QQQ legs 1x, TQQQ 3x, QLD 2x, VIXM +0):
+    A 40/60        exposure 2.20x: -26% / -44%  (2.0x cap: -24% / -40%)
+    B 50/0/0       exposure 0.50x: -6% / -10%  (2.0x cap: -6% / -10%)
+    D1             exposure 1.50x: -18% / -30%  (2.0x cap: -18% / -30%)
+    D2             exposure 2.50x: -30% / -50%  (2.0x cap: -24% / -40%)
+    D3             exposure 3.00x: -36% / -60%  (2.0x cap: -24% / -40%)
+    D2/D3 capped   exposure 2.00x: -24% / -40%  (2.0x cap: -24% / -40%)
+  bootstrap 10y max DD live        real  median -21.4%  5th pct -31.8%   Sharpe 5/50/95 1.54/2.08/2.61
+  bootstrap 10y max DD live        proxy median -25.2%  5th pct -38.3%   Sharpe 5/50/95 0.94/1.43/1.89
+  bootstrap 10y max DD G-scale     real  median -19.9%  5th pct -29.5%   Sharpe 5/50/95 1.54/2.07/2.59
+  bootstrap 10y max DD G-scale     proxy median -23.7%  5th pct -35.7%   Sharpe 5/50/95 0.92/1.42/1.87
+  bootstrap 10y max DD G-ladder    real  median -21.2%  5th pct -31.3%   Sharpe 5/50/95 1.48/2.04/2.54
+  bootstrap 10y max DD G-ladder    proxy median -25.0%  5th pct -37.9%   Sharpe 5/50/95 0.88/1.39/1.86
+  bootstrap 10y max DD G-scale-all real  median -19.8%  5th pct -29.2%   Sharpe 5/50/95 1.51/2.06/2.56
+  bootstrap 10y max DD G-scale-all proxy median -23.7%  5th pct -35.8%   Sharpe 5/50/95 0.90/1.40/1.86
+  verdict G-scale: dSh real +0.003 proxy -0.015; bootstrap median DD gain (worse panel) +1.4 pp  => reject
+  verdict G-ladder: dSh real -0.047 proxy -0.040; bootstrap median DD gain (worse panel) +0.2 pp  => reject
+  verdict G-scale-all: dSh real -0.025 proxy -0.028; bootstrap median DD gain (worse panel) +1.5 pp  => reject
+
+ITEM 8 -- execution
+  live      real  lag0   53.6% / 2.068 (ex 1.961) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%
+  live      real  lag1   46.2% / 1.835 (ex 1.729) /  -20.8%  worst day  -9.0%  worst 5d  -14.5%
+  half-half real  lag0   50.4% / 2.004 (ex 1.896) /  -18.5%  worst day  -7.6%  worst 5d  -14.5%
+  CB-4      real  lag0   52.9% / 2.052 (ex 1.945) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%
+  CB-4      real  lag1   45.3% / 1.819 (ex 1.711) /  -20.8%  worst day  -9.0%  worst 5d  -14.5%
+  CB-5      real  lag0   53.5% / 2.066 (ex 1.959) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%
+  CB-5      real  lag1   45.4% / 1.818 (ex 1.711) /  -20.8%  worst day  -9.0%  worst 5d  -14.5%
+  CB-6      real  lag0   53.6% / 2.068 (ex 1.961) /  -18.3%  worst day  -7.4%  worst 5d  -14.4%
+  CB-6      real  lag1   46.2% / 1.835 (ex 1.729) /  -20.8%  worst day  -9.0%  worst 5d  -14.5%
+  live      proxy lag0   34.8% / 1.425 (ex 1.344) /  -22.1%  worst day  -9.1%  worst 5d  -15.4%
+  live      proxy lag1   29.7% / 1.254 (ex 1.173) /  -28.6%  worst day  -9.5%  worst 5d  -17.2%
+  half-half proxy lag0   32.5% / 1.363 (ex 1.280) /  -23.3%  worst day  -9.1%  worst 5d  -15.4%
+  CB-4      proxy lag0   34.4% / 1.420 (ex 1.338) /  -22.1%  worst day  -9.1%  worst 5d  -15.4%
+  CB-4      proxy lag1   28.9% / 1.239 (ex 1.157) /  -28.6%  worst day  -9.5%  worst 5d  -17.2%
+  CB-5      proxy lag0   34.3% / 1.409 (ex 1.328) /  -22.1%  worst day  -9.1%  worst 5d  -15.4%
+  CB-5      proxy lag1   28.7% / 1.226 (ex 1.144) /  -28.6%  worst day  -9.5%  worst 5d  -17.2%
+  CB-6      proxy lag0   34.6% / 1.417 (ex 1.335) /  -22.7%  worst day  -9.1%  worst 5d  -15.4%
+  CB-6      proxy lag1   29.4% / 1.246 (ex 1.165) /  -28.6%  worst day  -9.5%  worst 5d  -17.2%
+  verdict CB-5 (Sharpe not lower and max DD better on real and proxy, lag 0 and 1)  => reject
