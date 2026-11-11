@@ -109,6 +109,15 @@ Only after the orders are placed: one short line to the session ("traded / no tr
   - realized P&L split usable / wash-sale-deferred, via `wash_sale.flag_wash_sales(trades, require_buys=True)`.
     The trade list comes from `get_pnl_trade_history` plus the BUYS from `get_equity_orders`, filled, from 30 days before the earliest loss sale.
   - drawdown
+  - **tax-year capital gains** (owner 2026-11-11: this account is taxable and the owner offsets it with
+    tax-loss harvesting elsewhere, so the aim is to keep its net gain low and visible). One small table for the
+    calendar tax year to date: realized gain/loss from `get_realized_pnl` span `ytd`; the wash-sale-deferred part
+    (from the `wash_sale.flag_wash_sales` line above) and so the estimated reportable net; short- vs long-term
+    where `get_equity_tax_lots` / the trade history shows the term; unrealized gain/loss on open lots
+    (`get_equity_tax_lots` per held symbol against Friday's close), noting any deferred loss sitting in a lot's
+    basis that the next sale will release. Add the change since last Friday, and the 2027 projection range from
+    `paper-track/research_notes/tax_2026_11/` until January, then the projection for the year in progress.
+    Robinhood's numbers are before its own wash-sale adjustments; say so. Not tax advice.
   - the shadow-track summary line and verdict
   - the standing limitations (STRATEGY.md "Known limitations")
 
