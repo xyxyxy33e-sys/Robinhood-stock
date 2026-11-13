@@ -1,0 +1,292 @@
+{
+ "date": "2026-11-13",
+ "time": "15:51 ET",
+ "prev": "2026-11-12",
+ "notes": [
+  "VIXM: filled 1 missing closes from Yahoo"
+ ],
+ "reading": {
+  "date": "2026-11-13",
+  "state": "D",
+  "fast": "F",
+  "eff": "D",
+  "gaps": {
+   "100": -0.046779788551504,
+   "150": -0.04014892180242957,
+   "200": -0.001766154516790408
+  },
+  "micro": false,
+  "vol": 0.4319262513683961,
+  "d_zone": null,
+  "d_zone_plain": null,
+  "mult": 0.46304201091361114,
+  "breadth_pct": 0.20436507936507936,
+  "x60": -0.05025642356969939,
+  "d_flags": [
+   false,
+   true
+  ],
+  "qqq_high": 688.75,
+  "gap200_gate": 0.009534771931987374,
+  "d_gate": true,
+  "raw_votes": 0,
+  "a_trim": {
+   "date": "2026-11-13",
+   "eff": "D",
+   "in_a": false,
+   "spell_start": null,
+   "base": null,
+   "raw": 0,
+   "held": 0
+  }
+ },
+ "prev_reading": {
+  "date": "2026-11-12",
+  "state": "D",
+  "fast": "F",
+  "eff": "D",
+  "gaps": {
+   "100": -0.03719887368903241,
+   "150": -0.029519572913587644,
+   "200": 0.00906630317972379
+  },
+  "micro": false,
+  "vol": 0.46288793273060413,
+  "d_zone": null,
+  "d_zone_plain": null,
+  "mult": 0.4320700235588079,
+  "breadth_pct": 0.22023809523809523,
+  "x60": -0.0489476063189187,
+  "d_flags": [
+   false,
+   true
+  ],
+  "qqq_high": 694.5599,
+  "gap200_gate": 0.018435837990436355,
+  "d_gate": true,
+  "raw_votes": 0,
+  "a_trim": {
+   "date": "2026-11-12",
+   "eff": "D",
+   "in_a": false,
+   "spell_start": null,
+   "base": null,
+   "raw": 0,
+   "held": 0
+  }
+ },
+ "vixm": {
+  "on": true,
+  "stress": true,
+  "allowed": true,
+  "faded": false,
+  "vix": 19.2,
+  "vix3m": 20.61,
+  "ratio": 0.9315866084425036,
+  "vol": 0.30329597422114685,
+  "vix_high": 19.2,
+  "as_of": "2026-11-13",
+  "available": true,
+  "panic": false
+ },
+ "vixm_prev": {
+  "on": true,
+  "stress": true,
+  "allowed": true,
+  "faded": false,
+  "vix": 18.7,
+  "vix3m": 20.06,
+  "ratio": 0.9322033898305085,
+  "vol": 0.30480817130847193,
+  "vix_high": 18.7,
+  "as_of": "2026-11-12",
+  "available": true,
+  "panic": false
+ },
+ "vixm_note": "VIX 19.20 = median of Robinhood 18.92 (0m), CBOE 19.20 (1m), Google 19.20 (0m), Yahoo 19.21 (15m) (history CBOE); VIX3M history CBOE; VIX3M 20.61 = median of CBOE 20.60 (1m), Google 20.61 (0m), Yahoo 20.61 (15m); ratio 0.932",
+ "quotes": {
+  "QQQ": {
+   "last": 681.04,
+   "bid": 681.0,
+   "ask": 681.04,
+   "close": 688.17,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "QQEW": {
+   "last": 148.6301,
+   "bid": 149.1,
+   "ask": 149.19,
+   "close": 150.07,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "SPMO": {
+   "last": 132.3837,
+   "bid": 132.38,
+   "ask": 132.41,
+   "close": 134.43,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "TQQQ": {
+   "last": 57.96,
+   "bid": 57.95,
+   "ask": 57.96,
+   "close": 59.88,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "QLD": {
+   "last": 79.565,
+   "bid": 79.56,
+   "ask": 79.57,
+   "close": 81.3,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "XLU": {
+   "last": 44.03,
+   "bid": 44.03,
+   "ask": 44.04,
+   "close": 43.81,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "BOXX": {
+   "last": 119.04,
+   "bid": 119.03,
+   "ask": 119.04,
+   "close": 119.015,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  },
+  "VIXY": {
+   "last": 17.9821,
+   "bid": 17.97,
+   "ask": 17.98,
+   "close": 17.51,
+   "close_date": "2026-11-12",
+   "last_trade_date": "2026-11-13"
+  }
+ },
+ "positions": {
+  "BOXX": 3324.236807,
+  "VIXY": 12123.068774
+ },
+ "idle_cash": 80.23,
+ "total_value": 613795.6145062255,
+ "target": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.35,
+  0.0,
+  0.65
+ ],
+ "target_prev": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.35,
+  0.0,
+  0.65
+ ],
+ "held": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.35516421077122945,
+  0.0,
+  0.6448357892287705
+ ],
+ "drift": 0.010328421542458999,
+ "decision": false,
+ "why": "drift 1.0% within band 5%",
+ "regime_changed": [],
+ "orders": [],
+ "sweep": {},
+ "pushes": [],
+ "status": "signal",
+ "input": {
+  "date": "2026-11-13",
+  "time": "15:51 ET",
+  "quotes": {
+   "QQQ": {
+    "last": 681.04,
+    "bid": 681.0,
+    "ask": 681.04,
+    "close": 688.17,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "QQEW": {
+    "last": 148.6301,
+    "bid": 149.1,
+    "ask": 149.19,
+    "close": 150.07,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "SPMO": {
+    "last": 132.3837,
+    "bid": 132.38,
+    "ask": 132.41,
+    "close": 134.43,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "TQQQ": {
+    "last": 57.96,
+    "bid": 57.95,
+    "ask": 57.96,
+    "close": 59.88,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "QLD": {
+    "last": 79.565,
+    "bid": 79.56,
+    "ask": 79.57,
+    "close": 81.3,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "XLU": {
+    "last": 44.03,
+    "bid": 44.03,
+    "ask": 44.04,
+    "close": 43.81,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "BOXX": {
+    "last": 119.04,
+    "bid": 119.03,
+    "ask": 119.04,
+    "close": 119.015,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   },
+   "VIXY": {
+    "last": 17.9821,
+    "bid": 17.97,
+    "ask": 17.98,
+    "close": 17.51,
+    "close_date": "2026-11-12",
+    "last_trade_date": "2026-11-13"
+   }
+  },
+  "vix": 18.92,
+  "qqq_high": 688.75,
+  "positions": {
+   "BOXX": 3324.236807,
+   "VIXY": 12123.068774
+  },
+  "idle_cash": 80.23,
+  "total_value": 613795.6145062255
+ }
+}
