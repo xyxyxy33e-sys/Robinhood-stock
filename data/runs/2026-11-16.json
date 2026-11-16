@@ -246,7 +246,7 @@
  "pushes": [
   "Regime shift: macro D -> E (breakdown)"
  ],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-11-16",
   "time": "15:51 ET",
@@ -324,5 +324,42 @@
   },
   "idle_cash": 80.23,
   "total_value": 637145.8427884093
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "VIXY",
+    "side": "sell",
+    "quantity": 12123,
+    "price": 19.84
+   },
+   {
+    "symbol": "VIXY",
+    "side": "sell",
+    "quantity": 0.068774,
+    "price": 19.8247
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 390,
+    "price": 119.0699
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 1630,
+    "price": 119.0692
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 0.63828,
+    "price": 119.0699
+   }
+  ],
+  "nav_return": 0.03182378349855308,
+  "tier": 0.05,
+  "session_lag": 0
  }
 }
