@@ -39,9 +39,9 @@ Account `576391551` only. Everything below is US/Eastern.
 - `get_index_quotes` for VIX, id `3b912aa2-88f9-4682-8ae3-e39520bdf4db`
 - `get_equity_positions` and `get_portfolio` for `576391551`
 - `get_equity_historicals` for `["QQQ"]`, interval `30minute`, start_time `<today>T14:30:00Z` (regular session):
-  `qqq_high` = the largest `high_price` across today's bars (the D gate reads the day's high from
-  2026-11-11, owner decision "Embed L1"). If the call fails, omit `qqq_high`: the run falls back to the
-  15:50 price and notes it.
+  `qqq_high` = the largest `high_price` across today's bars. Since 2026-11-17 the D gate reads the
+  15:50 price only (L1 switched off, owner); the high is still logged so `l1_tracker.py` can follow L1 on
+  paper. If the call fails, omit `qqq_high`; the run is unaffected.
 
 1.2 **Write** `data/runs/in/<today>.json`:
 ```json
@@ -189,7 +189,7 @@ This is not a strategy review and changes nothing.
   - a regime change not traded in the same session is MATERIAL
   - drift above 5% not traded by the next session is MATERIAL
 - **Fills.** `fill_quality.summarize()` against the 4bp cost model.
-- **D gate on the day's high.** Run `python3 paper-track/l1_tracker.py` and copy its table into the report: the sessions where the gate opened on the day high (shut on the 15:50 price alone) and what QQQ did after 1, 5 and 20 sessions. Report it; change nothing.
+- **D gate on the day's high (L1, off since 2026-11-17, followed on paper).** Run `python3 paper-track/l1_tracker.py` and copy its table into the report: the sessions where the gate would have opened on the day high while the 15:50 price kept it shut, and what QQQ did after 1, 5 and 20 sessions. Report it; change nothing.
 - **Report.**
   - Gap within about 1.5pp per month or 3pp cumulative, and nothing material: one paragraph.
   - Otherwise: find the dates, check the Routines' `last_run`, and report the cause. Change nothing.

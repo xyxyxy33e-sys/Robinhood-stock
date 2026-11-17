@@ -1,4 +1,4 @@
-"""Live check of the D gate read on the day's high ("L1", owner decision 2026-11-11).
+"""Check of the D gate read on the day's high ("L1", live 2026-11-11..16, switched off 2026-11-17 and followed on paper).
 
 The backtest of L1 used full-day highs, which include 15:50-16:00 and so flatter it. The live
 run reads only the high up to the 15:50 run (data/qqq_highs.csv), so every live L1 day is free
@@ -51,12 +51,18 @@ def main():
     for j in runs:
         r, d = j['reading'], j['date']
         g_close = (r.get('gaps') or {}).get('200', (r.get('gaps') or {}).get(200))
-        g_gate = r.get('gap200_gate')
-        close_gate = S.d_gate_active('D', r.get('breadth_pct'), g_close)
-        live_gate = bool(r.get('d_gate'))
-        if close_gate == live_gate:
-            continue                       # L1 did not change the decision
         px = float(j['quotes']['QQQ']['last'])
+        hi = r.get('qqq_high')
+        if g_close is None or hi is None:
+            continue
+        # Paper L1 (switched off live on 2026-11-17): recompute the high-based gap from the
+        # logged high, whatever the live switch was, so the rule is followed on paper.
+        sma = px / (1.0 + g_close)
+        g_gate = max(g_close, float(hi) / sma - 1.0)
+        close_gate = S.d_gate_active('D', r.get('breadth_pct'), g_close)
+        l1_gate = S.d_gate_active('D', r.get('breadth_pct'), g_gate)
+        if close_gate == l1_gate:
+            continue                       # L1 would not have changed the decision
         tgt = dict(zip(LEGS7, j.get('target') or []))
         lev = sum(tgt.get(k, 0.0) * v for k, v in LEG_LEV.items())
         fwd = {}
@@ -65,16 +71,16 @@ def main():
             for n in (1, 5, 20):
                 if i + n < len(days) and 'QQQ' in c[days[i + n]]:
                     fwd[n] = c[days[i + n]]['QQQ'] / px - 1
-        rows.append((d, px, r.get('qqq_high'), g_close, g_gate, lev, fwd))
-    print(f"L1 live days (gate opened by the day high, shut on the 15:50 price alone): {len(rows)}")
-    print(f"{'date':<11}{'QQQ 15:50':>10}{'high':>9}{'gap close':>10}{'gap high':>9}{'risky x':>8}"
+        rows.append((d, px, hi, g_close, g_gate, lev, fwd))
+    print(f"L1 days (gate would open on the day high, shut on the 15:50 price alone; live until 2026-11-16, paper since): {len(rows)}")
+    print(f"{'date':<11}{'QQQ 15:50':>10}{'high':>9}{'gap close':>10}{'gap high':>9}{'live x':>8}"
           f"{'QQQ +1d':>9}{'+5d':>8}{'+20d':>8}{'book est +5d':>13}")
     for d, px, hi, gc, gg, lev, fwd in rows:
         f = lambda n: f"{fwd[n]*100:+.2f}%" if n in fwd else '   n/a'
         est = f"{fwd[5]*lev*100:+.2f}%" if 5 in fwd else '   n/a'
         print(f"{d:<11}{px:>10.2f}{(hi or 0):>9.2f}{gc*100:>9.2f}%{gg*100:>8.2f}%{lev:>8.2f}"
               f"{f(1):>9}{f(5):>8}{f(20):>8}{est:>13}")
-    print("book est = risky exposure x QQQ move; a rough guide, not the NAV (leveraged-ETF decay and the "
+    print("live x = the risky exposure the live book held (0 on paper days after 2026-11-16, when the gate stayed shut); book est = live x times the QQQ move, a rough guide, not the NAV (leveraged-ETF decay and the "
           "gate closing again within the window are ignored).")
 
 

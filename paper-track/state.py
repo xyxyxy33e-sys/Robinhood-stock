@@ -1300,7 +1300,14 @@ def d_gate_flags(breadth_pct, gap200):
 # research includes 15:50-16:00 (a look-ahead the live run does not have; a crude cut
 # kept ~80% of the gain with maxDD -20.4% / -24.5%), the sample is small, and it was
 # the best of several variants tested on the same data. Rollback: DGATE_HIGH_ENABLED = False.
-DGATE_HIGH_ENABLED = True
+# SWITCHED OFF 2026-11-17 (owner: "turn L1 off"). The research above read the close after
+# 2026-09-04 because data/qqq_ohlc.csv ended there. With complete highs L1 opens the gate on
+# 2026-11-04 (high 701.45 at 10:15 ET, +3.07% over the 200-day; close +1.67%) and the book is
+# 2.0x long into the -6.4% QQQ day of 11-05: real 51.1% / 2.100 / -16.5% without L1 vs 50.6% /
+# 2.064 / -25.4% with it; none of 21 variants passed (research_notes/l1_variants_2026_11/).
+# The gate reads the 15:50 price only again. qqq_high is still fetched and logged so
+# l1_tracker.py can follow L1 on paper.
+DGATE_HIGH_ENABLED = False
 DGATE_HIGH_FROM_SESSION = '2026-11-11'
 
 
