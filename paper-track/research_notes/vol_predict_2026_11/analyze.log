@@ -1,0 +1,224 @@
+== 0. sample
+6833 1999-09-16 2026-11-16 up cut 4.17% down cut -4.30%
+
+== 1. where the top 100 sit: year counts (up / down / either)
+year  1999  2000  2001  2002  2003  2008  2009  2010  2011  2015  2018  2019  2020  2022  2025  2026
+up       1    26    23    14     3     9     4     1     2     1     1     1    10     3     1     0
+down     0    29    25     7     0    15     1     0     3     1     2     0     8     5     2     2
+days    75   252   248   252   252   253   252   252   251   252   251   252   253   251   250   220
+1999-2002 up 64 down 61 share of all days 12.1%
+2003-2007 up 3 down 0 share of all days 18.4%
+2008-2009 up 13 down 16 share of all days 7.4%
+2010-2019 up 6 down 6 share of all days 36.8%
+2020-2026 up 14 down 17 share of all days 25.3%
+
+== 2. prior-day signal medians: top-100 up vs top-100 down vs all days
+              all days  top100 up  top100 down
+p_vix          17.8400    29.8900      26.5950
+p_vxn          21.2500    52.8650      46.9750
+p_ratio         0.8911     1.1182       1.0516
+p_vix_chg1     -0.0054     0.0070      -0.0022
+p_vix_chg5     -0.0088     0.0323       0.0457
+p_vix_pct252    0.4306     0.9246       0.8353
+p_rv10         17.8153    49.2403      50.9205
+p_rv30         18.0586    50.7533      47.7347
+p_vrp          -0.8188   -14.9360     -18.9798
+p_ret1          0.0011    -0.0134       0.0020
+p_absret1       0.0075     0.0217       0.0184
+p_ret5          0.0048    -0.0328      -0.0218
+p_gap50         0.0182    -0.1086      -0.0783
+p_gap200        0.0635    -0.2511      -0.1931
+p_dd252        -0.0413    -0.4036      -0.3248
+
+shares:
+  prior VIX >= 25            all  18.8%   up  74.0%   down  63.0%
+  prior VIX >= 30            all   9.1%   up  48.0%   down  28.0%
+  prior VIX < 20             all  61.5%   up   2.0%   down   8.0%
+  below 200d SMA             all  26.3%   up  77.0%   down  71.0%
+  below 50d SMA              all  35.0%   up  79.0%   down  78.0%
+  rv10 >= 30%                all  20.2%   up  87.0%   down  83.0%
+  prior day |move| >= 2%     all  16.1%   up  52.0%   down  45.0%
+  prior day down             all  45.1%   up  64.0%   down  49.0%
+  VIX > VIX3M (2008+)        all  10.1%   up  81.8%   down  66.7%
+  drawdown <= -10%           all  28.2%   up  93.0%   down  81.0%
+
+state the day before (share):
+          all    up  down
+p_state                  
+A        52.4   1.2   5.8
+B         5.7   0.0   1.2
+C         6.7  12.0  10.5
+D        14.3   6.0  10.5
+E         5.8  15.7   7.0
+F        15.0  65.1  65.1
+
+== 3. next-day QQQ by prior-day VIX, all years
+       days  share%  mean|r|%  implied 1d%  P(|r|>=2%)  P(r<=-2%)  P(r>=+2%)  mean r%  median r%  top100 up  top100 dn
+p_vix                                                                                                                 
+<13    1095   16.03      0.54         0.74        1.37       1.00       0.37     0.05       0.09          0          0
+13-16  1489   21.79      0.70         0.91        4.10       2.69       1.41     0.02       0.06          0          2
+16-20  1619   23.69      0.95         1.12       10.81       6.36       4.45     0.02       0.12          2          6
+20-25  1342   19.64      1.45         1.41       26.01      14.23      11.77     0.02       0.17         24         29
+25-30   665    9.73      1.89         1.71       36.84      18.35      18.50     0.03       0.10         26         35
+30-40   430    6.29      1.88         2.11       36.28      16.28      20.00     0.27       0.30         21         13
+40+     193    2.82      2.71         3.20       52.85      24.35      28.50     0.31       0.13         27         15
+
+== 3b. same, 2010-2026 only
+       days  share%  mean|r|%  implied 1d%  P(|r|>=2%)  P(r<=-2%)  P(r>=+2%)  mean r%  median r%  top100 up  top100 dn
+p_vix                                                                                                                 
+<13     693   16.33      0.48         0.74        1.01       0.87       0.14     0.07       0.10          0          0
+13-16  1139   26.84      0.68         0.91        3.51       2.46       1.05     0.04       0.07          0          2
+16-20  1193   28.12      0.88         1.12        8.80       5.03       3.77     0.04       0.10          0          2
+20-25   659   15.53      1.13         1.40       17.30       9.41       7.89     0.11       0.30          2          4
+25-30   303    7.14      1.46         1.71       27.39      11.55      15.84     0.07       0.12          2          7
+30-40   202    4.76      1.69         2.10       33.17      15.35      17.82     0.15       0.25          4          4
+40+      54    1.27      3.22         3.15       53.70      18.52      35.19     0.91       1.01         12          4
+
+== 3c. by prior 10-day realized vol
+        days  share%  mean|r|%  P(|r|>=2%)  P(r<=-2%)  P(r>=+2%)  mean r%  median r%  top100 up  top100 dn
+p_rv10                                                                                                    
+<10      947   13.86      0.55        2.32       1.58       0.74     0.03       0.08          0          0
+10-15   1647   24.10      0.73        4.74       2.85       1.88     0.07       0.13          0          4
+15-20   1357   19.86      0.89        9.29       5.31       3.98     0.04       0.11          2          3
+20-30   1494   21.86      1.20       18.47       9.24       9.24     0.09       0.15         11         10
+30-40    657    9.62      1.65       33.64      17.50      16.13    -0.01       0.08         12         14
+40-60    486    7.11      2.31       44.86      23.05      21.81     0.00      -0.04         39         34
+60+      235    3.44      3.33       67.23      34.89      32.34     0.01      -0.04         36         35
+
+== 4. SIZE: does a signal rank tomorrow's |move|? Spearman corr with |r| and AUC for a big day
+              spearman |r|  AUC |r|>=2%  AUC |r|>=3%  AUC top-200  AUC2 99-09  AUC2 10-19  AUC2 20-26
+signal                                                                                               
+p_vix                0.400        0.791        0.835        0.862       0.750       0.800       0.738
+p_vxn                0.421        0.817        0.888        0.928       0.813       0.812       0.753
+p_ratio              0.324        0.753        0.828        0.889       0.721       0.794       0.700
+p_vix_chg1           0.022        0.501        0.502        0.526       0.504       0.526       0.467
+p_vix_chg5           0.108        0.562        0.570        0.583       0.549       0.611       0.559
+p_vix_pct252         0.279        0.706        0.746        0.795       0.671       0.783       0.721
+p_rv10               0.402        0.799        0.868        0.905       0.792       0.754       0.723
+p_rv30               0.387        0.802        0.870        0.903       0.805       0.730       0.711
+p_vrp               -0.159        0.351        0.299        0.275       0.307       0.552       0.446
+p_ret1              -0.098        0.450        0.450        0.425       0.458       0.385       0.472
+p_absret1            0.176        0.644        0.700        0.734       0.624       0.632       0.586
+p_ret5              -0.175        0.393        0.383        0.345       0.418       0.333       0.386
+p_gap50             -0.245        0.324        0.285        0.215       0.371       0.232       0.291
+p_gap200            -0.282        0.261        0.178        0.114       0.249       0.267       0.318
+p_dd252             -0.390        0.217        0.161        0.138       0.249       0.216       0.264
+base rates: |r|>=2% 16.1%, |r|>=3% 7.2%
+
+== 5. DIRECTION: does a signal rank tomorrow's signed return? Spearman with r; AUC for down among big days
+              spearman r  AUC down-day (all days)  AUC down | big2  AUC r<=-2% (all days)  AUC r>=+2% (all days)
+signal                                                                                                          
+p_vix              0.033                    0.510            0.434                  0.742                  0.793
+p_vxn              0.014                    0.520            0.454                  0.772                  0.817
+p_ratio            0.038                    0.508            0.451                  0.713                  0.763
+p_vix_chg1         0.002                    0.504            0.483                  0.493                  0.511
+p_vix_chg5         0.009                    0.505            0.497                  0.557                  0.557
+p_vix_pct252       0.031                    0.506            0.447                  0.668                  0.715
+p_rv10             0.006                    0.522            0.481                  0.761                  0.786
+p_rv30             0.004                    0.524            0.484                  0.764                  0.788
+p_vrp              0.035                    0.472            0.480                  0.352                  0.378
+p_ret1            -0.020                    0.501            0.534                  0.474                  0.433
+p_absret1          0.003                    0.509            0.489                  0.629                  0.634
+p_ret5            -0.023                    0.500            0.530                  0.413                  0.390
+p_gap50           -0.000                    0.483            0.529                  0.353                  0.323
+p_gap200           0.002                    0.480            0.542                  0.303                  0.254
+p_dd252           -0.006                    0.476            0.536                  0.263                  0.217
+big2 days 1103, down share 52.9%
+
+P(down | big day) by condition the day before:
+  all big days                 n 1103  down  52.9%  mean r -0.17%
+  prior VIX >= 30              n  258  down  45.3%  mean r +0.53%
+  prior VIX < 20               n  251  down  61.4%  mean r -0.72%
+  prior day up >= 2%           n  142  down  54.2%  mean r -0.34%
+  prior day down <= -2%        n  211  down  46.4%  mean r +0.49%
+  VIX rose >= 10% prior day    n   81  down  48.1%  mean r +0.70%
+  VIX fell >= 10% prior day    n   58  down  58.6%  mean r -0.87%
+  below 200d                   n  616  down  50.5%  mean r +0.01%
+  above 200d                   n  380  down  58.4%  mean r -0.58%
+  VIX > VIX3M                  n  185  down  49.2%  mean r +0.03%
+  VIX <= VIX3M                 n  394  down  54.6%  mean r -0.31%
+
+== 6. walk-forward model (expanding window, refit each Jan, tested on the next year, 2005-2026)
+ target: big day |r|>=2%
+   VIX only                   OOS AUC 0.775 | top-decile days: hit rate  35.6% vs base  11.2%, catch 31.8% of events
+   rv10 only                  OOS AUC 0.759 | top-decile days: hit rate  35.6% vs base  11.2%, catch 31.8% of events
+   VIX + rv10 + rv30          OOS AUC 0.786 | top-decile days: hit rate  37.0% vs base  11.2%, catch 33.1% of events
+   vol + trend + yesterday    OOS AUC 0.789 | top-decile days: hit rate  37.6% vs base  11.2%, catch 33.6% of events
+   kitchen sink               OOS AUC 0.800 | top-decile days: hit rate  38.8% vs base  11.2%, catch 34.7% of events
+ target: big DOWN r<=-2%
+   VIX only                   OOS AUC 0.718 | top-decile days: hit rate  16.2% vs base   5.9%, catch 27.4% of events
+   rv10 only                  OOS AUC 0.712 | top-decile days: hit rate  16.5% vs base   5.9%, catch 28.0% of events
+   VIX + rv10 + rv30          OOS AUC 0.730 | top-decile days: hit rate  16.9% vs base   5.9%, catch 28.6% of events
+   vol + trend + yesterday    OOS AUC 0.726 | top-decile days: hit rate  16.3% vs base   5.9%, catch 27.7% of events
+   kitchen sink               OOS AUC 0.740 | top-decile days: hit rate  18.9% vs base   5.9%, catch 32.0% of events
+ target: big UP r>=+2%
+   VIX only                   OOS AUC 0.793 | top-decile days: hit rate  19.1% vs base   5.3%, catch 36.1% of events
+   rv10 only                  OOS AUC 0.772 | top-decile days: hit rate  19.1% vs base   5.3%, catch 36.1% of events
+   VIX + rv10 + rv30          OOS AUC 0.807 | top-decile days: hit rate  20.0% vs base   5.3%, catch 37.8% of events
+   vol + trend + yesterday    OOS AUC 0.813 | top-decile days: hit rate  20.5% vs base   5.3%, catch 38.8% of events
+   kitchen sink               OOS AUC 0.819 | top-decile days: hit rate  20.9% vs base   5.3%, catch 39.5% of events
+ target: any down day
+   VIX only                   OOS AUC 0.500 | top-decile days: hit rate  44.5% vs base  44.5%, catch 10.0% of events
+   rv10 only                  OOS AUC 0.512 | top-decile days: hit rate  47.0% vs base  44.5%, catch 10.6% of events
+   VIX + rv10 + rv30          OOS AUC 0.509 | top-decile days: hit rate  45.6% vs base  44.5%, catch 10.3% of events
+   vol + trend + yesterday    OOS AUC 0.502 | top-decile days: hit rate  45.0% vs base  44.5%, catch 10.1% of events
+   kitchen sink               OOS AUC 0.500 | top-decile days: hit rate  42.1% vs base  44.5%, catch  9.5% of events
+ corr of the big-DOWN and big-UP forecasts (same features): 0.954
+ quintiles of (P down-big minus P up-big), next-day mean return %: [0.102, 0.047, 0.042, 0.113, -0.002]
+
+== 7. how well does VIX size the move? realized next-day |r| / VIX-implied 1-day sigma
+ QQQ |r| in VIX sigmas: median 0.65, mean 0.87, share beyond 2 sigma 8.5%, beyond 3 sigma 2.2% (normal: 4.6% / 0.3%)
+ top-100 down days in VIX sigmas: median 3.29; top-100 up: 2.81
+ vs VXN (Nasdaq-100 vol index, 2001+): median 0.51, beyond 2 sigma 2.5%, beyond 3 sigma 0.2%
+ biggest surprises (down days from calm, prior VIX < 20, r <= -3%):
+               ret  p_vix   p_rv10  p_gap200 p_state
+date                                                
+2000-07-05 -0.0387  19.83  39.2888    0.0958       A
+2000-07-21 -0.0336  18.94  31.5810    0.1267       A
+2000-07-27 -0.0392  19.67  35.1191    0.0657       A
+2000-07-28 -0.0544  19.60  38.8330    0.0222       A
+2000-09-05 -0.0305  17.53  15.6873    0.0966       A
+2000-09-06 -0.0352  19.82  24.9102    0.0618       A
+2000-09-08 -0.0306  19.42  32.8371    0.0447       A
+2000-09-21 -0.0727  19.93  37.6160   -0.0002       E
+2000-09-29 -0.0307  19.47  59.0225   -0.0358       F
+2001-07-05 -0.0480  18.92  17.5092   -0.2250       F
+2002-03-20 -0.0353  18.16  21.6570   -0.0315       F
+2002-03-25 -0.0305  17.77  27.8189   -0.0465       F
+2002-04-02 -0.0452  18.73  32.2330   -0.0377       F
+2002-04-09 -0.0348  19.61  32.7458   -0.0825       F
+2002-06-03 -0.0353  19.98  26.7655   -0.1637       F
+2003-05-19 -0.0352  18.40  21.0397    0.1481       A
+2003-07-17 -0.0305  19.76  27.5482    0.2160       A
+2003-09-24 -0.0377  19.47  26.4492    0.2184       A
+2007-02-27 -0.0411  11.15  13.6313    0.1000       A
+2008-06-06 -0.0301  18.63  15.1992    0.0473       B
+2014-04-10 -0.0310  13.82  21.4799    0.0648       D
+2015-08-21 -0.0437  19.14  17.9080    0.0018       D
+2016-06-24 -0.0412  17.25  13.6506    0.0103       D
+2018-02-05 -0.0394  17.31  16.9980    0.1149       A
+2018-10-10 -0.0440  15.95  12.9147    0.0484       D
+2018-11-12 -0.0303  17.36  28.6025   -0.0046       D
+2018-11-19 -0.0325  18.14  27.2447   -0.0277       E
+2018-12-04 -0.0384  16.44  30.6057   -0.0009       F
+2019-05-13 -0.0347  16.04  14.0877    0.0613       A
+2019-08-05 -0.0353  17.61  14.7960    0.0667       A
+2019-08-23 -0.0316  16.68  25.1875    0.0643       D
+2020-02-24 -0.0386  17.08  15.1624    0.1648       A
+2021-03-18 -0.0306  19.23  30.8856    0.1181       D
+2022-01-05 -0.0307  16.91  17.7767    0.0942       A
+2024-07-24 -0.0359  14.72  22.0699    0.1287       A
+2024-09-03 -0.0304  15.00  16.2609    0.0826       A
+2024-12-18 -0.0361  15.87  15.1551    0.1369       A
+2025-10-10 -0.0347  16.43   8.1482    0.1537       A
+2026-06-05 -0.0480  15.40  10.0550    0.1923       A
+2026-06-23 -0.0329  17.28  32.4662    0.1723       A
+2026-10-30 -0.0347  17.20  24.9679    0.0533       D
+2026-11-05 -0.0649  16.61  27.5487    0.0167       D
+ big up days from calm (prior VIX < 20, r >= +3%): 14
+
+== 8. the day AFTER: do big days cluster?
+  after a top-100 down day   n  100  next-day mean +0.22%  mean|r| 3.17%  P(|r|>=2%)  55.0%  P(down)  50.0%
+  after a top-100 up day     n  100  next-day mean -0.11%  mean|r| 2.24%  P(|r|>=2%)  48.0%  P(down)  48.0%
+  after |r|>=2%              n 1102  next-day mean +0.10%  mean|r| 1.76%  P(|r|>=2%)  32.0%  P(down)  47.1%
+  after a quiet day |r|<1%   n 4153  next-day mean +0.06%  mean|r| 0.95%  P(|r|>=2%)  11.4%  P(down)  44.3%

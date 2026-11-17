@@ -1,0 +1,153 @@
+<title>Big QQQ Days</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* layout: one reading column; findings first, evidence tables after, the two ranked lists last behind a toggle */
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --ink:#161a22; --ink2:#4a5263; --muted:#7a8395; --line:#dfe3ea;
+  --accent:#2c5f8a; --down:#c0453f; --up:#1d8a5f; --down-soft:#f7e3e1; --up-soft:#def2e9;
+  --display:"Space Grotesk",system-ui,sans-serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#0e1116; --panel:#161a22; --ink:#eceff4; --ink2:#bcc3d0; --muted:#8891a3; --line:#272d39; --accent:#7fb0d8; --down:#e8736a; --up:#48c48e; --down-soft:#3a1c1a; --up-soft:#12301f; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#0e1116; --panel:#161a22; --ink:#eceff4; --ink2:#bcc3d0; --muted:#8891a3; --line:#272d39; --accent:#7fb0d8; --down:#e8736a; --up:#48c48e; --down-soft:#3a1c1a; --up-soft:#12301f; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(26px,4vw,36px);line-height:1.15;margin:0 0 10px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+p{margin:0;max-width:68ch;color:var(--ink2)} p+p{margin-top:10px}
+.lede{font-size:16.5px;color:var(--ink)}
+.sub{font-size:13px;color:var(--muted);max-width:72ch}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;min-width:0}
+.find{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:720px){.find{grid-template-columns:1fr}}
+.find .panel h3{font-family:var(--display);font-size:15.5px;font-weight:600;margin:0 0 6px}
+.find .panel p{font-size:14px}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.tag.yes{color:var(--up)} .tag.no{color:var(--down)} .tag.mix{color:var(--accent)}
+.brow{display:grid;grid-template-columns:72px 1fr 170px;gap:12px;align-items:center;font-family:var(--mono);font-size:12.5px}
+@media (max-width:560px){.brow{grid-template-columns:64px 1fr} .bval{grid-column:2}}
+.bars{display:flex;flex-direction:column;gap:9px}
+.btrack{height:18px;background:var(--bg);border-radius:4px;overflow:hidden;display:flex;border:1px solid var(--line)}
+.bdn{background:var(--down)} .bup{background:var(--up)}
+.bval small{color:var(--muted)}
+.key{display:flex;gap:16px;font-family:var(--mono);font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+th{font-family:var(--sans);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:normal;vertical-align:bottom}
+th.l,td.l{text-align:left} td.l{font-family:var(--sans)}
+tbody tr:last-child td{border-bottom:none}
+.neg{color:var(--down)} .pos{color:var(--up)} .na{color:var(--muted)}
+table.days{min-width:760px}
+.st{display:inline-block;min-width:22px;padding:1px 6px;border-radius:4px;font-weight:600;font-size:11.5px;color:#fff}
+.st-A{background:#2f6fb0}.st-B{background:#c9752c}.st-C{background:#2f9e73}.st-D{background:#b8912c}.st-E{background:#a8567f}.st-F{background:#8c4040}.st-x{background:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{font-family:var(--sans);font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px} footer p{color:var(--muted);max-width:none}
+code{font-family:var(--mono);font-size:12px}
+</style>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Research only &middot; 17 Nov 2026 &middot; not adopted</p>
+    <h1>Can QQQ&rsquo;s biggest days be seen coming the day before?</h1>
+    <p class="lede">The size of tomorrow&rsquo;s move can be forecast fairly well. Its direction cannot. Every signal that flags a big down day flags a big up day just as strongly.</p>
+    <p class="sub" style="margin-top:10px">6,833 QQQ sessions, 16 Sep 1999 to 16 Nov 2026, close to close. Every signal is read at the prior day&rsquo;s close, so nothing here uses information from the day itself. The top 100 up days are +4.17% or more; the top 100 down days are &minus;4.30% or worse.</p>
+  </header>
+
+  <section>
+    <h2>What the data says</h2>
+    <div class="find">
+      <div class="panel"><div class="tag yes">Predictable</div><h3>How big tomorrow will be</h3><p>Ranking days by the prior day&rsquo;s VIX separates big days (2% or more either way) from quiet ones with an accuracy score of 0.79, where 0.50 is a coin flip and 1.00 is perfect. Tested forward on years the model had not seen (2005&ndash;2026) it holds at 0.78. The riskiest tenth of days by forecast contain a third of all big days.</p></div>
+      <div class="panel"><div class="tag no">Not predictable</div><h3>Which way it will go</h3><p>For up versus down, every signal scores 0.50 to 0.52, and the forward test of the full model scores 0.50. The forecast for a big down day and the forecast for a big up day move together almost perfectly (correlation 0.95). They are the same forecast.</p></div>
+      <div class="panel"><div class="tag mix">Why VIX looks like it calls dips</div><h3>It moves with the dip, not before it</h3><p>On 91 of the top 100 down days VIX rose the same day (median +8%). The day <em>before</em> those drops, VIX had risen only 47% of the time, the same as on any ordinary day (46%). VIX reports the fall as it happens.</p></div>
+      <div class="panel"><div class="tag mix">One real asymmetry</div><h3>Calm breaks down, panic bounces up</h3><p>With VIX under 20 the day before, moves of 3% or more were down 42 times and up 14 times. With VIX at 30 or more they were up 91 times and down 66. The first crack out of a calm market is usually downward and arrives without warning; the largest rallies happen inside panics.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Chance of a 2% day, by VIX the day before</h2>
+    <p class="sub">Each bar is the share of sessions that moved 2% or more. Red is down days, green is up days. The two halves grow together as VIX rises.</p>
+    <div class="panel">
+      <div class="bars">
+{{BARS}}
+      </div>
+      <div class="key" style="margin-top:14px"><span><span class="sw" style="background:var(--down)"></span>fell 2% or more</span><span><span class="sw" style="background:var(--up)"></span>rose 2% or more</span></div>
+    </div>
+    <div class="panel" style="padding:0"><div class="scroll">
+      <table style="min-width:640px"><thead><tr><th class="l">VIX day before</th><th>Sessions</th><th>Share of all days</th><th>Average move, either way</th><th>Fell 2%+</th><th>Rose 2%+</th><th>Top-100 down days</th><th>Top-100 up days</th></tr></thead><tbody>{{BROWS}}</tbody></table>
+    </div></div>
+    <p class="sub">Days with VIX at 25 or more are 19% of history and hold 63 of the top 100 down days and 74 of the top 100 up days. Days with VIX under 16 are 38% of history and hold 2 and 0.</p>
+  </section>
+
+  <section>
+    <h2>What the day before looked like</h2>
+    <div class="panel" style="padding:0"><div class="scroll">
+      <table style="min-width:620px"><thead><tr><th class="l">Condition at the prior close</th><th>All days</th><th>Before a top-100 down day</th><th>Before a top-100 up day</th></tr></thead><tbody>
+        <tr><td class="l">Median VIX</td><td>17.8</td><td>26.6</td><td>29.9</td></tr>
+        <tr><td class="l">VIX 25 or higher</td><td>19%</td><td>63%</td><td>74%</td></tr>
+        <tr><td class="l">VIX under 20</td><td>62%</td><td>8%</td><td>2%</td></tr>
+        <tr><td class="l">10-day realized volatility 30% or higher</td><td>20%</td><td>83%</td><td>87%</td></tr>
+        <tr><td class="l">QQQ below its 200-day average</td><td>26%</td><td>71%</td><td>77%</td></tr>
+        <tr><td class="l">QQQ 10% or more below its one-year high</td><td>28%</td><td>81%</td><td>93%</td></tr>
+        <tr><td class="l">VIX above VIX3M (2008 on)</td><td>10%</td><td>67%</td><td>82%</td></tr>
+        <tr><td class="l">Prior day moved 2% or more</td><td>16%</td><td>45%</td><td>52%</td></tr>
+        <tr><td class="l">Strategy state F (downtrend)</td><td>15%</td><td>65%</td><td>65%</td></tr>
+        <tr><td class="l">Strategy state A (uptrend)</td><td>52%</td><td>6%</td><td>1%</td></tr>
+      </tbody></table>
+    </div></div>
+    <p class="sub">The down column and the up column are nearly the same. Both kinds of day come from the same place: a market already volatile, already falling, already under its 200-day average. The strategy is in cash (states E or F) before about 72% of the top-100 down days, and also before about 81% of the top-100 up days.</p>
+  </section>
+
+  <section>
+    <h2>Which signal is best</h2>
+    <div class="panel" style="padding:0"><div class="scroll">
+      <table style="min-width:560px"><thead><tr><th class="l">Signal at the prior close</th><th>Finds big days (2%+)</th><th>Finds the top 200</th><th>Tells up from down</th></tr></thead><tbody>
+        <tr><td class="l">VXN (Nasdaq-100 volatility index, 2001 on)</td><td>0.82</td><td>0.93</td><td>0.52</td></tr>
+        <tr><td class="l">30-day realized volatility</td><td>0.80</td><td>0.90</td><td>0.52</td></tr>
+        <tr><td class="l">10-day realized volatility</td><td>0.80</td><td>0.91</td><td>0.52</td></tr>
+        <tr><td class="l">VIX level</td><td>0.79</td><td>0.86</td><td>0.51</td></tr>
+        <tr><td class="l">VIX &divide; VIX3M</td><td>0.75</td><td>0.89</td><td>0.51</td></tr>
+        <tr><td class="l">Size of the prior day&rsquo;s move</td><td>0.64</td><td>0.73</td><td>0.51</td></tr>
+        <tr><td class="l">VIX change over 5 days</td><td>0.56</td><td>0.58</td><td>0.51</td></tr>
+        <tr><td class="l">VIX change on the prior day</td><td>0.50</td><td>0.53</td><td>0.50</td></tr>
+      </tbody></table>
+    </div></div>
+    <p class="sub">Scores are accuracy of ranking (AUC): 0.50 is a coin flip, 1.00 is perfect. Realized volatility, which the strategy&rsquo;s vol target already uses, does the job about as well as VIX. Adding VIX to it lifts the forward-tested score from 0.76 to 0.79. The <em>level</em> of volatility carries the information; yesterday&rsquo;s <em>change</em> in VIX carries none.</p>
+  </section>
+
+  <section>
+    <h2>What this means for the strategy</h2>
+    <div class="panel">
+      <p><b>Already used.</b> The 20% volatility target cuts the risky legs when realized volatility is high, which is the predictable part. States E and F hold cash through most of the worst days.</p>
+      <p><b>Not available.</b> A rule that sells before big down days would also sell before big up days. With VIX at 30 or more the average next day is +0.28%, and 14 of the 30 biggest up days since 2010 came with VIX above 40.</p>
+      <p><b>The gap.</b> 42 drops of 3% or more came out of calm (VIX under 20), most of them in state A or D with leverage on. The latest is 5 Nov 2026: &minus;6.5% with VIX at 16.6 the night before. Nothing tested here flags those in advance. This is the case the VIXY sleeve is meant to cushion, since it is bought when VIX is low.</p>
+      <p><b>Possible follow-up, untested.</b> Feed VIX or VXN into the vol target alongside realized volatility. The forward-test gain is small (0.76 to 0.79), so it needs its own backtest before any change.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The 100 biggest days each way</h2>
+    <p class="sub">Every column except the day&rsquo;s return is the reading at the prior close. 125 of the 200 fall in 1999&ndash;2002 and 29 in 2008&ndash;2009; 2010&ndash;2019 holds 12 and 2020&ndash;2026 holds 31. State is the strategy&rsquo;s six-state read; the first 200 sessions have none.</p>
+    <div class="tabs" role="tablist"><button id="tab-down" role="tab" aria-selected="true" aria-controls="p-down">Top 100 down days</button><button id="tab-up" role="tab" aria-selected="false" aria-controls="p-up">Top 100 up days</button></div>
+    <div class="panel" style="padding:0" id="p-down" role="tabpanel">{{DOWN}}</div>
+    <div class="panel" style="padding:0" id="p-up" role="tabpanel" hidden>{{UP}}</div>
+  </section>
+
+  <footer>
+    <p>Data: QQQ daily closes (repository history to 4 Sep 2026, live run closes after); VIX, VIX3M and VXN daily closes from FRED. VIX3M starts Dec 2007 and VXN Feb 2001. VVIX, SKEW and VIX9D were not available and are not tested. Returns are price only. The forward test refits a logistic model each January on all earlier years and scores the following year, 2005&ndash;2026. Raw-percent ranking favours 2000&ndash;2002 and 2008, when every day was large. Scripts and output: <code>paper-track/research_notes/vol_predict_2026_11/</code>. Not investment advice.</p>
+  </footer>
+</div>
+<script>
+(function(){
+  var t=[['tab-down','p-down'],['tab-up','p-up']];
+  t.forEach(function(x){document.getElementById(x[0]).addEventListener('click',function(){
+    t.forEach(function(y){var on=y===x;document.getElementById(y[0]).setAttribute('aria-selected',on?'true':'false');document.getElementById(y[1]).hidden=!on;});
+  });});
+})();
+</script>
