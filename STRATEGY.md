@@ -11,7 +11,15 @@ Part I when the strategy changes; append to Part II when something is tested.
 
 ## Current design at a glance (2026-09-23; VIXM cash sleeve 2026-10-08; D ladder 2026-10-09; max(10d, 30d) vol estimator and A back to 40/60 2026-10-22; D zone buffer ±0.5% 2026-10-29; A 20/80 2026-10-30; A back to 40/60 2026-11-06; deep-E and VIX-panic QQQ legs and B 50% SPMO / 50% cash 2026-11-11; gross cap 2.0x and VIXY sleeve 2026-11-11)
 
-**Standing figures — re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
+**Standing figures — re-baseline of the live design, 2026-11-17** (`paper-track/harness_live.py`, defaults = exactly
+what trades now: A 40/60 + trim v2, B 50/50, D ladder + gate on the 15:50 price (L1 off) + ±0.5% buffer, max(10d, 30d)
+vol target 20%, 2.0x gross cap, VIXY 35% sleeve, deep-E and VIX-panic QQQ legs; complete data to 2026-11-16 after the
+data audit, `research_notes/data_audit_2026_11/`): real ETFs 2015-11-03..2026-11-16 **51.1% / Sharpe 2.100 / max DD
+−16.5%**; proxy 2001-01-03..2026-11-16 (VIXY sleeve from 2011) **34.0% / 1.480 / −22.1%**. One session of execution
+delay: real 43.4% / 1.849 / −19.8%. Reading the 4pm close instead of the 15:50 price (measured noise) costs about
+0.08 Sharpe on real. These supersede the 2026-10-22 figures below.
+
+*Superseded:* **re-baseline of the live design, 2026-10-22** (`rebaseline_2026_10_22.py`,
 `research_notes/rebaseline_2026_10_22.md`; one run of exactly what trades after the 10-22 changes):
 real ETFs 2015-11..2026-08 with VIXM (off in D2 from 10-22) **47.9% / Sharpe 2.01 / max DD −18.4%** (avg DD −3.4%,
 95th-pct −12.4%, worst 12m −11.0%; no VIXM 44.5% / 1.89 / −18.4%); 26-year proxy (no VIXM)
@@ -35,7 +43,7 @@ C row when the fast read is A/B/C.
 | E | 100% BOXX | 0.00x |
 | F | 100% BOXX | 0.00x |
 
-**A is held at 20% SPMO / 80% TQQQ (2.6x) from 2026-10-30 (40/60 from 2026-10-22); the table's A row is the code's 50/50 reference row.**
+**A is held at 40% SPMO / 60% TQQQ (2.2x before the vol target, then capped at 2.0x gross) from 2026-11-06 (20/80 from 2026-10-30, 40/60 from 2026-10-22); the table's A row is the code's 50/50 reference row. Every row is capped at 2.0x gross from 2026-11-11 (D2 and D3 included).**
 **A row base: 50/50 in the A spell in progress on 2026-09-23 (began
 2026-08-04); 40/60 SPMO/TQQQ in every A spell that starts on or after
 2026-09-23** (`A_BASE_ROWS`; owner: "leave that to the next time we enter A",
