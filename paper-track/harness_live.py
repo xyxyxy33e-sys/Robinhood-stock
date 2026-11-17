@@ -31,7 +31,8 @@ HIGHS_LIVE = os.path.join(MC.DATA, 'qqq_highs.csv')
 
 # ---------------------------------------------------------------------------------------------
 # every setting of the live design and where it comes from
-assert S.GROSS_CAP_ENABLED and S.DGATE_HIGH_ENABLED and S.VIXM_OVERLAY_ENABLED and S.VIXM_INSTRUMENT == 'VIXY'
+# L1 (DGATE_HIGH_ENABLED) was switched off on 2026-11-17; the 'l1' default below follows state.py.
+assert S.GROSS_CAP_ENABLED and S.VIXM_OVERLAY_ENABLED and S.VIXM_INSTRUMENT == 'VIXY'
 LIVE_CFG = {
     'gross_cap': (S.GROSS_CAP, 'state.GROSS_CAP (GROSS_CAP_ENABLED); applied after the vol target to the 4 risky legs with state.GROSS_EXPOSURE (1,3,2,1); rest to cash'),
     'a_cap': (None, 'research hook, not live: separate cap for state A only (D keeps gross_cap)'),

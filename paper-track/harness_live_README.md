@@ -1,5 +1,7 @@
 # harness_live: the live design as the default (research only)
 
+**Update 2026-11-17: L1 is switched off live, so the default is now L1 OFF (it follows `state.DGATE_HIGH_ENABLED`). Default results: real 51.1% / 2.100 / -16.5%, proxy 2001 (sleeve on from 2011) 34.0% / 1.480 / -22.1%. Pass `l1=True` for the old rule. Data audit: `research_notes/data_audit_2026_11/AUDIT.md`.**
+
 `paper-track/harness_live.py` imports `review_2026_11/harness.py` (untouched, so old studies still reproduce) and builds the design that trades since
 2026-11-11: **2.0x gross cap**, **VIXY sleeve at 35% of the cash leg** (full VIXY history, so it also runs on the proxy panel from 2011-01-04), and the
 **D gate read on the day's high ("L1")**. Everything else is harness.CUR (A 40/60 + trim v2, B 50/50, D ladder + 0.5% buffer, max(10d,30d) vol target 20%,
@@ -23,7 +25,7 @@ CAGR / Sharpe / max DD; all windows end 2026-11-16 unless stated.
 | Real 2015-11 | no L1, cap + VIXY 35% | 51.1% / 2.100 / -16.5% | 51.1% / 2.100 / -16.5% (vixy_sleeve_sweep), and identical to `harness.run(cap, VIXY 35%)` to 1e-16 |
 | Real | L1 with highs as the recorded studies had them, to 2026-11-10 | 53.0% / 2.139 / -16.6% | 53.0% / 2.139 (STRATEGY.md); tax study 52.9% / 2.136 / -16.6% |
 | Real | same, to 2026-11-16 | 53.7% / 2.158 / -16.6% | none (longer sample) |
-| Real | **DEFAULT: L1 with complete highs**, to 2026-11-16 | **50.6% / 2.064 / -25.4%** | none (see below) |
+| Real | L1 with complete highs (default until 2026-11-17), to 2026-11-16 | **50.6% / 2.064 / -25.4%** | none (see below) |
 | Proxy 2001 | L1 (recorded highs), sleeve off | 34.0% / 1.474 / -22.1% | 34.0% / 1.474 |
 | Proxy | no L1, sleeve off | 31.8% / 1.409 / -22.1% | 31.8% / 1.409 / -22.1% |
 | Proxy | no L1, sleeve ON from 2011 | 34.0% / 1.480 / -22.1% | none |

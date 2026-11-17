@@ -1,0 +1,378 @@
+========================================================================================================================
+1. DATA AND LOADERS
+========================================================================================================================
+
+1a. file coverage (first, last, rows) -- last session of the panel = 2026-11-16
+  qqq_ohlc.csv                 1999-09-15 .. 2026-09-04  rows 6784
+  qqq_long_history.csv         1999-09-15 .. 2026-09-04  rows 6784
+  spmo_ohlc.csv                2015-10-12 .. 2026-09-04  rows 2741
+  tqqq_ohlc.csv                2015-10-01 .. 2026-09-04  rows 2748
+  qld_ohlc.csv                 2015-10-01 .. 2026-09-04  rows 2748
+  xlu_ohlc.csv                 2015-10-01 .. 2026-09-04  rows 2748
+  vxncls.csv                   2001-02-02 .. 2026-09-04  rows 6436
+  vxvcls.csv                   2007-12-04 .. 2026-09-04  rows 4718
+  vixcls_full.csv              1990-01-02 .. 2026-09-07  rows 9268
+  dgs3mo.csv                   1981-09-01 .. 2026-09-08  rows 11254
+  dgs3mo_full.csv              1981-09-01 .. 2026-08-31  rows 11249
+  QQEW_daily.csv               2006-05-02 .. 2026-09-09  rows 5121
+  QQEW_daily_ext.csv           2006-05-02 .. 2026-09-10  rows 5122
+  spy_long_history.csv         1999-09-15 .. 2026-08-27  rows 6778
+  xlu_long_history.csv         1999-09-15 .. 2026-08-27  rows 6778
+  vixm_daily.csv               2015-09-01 .. 2026-10-20  rows 2800
+  live_closes.csv              2022-01-03 .. 2026-11-16  rows 1223
+  qqq_highs.csv                2026-11-11 .. 2026-11-16  rows 4
+  boxx_yahoo_tr.csv            2022-12-28 .. 2026-10-29  rows 963
+  bil_yahoo_tr.csv             2007-05-30 .. 2026-10-29  rows 4887
+  ndx_survivor_ew_daily.csv    1999-01-05 .. 2006-12-29  rows 2010
+  spy_yahoo_daily.csv          2000-01-03 .. 2026-10-29  rows 6747
+  vixy_yahoo_full.csv          2011-01-04 .. 2026-11-16  rows 3991
+  qqq_highs_av_2026_09_11.csv  2026-09-08 .. 2026-11-10  rows 46
+  VIXCLS.csv                   1990-01-02 .. 2026-11-13  rows 9317
+  VXVCLS.csv                   2007-12-04 .. 2026-11-13  rows 4767
+  VXNCLS.csv                   2001-02-02 .. 2026-11-13  rows 6485
+
+1b. what the harness panel does after each file ends (genuine = file row or live_closes row for that session; panel sessions after 2026-08-20 = 62)
+  qqq_long_history.csv     file ends 2026-09-04; live_closes col QQQ; panel sessions w/o a genuine print: 0 
+  QQEW_daily_ext.csv       file ends 2026-09-10; live_closes col QQEW; panel sessions w/o a genuine print: 0 
+  spmo_ohlc.csv            file ends 2026-09-04; live_closes col SPMO; panel sessions w/o a genuine print: 0 
+  tqqq_ohlc.csv            file ends 2026-09-04; live_closes col TQQQ; panel sessions w/o a genuine print: 0 
+  qld_ohlc.csv             file ends 2026-09-04; live_closes col QLD; panel sessions w/o a genuine print: 0 
+  xlu_ohlc.csv             file ends 2026-09-04; live_closes col XLU; panel sessions w/o a genuine print: 0 
+  vixm_daily.csv           file ends 2026-10-20; live_closes col VIXM; panel sessions w/o a genuine print: 1 2026-11-16..2026-11-16
+  xlu_long_history.csv     file ends 2026-08-27; live_closes col (none: not extended by harness._load); panel sessions w/o a genuine print: 56 2026-08-28..2026-11-16
+  spy_long_history.csv     file ends 2026-08-27; live_closes col (none: carried FLAT by harness); panel sessions w/o a genuine print: 56 2026-08-28..2026-11-16
+  dgs3mo_full.csv ends 2026-08-31 -> 54 panel sessions after it earn the forward-filled last print (3.91%)
+  VIX (vol_curve.history, source CBOE here) ends 2026-11-16, VIX3M ends 2026-11-16; sessions after 2026-08-27 missing either: 0
+  NYSE sessions 2026-09-08..2026-11-16 expected 50 (no 2026-09-07), panel has 50
+  calendar gaps > 4 days since 2015 in the panel calendar: []
+
+1c. basis check: live_closes vs the file series on overlapping dates (live_closes is only used AFTER the file ends)
+  qqq_long_history.csv     overlap 1173 sessions 2022-01-03..2026-09-04: |diff| mean 0.000% max 0.18%
+  QQEW_daily_ext.csv       overlap 1176 sessions 2022-01-03..2026-09-10: |diff| mean 0.000% max 0.00%
+  spmo_ohlc.csv            overlap 1173 sessions 2022-01-03..2026-09-04: |diff| mean 0.001% max 0.27%
+  tqqq_ohlc.csv            overlap 1173 sessions 2022-01-03..2026-09-04: |diff| mean 0.000% max 0.10%
+  qld_ohlc.csv             overlap 1173 sessions 2022-01-03..2026-09-04: |diff| mean 0.001% max 0.09%
+  xlu_ohlc.csv             overlap 1173 sessions 2022-01-03..2026-09-04: |diff| mean 0.000% max 0.03%
+  vixm_daily.csv           overlap 1204 sessions 2022-01-03..2026-10-20: |diff| mean 0.001% max 0.04%
+  QQQ live_closes vs qqq_long_history on 2026-09-04: 718.96 vs 718.96; first live-only session 2026-09-08 = 718.36
+
+1d. QQQ highs: sessions after 2026-09-04 whose high is the fallback CLOSE (harness_live.highs())
+  use_live_highs=False -> 50 of 50 sessions fall back to the close
+  use_live_highs=True -> 0 of 50 sessions fall back to the close
+  real L1 with recorded highs (close fallback):  53.7% / 2.158 /  -16.6% | complete highs:  50.6% / 2.064 /  -25.4% | L1 off:  51.1% / 2.100 /  -16.5%
+
+1e. stale T-bill: repo dgs3mo_full.csv is frozen at 3.91% from 2026-08-31; fresh FRED DGS3MO (fetched 2026-11-17) is in fetched/
+  fetched DGS3MO 1981-09-01..2026-11-13; overlap with repo file 11249 dates, max |diff| 0.000 (history identical)
+  FRED 3m: 2026-08-31 3.91, 2026-09-30 4.20, 2026-10-30 4.16, 2026-11-13 4.32; repo-frozen 3.91
+  real panel: cash earned 2026-09-01..2026-11-16 repo 0.828% vs fresh 0.884% (compound over 54 sessions)
+  real live design: repo cash  51.1% / 2.100 /  -16.5% | fresh T-bill  51.1% / 2.100 /  -16.5%
+  proxy panel: cash earned 2026-09-01..2026-11-16 repo 0.828% vs fresh 0.884% (compound over 54 sessions)
+  proxy live design: repo cash  34.0% / 1.480 /  -22.1% | fresh T-bill  34.0% / 1.480 /  -22.1%
+  BOXX (live_closes) 2026-09-04..11-16: 0.796% ; T-bill panel same window 0.785% (BOXX is not in the backtest; cash = T-bill)
+
+1f. unused / dead-end series that silently flat-line (proxy XLU, SPY, VIXM last day): are they ever held in the live design?
+  real: max XLU weight in the live design 0.0000 (so XLU/SPY flat-lines cannot reach returns)
+  proxy: max XLU weight in the live design 0.0000 (so XLU/SPY flat-lines cannot reach returns)
+  real VIXM-75% arm: VIXM return on 2026-11-16 is forward-filled 0 (VIXM ends 2026-11-13); weight held that day 0.750
+
+1g. what if VIX/VIX3M came from the stale local FRED files (rebaseline_2026_10_22.py falls back to them silently on any CBOE error)?
+  real: complete VIX  51.1% / 2.100 /  -16.5% | stale-local VIX (ends 2026-09-07 / 2026-09-04)  49.0% / 2.057 /  -16.5% ; sleeve weight>0 on 5 vs 0 sessions after 2026-09-08
+  proxy: complete VIX  34.0% / 1.480 /  -22.1% | stale-local VIX (ends 2026-09-07 / 2026-09-04)  33.2% / 1.459 /  -22.1% ; sleeve weight>0 on 5 vs 0 sessions after 2026-09-08
+
+1h. proxy_vix3m substitution (vol_curve.PROXY_K x SMA63(VIX)) for the whole VIX3M history: effect on the sleeve (research cannot do this silently: history() raises)
+  real: real VIX3M  51.1% / 2.100 /  -16.5% | proxy VIX3M  52.4% / 2.125 /  -16.5%
+  proxy: real VIX3M  34.0% / 1.480 /  -22.1% | proxy VIX3M  34.5% / 1.493 /  -22.1%
+
+1i. counterfactuals: what each series would do if its file simply ended and the backtest kept running (flat-line = the _rets() forward-fill) -- NOT what the harness does, but what an unpatched loader would
+  QQEW frozen after 2026-09-10 (breadth leg flat, QQQ runs)  real  51.1% / 2.100 /  -16.5% (d Sh +0.000, d maxDD +0.0pp)
+                                                             proxy  34.0% / 1.480 /  -22.1% (d Sh +0.000, d maxDD +0.0pp)
+  SPMO/TQQQ/QLD frozen after 2026-09-04 (real legs earn 0; proxy unaffected) real  52.3% / 2.187 /  -15.9% (d Sh +0.087, d maxDD +0.6pp)
+                                                             proxy  34.0% / 1.480 /  -22.1% (d Sh +0.000, d maxDD +0.0pp)
+  T-bill earning 0 after 2026-08-31 (instead of 3.91% frozen) real  51.0% / 2.100 /  -16.5% (d Sh -0.000, d maxDD +0.0pp)
+                                                             proxy  34.0% / 1.480 /  -22.1% (d Sh -0.000, d maxDD +0.0pp)
+  elapsed 7s
+
+========================================================================================================================
+2. LIVE RULES ADOPTED 2026-09-01 OR LATER: ON vs OFF on complete data (live design, all else as live, L1 off)
+========================================================================================================================
+Cells: CAGR / Sharpe (mean/sd, no rf, as the project) / max DD.  real = 2015-11-03..2026-11-16, proxy = 2001-01-03..2026-11-16.  "excl" = daily returns of 2026-10-26..2026-11-16 dropped from both arms (paths run in full, days then removed).
+d = ON minus OFF (Sharpe; max DD in pp, positive = ON shallower).  stretch = compounded return of the arm over 2026-10-26..2026-11-16.  boot = P(ON Sharpe > OFF Sharpe) over 400 paired stationary-bootstrap resamples (block 20) [5%,95%] of dSharpe.
+
+R01  09-01  volatility target 20% (outermost overlay)
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  53.3% / 2.002 /  -16.7% | excl  52.0% / 1.990 /  -16.6% | stretch +12.31% | 35 tr/yr
+  real  d: Sharpe +0.099  CAGR  -2.2pp  maxDD  +0.2pp | excl d: Sharpe +0.101  CAGR  -2.3pp  maxDD  +0.6pp | stretch +0.44pp | boot P 0.96 [+0.005,+0.202]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  35.7% / 1.377 /  -27.9% | excl  35.2% / 1.367 /  -27.9% | stretch +12.47% | 31 tr/yr
+  proxy d: Sharpe +0.103  CAGR  -1.7pp  maxDD  +5.8pp | excl d: Sharpe +0.103  CAGR  -1.8pp  maxDD  +5.8pp | stretch +0.41pp | boot P 0.99 [+0.042,+0.163]
+
+R02  09-06  20/100 fast re-entry overlay
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  47.8% / 2.065 /  -16.5% | excl  46.5% / 2.056 /  -15.9% | stretch +12.75% | 46 tr/yr
+  real  d: Sharpe +0.035  CAGR  +3.2pp  maxDD  -0.0pp | excl d: Sharpe +0.034  CAGR  +3.2pp  maxDD  +0.0pp | stretch +0.00pp | boot P 0.79 [-0.062,+0.173]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  30.1% / 1.417 /  -18.6% | excl  29.5% / 1.406 /  -18.6% | stretch +12.88% | 41 tr/yr
+  proxy d: Sharpe +0.063  CAGR  +3.9pp  maxDD  -3.6pp | excl d: Sharpe +0.063  CAGR  +3.9pp  maxDD  -3.6pp | stretch +0.00pp | boot P 0.90 [-0.019,+0.136]
+
+R03  09-06/09-23  extension trim v2 vs graded v1 (same A base)
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  46.6% / 1.741 /  -16.7% | excl  45.3% / 1.722 /  -16.7% | stretch +12.75% | 59 tr/yr
+  real  d: Sharpe +0.359  CAGR  +4.5pp  maxDD  +0.2pp | excl d: Sharpe +0.368  CAGR  +4.5pp  maxDD  +0.8pp | stretch +0.00pp | boot P 0.98 [+0.091,+0.647]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.6% / 1.333 /  -24.2% | excl  33.1% / 1.322 /  -24.2% | stretch +12.88% | 54 tr/yr
+  proxy d: Sharpe +0.147  CAGR  +0.4pp  maxDD  +2.1pp | excl d: Sharpe +0.148  CAGR  +0.4pp  maxDD  +2.1pp | stretch +0.00pp | boot P 0.95 [+0.003,+0.301]
+
+R03b  09-06/09-23  extension trim v2 vs NO trim
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  43.5% / 1.476 /  -20.6% | excl  42.2% / 1.454 /  -20.6% | stretch +12.75% | 50 tr/yr
+  real  d: Sharpe +0.624  CAGR  +7.6pp  maxDD  +4.1pp | excl d: Sharpe +0.637  CAGR  +7.6pp  maxDD  +4.7pp | stretch +0.00pp | boot P 1.00 [+0.340,+0.946]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  30.8% / 1.133 /  -28.7% | excl  30.2% / 1.121 /  -28.7% | stretch +12.88% | 45 tr/yr
+  proxy d: Sharpe +0.347  CAGR  +3.3pp  maxDD  +6.6pp | excl d: Sharpe +0.349  CAGR  +3.2pp  maxDD  +6.6pp | stretch +0.00pp | boot P 1.00 [+0.181,+0.524]
+
+R04  09-23  whipsaw carry of held votes (3 sessions) vs none
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  49.8% / 2.043 /  -16.5% | excl  48.5% / 2.032 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe +0.057  CAGR  +1.3pp  maxDD  -0.0pp | excl d: Sharpe +0.058  CAGR  +1.3pp  maxDD  -0.0pp | stretch +0.00pp | boot P 0.85 [-0.017,+0.151]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.4% / 1.453 /  -22.1% | excl  32.9% / 1.443 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe +0.027  CAGR  +0.6pp  maxDD  -0.0pp | excl d: Sharpe +0.027  CAGR  +0.6pp  maxDD  -0.0pp | stretch +0.00pp | boot P 0.88 [-0.009,+0.070]
+
+R05  09-09  drift band 5% vs 3%
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  50.9% / 2.095 /  -16.6% | excl  49.6% / 2.085 /  -15.9% | stretch +12.71% | 58 tr/yr
+  real  d: Sharpe +0.005  CAGR  +0.2pp  maxDD  +0.0pp | excl d: Sharpe +0.005  CAGR  +0.2pp  maxDD  -0.0pp | stretch +0.04pp | boot P 0.95 [+0.000,+0.011]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.9% / 1.478 /  -22.2% | excl  33.4% / 1.467 /  -22.2% | stretch +12.84% | 52 tr/yr
+  proxy d: Sharpe +0.002  CAGR  +0.1pp  maxDD  +0.1pp | excl d: Sharpe +0.002  CAGR  +0.1pp  maxDD  +0.1pp | stretch +0.03pp | boot P 0.83 [-0.001,+0.006]
+
+R06  09-19  D gate (breadth<0.20 OR gap200<2%)
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  40.4% / 1.632 /  -28.3% | excl  42.7% / 1.723 /  -28.3% | stretch -14.23% | 48 tr/yr
+  real  d: Sharpe +0.468  CAGR +10.6pp  maxDD +11.7pp | excl d: Sharpe +0.367  CAGR  +7.1pp  maxDD +12.4pp | stretch +26.98pp | boot P 1.00 [+0.208,+0.762]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  28.8% / 1.214 /  -28.9% | excl  29.7% / 1.248 /  -28.9% | stretch -14.46% | 43 tr/yr
+  proxy d: Sharpe +0.266  CAGR  +5.2pp  maxDD  +6.8pp | excl d: Sharpe +0.222  CAGR  +3.8pp  maxDD  +6.8pp | stretch +27.34pp | boot P 1.00 [+0.117,+0.407]
+
+R07  09-19  state E 100% cash vs 50% XLU/50% cash
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  50.1% / 2.069 /  -17.6% | excl  48.8% / 2.057 /  -17.6% | stretch +13.08% | 48 tr/yr
+  real  d: Sharpe +0.031  CAGR  +0.9pp  maxDD  +1.1pp | excl d: Sharpe +0.033  CAGR  +1.0pp  maxDD  +1.7pp | stretch -0.33pp | boot P 0.91 [-0.008,+0.074]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.6% / 1.462 /  -22.1% | excl  33.0% / 1.452 /  -22.1% | stretch +12.87% | 45 tr/yr
+  proxy d: Sharpe +0.018  CAGR  +0.4pp  maxDD  -0.0pp | excl d: Sharpe +0.018  CAGR  +0.4pp  maxDD  -0.0pp | stretch +0.01pp | boot P 0.89 [-0.007,+0.045]
+
+R08  10-08  VIXM sleeve 75% of cash leg (VIXM, D2-off on) vs no sleeve
+  real  ON   49.7% / 2.079 /  -16.5% | excl  49.5% / 2.085 /  -15.9% | stretch  +4.17% | 47 tr/yr
+  real  OFF  45.2% / 1.932 /  -19.3% | excl  46.0% / 1.964 /  -19.3% | stretch  -3.08% | 44 tr/yr
+  real  d: Sharpe +0.146  CAGR  +4.5pp  maxDD  +2.8pp | excl d: Sharpe +0.121  CAGR  +3.6pp  maxDD  +3.4pp | stretch +7.26pp | boot P 1.00 [+0.067,+0.251]
+  proxy ON   33.6% / 1.472 /  -22.1% | excl  33.5% / 1.471 /  -22.1% | stretch  +4.29% | 43 tr/yr
+  proxy OFF  31.8% / 1.409 /  -22.1% | excl  32.1% / 1.420 /  -22.1% | stretch  -2.97% | 42 tr/yr
+  proxy d: Sharpe +0.062  CAGR  +1.8pp  maxDD  +0.0pp | excl d: Sharpe +0.050  CAGR  +1.4pp  maxDD  +0.0pp | stretch +7.27pp | boot P 1.00 [+0.025,+0.104]
+
+R09  10-09  D ladder vs plain D = 100% QLD
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  50.4% / 2.011 /  -17.6% | excl  49.1% / 1.995 /  -17.6% | stretch +12.82% | 46 tr/yr
+  real  d: Sharpe +0.089  CAGR  +0.6pp  maxDD  +1.1pp | excl d: Sharpe +0.096  CAGR  +0.6pp  maxDD  +1.7pp | stretch -0.08pp | boot P 0.98 [+0.017,+0.156]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.4% / 1.429 /  -22.1% | excl  32.8% / 1.417 /  -22.1% | stretch +12.80% | 43 tr/yr
+  proxy d: Sharpe +0.051  CAGR  +0.6pp  maxDD  -0.0pp | excl d: Sharpe +0.053  CAGR  +0.6pp  maxDD  -0.0pp | stretch +0.07pp | boot P 0.98 [+0.019,+0.087]
+
+R10  10-22  vol estimator max(10d,30d) vs plain 30d
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  51.8% / 2.079 /  -16.9% | excl  50.6% / 2.070 /  -15.9% | stretch +12.31% | 41 tr/yr
+  real  d: Sharpe +0.021  CAGR  -0.8pp  maxDD  +0.3pp | excl d: Sharpe +0.020  CAGR  -0.8pp  maxDD  +0.0pp | stretch +0.44pp | boot P 0.79 [-0.020,+0.068]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  34.4% / 1.470 /  -22.2% | excl  33.8% / 1.461 /  -22.2% | stretch +12.47% | 37 tr/yr
+  proxy d: Sharpe +0.010  CAGR  -0.3pp  maxDD  +0.1pp | excl d: Sharpe +0.009  CAGR  -0.4pp  maxDD  +0.1pp | stretch +0.41pp | boot P 0.86 [-0.007,+0.032]
+
+R11  10-22  D3 100% TQQQ vs D3 40/60 SPMO/TQQQ
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  51.0% / 2.100 /  -16.5% | excl  49.7% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe -0.000  CAGR  +0.0pp  maxDD  -0.0pp | excl d: Sharpe -0.000  CAGR  +0.0pp  maxDD  -0.0pp | stretch +0.00pp | boot P 0.48 [-0.006,+0.005]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe -0.000  CAGR  +0.0pp  maxDD  -0.0pp | excl d: Sharpe -0.000  CAGR  +0.0pp  maxDD  -0.0pp | stretch +0.00pp | boot P 0.40 [-0.005,+0.003]
+
+R12  10-22  A base 40/60 vs 25/75
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  52.0% / 2.085 /  -16.3% | excl  50.7% / 2.074 /  -16.1% | stretch +12.75% | 45 tr/yr
+  real  d: Sharpe +0.016  CAGR  -0.9pp  maxDD  -0.2pp | excl d: Sharpe +0.016  CAGR  -0.9pp  maxDD  +0.1pp | stretch +0.00pp | boot P 0.70 [-0.021,+0.056]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  34.4% / 1.478 /  -22.4% | excl  33.9% / 1.467 /  -22.4% | stretch +12.88% | 41 tr/yr
+  proxy d: Sharpe +0.002  CAGR  -0.4pp  maxDD  +0.3pp | excl d: Sharpe +0.002  CAGR  -0.4pp  maxDD  +0.3pp | stretch +0.00pp | boot P 0.61 [-0.013,+0.019]
+
+R13  10-22  sleeve OFF in ungated D2 (VIXY live)
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  50.9% / 2.100 /  -16.5% | excl  49.6% / 2.091 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe -0.000  CAGR  +0.1pp  maxDD  -0.0pp | excl d: Sharpe -0.000  CAGR  +0.1pp  maxDD  +0.0pp | stretch +0.00pp | boot P 0.49 [-0.016,+0.011]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.9% / 1.478 /  -22.1% | excl  33.4% / 1.468 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe +0.002  CAGR  +0.1pp  maxDD  +0.0pp | excl d: Sharpe +0.002  CAGR  +0.1pp  maxDD  +0.0pp | stretch +0.00pp | boot P 0.70 [-0.005,+0.007]
+
+R14  10-29  D zone buffer +/-0.5% vs none
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  50.6% / 2.083 /  -16.6% | excl  49.3% / 2.074 /  -15.9% | stretch +12.61% | 48 tr/yr
+  real  d: Sharpe +0.017  CAGR  +0.4pp  maxDD  +0.1pp | excl d: Sharpe +0.017  CAGR  +0.4pp  maxDD  -0.0pp | stretch +0.14pp | boot P 0.77 [-0.017,+0.050]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.6% / 1.468 /  -22.1% | excl  33.1% / 1.458 /  -22.1% | stretch +12.32% | 44 tr/yr
+  proxy d: Sharpe +0.012  CAGR  +0.4pp  maxDD  +0.0pp | excl d: Sharpe +0.011  CAGR  +0.3pp  maxDD  +0.0pp | stretch +0.56pp | boot P 0.91 [-0.003,+0.028]
+
+R15  10-30  A base 20/80 (adopted 10-30, reversed 11-06) vs 40/60
+  real  ON   52.3% / 2.082 /  -16.3% | excl  51.0% / 2.071 /  -16.1% | stretch +12.75% | 44 tr/yr
+  real  OFF  51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe -0.018  CAGR  +1.2pp  maxDD  +0.3pp | excl d: Sharpe -0.019  CAGR  +1.2pp  maxDD  -0.2pp | stretch +0.00pp | boot P 0.27 [-0.067,+0.029]
+  proxy ON   34.5% / 1.478 /  -22.5% | excl  34.0% / 1.468 /  -22.5% | stretch +12.88% | 40 tr/yr
+  proxy OFF  34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe -0.002  CAGR  +0.5pp  maxDD  -0.4pp | excl d: Sharpe -0.002  CAGR  +0.5pp  maxDD  -0.4pp | stretch +0.00pp | boot P 0.46 [-0.023,+0.017]
+
+R16  11-06  A base 40/60 vs 20/80
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  52.3% / 2.082 /  -16.3% | excl  51.0% / 2.071 /  -16.1% | stretch +12.75% | 44 tr/yr
+  real  d: Sharpe +0.018  CAGR  -1.2pp  maxDD  -0.3pp | excl d: Sharpe +0.019  CAGR  -1.2pp  maxDD  +0.2pp | stretch +0.00pp | boot P 0.73 [-0.032,+0.067]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  34.5% / 1.478 /  -22.5% | excl  34.0% / 1.468 /  -22.5% | stretch +12.88% | 40 tr/yr
+  proxy d: Sharpe +0.002  CAGR  -0.5pp  maxDD  +0.4pp | excl d: Sharpe +0.002  CAGR  -0.5pp  maxDD  +0.4pp | stretch +0.00pp | boot P 0.58 [-0.020,+0.023]
+
+R17  11-11  sleeve VIXY 35% vs VIXM 75%
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  49.7% / 2.079 /  -16.5% | excl  49.5% / 2.085 /  -15.9% | stretch  +4.17% | 47 tr/yr
+  real  d: Sharpe +0.022  CAGR  +1.3pp  maxDD  +0.0pp | excl d: Sharpe +0.005  CAGR  +0.3pp  maxDD  +0.0pp | stretch +8.57pp | boot P 0.73 [-0.035,+0.074]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.6% / 1.472 /  -22.1% | excl  33.5% / 1.471 /  -22.1% | stretch  +4.29% | 43 tr/yr
+  proxy d: Sharpe +0.008  CAGR  +0.4pp  maxDD  +0.0pp | excl d: Sharpe -0.001  CAGR  +0.0pp  maxDD  +0.0pp | stretch +8.58pp | boot P 0.73 [-0.013,+0.032]
+
+R17b  10-08/11-11  sleeve VIXY 35% vs no sleeve
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  45.2% / 1.932 /  -19.3% | excl  46.0% / 1.964 /  -19.3% | stretch  -3.08% | 44 tr/yr
+  real  d: Sharpe +0.168  CAGR  +5.8pp  maxDD  +2.8pp | excl d: Sharpe +0.126  CAGR  +3.8pp  maxDD  +3.4pp | stretch +15.83pp | boot P 0.99 [+0.044,+0.299]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  31.8% / 1.409 /  -22.1% | excl  32.1% / 1.420 /  -22.1% | stretch  -2.97% | 42 tr/yr
+  proxy d: Sharpe +0.070  CAGR  +2.2pp  maxDD  +0.0pp | excl d: Sharpe +0.049  CAGR  +1.4pp  maxDD  +0.0pp | stretch +15.85pp | boot P 0.99 [+0.022,+0.121]
+
+R18  11-11  deep-E QQQ leg (50% of cash leg)
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  47.3% / 2.036 /  -16.5% | excl  46.0% / 2.025 /  -15.9% | stretch +12.75% | 45 tr/yr
+  real  d: Sharpe +0.064  CAGR  +3.7pp  maxDD  +0.0pp | excl d: Sharpe +0.065  CAGR  +3.7pp  maxDD  -0.0pp | stretch +0.00pp | boot P 0.96 [+0.003,+0.146]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  32.1% / 1.431 /  -22.1% | excl  31.6% / 1.420 /  -22.1% | stretch +12.88% | 41 tr/yr
+  proxy d: Sharpe +0.049  CAGR  +1.9pp  maxDD  +0.0pp | excl d: Sharpe +0.049  CAGR  +1.9pp  maxDD  +0.0pp | stretch +0.00pp | boot P 1.00 [+0.019,+0.085]
+
+R19  11-11  VIX-panic QQQ leg (25% of cash leg)
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  49.4% / 2.105 /  -16.5% | excl  48.1% / 2.097 /  -15.9% | stretch +12.75% | 45 tr/yr
+  real  d: Sharpe -0.005  CAGR  +1.7pp  maxDD  -0.0pp | excl d: Sharpe -0.006  CAGR  +1.6pp  maxDD  +0.0pp | stretch +0.00pp | boot P 0.43 [-0.077,+0.049]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  32.6% / 1.472 /  -19.8% | excl  32.1% / 1.462 /  -19.8% | stretch +12.88% | 41 tr/yr
+  proxy d: Sharpe +0.008  CAGR  +1.4pp  maxDD  -2.4pp | excl d: Sharpe +0.008  CAGR  +1.4pp  maxDD  -2.4pp | stretch +0.00pp | boot P 0.54 [-0.047,+0.041]
+
+R20  11-11  B row 50% SPMO/50% cash vs 75/25 SPMO/TQQQ
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  50.6% / 2.084 /  -16.5% | excl  49.3% / 2.073 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe +0.016  CAGR  +0.5pp  maxDD  -0.0pp | excl d: Sharpe +0.017  CAGR  +0.5pp  maxDD  -0.0pp | stretch +0.00pp | boot P 0.82 [-0.008,+0.057]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  33.3% / 1.448 /  -23.6% | excl  32.8% / 1.437 /  -23.6% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe +0.032  CAGR  +0.7pp  maxDD  +1.5pp | excl d: Sharpe +0.033  CAGR  +0.7pp  maxDD  +1.5pp | stretch +0.00pp | boot P 0.99 [+0.006,+0.059]
+
+R21  11-11  gross cap 2.0x vs no cap
+  real  ON   51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  OFF  55.1% / 2.097 /  -18.3% | excl  53.8% / 2.085 /  -18.3% | stretch +13.01% | 50 tr/yr
+  real  d: Sharpe +0.003  CAGR  -4.1pp  maxDD  +1.8pp | excl d: Sharpe +0.006  CAGR  -4.0pp  maxDD  +2.4pp | stretch -0.26pp | boot P 0.52 [-0.038,+0.046]
+  proxy ON   34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  37.0% / 1.491 /  -22.1% | excl  36.5% / 1.481 /  -22.1% | stretch +13.14% | 46 tr/yr
+  proxy d: Sharpe -0.011  CAGR  -3.0pp  maxDD  +0.0pp | excl d: Sharpe -0.011  CAGR  -3.0pp  maxDD  +0.0pp | stretch -0.26pp | boot P 0.18 [-0.033,+0.010]
+
+R22  11-11  L1 (day-high D gate), COMPLETE highs, vs off
+  real  ON   50.6% / 2.064 /  -25.4% | excl  52.4% / 2.149 /  -16.6% | stretch  -9.66% | 47 tr/yr
+  real  OFF  51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe -0.036  CAGR  -0.5pp  maxDD  -8.9pp | excl d: Sharpe +0.059  CAGR  +2.6pp  maxDD  -0.7pp | stretch -22.41pp | boot P 0.40 [-0.202,+0.104]
+  proxy ON   35.1% / 1.505 /  -24.9% | excl  35.8% / 1.536 /  -22.1% | stretch  -9.98% | 43 tr/yr
+  proxy OFF  34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe +0.025  CAGR  +1.1pp  maxDD  -2.8pp | excl d: Sharpe +0.066  CAGR  +2.3pp  maxDD  +0.0pp | stretch -22.85pp | boot P 0.69 [-0.064,+0.101]
+
+R22r  11-11  L1 as RECORDED (50 sessions read the close) vs off
+  real  ON   53.7% / 2.158 /  -16.6% | excl  52.4% / 2.149 /  -16.6% | stretch +12.75% | 47 tr/yr
+  real  OFF  51.1% / 2.100 /  -16.5% | excl  49.8% / 2.090 /  -15.9% | stretch +12.75% | 47 tr/yr
+  real  d: Sharpe +0.058  CAGR  +2.6pp  maxDD  -0.1pp | excl d: Sharpe +0.059  CAGR  +2.6pp  maxDD  -0.7pp | stretch +0.00pp | boot P 0.94 [-0.004,+0.128]
+  proxy ON   36.3% / 1.546 /  -22.1% | excl  35.8% / 1.536 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy OFF  34.0% / 1.480 /  -22.1% | excl  33.5% / 1.470 /  -22.1% | stretch +12.88% | 43 tr/yr
+  proxy d: Sharpe +0.066  CAGR  +2.3pp  maxDD  +0.0pp | excl d: Sharpe +0.066  CAGR  +2.3pp  maxDD  +0.0pp | stretch +0.00pp | boot P 1.00 [+0.026,+0.111]
+  elapsed 30s
+
+R16 detail: 2026 YTD and calendar years, 40/60 vs 20/80 (live design, complete data)
+  40/60: 2022 +2.2% 2023 +84.6% 2024 +78.8% 2025 +33.3% 2026 +28.4% | 2026 to 11-05 +21.7% (max DD within -16.5%)
+  20/80: 2022 +0.3% 2023 +96.4% 2024 +74.7% 2025 +31.9% 2026 +28.4% | 2026 to 11-05 +21.7% (max DD within -16.3%)
+
+========================================================================================================================
+3. LOOK-AHEAD AND TIMING
+========================================================================================================================
+
+3a. harness_live `lag` = delays EVERY target weight and regime key by `lag` sessions (np.concatenate on W and key): an execution delay of the whole book, not a lag of one input.
+  real: live  51.1% / 2.100 /  -16.5% | lag=1 (all inputs, execute one session late)  43.4% / 1.849 /  -19.8%
+  proxy: live  34.0% / 1.480 /  -22.1% | lag=1 (all inputs, execute one session late)  29.4% / 1.319 /  -26.7%
+
+3b. 15:50 live reading vs the backtest's close, measured on the 27 live runs 2026-10-09..2026-11-16 (data/runs/*.json vs closes)
+  VIX (15:50 reading, Robinhood until 11-05 then median) minus CBOE close: n=27 mean +0.02 sd 0.35 max|.| 0.99 pts
+  QQQ 15:50 last / close - 1: n=27 mean +0.030% sd 0.122% max|.| 0.50% ; QQEW: sd 0.199%
+  fill_quality.csv: 72 fills of SPMO/TQQQ/QLD vs signal-session close: mean slippage -2.9 bps, sd 21.5 bps
+
+3c. one-day lag of ONE input at a time (live design; real | proxy; Sharpe/CAGR/maxDD)
+  live (no lag)                                                  real  51.1% / 2.100 /  -16.5% | proxy  34.0% / 1.480 /  -22.1%
+  VIX + VIX3M lagged 1 session (sleeve latch + panic latch)      real  53.3% / 2.128 /  -16.5% | proxy  34.8% / 1.496 /  -22.3%
+  VIX only lagged (VIX3M current)                                real  49.8% / 2.033 /  -16.7% | proxy  33.6% / 1.459 /  -22.3%
+  QQEW lagged 1 session in the breadth signal                    real  49.1% / 2.018 /  -16.5% | proxy  33.1% / 1.440 /  -22.1%
+  ALL inputs lagged (harness lag=1)                              real  43.4% / 1.849 /  -19.8% | proxy  29.4% / 1.319 /  -26.7%
+  deltas vs live (Sharpe, CAGR pp, maxDD pp):
+    VIX + VIX3M lagged 1 session (sleeve latch + panic latch)      real  +0.028  +2.3  +0.0
+    VIX + VIX3M lagged 1 session (sleeve latch + panic latch)      proxy +0.016  +0.8  -0.2
+    VIX only lagged (VIX3M current)                                real  -0.067  -1.2  -0.2
+    VIX only lagged (VIX3M current)                                proxy -0.021  -0.4  -0.2
+    QQEW lagged 1 session in the breadth signal                    real  -0.082  -2.0  +0.0
+    QQEW lagged 1 session in the breadth signal                    proxy -0.040  -0.9  +0.0
+    ALL inputs lagged (harness lag=1)                              real  -0.251  -7.7  -3.2
+    ALL inputs lagged (harness lag=1)                              proxy -0.161  -4.6  -4.6
+
+3d. QQQ-derived signals lagged 1 session while VIX/QQEW stay current (state, gaps, vol, gate, trim): isolates the "4pm close vs 15:50" input
+  real  QQQ-signals lag 1:  43.2% / 1.836 /  -19.5% | d vs live: Sharpe -0.264 CAGR -7.9pp maxDD -3.0pp
+  proxy QQQ-signals lag 1:  29.4% / 1.316 /  -26.6% | d vs live: Sharpe -0.164 CAGR -4.6pp maxDD -4.4pp
+
+3e. VIX reading noise matched to the measured 15:50-vs-close spread (sd 0.35 pts), applied to VIX and VIX3M independently, 150 draws
+  real  noisy-VIX Sharpe mean 2.081 (live 2.100) sd 0.028, min 2.019; CAGR mean 51.0% (live 51.1%); maxDD mean -16.5% (live -16.5%), worst -16.5%
+  proxy noisy-VIX Sharpe mean 1.473 (live 1.480) sd 0.013, min 1.446; CAGR mean 34.0% (live 34.0%); maxDD mean -22.1% (live -22.1%), worst -22.1%
+
+3f. realistic 15:50-vs-close noise on the QQQ and QQEW LEVELS the signals read (sd 0.122% QQQ, 0.199% QQEW measured in 3b), independent per day, 40 draws; returns stay true
+  real  noisy-signal Sharpe mean 2.019 (live 2.100) sd 0.062, min 1.906; CAGR mean 48.7% (live 51.1%); maxDD mean -18.7% (live -16.5%), worst -22.7%
+  proxy noisy-signal Sharpe mean 1.429 (live 1.480) sd 0.031, min 1.363; CAGR mean 32.6% (live 34.0%); maxDD mean -22.5% (live -22.1%), worst -26.5%
+
+========================================================================================================================
+4. CAN THE QUOTED STRATEGY.md REFERENCE NUMBERS BE REPRODUCED? (harness_live engine with each rule-era design, 4 bp cost where the study used 4 bp, window ends as the study)
+========================================================================================================================
+A ladder 10-09: cited live 47.7/1.912/-18.7 | 28.7/1.226/-23.5 ; pick 54.7/1.977/-19.4 | 32.7/1.275/-27.7 (labelled real 2015-11..2026-10)
+ d1 2026-08-27 pick real  53.9% / 1.968 /  -19.3%  (to 2026-08-27)
+     live real  47.1% / 1.904 /  -18.7%  (to 2026-08-27)
+ d1 2026-09-04 pick real  53.7% / 1.960 /  -19.3%  (to 2026-09-04)
+     live real  47.0% / 1.898 /  -18.7%  (to 2026-09-04)
+ d1 2026-10-08 pick real  54.3% / 1.965 /  -19.3%  (to 2026-10-08)
+     live real  47.4% / 1.901 /  -18.7%  (to 2026-10-08)
+ proxy pick  33.7% / 1.310 /  -26.6%  (to 2026-08-27) | live  29.6% / 1.263 /  -22.5%  (to 2026-08-27)
+B rebaseline 10-22: cited real 47.9/2.006/-18.4 proxy 30.4/1.320/-24.6 (to 08-27)
+ real  47.9% / 2.006 /  -18.4%  (to 2026-08-27) 
+ proxy  30.4% / 1.320 /  -24.6%  (to 2026-08-27)
+C buffer 10-29: cited real 43.52/1.831/-18.4 -> 44.00/1.849 (to 10-29, 4bp, no VIXM?)
+ sleeve none buf 0  43.5% / 1.831 /  -18.4%  (to 2026-10-29)
+ sleeve none buf 0.005  44.0% / 1.849 /  -18.4%  (to 2026-10-29)
+ sleeve vixm buf 0  46.6% / 1.940 /  -18.4%  (to 2026-10-29)
+ sleeve vixm buf 0.005  47.1% / 1.958 /  -18.4%  (to 2026-10-29)
+D 10-30 A 20/80: cited real 47.2/1.959/-18.4 -> 53.5/1.911/-20.3; proxy 30.7/1.321/-22.2 -> 33.9/1.301/-26.5
+ real (0.4, 0.6)  47.2% / 1.959 /  -18.4%  (to 2026-10-29) | proxy  30.7% / 1.321 /  -22.2%  (to 2026-10-29)
+ real (0.2, 0.8)  53.5% / 1.911 /  -20.3%  (to 2026-10-29) | proxy  33.9% / 1.301 /  -26.5%  (to 2026-10-29)
+E L1 11-11: cited real 53.1/2.053/-18.3 -> 56.0/2.109/-18.3 ; proxy 34.4/1.411/-22.1 -> 37.1/1.485/-22.9 (to 11-10, no cap, VIXM, deep-E+panic)
+ B (0.75, 0.25) l1 False real  53.1% / 2.053 /  -18.3%  (to 2026-11-10) | proxy  34.2% / 1.398 /  -23.6%  (to 2026-11-10)
+ B (0.75, 0.25) l1 True real  56.2% / 2.116 /  -18.3%  (to 2026-11-10) | proxy  36.9% / 1.467 /  -23.6%  (to 2026-11-10)
+ B (0.5, 0) l1 False real  53.6% / 2.068 /  -18.3%  (to 2026-11-10) | proxy  34.8% / 1.425 /  -22.1%  (to 2026-11-10)
+ B (0.5, 0) l1 True real  56.7% / 2.131 /  -18.3%  (to 2026-11-10) | proxy  37.5% / 1.495 /  -22.1%  (to 2026-11-10)
+F trim v2 09-23: cited real 37.30/1.475/-18.6 (v1 A50/50) -> 39.32/1.717/-17.8 ; proxy 25.46/1.071/-27.0 -> 25.41/1.161/-21.9
+  v1 real  37.3% / 1.475 /  -18.6%  (to 2026-09-04) | proxy  27.5% / 1.142 /  -26.7%  (to 2026-08-27)
+  v2 real  41.0% / 1.796 /  -17.8%  (to 2026-09-04) | proxy  27.8% / 1.261 /  -21.7%  (to 2026-08-27)
+
+total elapsed 162s
