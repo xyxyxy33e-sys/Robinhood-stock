@@ -108,6 +108,7 @@ def tw(sg, eff, xrow):
     vt = CFG['vol_target']
     mult = np.where(np.isnan(v) | (v <= 0), 1.0, np.minimum(1.0, vt / np.where(v > 0, v, 1)))
     w[..., :4] *= mult[..., None]
+    w[..., 4] = 1.0 - w[..., :4].sum(-1)
     return w
 GX = np.array(S.GROSS_EXPOSURE, float)
 
@@ -275,11 +276,12 @@ tb('\n### Top 5 drawdown episodes, p01 (depth %, peak -> trough -> recovery)\n')
 for name in EP: tb(f'| {name} | ' + ' | '.join(f'{e[0]*100:.1f}%: {e[1]} -> {e[2]} -> {e[3]}' for e in EP[name]) + ' |')
 # spells
 def spells(P, s0):
-    act = P['act'][s0:-1]; out = []; i = 0; n = len(act)
+    """Contiguous runs of ONE overlay type (BC->A, or F->C); a BC run that follows an F run directly is a separate spell."""
+    ty = np.where(P['bc'], 1, np.where(P['f'], 2, 0))[s0:-1]; out = []; i = 0; n = len(ty)
     while i < n:
-        if act[i]:
+        if ty[i]:
             j = i
-            while j + 1 < n and act[j + 1]: j += 1
+            while j + 1 < n and ty[j + 1] == ty[i]: j += 1
             out.append((i, j)); i = j + 1
         else: i += 1
     return out
@@ -312,27 +314,25 @@ def attribution(offname, label):
     return rows, ld
 ATT = {}
 for off_ in ('OFF_audit', 'OFF'): ATT[off_] = attribution(off_, 'the audit arm' if off_ == 'OFF_audit' else 'clean off')
-def window_detail(name, offname):
-    e = EP[name][0]; a, b = e[5], e[6]    # nav indices; return k = nav idx k+1 -> days a..b-1 (0-based) are the drawdown days
-    rows, ld = ATT[offname]
-    rO = R[(offname, 'p01')]['r']
-    pk = float(np.prod(1 + rF[a:b]) - 1); po = float(np.prod(1 + rO[a:b]) - 1)
-    log(f'\n  Max-DD window of {name}: {e[1]} -> {e[2]} ({e[0]*100:.1f}%).  Over the same days: FULL {pk*100:+.1f}%, {offname} {po*100:+.1f}%, QQQ {PFp["qqq"][s0+b]/PFp["qqq"][s0+a]*100-100:+.1f}%; log diff over the window {ld[a:b].sum()*100:+.1f} pp')
+def window_detail(ep, offname='OFF'):
+    a, b = ep[5], ep[6]    # nav indices; days a..b-1 (0-based return index) are the drawdown days
+    rows, ld = ATT[offname]; rO = R[(offname, 'p01')]['r']
+    navF = np.concatenate([[1.0], np.cumprod(1 + rF)]); navO = np.concatenate([[1.0], np.cumprod(1 + rO)])
+    pk = navF[b] / navF[a] - 1; po = navO[b] / navO[a] - 1
+    log(f'\n  Episode {ep[1]} -> {ep[2]}: FULL {pk*100:+.1f}%, {offname} {po*100:+.1f}%, QQQ {PFp["qqq"][s0+b]/PFp["qqq"][s0+a]*100-100:+.1f}%; '
+        f'NAV FULL/{offname} at the peak date {navF[a]/navO[a]:.3f}, at the trough date {navF[b]/navO[b]:.3f} (log diff over the window {ld[a:b].sum()*100:+.1f} pp, before the peak {ld[:a].sum()*100:+.1f} pp)')
     inw = [r_ for r_ in rows if r_['j'] >= a and r_['i'] < b]
     for r_ in inw:
         lo_, hi_ = max(r_['i'], a), min(r_['j'], b - 1)
-        log(f"      spell {r_['a']}..{r_['b']} {r_['typ']} macro/fast {r_['mac']}/{r_['fast']} n={r_['n']}: log diff inside window {ld[lo_:hi_+1].sum()*100:+.2f} pp (whole spell {r_['ld']*100:+.2f})")
+        log(f"      spell {r_['a']}..{r_['b']} {r_['typ']} macro/fast {r_['mac']}/{r_['fast']} n={r_['n']} QQQ {r_['qqq']*100:+.1f}%: log diff inside window {ld[lo_:hi_+1].sum()*100:+.2f} pp (whole spell {r_['ld']*100:+.2f})")
     if not inw: log('      no overlay spell inside this window')
-log('\nMax-DD windows:')
-for name in ('FULL', 'OFF_audit', 'OFF'):
-    for off_ in ('OFF_audit', 'OFF'):
-        if name != off_: window_detail(name, off_)
-# difference of max DD between arms: where is the FULL trough relative to the OFF path
-log('\nDrawdown paths on the days of the FULL max-DD window (peak/trough of FULL), and the OFF arms\' drawdown from the same peak date:')
-for off_ in ('OFF_audit', 'OFF'):
-    a, b = EP['FULL'][0][5], EP['FULL'][0][6]; navF = np.concatenate([[1.0], np.cumprod(1 + rF)]); navO = np.concatenate([[1.0], np.cumprod(1 + R[(off_, 'p01')]['r'])])
-    log(f"  {off_}: from FULL's peak date to FULL's trough date: {off_} {((navO[b]/navO[a])-1)*100:+.1f}% vs FULL {((navF[b]/navF[a])-1)*100:+.1f}%; {off_}'s own trough in the window {(navO[a:b+1]/navO[a]).min()*100-100:.1f}%")
-
+    return ld[a:b].sum()
+log('\nDrawdown windows: the top 5 episodes of FULL and of OFF (clean), FULL vs OFF over the same peak-to-trough days')
+seen = set()
+for ep in EP['FULL'] + EP['OFF']:
+    if (ep[1], ep[2]) in seen: continue
+    seen.add((ep[1], ep[2])); window_detail(ep, 'OFF')
+log('\nOFF_audit differs from OFF only through trim held votes (see the table: the two arms have the same max DD, 3.6pp shallower than FULL on p01); the windows above apply to both.')
 # FULL vs OFF NAV gap by year (is the DD difference one episode?)
 log('\nCumulative log NAV difference FULL - OFF (clean) at calendar-year ends, p01 (pp): shows when the overlay gained or lost')
 dsr = np.array(R[('FULL', 'p01')]['ds']); ldc = ATT['OFF'][1]

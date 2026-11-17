@@ -27,7 +27,7 @@ F->C stricter: F_AB = fast read A or B only; F_A (n) = fast read A only.
 Confirmation (the overlay condition must have held N consecutive sessions to take effect; it drops the day it fails): CONF2, CONF3.
 Fast windows (same classifier, 1% hysteresis, on the normalised QQQ path): W20_80, W30_150 (the old micro pair), W30_100 (n; plateau edge per STRATEGY.md).
 Stress filter (overlay off for the day when the condition holds): V30 = QQQ 30-day realized vol > 30% (the engine's `vol`), V25 (n), V40 (n);
-VT100 = VIX > VIX3M, VT95 (n) = VIX > 0.95 x VIX3M, VT105 (n) = VIX > 1.05 x VIX3M (VIX3M exists from 2007-12 on the proxy, so before that the VIX filter is off).
+VT100 = VIX > VIX3M, VT95 (n) = VIX > 0.95 x VIX3M, VT105 (n) = VIX > 1.05 x VIX3M (VIX3M in the harness starts 2009-09-18, so before that date the VIX filter is off and these arms equal FULL: 2001-2002 and 2008 are untouched by them).
 Families for the neighbour test (adjacent members only): lowrow [LR50, LR75, LR100]; fcut [F_A, F_AB]; conf [CONF2, CONF3]; win [W20_80, W30_100, W30_150];
 vol [V25, V30, V40]; vix [VT95, VT100, VT105]. Each signal-timing choice is the live one (decision on the day's close, trade at that close).
 
