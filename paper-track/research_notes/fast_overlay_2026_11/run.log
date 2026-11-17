@@ -1,0 +1,10 @@
+======================================================================================================================================================
+run.py: fast re-entry overlay (2026-11-17). PLAN.md pre-registered; research only, nothing adopted.
+======================================================================================================================================================
+(arms computed 12s)
+check: FULL real vs HL.run_live max |diff| = 0.00e+00
+check: FULL p01 vs HL.run_live max |diff| = 0.00e+00
+check: FULL p10 vs HL.run_live max |diff| = 0.00e+00
+check: OFF_audit real: 47.8% / 2.065 / -16.5%   (audit: real 47.8/2.065/-16.5; proxy 2001 30.1/1.417/-18.6)
+check: OFF_audit p01: 30.1% / 1.417 / -18.6%   (audit: real 47.8/2.065/-16.5; proxy 2001 30.1/1.417/-18.6)
+check: OFF_audit p10: 40.4% / 1.688 / -17.0%   (audit: real 47.8/2.065/-16.5; proxy 2001 30.1/1.417/-18.6)
