@@ -1,0 +1,478 @@
+FC2: revised 2027 forecast (NYC rates, K-1 60/40 view). Research only, not tax advice. $608,122 book, FIFO, BASE+L1, wash rule applied, pre-tax $, each year an independent replay (no carryforward in).
+Rates (approximate, from memory of 2025-26 law): NYC top ST 55.576% LT 38.576% ; NYC upper-middle ST 49.526% LT 29.526%. No SALT limit, no AMT. $3k loss offset valued at the ST rate. K-1 interest income ignored.
+
+================ REAL 2016-2025
+
+---- start-lot variant: plain
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -4729        0 |   163059        0 |   158331        0   158331 |    87994    78415
+    2017 |        0        0 |   268988        0 |   268988        0   268988 |   149493   133219
+    2018 |   102260        0 |   279878        0 |   382138        0   382138 |   212377   189258
+    2019 |    -9869        0 |   282056        0 |   272187        0   272187 |   151271   134803
+    2020 |        0        0 |   356936        0 |   356936        0   356936 |   198371   176776
+    2021 |   -18711        0 |   565628        0 |   546918        0   546918 |   303955   270867
+    2022 |    51429        0 |   -47754        0 |     3676        0     3676 |     2043     1820
+    2023 |    33460        0 |   495411        0 |   528870        0   528870 |   293925   261928
+    2024 |    50366        0 |   582418        0 |   632783        0   632783 |   351676   313392
+    2025 |    50588        0 |   196337        0 |   246925        0   246925 |   137231   122292
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -1891    -2837 |   163059        0 |   158331        0   158331 |    87994    78415
+    2017 |        0        0 |   268988        0 |   268988        0   268988 |   149493   133219
+    2018 |    40904    61356 |   279878        0 |   320782    61356   382138 |   201947   176987
+    2019 |    -3948    -5921 |   282056        0 |   272187        0   272187 |   151271   134803
+    2020 |        0        0 |   356936        0 |   356936        0   356936 |   198371   176776
+    2021 |    -7484   -11226 |   565628        0 |   546918        0   546918 |   303955   270867
+    2022 |    20572    30858 |   -47754        0 |        0     3676     3676 |     1418     1085
+    2023 |    13384    20076 |   495411        0 |   508795    20076   528870 |   290512   257913
+    2024 |    20146    30220 |   582418        0 |   602564    30220   632783 |   346538   307348
+    2025 |    20235    30353 |   196337        0 |   216572    30353   246925 |   132071   116221
+  FORECAST DISTRIBUTION REAL 2016-2025 / plain (n=10)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)       142865     252441     314561     492187     555504
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    142865     252441     314561     492187     555504
+    tax due, NYC top                   79399     140296     174821     273538     308727
+    tax due, NYC upper-middle          70755     125024     155790     243761     275119
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)       142497     229676     296485     470830     552482
+    net LT gain (after netting)            0          0       1838      27684      33453
+    total net gain                    142865     252441     314561     492187     555504
+    tax due, NYC top                   79336     136426     174821     268371     308213
+    tax due, NYC upper-middle          70682     120471     155790     237682     274515
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median         0  p90       514 | percentiles of per-year saving: p10        0 median      312 p90     5687 | mean     2477
+    NYC upper-middle   diff of percentiles: median         0  p90       604 | percentiles of per-year saving: p10        0 median      368 p90     6691 | mean     2914
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A 16730 / median total 314561 = 5.3% | sum A 254795 / sum total 3397752 = 7.5%
+  median-ranked year(s) by total gain: [2019, 2020]; their A / total: -9869/272187, 0/356936
+  years with A>0: 5 of 10; A by year: 2016:-4729 2017:0 2018:102260 2019:-9869 2020:0 2021:-18711 2022:51429 2023:33460 2024:50366 2025:50588
+
+---- start-lot variant: seed
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -4729        0 |   131659        0 |   126931        0   126931 |    70543    62864
+    2017 |        0        0 |   237588        0 |   237588        0   237588 |   132042   117668
+    2018 |   102260        0 |   248478        0 |   350738        0   350738 |   194926   173707
+    2019 |    -9869        0 |   250656        0 |   240787        0   240787 |   133820   119252
+    2020 |        0        0 |   325536        0 |   325536        0   325536 |   180920   161225
+    2021 |   -18711        0 |   534228        0 |   515518        0   515518 |   286504   255315
+    2022 |    51429        0 |   -79154        0 |   -27724        0   -27724 |    -1667    -1486
+    2023 |    33460        0 |   464011        0 |   497470        0   497470 |   276474   246377
+    2024 |    50366        0 |   551018        0 |   601383        0   601383 |   334225   297841
+    2025 |    50588        0 |   164937        0 |   215525        0   215525 |   119780   106741
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -1891    -2837 |   131659        0 |   126931        0   126931 |    70543    62864
+    2017 |        0        0 |   237588        0 |   237588        0   237588 |   132042   117668
+    2018 |    40904    61356 |   248478        0 |   289382    61356   350738 |   184496   161435
+    2019 |    -3948    -5921 |   250656        0 |   240787        0   240787 |   133820   119252
+    2020 |        0        0 |   325536        0 |   325536        0   325536 |   180920   161225
+    2021 |    -7484   -11226 |   534228        0 |   515518        0   515518 |   286504   255315
+    2022 |    20572    30858 |   -79154        0 |   -27724        0   -27724 |    -1667    -1486
+    2023 |    13384    20076 |   464011        0 |   477395    20076   497470 |   273061   242362
+    2024 |    20146    30220 |   551018        0 |   571164    30220   601383 |   329088   291797
+    2025 |    20235    30353 |   164937        0 |   185172    30353   215525 |   114620   100670
+  FORECAST DISTRIBUTION REAL 2016-2025 / seed (n=10)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)       111465     221041     283161     460787     524104
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    111465     221041     283161     460787     524104
+    tax due, NYC top                   63322     122846     157370     256087     291276
+    tax due, NYC upper-middle          56429     109473     140239     228210     259568
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)       111465     198276     265085     439430     521082
+    net LT gain (after netting)            0          0          0      27684      33453
+    total net gain                    111465     221041     283161     460787     524104
+    tax due, NYC top                   63322     118976     157370     250920     290763
+    tax due, NYC upper-middle          56429     104920     140239     222130     258964
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median         0  p90       514 | percentiles of per-year saving: p10       -0 median        0 p90     5687 | mean     2414
+    NYC upper-middle   diff of percentiles: median         0  p90       604 | percentiles of per-year saving: p10       -0 median        0 p90     6691 | mean     2840
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A 16730 / median total 283161 = 5.9% | sum A 254795 / sum total 3083752 = 8.3%
+  median-ranked year(s) by total gain: [2019, 2020]; their A / total: -9869/240787, 0/325536
+  years with A>0: 5 of 10; A by year: 2016:-4729 2017:0 2018:102260 2019:-9869 2020:0 2021:-18711 2022:51429 2023:33460 2024:50366 2025:50588
+
+---- start-lot variant: today
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -8897        0 |   158892        0 |   149995        0   149995 |    83361    74287
+    2017 |    -6184        0 |   262953        0 |   256769        0   256769 |   142702   127167
+    2018 |    98717        0 |   272552        0 |   371269        0   371269 |   206336   183875
+    2019 |    -3861        0 |   247571        0 |   243711        0   243711 |   135445   120700
+    2020 |     6081        0 |   350055        0 |   356137        0   356137 |   197926   176380
+    2021 |   -23354        0 |   571097        0 |   547743        0   547743 |   304414   271275
+    2022 |    51354        0 |   -48957        0 |     2397        0     2397 |     1332     1187
+    2023 |    29795        0 |   499360        0 |   529154        0   529154 |   294083   262069
+    2024 |    55314        0 |   595681        0 |   650995        0   650995 |   361797   322412
+    2025 |    44300        0 |   207209        0 |   251508        0   251508 |   139778   124562
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -3559    -5338 |   158892        0 |   149995        0   149995 |    83361    74287
+    2017 |    -2474    -3711 |   262953        0 |   256769        0   256769 |   142702   127167
+    2018 |    39487    59230 |   272552        0 |   312039    59230   371269 |   196267   172029
+    2019 |    -1544    -2317 |   247571        0 |   243711        0   243711 |   135445   120700
+    2020 |     2432     3649 |   350055        0 |   352488     3649   356137 |   197306   175650
+    2021 |    -9342   -14012 |   571097        0 |   547743        0   547743 |   304414   271275
+    2022 |    20541    30812 |   -48957        0 |        0     2397     2397 |      925      708
+    2023 |    11918    17877 |   499360        0 |   511277    17877   529154 |   291044   258494
+    2024 |    22126    33189 |   595681        0 |   617806    33189   650995 |   356155   315774
+    2025 |    17720    26580 |   207209        0 |   224929    26580   251508 |   135260   119246
+  FORECAST DISTRIBUTION REAL 2016-2025 / today (n=10)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)       135235     245660     306453     489683     558068
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    135235     245660     306453     489683     558068
+    tax due, NYC top                   75158     136528     170314     272146     310152
+    tax due, NYC upper-middle          66977     121666     151774     242520     276389
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)       134996     229624     284404     471580     554749
+    net LT gain (after netting)            0          0       3023      24404      35793
+    total net gain                    135235     245660     306453     489683     558068
+    tax due, NYC top                   75118     135306     169485     267609     309588
+    tax due, NYC upper-middle          66929     119610     149598     237783     275725
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median       830  p90       564 | percentiles of per-year saving: p10        0 median      514 p90     6085 | mean     2430
+    NYC upper-middle   diff of percentiles: median      2176  p90       664 | percentiles of per-year saving: p10        0 median      605 p90     7159 | mean     2858
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A 17938 / median total 306453 = 5.9% | sum A 243264 / sum total 3359678 = 7.2%
+  median-ranked year(s) by total gain: [2017, 2020]; their A / total: -6184/256769, 6081/356137
+  years with A>0: 6 of 10; A by year: 2016:-8897 2017:-6184 2018:98717 2019:-3861 2020:6081 2021:-23354 2022:51354 2023:29795 2024:55314 2025:44300
+
+---- start-lot variant: today+seed
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -8897        0 |   127492        0 |   118595        0   118595 |    65911    58736
+    2017 |    -6184        0 |   231553        0 |   225369        0   225369 |   125251   111616
+    2018 |    98717        0 |   241152        0 |   339869        0   339869 |   188886   168323
+    2019 |    -3861        0 |   216171        0 |   212311        0   212311 |   117994   105149
+    2020 |     6081        0 |   318655        0 |   324737        0   324737 |   180476   160829
+    2021 |   -23354        0 |   539697        0 |   516343        0   516343 |   286963   255724
+    2022 |    51354        0 |   -80357        0 |   -29003        0   -29003 |    -1667    -1486
+    2023 |    29795        0 |   467960        0 |   497754        0   497754 |   276632   246518
+    2024 |    55314        0 |   564281        0 |   619595        0   619595 |   344346   306861
+    2025 |    44300        0 |   175809        0 |   220108        0   220108 |   122327   109011
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2016 |    -3559    -5338 |   127492        0 |   118595        0   118595 |    65911    58736
+    2017 |    -2474    -3711 |   231553        0 |   225369        0   225369 |   125251   111616
+    2018 |    39487    59230 |   241152        0 |   280639    59230   339869 |   178816   156477
+    2019 |    -1544    -2317 |   216171        0 |   212311        0   212311 |   117994   105149
+    2020 |     2432     3649 |   318655        0 |   321088     3649   324737 |   179855   160099
+    2021 |    -9342   -14012 |   539697        0 |   516343        0   516343 |   286963   255724
+    2022 |    20541    30812 |   -80357        0 |   -29003        0   -29003 |    -1667    -1486
+    2023 |    11918    17877 |   467960        0 |   479877    17877   497754 |   273593   242942
+    2024 |    22126    33189 |   564281        0 |   586406    33189   619595 |   338704   300223
+    2025 |    17720    26580 |   175809        0 |   193529    26580   220108 |   117809   103695
+  FORECAST DISTRIBUTION REAL 2016-2025 / today+seed (n=10)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)       103835     214260     275053     458283     526668
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    103835     214260     275053     458283     526668
+    tax due, NYC top                   59153     119077     152863     254695     292701
+    tax due, NYC upper-middle          52713     106114     136223     226969     260838
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)       103835     198224     253004     440180     523349
+    net LT gain (after netting)            0          0       1824      24404      35793
+    total net gain                    103835     214260     275053     458283     526668
+    tax due, NYC top                   59153     117855     152034     250158     292137
+    tax due, NYC upper-middle          52713     104058     134047     222232     260174
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median       830  p90       564 | percentiles of per-year saving: p10       -0 median      310 p90     6085 | mean     2389
+    NYC upper-middle   diff of percentiles: median      2176  p90       664 | percentiles of per-year saving: p10       -0 median      365 p90     7159 | mean     2810
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A 17938 / median total 275053 = 6.5% | sum A 243264 / sum total 3045678 = 8.0%
+  median-ranked year(s) by total gain: [2017, 2020]; their A / total: -6184/225369, 6081/324737
+  years with A>0: 6 of 10; A by year: 2016:-8897 2017:-6184 2018:98717 2019:-3861 2020:6081 2021:-23354 2022:51354 2023:29795 2024:55314 2025:44300
+REPRODUCTION of fc.py headline (real, plain): net total p10/p25/med/p75/p90 = 142865 / 252441 / 314561 / 492187 / 555504 ; LT p50 = 0
+REPRODUCTION of fc.py headline (real, today): net total p10/p25/med/p75/p90 = 135235 / 245660 / 306453 / 489683 / 558068 ; LT p50 = 0
+
+================ PROXY 2002-2025
+
+---- start-lot variant: plain
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |        0        0 |    20184        0 |    20184        0    20184 |    11217     9996
+    2003 |        0        0 |   250253        0 |   250253        0   250253 |   139081   123940
+    2004 |        0        0 |   103848        0 |   103848        0   103848 |    57715    51432
+    2005 |        0        0 |     -904        0 |     -904        0     -904 |     -502     -448
+    2006 |        0        0 |    78791        0 |    78791        0    78791 |    43789    39022
+    2007 |        0        0 |   179991        0 |   179991        0   179991 |   100032    89142
+    2008 |        0        0 |    67722        0 |    67722        0    67722 |    37637    33540
+    2009 |        0        0 |   172474        0 |   172474        0   172474 |    95854    85420
+    2010 |        0        0 |   390001        0 |   390001        0   390001 |   216747   193152
+    2011 |        0        0 |   -34449        0 |   -34449        0   -34449 |    -1667    -1486
+    2012 |        0        0 |   195367        0 |   195367        0   195367 |   108577    96758
+    2013 |        0        0 |    90934        0 |    90934        0    90934 |    50537    45036
+    2014 |        0        0 |   150974        0 |   150974        0   150974 |    83905    74771
+    2015 |        0        0 |   142570        0 |   142570        0   142570 |    79235    70609
+    2016 |        0        0 |   139511        0 |   139511        0   139511 |    77535    69094
+    2017 |        0        0 |   280632        0 |   280632        0   280632 |   155964   138986
+    2018 |        0        0 |   266941        0 |   266941        0   266941 |   148355   132205
+    2019 |        0        0 |   288319        0 |   288319        0   288319 |   160236   142793
+    2020 |        0        0 |   361941        0 |   361941        0   361941 |   201152   179255
+    2021 |        0        0 |   571539        0 |   571539        0   571539 |   317639   283060
+    2022 |        0        0 |   -96159        0 |   -96159        0   -96159 |    -1667    -1486
+    2023 |        0        0 |   602952        0 |   602952        0   602952 |   335096   298618
+    2024 |        0        0 |   540802        0 |   540802        0   540802 |   300556   267838
+    2025 |        0        0 |   175090        0 |   175090        0   175090 |    97308    86715
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |        0        0 |    20184        0 |    20184        0    20184 |    11217     9996
+    2003 |        0        0 |   250253        0 |   250253        0   250253 |   139081   123940
+    2004 |        0        0 |   103848        0 |   103848        0   103848 |    57715    51432
+    2005 |        0        0 |     -904        0 |     -904        0     -904 |     -502     -448
+    2006 |        0        0 |    78791        0 |    78791        0    78791 |    43789    39022
+    2007 |        0        0 |   179991        0 |   179991        0   179991 |   100032    89142
+    2008 |        0        0 |    67722        0 |    67722        0    67722 |    37637    33540
+    2009 |        0        0 |   172474        0 |   172474        0   172474 |    95854    85420
+    2010 |        0        0 |   390001        0 |   390001        0   390001 |   216747   193152
+    2011 |        0        0 |   -34449        0 |   -34449        0   -34449 |    -1667    -1486
+    2012 |        0        0 |   195367        0 |   195367        0   195367 |   108577    96758
+    2013 |        0        0 |    90934        0 |    90934        0    90934 |    50537    45036
+    2014 |        0        0 |   150974        0 |   150974        0   150974 |    83905    74771
+    2015 |        0        0 |   142570        0 |   142570        0   142570 |    79235    70609
+    2016 |        0        0 |   139511        0 |   139511        0   139511 |    77535    69094
+    2017 |        0        0 |   280632        0 |   280632        0   280632 |   155964   138986
+    2018 |        0        0 |   266941        0 |   266941        0   266941 |   148355   132205
+    2019 |        0        0 |   288319        0 |   288319        0   288319 |   160236   142793
+    2020 |        0        0 |   361941        0 |   361941        0   361941 |   201152   179255
+    2021 |        0        0 |   571539        0 |   571539        0   571539 |   317639   283060
+    2022 |        0        0 |   -96159        0 |   -96159        0   -96159 |    -1667    -1486
+    2023 |        0        0 |   602952        0 |   602952        0   602952 |   335096   298618
+    2024 |        0        0 |   540802        0 |   540802        0   540802 |   300556   267838
+    2025 |        0        0 |   175090        0 |   175090        0   175090 |    97308    86715
+  FORECAST DISTRIBUTION PROXY 2002-2025 / plain (n=24)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)         5422      87898     173782     282553     495562
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                      5422      87898     173782     282553     495562
+    tax due, NYC top                    3013      48850      96581     157032     275413
+    tax due, NYC upper-middle           2685      43532      86067     139937     245432
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)         5422      87898     173782     282553     495562
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                      5422      87898     173782     282553     495562
+    tax due, NYC top                    3013      48850      96581     157032     275413
+    tax due, NYC upper-middle           2685      43532      86067     139937     245432
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+    NYC upper-middle   diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A 0 / median total 173782 = 0.0% | sum A 0 / sum total 4939324 = 0.0%
+  median-ranked year(s) by total gain: [2009, 2025]; their A / total: 0/172474, 0/175090
+  years with A>0: 0 of 24; A by year: 2002:0 2003:0 2004:0 2005:0 2006:0 2007:0 2008:0 2009:0 2010:0 2011:0 2012:0 2013:0 2014:0 2015:0 2016:0 2017:0 2018:0 2019:0 2020:0 2021:0 2022:0 2023:0 2024:0 2025:0
+
+---- start-lot variant: seed
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |        0        0 |   -11216        0 |   -11216        0   -11216 |    -1667    -1486
+    2003 |        0        0 |   218853        0 |   218853        0   218853 |   121630   108389
+    2004 |        0        0 |    72448        0 |    72448        0    72448 |    40264    35881
+    2005 |        0        0 |   -32304        0 |   -32304        0   -32304 |    -1667    -1486
+    2006 |        0        0 |    47391        0 |    47391        0    47391 |    26338    23471
+    2007 |        0        0 |   148591        0 |   148591        0   148591 |    82581    73591
+    2008 |        0        0 |    36322        0 |    36322        0    36322 |    20186    17989
+    2009 |        0        0 |   141074        0 |   141074        0   141074 |    78403    69868
+    2010 |        0        0 |   358601        0 |   358601        0   358601 |   199296   177601
+    2011 |        0        0 |   -65849        0 |   -65849        0   -65849 |    -1667    -1486
+    2012 |        0        0 |   163967        0 |   163967        0   163967 |    91127    81207
+    2013 |        0        0 |    66926        0 |    66926        0    66926 |    37195    33146
+    2014 |        0        0 |   119574        0 |   119574        0   119574 |    66455    59220
+    2015 |        0        0 |   111170        0 |   111170        0   111170 |    61784    55058
+    2016 |        0        0 |   108111        0 |   108111        0   108111 |    60084    53543
+    2017 |        0        0 |   249232        0 |   249232        0   249232 |   138513   123434
+    2018 |        0        0 |   235541        0 |   235541        0   235541 |   130905   116654
+    2019 |        0        0 |   256919        0 |   256919        0   256919 |   142785   127242
+    2020 |        0        0 |   330541        0 |   330541        0   330541 |   183701   163704
+    2021 |        0        0 |   540139        0 |   540139        0   540139 |   300188   267509
+    2022 |        0        0 |  -127559        0 |  -127559        0  -127559 |    -1667    -1486
+    2023 |        0        0 |   571552        0 |   571552        0   571552 |   317646   283067
+    2024 |        0        0 |   509402        0 |   509402        0   509402 |   283105   252286
+    2025 |        0        0 |   143690        0 |   143690        0   143690 |    79857    71164
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |        0        0 |   -11216        0 |   -11216        0   -11216 |    -1667    -1486
+    2003 |        0        0 |   218853        0 |   218853        0   218853 |   121630   108389
+    2004 |        0        0 |    72448        0 |    72448        0    72448 |    40264    35881
+    2005 |        0        0 |   -32304        0 |   -32304        0   -32304 |    -1667    -1486
+    2006 |        0        0 |    47391        0 |    47391        0    47391 |    26338    23471
+    2007 |        0        0 |   148591        0 |   148591        0   148591 |    82581    73591
+    2008 |        0        0 |    36322        0 |    36322        0    36322 |    20186    17989
+    2009 |        0        0 |   141074        0 |   141074        0   141074 |    78403    69868
+    2010 |        0        0 |   358601        0 |   358601        0   358601 |   199296   177601
+    2011 |        0        0 |   -65849        0 |   -65849        0   -65849 |    -1667    -1486
+    2012 |        0        0 |   163967        0 |   163967        0   163967 |    91127    81207
+    2013 |        0        0 |    66926        0 |    66926        0    66926 |    37195    33146
+    2014 |        0        0 |   119574        0 |   119574        0   119574 |    66455    59220
+    2015 |        0        0 |   111170        0 |   111170        0   111170 |    61784    55058
+    2016 |        0        0 |   108111        0 |   108111        0   108111 |    60084    53543
+    2017 |        0        0 |   249232        0 |   249232        0   249232 |   138513   123434
+    2018 |        0        0 |   235541        0 |   235541        0   235541 |   130905   116654
+    2019 |        0        0 |   256919        0 |   256919        0   256919 |   142785   127242
+    2020 |        0        0 |   330541        0 |   330541        0   330541 |   183701   163704
+    2021 |        0        0 |   540139        0 |   540139        0   540139 |   300188   267509
+    2022 |        0        0 |  -127559        0 |  -127559        0  -127559 |    -1667    -1486
+    2023 |        0        0 |   571552        0 |   571552        0   571552 |   317646   283067
+    2024 |        0        0 |   509402        0 |   509402        0   509402 |   283105   252286
+    2025 |        0        0 |   143690        0 |   143690        0   143690 |    79857    71164
+  FORECAST DISTRIBUTION PROXY 2002-2025 / seed (n=24)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)       -25978      62042     142382     251153     464162
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    -25978      62042     142382     251153     464162
+    tax due, NYC top                   -1667      34481      79130     139581     257962
+    tax due, NYC upper-middle          -1486      30727      70516     124386     229881
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)       -25978      62042     142382     251153     464162
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    -25978      62042     142382     251153     464162
+    tax due, NYC top                   -1667      34481      79130     139581     257962
+    tax due, NYC upper-middle          -1486      30727      70516     124386     229881
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+    NYC upper-middle   diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A 0 / median total 142382 = 0.0% | sum A 0 / sum total 4193117 = 0.0%
+  median-ranked year(s) by total gain: [2009, 2025]; their A / total: 0/141074, 0/143690
+  years with A>0: 0 of 24; A by year: 2002:0 2003:0 2004:0 2005:0 2006:0 2007:0 2008:0 2009:0 2010:0 2011:0 2012:0 2013:0 2014:0 2015:0 2016:0 2017:0 2018:0 2019:0 2020:0 2021:0 2022:0 2023:0 2024:0 2025:0
+
+---- start-lot variant: today
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |      -24        0 |    37200        0 |    37175        0    37175 |    20661    18411
+    2003 |      -24        0 |   259871        0 |   259846        0   259846 |   144412   128691
+    2004 |      -24        0 |   117100        0 |   117076        0   117076 |    65066    57983
+    2005 |      -24        0 |   -12386        0 |   -12411        0   -12411 |    -1667    -1486
+    2006 |      -24        0 |    73940        0 |    73916        0    73916 |    41079    36607
+    2007 |      -24        0 |   193762        0 |   193737        0   193737 |   107671    95950
+    2008 |      -24        0 |    70412        0 |    70388        0    70388 |    39119    34860
+    2009 |      -24        0 |   172708        0 |   172684        0   172684 |    95971    85523
+    2010 |      -24        0 |   389772        0 |   389748        0   389748 |   216606   193026
+    2011 |      -24        0 |   -29884        0 |   -29909        0   -29909 |    -1667    -1486
+    2012 |      -24        0 |   199885        0 |   199860        0   199860 |   111074    98983
+    2013 |      -24        0 |    87605        0 |    87580        0    87580 |    48674    43375
+    2014 |      -24        0 |   154669        0 |   154645        0   154645 |    85945    76589
+    2015 |      -24        0 |   150589        0 |   150565        0   150565 |    83678    74569
+    2016 |      -24        0 |   137761        0 |   137737        0   137737 |    76549    68216
+    2017 |      -24        0 |   278854        0 |   278830        0   278830 |   154962   138093
+    2018 |      -24        0 |   260883        0 |   260858        0   260858 |   144975   129193
+    2019 |      -24        0 |   250447        0 |   250422        0   250422 |   139175   124024
+    2020 |      -24        0 |   353232        0 |   353208        0   353208 |   196299   174930
+    2021 |      -24        0 |   581059        0 |   581035        0   581035 |   322916   287763
+    2022 |      -24        0 |   -91807        0 |   -91831        0   -91831 |    -1667    -1486
+    2023 |      -24        0 |   609858        0 |   609834        0   609834 |   338921   302026
+    2024 |      -24        0 |   550406        0 |   550381        0   550381 |   305880   272582
+    2025 |      -24        0 |   187453        0 |   187428        0   187428 |   104165    92826
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |      -10      -15 |    37200        0 |    37175        0    37175 |    20661    18411
+    2003 |      -10      -15 |   259871        0 |   259846        0   259846 |   144412   128691
+    2004 |      -10      -15 |   117100        0 |   117076        0   117076 |    65066    57983
+    2005 |      -10      -15 |   -12386        0 |   -12396      -15   -12411 |    -1667    -1486
+    2006 |      -10      -15 |    73940        0 |    73916        0    73916 |    41079    36607
+    2007 |      -10      -15 |   193762        0 |   193737        0   193737 |   107671    95950
+    2008 |      -10      -15 |    70412        0 |    70388        0    70388 |    39119    34860
+    2009 |      -10      -15 |   172708        0 |   172684        0   172684 |    95971    85523
+    2010 |      -10      -15 |   389772        0 |   389748        0   389748 |   216606   193026
+    2011 |      -10      -15 |   -29884        0 |   -29894      -15   -29909 |    -1667    -1486
+    2012 |      -10      -15 |   199885        0 |   199860        0   199860 |   111074    98983
+    2013 |      -10      -15 |    87605        0 |    87580        0    87580 |    48674    43375
+    2014 |      -10      -15 |   154669        0 |   154645        0   154645 |    85945    76589
+    2015 |      -10      -15 |   150589        0 |   150565        0   150565 |    83678    74569
+    2016 |      -10      -15 |   137761        0 |   137737        0   137737 |    76549    68216
+    2017 |      -10      -15 |   278854        0 |   278830        0   278830 |   154962   138093
+    2018 |      -10      -15 |   260883        0 |   260858        0   260858 |   144975   129193
+    2019 |      -10      -15 |   250447        0 |   250422        0   250422 |   139175   124024
+    2020 |      -10      -15 |   353232        0 |   353208        0   353208 |   196299   174930
+    2021 |      -10      -15 |   581059        0 |   581035        0   581035 |   322916   287763
+    2022 |      -10      -15 |   -91807        0 |   -91817      -15   -91831 |    -1667    -1486
+    2023 |      -10      -15 |   609858        0 |   609834        0   609834 |   338921   302026
+    2024 |      -10      -15 |   550406        0 |   550381        0   550381 |   305880   272582
+    2025 |      -10      -15 |   187453        0 |   187428        0   187428 |   104165    92826
+  FORECAST DISTRIBUTION PROXY 2002-2025 / today (n=24)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)         2465      84164     180056     265351     502191
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                      2465      84164     180056     265351     502191
+    tax due, NYC top                    5031      46775     100068     147472     279098
+    tax due, NYC upper-middle           4483      41683      89175     131418     248715
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)         2475      84164     180056     265351     502191
+    net LT gain (after netting)          -10          0          0          0          0
+    total net gain                      2465      84164     180056     265351     502191
+    tax due, NYC top                    5031      46775     100068     147472     279098
+    tax due, NYC upper-middle           4483      41683      89175     131418     248715
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+    NYC upper-middle   diff of percentiles: median         0  p90        -0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A -24 / median total 180056 = -0.0% | sum A -584 / sum total 4982802 = -0.0%
+  median-ranked year(s) by total gain: [2009, 2025]; their A / total: -24/172684, -24/187428
+  years with A>0: 0 of 24; A by year: 2002:-24 2003:-24 2004:-24 2005:-24 2006:-24 2007:-24 2008:-24 2009:-24 2010:-24 2011:-24 2012:-24 2013:-24 2014:-24 2015:-24 2016:-24 2017:-24 2018:-24 2019:-24 2020:-24 2021:-24 2022:-24 2023:-24 2024:-24 2025:-24
+
+---- start-lot variant: today+seed
+  per year (pre-netting, $): A = VIXY+VIXM lots, B = everything else | then netted ST / LT / total, tax NYC top / NYC upper-middle
+  [OLD all-ordinary (holding-period character) treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |      -24        0 |     5800        0 |     5775        0     5775 |     3210     2860
+    2003 |      -24        0 |   228471        0 |   228446        0   228446 |   126961   113140
+    2004 |      -24        0 |    85700        0 |    85676        0    85676 |    47615    42432
+    2005 |      -24        0 |   -43786        0 |   -43811        0   -43811 |    -1667    -1486
+    2006 |      -24        0 |    42540        0 |    42516        0    42516 |    23628    21056
+    2007 |      -24        0 |   162362        0 |   162337        0   162337 |    90221    80399
+    2008 |      -24        0 |    39012        0 |    38988        0    38988 |    21668    19309
+    2009 |      -24        0 |   141308        0 |   141284        0   141284 |    78520    69972
+    2010 |      -24        0 |   358372        0 |   358348        0   358348 |   199155   177475
+    2011 |      -24        0 |   -61284        0 |   -61309        0   -61309 |    -1667    -1486
+    2012 |      -24        0 |   168485        0 |   168460        0   168460 |    93624    83432
+    2013 |      -24        0 |    71295        0 |    71271        0    71271 |    39609    35298
+    2014 |      -24        0 |   123269        0 |   123245        0   123245 |    68494    61038
+    2015 |      -24        0 |   119189        0 |   119165        0   119165 |    66227    59018
+    2016 |      -24        0 |   106361        0 |   106337        0   106337 |    59098    52664
+    2017 |      -24        0 |   247454        0 |   247430        0   247430 |   137511   122542
+    2018 |      -24        0 |   229483        0 |   229458        0   229458 |   127524   113641
+    2019 |      -24        0 |   219047        0 |   219022        0   219022 |   121724   108473
+    2020 |      -24        0 |   321832        0 |   321808        0   321808 |   178848   159378
+    2021 |      -24        0 |   549659        0 |   549635        0   549635 |   305465   272212
+    2022 |      -24        0 |  -123207        0 |  -123231        0  -123231 |    -1667    -1486
+    2023 |      -24        0 |   578458        0 |   578434        0   578434 |   321471   286475
+    2024 |      -24        0 |   519006        0 |   518981        0   518981 |   288429   257031
+    2025 |      -24        0 |   156053        0 |   156028        0   156028 |    86714    77275
+  [K-1 60/40 on VIXY+VIXM treatment]  year |  A_st   A_lt |  B_st   B_lt | netST  netLT  total | tax top  tax UM
+    2002 |      -10      -15 |     5800        0 |     5775        0     5775 |     3210     2860
+    2003 |      -10      -15 |   228471        0 |   228446        0   228446 |   126961   113140
+    2004 |      -10      -15 |    85700        0 |    85676        0    85676 |    47615    42432
+    2005 |      -10      -15 |   -43786        0 |   -43796      -15   -43811 |    -1667    -1486
+    2006 |      -10      -15 |    42540        0 |    42516        0    42516 |    23628    21056
+    2007 |      -10      -15 |   162362        0 |   162337        0   162337 |    90221    80399
+    2008 |      -10      -15 |    39012        0 |    38988        0    38988 |    21668    19309
+    2009 |      -10      -15 |   141308        0 |   141284        0   141284 |    78520    69972
+    2010 |      -10      -15 |   358372        0 |   358348        0   358348 |   199155   177475
+    2011 |      -10      -15 |   -61284        0 |   -61294      -15   -61309 |    -1667    -1486
+    2012 |      -10      -15 |   168485        0 |   168460        0   168460 |    93624    83432
+    2013 |      -10      -15 |    71295        0 |    71271        0    71271 |    39609    35298
+    2014 |      -10      -15 |   123269        0 |   123245        0   123245 |    68494    61038
+    2015 |      -10      -15 |   119189        0 |   119165        0   119165 |    66227    59018
+    2016 |      -10      -15 |   106361        0 |   106337        0   106337 |    59098    52664
+    2017 |      -10      -15 |   247454        0 |   247430        0   247430 |   137511   122542
+    2018 |      -10      -15 |   229483        0 |   229458        0   229458 |   127524   113641
+    2019 |      -10      -15 |   219047        0 |   219022        0   219022 |   121724   108473
+    2020 |      -10      -15 |   321832        0 |   321808        0   321808 |   178848   159378
+    2021 |      -10      -15 |   549659        0 |   549635        0   549635 |   305465   272212
+    2022 |      -10      -15 |  -123207        0 |  -123217      -15  -123231 |    -1667    -1486
+    2023 |      -10      -15 |   578458        0 |   578434        0   578434 |   321471   286475
+    2024 |      -10      -15 |   519006        0 |   518981        0   518981 |   288429   257031
+    2025 |      -10      -15 |   156053        0 |   156028        0   156028 |    86714    77275
+  FORECAST DISTRIBUTION PROXY 2002-2025 / today+seed (n=24)            p10        p25     median        p75        p90
+  treatment: OLD (all ST as simulated)
+    net ST gain (after netting)       -28935      64082     148656     233951     470791
+    net LT gain (after netting)            0          0          0          0          0
+    total net gain                    -28935      64082     148656     233951     470791
+    tax due, NYC top                    -204      35614      82617     130021     261647
+    tax due, NYC upper-middle           -182      31737      73623     115867     233164
+  treatment: K-1 60/40 on VIXY+VIXM
+    net ST gain (after netting)       -28925      64082     148656     233951     470791
+    net LT gain (after netting)          -10          0          0          0          0
+    total net gain                    -28935      64082     148656     233951     470791
+    tax due, NYC top                    -204      35614      82617     130021     261647
+    tax due, NYC upper-middle           -182      31737      73623     115867     233164
+  TAX SAVED by K-1 treatment (old tax minus K-1 tax; >0 = K-1 view is cheaper)
+    NYC top            diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean       -0
+    NYC upper-middle   diff of percentiles: median         0  p90         0 | percentiles of per-year saving: p10        0 median        0 p90        0 | mean        0
+  VIXY+VIXM sleeve share (A = realized gain on VIXY/VIXM lots): median A -24 / median total 148656 = -0.0% | sum A -584 / sum total 4244293 = -0.0%
+  median-ranked year(s) by total gain: [2009, 2025]; their A / total: -24/141284, -24/156028
+  years with A>0: 0 of 24; A by year: 2002:-24 2003:-24 2004:-24 2005:-24 2006:-24 2007:-24 2008:-24 2009:-24 2010:-24 2011:-24 2012:-24 2013:-24 2014:-24 2015:-24 2016:-24 2017:-24 2018:-24 2019:-24 2020:-24 2021:-24 2022:-24 2023:-24 2024:-24 2025:-24
+
+================ 2026 ACTUALS to date (Robinhood realized, before wash-sale adjustments; all symbols assumed short-term)
+  inputs: VIXM +29295.67, VIXY +31508.36, other symbols -69747.54, total -8943.51 (given -8943.51)
+  all short-term               pre-net ST    -8943.51 LT       +0.00 -> netted ST    -8943.51 LT       +0.00 total    -8943.51 | $3k offset 3000.00 | carryforward ST -5943.51 LT +0.00
+  K-1 view (VIXM+VIXY 60/40)   pre-net ST   -45425.93 LT   +36482.42 -> netted ST    -8943.51 LT       +0.00 total    -8943.51 | $3k offset 3000.00 | carryforward ST -5943.51 LT +0.00
+  K-1 sleeve: 60% LT 36482.42, 40% ST 24321.61 (of 60804.03)
