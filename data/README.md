@@ -1,3 +1,21 @@
+## 2026-11-17 refresh of the research price / rate files
+
+`qqq_ohlc.csv`, `qqq_long_history.csv`, `spmo_ohlc.csv`, `tqqq_ohlc.csv`, `qld_ohlc.csv`, `xlu_ohlc.csv`, `QQEW_daily_ext.csv`,
+`spy_long_history.csv`, `xlu_long_history.csv`, `vixm_daily.csv` (Yahoo chart API, split-adjusted, not dividend-adjusted; same basis as the
+existing rows, last old row re-checked against the source, cross-checked against Robinhood daily bars) and `vixcls_full.csv`, `vxvcls.csv`,
+`vxncls.csv`, `dgs3mo.csv`, `dgs3mo_full.csv` (FRED `fredgraph.csv`, rows copied verbatim incl. blank holiday rows) were extended through
+2026-11-16 (T-bill: FRED's last print is 2026-11-13). Append-only: no existing row was changed. `live_closes.csv`, `qqq_highs.csv`, `runs/`
+and the live ledgers were not touched.
+
+Re-run any time (idempotent, appends only sessions after each file's last date):
+
+    python3 paper-track/refresh_data.py            # or --dry-run, --through YYYY-MM-DD, --fred-dir DIR
+
+The research loaders (`monte_carlo.load_panel`, `review_2026_11/harness.py`, `harness_live.py`) now raise if a series ends before the panel
+or a rate/VIX input is more than 5 business days stale, so run the refresh before new research.
+
+---
+
 # data/ — SPMO holdings and price history
 
 This directory holds a reconstructed holdings history for **SPMO** (Invesco S&P

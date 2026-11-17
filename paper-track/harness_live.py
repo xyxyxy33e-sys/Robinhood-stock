@@ -16,6 +16,7 @@ this module imports it and adds them as the default:
 Overrides accepted by run_live / run_live_detail (defaults in LIVE_CFG): l1, gross_cap, a_cap, a_split, a_instr,
 sleeve_share, sleeve_proxy, vol_target, risky_scale, vixy_source, use_live_highs, plus d0, d1, lag, cost.
 Research only; nothing here touches the live code or data.
+Fail-loud (2026-11-17 audit): highs() raises when a panel date has no high; the VIXY latch and VIXY returns raise instead of skipping / forward-filling.
 """
 import csv, os, sys
 import numpy as np
@@ -65,8 +66,12 @@ def _hi_map(use_live):
     return m
 def highs(use_live=True):
     m = _hi_map(use_live)
-    h = np.array([m[d] if d in m else np.nan for d in _PD]) * _scale
-    return np.where(np.isnan(h), Q0, np.maximum(h, Q0)), int(np.isnan(h).sum())
+    miss = [d for d in _PD if d not in m]
+    if miss:   # research must not read the CLOSE where a high is missing (the 2026-11 L1 error: 50 sessions did)
+        raise ValueError(f"harness_live.highs: {len(miss)} panel dates have no high (first {miss[0]}, last {miss[-1]}); "
+                         f"refresh data/qqq_ohlc.csv (paper-track/refresh_data.py) or extend HIGHS_AV / data/qqq_highs.csv")
+    h = np.array([m[d] for d in _PD]) * _scale
+    return np.maximum(h, Q0), 0
 
 _SG = {}
 def signals(l1, use_live=True):
@@ -90,8 +95,11 @@ def _vixy_rets(ds, source):
         px = {r['d']: float(r['c']) for r in csv.DictReader(open(VIXY_OLD))}
         for r in H.LC:
             if r['date'] > max(px) and r.get('VIXY'): px[r['date']] = float(r['VIXY'])
-    x = MC._rets(px, ds); x[0] = 0.0
+    x = MC._rets(px, ds, True, 'VIXY series (%s)' % source); x[0] = 0.0     # raises if the file ends before the panel
     return x, min(px)
+
+def _vixy_first():
+    return min(r['d'] for r in csv.DictReader(open(VIXY_FULL)))
 
 _VXA = {}
 def _latch(real, sg):
@@ -99,6 +107,9 @@ def _latch(real, sg):
     if real not in _VXA:
         vd = {d: (None if np.isnan(v) else float(v)) for d, v in zip(ds, sg['vol'][0])}
         vx = S.vixm_series(ds, H.VIX, H.VIX3M, vd)
+        # no panel date from the sleeve's first VIXY print on may be skipped by state.vixm_series (the proxy panel has no VIX3M
+        # before 2007-12, and the sleeve is off before 2011-01-04 anyway)
+        H.assert_latch_covers(ds, vx, 'harness_live VIXY latch', from_date=_vixy_first())
         _VXA[real] = np.array([bool(vx.get(d, {}).get('allowed')) for d in ds])
     return _VXA[real]
 

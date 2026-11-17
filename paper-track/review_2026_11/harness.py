@@ -7,9 +7,17 @@ cash leg when the latch allows, off in ungated D2), deep-E QQQ leg (50% of the c
 QQQ <= -5% vs its 200-day), VIX-panic QQQ leg (25% of the cash leg while the VIX latch >= 30 / < 25).
 Leg stacking follows research_notes/deep_e_2026_11/strategy_page_gen.py, plus d_buffer (live has it;
 that script left it at 0). Real-ETF files are extended with data/live_closes.csv; SPY is carried flat
-past its file (unused). Hooks let each test change one thing.
+past its file ONLY with a loud warning (benchmark-only: no weight or signal reads it; with a refreshed
+data/spy_long_history.csv this never triggers). Hooks let each test change one thing.
+
+Research fail-loud checks (2026-11-17 data audit): MC.load_panel raises on a series that ends before the panel end,
+VIX / VIX3M must be within MC.MAX_STALE_BDAYS business days of the panel end, and the VIXM latch must cover every
+panel date (state.vixm_series silently skips dates without both indices; the live function is unchanged).
+VIXM default: VIXM_R below (data/vixm_daily.csv) is still the sleeve of this harness's weights(); the live sleeve since
+2026-11-11 is VIXY (harness_live uses research_notes/vixy_calm_2026_11/vixy_yahoo_full.csv). It is left as is because
+switching it would change the recorded results of every script built on weights() (the old VIXM-sleeve figures).
 """
-import csv, os, sys
+import csv, os, sys, warnings
 import numpy as np
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, HERE)
 import monte_carlo as MC, state as S, vol_curve as VC
@@ -21,11 +29,14 @@ _orig = MC._load
 def _load(name, dcol='d', ccol='c'):
     out = _orig(name, dcol, ccol)
     if name in EXT or name == 'spy_long_history.csv':
-        last = max(out); v = out[last]
+        last = max(out); v = out[last]; carried = 0
         for r in LC:
             if r['date'] > last:
                 if name in EXT and r.get(EXT[name]): out[r['date']] = float(r[EXT[name]])
-                elif name not in EXT: out[r['date']] = v
+                elif name not in EXT: out[r['date']] = v; carried += 1
+        if carried:   # SPY is benchmark-only, so the flat carry is kept, but never silently
+            warnings.warn(f'harness: {name} ends {last}; carrying its last close FLAT for {carried} sessions (benchmark SPY return = 0 there). '
+                          f'Run python3 paper-track/refresh_data.py', stacklevel=2)
     return out
 MC._load = _load
 
@@ -41,11 +52,27 @@ def slice_sig(sg, off):
             if not isinstance(k, tuple)}
 sr = slice_sig(sig, OFF)
 VIX, _ = VC.history('VIX'); VIX3M, _ = VC.history('VIX3M')
+for _n, _h in (('VIX', VIX), ('VIX3M', VIX3M)):       # research: stale volatility inputs are an error, not a forward-fill
+    MC.assert_fresh(max(_h), RD[-1], f'{_n} history')
 _vx = S.vixm_series(RD, VIX, VIX3M, {d: (None if np.isnan(v) else float(v)) for d, v in zip(RD, sr['vol'][0])})
+def assert_latch_covers(ds, vx, what='VIXM latch', from_date=None):
+    """state.vixm_series skips dates with no VIX/VIX3M (latch frozen, allowed=False). Research must not accept that silently."""
+    miss = [d for d in ds if d not in vx and (from_date is None or d >= from_date)]
+    if miss:
+        raise ValueError(f"{what}: {len(miss)} panel dates have no VIX/VIX3M level and were skipped by state.vixm_series "
+                         f"(first {miss[0]}, last {miss[-1]}); refresh the data / sources")
+assert_latch_covers(RD, _vx)
 VXA = np.array([bool(_vx.get(d, {}).get('allowed')) for d in RD])
-VIXM_R = MC._rets(MC._load('vixm_daily.csv'), RD); VIXM_R[0] = 0.0
+_vixm_px = MC._load('vixm_daily.csv')
+VIXM_STALE = max(_vixm_px) < RD[-1]
+if VIXM_STALE:      # only the VIXM arms of weights() use it; HL (VIXY) does not -> warn now, raise when it is actually used
+    warnings.warn(f'harness: vixm_daily.csv ends {max(_vixm_px)} < panel end {RD[-1]}; weights() with the VIXM sleeve will raise')
+VIXM_R = MC._rets(_vixm_px, RD); VIXM_R[0] = 0.0
 
 def panic_series(ds):
+    miss = [d for d in ds if d not in VIX and d > '2000-12-31']      # CBOE has no VIX print on 1999-12-31 (only known hole)
+    if miss:    # the latch would freeze on a missing VIX print
+        raise ValueError(f'panic_series: {len(miss)} panel dates have no VIX close (first {miss[0]}, last {miss[-1]})')
     on = False; out = np.zeros(len(ds))
     for i, d in enumerate(ds):
         v = VIX.get(d, np.nan)
@@ -67,6 +94,9 @@ def weights(sg, ds, real, cfg=CUR, vixm=True, vixm_share=None, vixm_cap=None, vi
     legs = [pn['core'], pn['tqqq'], pn['qld'], pn['xlu']]; W = [w5[0, :, i] for i in range(4)]
     used = np.zeros_like(cash)
     if real and vixm:
+        if VIXM_STALE and vixm_ret is None:
+            raise ValueError(f'harness.weights: the VIXM sleeve needs data/vixm_daily.csv to reach {RD[-1]} (ends {max(_vixm_px)}); '
+                             f'run paper-track/refresh_data.py or pass vixm_ret / vixm=False')
         eff = MC._eff(sg, cfg)[0]; gate = MC._gate(sg, cfg)[0]; z = MC._zone(sg, cfg)[0]
         allowed = VXA & ~((eff == 3) & ~gate & (z == 2))
         v = np.where(allowed, cash * (S.VIXM_CASH_SHARE if vixm_share is None else vixm_share), 0.0)

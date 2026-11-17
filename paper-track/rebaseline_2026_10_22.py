@@ -37,9 +37,10 @@ sr = {k: (v[:, off:] if not isinstance(v, dict) else {n: a[:, off:] for n, a in 
 # ---- VIXM sleeve on the real panel, from state.py's own latch
 try:
     vix, vsrc = VC.history('VIX'); vix3m, v3src = VC.history('VIX3M')
-except Exception as e:        # offline: local FRED files
-    rd = lambda f, c: {r['observation_date']: float(r[c]) for r in csv.DictReader(open(os.path.join(MC.DATA, f))) if r[c] not in ('', '.')}
-    vix, vix3m, vsrc, v3src = rd('vixcls_full.csv', 'VIXCLS'), rd('vxvcls.csv', 'VXVCLS'), 'FRED (local)', 'FRED (local)'
+except Exception as e:        # 2026-11-17 audit: no silent fallback to the (possibly stale) local FRED files
+    raise RuntimeError(f'rebaseline_2026_10_22: VIX/VIX3M history unavailable from CBOE and FRED ({e}); refusing to use local files '
+                       f'(they end before the panel and would switch the VIXM sleeve off). Fix the network or refresh data/ and re-run.')
+MC.assert_fresh(max(vix), pr['dates'][-1], 'VIX history'); MC.assert_fresh(max(vix3m), pr['dates'][-1], 'VIX3M history')
 rdates = pr['dates']
 vol30 = {d: (None if np.isnan(v) else float(v)) for d, v in zip(rdates, sr['vol'][0])}      # plain 30d, as pinned
 VX = S.vixm_series(rdates, vix, vix3m, vol30)

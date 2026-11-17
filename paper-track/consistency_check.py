@@ -838,7 +838,10 @@ def check_extension_trim_v2():
             assert x['held'] == 0 and x['base'] is None
         else:
             assert x['held'] >= x['raw'], f"{d}: held below raw"
-            assert x['base'] == a_base_row(x['spell_start'])
+            # 2026-11-17: the base row is session-dependent (state.a_base_for applies the A_BASE_FROM_SESSION overrides); the
+            # old a_base_row(spell_start) form only held while qqq_long_history.csv ended before the 2026-10-09 override
+            from state import a_base_for
+            assert x['base'] == a_base_for(x['spell_start'], d)
             if prev is not None and prev['in_a'] and x['held'] < prev['held']:
                 assert prev['held'] - x['held'] == 1, f"{d}: stepped more than one vote"
                 assert closes[i] >= max(closes[max(0, i - EXTENSION_REENTRY_HIGH_N + 1):i + 1]), f"{d}: stepped without a 15-session high"

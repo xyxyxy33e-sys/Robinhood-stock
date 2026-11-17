@@ -118,8 +118,8 @@ def sigs(p):
 def vix_hist():
     try:
         h, src = VC.history('VIX'); return h, src
-    except Exception as e:  # noqa: BLE001
-        return MC._load('vixcls_full.csv', 'observation_date', 'VIXCLS'), f'local vixcls_full.csv ({e})'
+    except Exception as e:  # noqa: BLE001 -- 2026-11-17 audit: no silent fallback to the local (possibly stale) FRED file
+        raise RuntimeError(f'untouched_test: VIX history unavailable from CBOE and FRED ({e}); refusing to use data/vixcls_full.csv')
 
 
 def panic_series(ds, vix):

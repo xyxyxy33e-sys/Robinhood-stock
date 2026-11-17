@@ -45,6 +45,7 @@ import math
 import os
 import sys
 import time
+import warnings
 from datetime import date
 
 import numpy as np
@@ -96,8 +97,14 @@ def _yf(d0, d1):
     return (date.fromisoformat(d1) - date.fromisoformat(d0)).days / 365.0
 
 
-def _rets(px, dates):
-    """Simple returns on `dates` (r[0] = 0), forward-filling missing closes."""
+def _rets(px, dates, strict=False, name='series'):
+    """Simple returns on `dates` (r[0] = 0), forward-filling missing closes.
+    strict=True (used by load_panel): raise if the series ends before dates[-1] instead of carrying its last
+    close forward (which would book a 0% return for every later session). Gaps inside the series are still
+    forward-filled (calendar mismatches); a series that starts late reads 0 before its first print."""
+    if strict and dates and (not px or max(px) < dates[-1]):
+        raise ValueError(f"monte_carlo._rets: {name} ends {max(px) if px else None} before the panel end {dates[-1]}; "
+                         f"refresh the data (python3 paper-track/refresh_data.py) or truncate the panel explicitly")
     out = np.zeros(len(dates)); last = None
     for i, d in enumerate(dates):
         v = px.get(d, last)
@@ -105,6 +112,20 @@ def _rets(px, dates):
             out[i] = v / last - 1
         last = v
     return out
+
+
+MAX_STALE_BDAYS = 5      # a rate / vol input (T-bill, VIX, VIX3M) may lag the panel end by at most this many business days
+
+
+def assert_fresh(last_date, panel_end, what, max_bdays=None):
+    """Research guard: raise if a rate or vol series' last print is more than max_bdays business days before the panel end."""
+    max_bdays = MAX_STALE_BDAYS if max_bdays is None else max_bdays
+    if not last_date:
+        raise ValueError(f"{what}: no data")
+    n = int(np.busday_count(last_date, panel_end))
+    if n > max_bdays:
+        raise ValueError(f"{what} is stale: last print {last_date}, panel ends {panel_end} ({n} business days > {max_bdays}); "
+                         f"refresh the data (python3 paper-track/refresh_data.py) -- research must not forward-fill it")
 
 
 def load_panel(kind):
@@ -119,13 +140,22 @@ def load_panel(kind):
     spy = _load('spy_long_history.csv')
     tb = _load('dgs3mo_full.csv', 'observation_date', 'DGS3MO')
     qqew = _load('QQEW_daily_ext.csv'); surv = _load('ndx_survivor_ew_daily.csv')
-    end = min(max(qqq), max(spy))
+    xlu = _load('xlu_ohlc.csv') if kind == 'real' else _load('xlu_long_history.csv')
+    # panel end = last date common to every price input used (truncation is allowed, silent substitution is not)
+    end = min(max(qqq), max(spy), max(qqew), max(xlu))
     if kind == 'real':
         spmo, tq, ql = _load('spmo_ohlc.csv'), _load('tqqq_ohlc.csv'), _load('qld_ohlc.csv')
         end = min(end, max(spmo), max(tq), max(ql))
         dates = sorted(d for d in qqq if min(spmo) <= d <= end)
     else:
         dates = sorted(d for d in qqq if d <= end)
+    ends = {'qqq_long_history': max(qqq), 'spy_long_history': max(spy), 'QQEW_daily_ext': max(qqew), 'xlu': max(xlu)}
+    if kind == 'real':
+        ends.update(spmo_ohlc=max(spmo), tqqq_ohlc=max(tq), qld_ohlc=max(ql))
+    if dates[-1] < max(qqq):      # truncation is allowed but never silent
+        warnings.warn(f"load_panel({kind!r}): panel truncated at {dates[-1]} (earliest-ending input: "
+                      f"{min(ends, key=ends.get)}); qqq_long_history.csv runs to {max(qqq)}. Run paper-track/refresh_data.py", stacklevel=2)
+    assert_fresh(max(tb), dates[-1], 'dgs3mo_full.csv (T-bill)')
     rate = []; last = 0.0
     tbd = sorted(tb); j = 0
     for d in dates:                       # 3m T-bill as of the prior available print
@@ -136,18 +166,24 @@ def load_panel(kind):
     yf = np.array([0.0] + [_yf(dates[i - 1], dates[i]) for i in range(1, len(dates))])
     rprev = np.concatenate([[rate[0]], rate[:-1]])
     cash = rprev * yf
-    rq = _rets(qqq, dates)
-    # EW breadth leg: QQEW where it exists, NDX survivor EW before (returns, so no splice jump)
-    ew = np.where([d in qqew for d in dates], _rets(qqew, dates), _rets(surv, dates))
+    rq = _rets(qqq, dates, True, 'qqq_long_history.csv')
+    # EW breadth leg: QQEW where it exists, NDX survivor EW before (returns, so no splice jump).
+    # After QQEW's first print every session must have a QQEW close: the survivor file ends 2006-12-29 and would
+    # forward-fill a 0 return into the breadth signal.
     first_qqew = min(qqew)
+    miss = [d for d in dates if d > first_qqew and d not in qqew]
+    if miss:
+        raise ValueError(f"load_panel: {len(miss)} sessions after QQEW's first print have no QQEW close "
+                         f"(first {miss[0]}, last {miss[-1]}); refusing to substitute the survivor-EW leg")
+    ew = np.where([d in qqew for d in dates], _rets(qqew, dates, True, 'QQEW_daily_ext.csv'), _rets(surv, dates))
     ew[[i for i, d in enumerate(dates) if d == first_qqew]] = 0.0
-    p = dict(dates=dates, qqq=rq, ew=ew, cash=cash, spy=_rets(spy, dates) + SPY_DIV * yf,
+    p = dict(dates=dates, qqq=rq, ew=ew, cash=cash, spy=_rets(spy, dates, True, 'spy_long_history.csv') + SPY_DIV * yf,
              qqq_tr=rq + QQQ_DIV * yf)
-    xlu = _load('xlu_ohlc.csv') if kind == 'real' else _load('xlu_long_history.csv')
-    p['xlu'] = _rets(xlu, dates) + XLU_DIV * yf
+    p['xlu'] = _rets(xlu, dates, True, 'xlu') + XLU_DIV * yf
     if kind == 'real':
-        p.update(core=_rets(spmo, dates), tqqq=_rets(tq, dates), qld=_rets(ql, dates),
-                 spmo=_rets(spmo, dates), qqq_tr=rq.copy(), spy=_rets(spy, dates))
+        p.update(core=_rets(spmo, dates, True, 'spmo_ohlc.csv'), tqqq=_rets(tq, dates, True, 'tqqq_ohlc.csv'),
+                 qld=_rets(ql, dates, True, 'qld_ohlc.csv'), spmo=_rets(spmo, dates, True, 'spmo_ohlc.csv'),
+                 qqq_tr=rq.copy(), spy=_rets(spy, dates, True, 'spy_long_history.csv'))
     else:
         u = rq + QQQ_DIV * yf
         fin = (rprev + FIN_SPREAD) * yf
