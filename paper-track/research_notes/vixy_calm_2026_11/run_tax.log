@@ -1,0 +1,378 @@
+==================================================================================================================================
+run_tax.py: after-tax view of the calm hedge (PLAN.md Addendum 3). Research only. 208 lot simulations in 4s
+==================================================================================================================================
+Method: after_tax_test.py lot book (FIFO, ST<=365d, wash sales +/-30d same ticker, price-only, tax for year Y paid first session on/after 15 Apr Y+1 by pro-rata sale, 2 bp, BOXX deferred, no $3k offset).
+Netting/carry: ST and LT netted separately incl. carryforwards, cross-netted; a net-loss year pays no tax and the loss is carried forward (character kept) to later years' gains. Liquidation basis for after-tax CAGR (unrealized gains treated LT).
+Rates: S1 federal ST 38.8% (35+3.8) / LT 18.8% (15+3.8); S2 top+CA ST 50.1% (37+9.3+3.8) / LT 33.1% (20+9.3+3.8). View c: no tax (zero-rate path, realized gains tracked).
+After-tax Sharpe / max DD are on the taxed account's daily value changes INCLUDING the April tax-payment sales (as the existing test's MaxDD); 'acc' columns = accrual alternative (tax or credit at the rate on each day's realized ST/LT gain, no cash-flow jumps).
+VIXY/VIXM treated as ordinary ETFs (commodity-pool / ETN tax treatment, 60/40 1256 for VIXM-type pools, NOT modelled). Proxy-panel core is its own ticker CORE (adds a 0.6%/yr dividend accrual); QQQ cash legs ticker QQQ; VIXY sleeve and VIXY hedge share ticker VIXY (wash sales across them); VIXM hedge ticker VIXM.
+SANITY: zero-rate lot simulation reproduces MC.run_strategy daily returns (max abs diff < 1e-9) for Base / VIXY C1 T18 h5 / its matched cash... and VIXM C5 h10 MC, all 4 windows: PASS
+SANITY real Base vs harness.run (VIXY sleeve, cap): max abs diff 4.44e-16
+
+=== BASELINE (Base) per window: pre-tax | S1 federal | S2 top+CA : CAGR / Sharpe / max DD  (after-tax CAGR on liquidation basis); taxes paid per $1 start; ST share of gross gains ===
+  real    | pre  51.1% / 2.100 /  -16.5% | S1  34.2% / 1.364 /  -26.3% | S2  28.8% / 1.127 /  -31.4%
+  oos     | pre  22.6% / 0.963 /  -16.4% | S1  15.1% / 0.739 /  -19.0% | S2  12.6% / 0.663 /  -22.9%
+  late    | pre  52.0% / 2.029 /  -20.1% | S1  34.8% / 1.341 /  -32.6% | S2  29.3% / 1.117 /  -37.8%
+  joined  | pre  42.7% / 1.690 /  -20.1% | S1  28.6% / 1.148 /  -32.6% | S2  24.1% / 0.967 /  -37.8%
+
+=== ARM vs MATCHED CASH, pre-tax vs after-tax (differences arm minus matched cash: dCAGR pp / dSharpe / dmaxDD pp) ===
+  columns: pre-tax | S1 federal | S2 top+CA | accrual S1 (dCAGR/dSh) | accrual S2 ;  arm and MC levels for S2 shown in the detail block below
+ window real
+  VIXY C1 T18 h5   |  -0.27 / +0.052 / +0.25 |  -0.40 / +0.012 / -0.17 |  -0.39 / +0.004 / -0.20 | accS1  -0.56 / +0.016 | accS2  -0.61 / +0.004
+  VIXY C1 T20 h5   |  -0.69 / +0.062 / +0.67 |  -0.70 / +0.010 / -0.28 |  -0.66 / -0.000 / -0.37 | accS1  -0.84 / +0.019 | accS2  -0.86 / +0.004
+  VIXM C1 T18 h10  |  -0.19 / +0.039 / +0.26 |  -0.30 / +0.007 / -0.27 |  -0.30 / +0.000 / -0.34 | accS1  -0.44 / +0.011 | accS2  -0.45 / +0.002
+  VIXY C5 h5       |  +0.51 / +0.037 / +0.09 |  +0.36 / +0.015 / +0.08 |  +0.32 / +0.010 / +0.04 | accS1  +0.15 / +0.019 | accS2  +0.06 / +0.013
+  VIXM C5 h10      |  +0.86 / +0.043 / +0.01 |  +0.61 / +0.020 / -0.71 |  +0.53 / +0.014 / -0.94 | accS1  +0.39 / +0.025 | accS2  +0.27 / +0.019
+  VIXM C5 h20      |  +1.70 / +0.069 / +0.06 |  +1.19 / +0.032 / -1.39 |  +1.03 / +0.023 / -1.82 | accS1  +0.78 / +0.041 | accS2  +0.56 / +0.031
+  VIXY C3 h5       |  -2.99 / +0.015 / +0.67 |  -2.37 / -0.027 / +0.29 |  -2.09 / -0.032 / +0.61 | accS1  -2.32 / -0.022 | accS2  -2.08 / -0.032
+ window oos
+  VIXY C1 T18 h5   |  -1.19 / -0.009 / +0.47 |  -0.98 / -0.024 / -1.28 |  -0.83 / -0.028 / -1.23 | accS1  -0.95 / -0.016 | accS2  -0.83 / -0.017
+  VIXY C1 T20 h5   |  -2.08 / -0.037 / +0.04 |  -1.55 / -0.050 / -1.79 |  -1.30 / -0.053 / -1.79 | accS1  -1.56 / -0.037 | accS2  -1.34 / -0.035
+  VIXM C1 T18 h10  |  -1.90 / -0.041 / +0.19 |  -1.40 / -0.048 / -1.51 |  -1.18 / -0.049 / -1.53 | accS1  -1.44 / -0.040 | accS2  -1.25 / -0.037
+  VIXY C5 h5       |  -0.53 / -0.013 / +0.02 |  -0.34 / -0.009 / +0.11 |  -0.28 / -0.007 / +0.12 | accS1  -0.33 / -0.009 | accS2  -0.28 / -0.008
+  VIXM C5 h10      |  -0.66 / -0.019 / +0.04 |  -0.43 / -0.013 / +0.08 |  -0.35 / -0.012 / +0.09 | accS1  -0.42 / -0.013 | accS2  -0.35 / -0.011
+  VIXM C5 h20      |  -1.35 / -0.042 / +0.08 |  -0.90 / -0.031 / +0.50 |  -0.76 / -0.027 / +0.64 | accS1  -0.82 / -0.028 | accS2  -0.67 / -0.023
+  VIXY C3 h5       |  -3.02 / -0.058 / +0.19 |  -2.14 / -0.062 / -1.63 |  -1.80 / -0.063 / -1.57 | accS1  -2.07 / -0.050 | accS2  -1.74 / -0.046
+ window late
+  VIXY C1 T18 h5   |  -0.22 / +0.049 / -0.00 |  -0.36 / +0.013 / -0.16 |  -0.36 / +0.005 / -0.20 | accS1  -0.53 / +0.016 | accS2  -0.58 / +0.005
+  VIXY C1 T20 h5   |  -0.69 / +0.055 / +0.14 |  -0.71 / +0.009 / -0.27 |  -0.66 / +0.000 / -0.37 | accS1  -0.83 / +0.018 | accS2  -0.85 / +0.005
+  VIXM C1 T18 h10  |  -0.23 / +0.034 / +0.00 |  -0.33 / +0.006 / -0.25 |  -0.32 / -0.000 / -0.32 | accS1  -0.46 / +0.009 | accS2  -0.47 / +0.001
+  VIXY C5 h5       |  +0.50 / +0.034 / +0.00 |  +0.35 / +0.015 / +0.03 |  +0.31 / +0.009 / +0.06 | accS1  +0.13 / +0.018 | accS2  +0.05 / +0.012
+  VIXM C5 h10      |  +0.86 / +0.040 / -0.00 |  +0.61 / +0.019 / -0.67 |  +0.53 / +0.013 / -0.88 | accS1  +0.38 / +0.024 | accS2  +0.27 / +0.018
+  VIXM C5 h20      |  +1.68 / +0.065 / +0.00 |  +1.18 / +0.032 / -1.31 |  +1.02 / +0.023 / -1.72 | accS1  +0.77 / +0.038 | accS2  +0.54 / +0.029
+  VIXY C3 h5       |  -2.87 / +0.012 / +0.42 |  -2.29 / -0.025 / +0.24 |  -2.03 / -0.030 / +0.54 | accS1  -2.23 / -0.018 | accS2  -2.00 / -0.027
+ window joined
+  VIXY C1 T18 h5   |  -0.56 / +0.035 / -0.00 |  -0.52 / +0.008 / -0.16 |  -0.48 / +0.002 / -0.20 | accS1  -0.67 / +0.009 | accS2  -0.66 / +0.001
+  VIXY C1 T20 h5   |  -1.17 / +0.030 / +0.14 |  -0.94 / +0.000 / -0.27 |  -0.84 / -0.006 / -0.37 | accS1  -1.07 / +0.003 | accS2  -1.00 / -0.006
+  VIXM C1 T18 h10  |  -0.80 / +0.016 / -0.00 |  -0.64 / -0.002 / -0.25 |  -0.57 / -0.006 / -0.32 | accS1  -0.78 / -0.003 | accS2  -0.72 / -0.008
+  VIXY C5 h5       |  +0.14 / +0.018 / +0.00 |  +0.13 / +0.008 / +0.03 |  +0.12 / +0.005 / +0.06 | accS1  -0.02 / +0.009 | accS2  -0.05 / +0.005
+  VIXM C5 h10      |  +0.34 / +0.021 / +0.00 |  +0.27 / +0.010 / -0.67 |  +0.24 / +0.007 / -0.88 | accS1  +0.13 / +0.011 | accS2  +0.07 / +0.008
+  VIXM C5 h20      |  +0.65 / +0.031 / +0.00 |  +0.49 / +0.015 / -1.31 |  +0.44 / +0.011 / -1.72 | accS1  +0.25 / +0.017 | accS2  +0.16 / +0.012
+  VIXY C3 h5       |  -2.93 / -0.005 / +0.42 |  -2.21 / -0.028 / +0.24 |  -1.93 / -0.030 / +0.54 | accS1  -2.18 / -0.025 | accS2  -1.92 / -0.031
+
+=== DETAIL: arm / matched cash levels (CAGR / Sharpe / maxDD), pre-tax and S2 ===
+ window real
+  VIXY C1 T18 h5   | Z:  49.8/2.168/ -15.4  MC  50.0/2.116/ -15.7 | S1:  33.0/1.379/ -26.0  MC  33.4/1.366/ -25.9 | S2:  27.7/1.130/ -31.4  MC  28.1/1.127/ -31.2
+  VIXY C1 T20 h5   | Z:  49.0/2.184/ -15.1  MC  49.6/2.121/ -15.7 | S1:  32.4/1.378/ -25.7  MC  33.1/1.367/ -25.4 | S2:  27.2/1.126/ -31.1  MC  27.8/1.126/ -30.7
+  VIXM C1 T18 h10  | Z:  48.8/2.169/ -15.2  MC  49.0/2.130/ -15.4 | S1:  32.3/1.375/ -26.0  MC  32.6/1.368/ -25.7 | S2:  27.0/1.126/ -31.4  MC  27.3/1.126/ -31.0
+  VIXY C5 h5       | Z:  51.1/2.143/ -16.1  MC  50.6/2.106/ -16.2 | S1:  34.0/1.378/ -25.7  MC  33.7/1.363/ -25.8 | S2:  28.6/1.134/ -31.0  MC  28.3/1.124/ -31.0
+  VIXM C5 h10      | Z:  51.0/2.155/ -15.8  MC  50.2/2.112/ -15.8 | S1:  33.9/1.384/ -26.2  MC  33.3/1.364/ -25.5 | S2:  28.5/1.138/ -31.7  MC  27.9/1.124/ -30.7
+  VIXM C5 h20      | Z:  50.9/2.181/ -15.5  MC  49.2/2.113/ -15.6 | S1:  33.7/1.392/ -26.6  MC  32.5/1.360/ -25.2 | S2:  28.2/1.142/ -32.1  MC  27.2/1.119/ -30.3
+  VIXY C3 h5       | Z:  45.5/2.123/ -15.1  MC  48.5/2.108/ -15.7 | S1:  30.0/1.328/ -24.8  MC  32.3/1.355/ -25.1 | S2:  25.1/1.083/ -29.7  MC  27.2/1.115/ -30.3
+ window oos
+  VIXY C1 T18 h5   | Z:  20.7/0.956/ -15.6  MC  21.9/0.965/ -16.1 | S1:  13.5/0.707/ -19.8  MC  14.4/0.731/ -18.5 | S2:  11.2/0.625/ -23.4  MC  12.0/0.653/ -22.2
+  VIXY C1 T20 h5   | Z:  19.5/0.921/ -15.6  MC  21.6/0.958/ -15.7 | S1:  12.7/0.675/ -20.5  MC  14.3/0.725/ -18.7 | S2:  10.6/0.594/ -24.3  MC  11.9/0.647/ -22.5
+  VIXM C1 T18 h10  | Z:  19.2/0.924/ -15.7  MC  21.1/0.966/ -15.9 | S1:  12.4/0.675/ -18.4  MC  13.8/0.723/ -16.9 | S2:  10.2/0.596/ -21.8  MC  11.4/0.645/ -20.2
+  VIXY C5 h5       | Z:  21.9/0.951/ -16.2  MC  22.4/0.964/ -16.2 | S1:  14.4/0.717/ -18.9  MC  14.7/0.725/ -19.0 | S2:  12.0/0.639/ -22.7  MC  12.3/0.646/ -22.8
+  VIXM C5 h10      | Z:  21.6/0.942/ -16.1  MC  22.2/0.961/ -16.1 | S1:  13.9/0.695/ -19.0  MC  14.3/0.708/ -19.0 | S2:  11.5/0.615/ -22.6  MC  11.9/0.627/ -22.7
+  VIXM C5 h20      | Z:  20.5/0.913/ -15.8  MC  21.8/0.956/ -15.8 | S1:  13.0/0.657/ -18.2  MC  13.9/0.688/ -18.7 | S2:  10.8/0.575/ -21.6  MC  11.5/0.602/ -22.2
+  VIXY C3 h5       | Z:  18.5/0.907/ -15.4  MC  21.5/0.965/ -15.6 | S1:  12.2/0.671/ -20.3  MC  14.3/0.733/ -18.7 | S2:  10.1/0.592/ -24.1  MC  11.9/0.655/ -22.5
+ window late
+  VIXY C1 T18 h5   | Z:  50.8/2.096/ -20.1  MC  51.1/2.048/ -20.1 | S1:  33.6/1.358/ -32.7  MC  34.0/1.345/ -32.6 | S2:  28.2/1.122/ -37.8  MC  28.6/1.117/ -37.6
+  VIXY C1 T20 h5   | Z:  50.0/2.109/ -19.5  MC  50.7/2.054/ -19.7 | S1:  33.1/1.356/ -32.4  MC  33.8/1.347/ -32.1 | S2:  27.7/1.118/ -37.6  MC  28.4/1.118/ -37.2
+  VIXM C1 T18 h10  | Z:  49.8/2.098/ -20.1  MC  50.0/2.064/ -20.1 | S1:  32.9/1.354/ -32.7  MC  33.2/1.348/ -32.5 | S2:  27.6/1.118/ -37.9  MC  27.9/1.118/ -37.5
+  VIXY C5 h5       | Z:  52.1/2.070/ -20.1  MC  51.6/2.035/ -20.1 | S1:  34.7/1.355/ -32.3  MC  34.3/1.340/ -32.4 | S2:  29.2/1.124/ -37.3  MC  28.8/1.114/ -37.4
+  VIXM C5 h10      | Z:  52.1/2.082/ -20.1  MC  51.2/2.042/ -20.1 | S1:  34.6/1.360/ -32.9  MC  34.0/1.341/ -32.2 | S2:  29.0/1.127/ -38.0  MC  28.5/1.114/ -37.1
+  VIXM C5 h20      | Z:  52.1/2.111/ -20.1  MC  50.4/2.046/ -20.1 | S1:  34.4/1.370/ -33.1  MC  33.2/1.339/ -31.8 | S2:  28.9/1.132/ -38.3  MC  27.8/1.109/ -36.6
+  VIXY C3 h5       | Z:  46.6/2.049/ -19.1  MC  49.4/2.037/ -19.5 | S1:  30.6/1.307/ -31.5  MC  32.9/1.333/ -31.7 | S2:  25.6/1.075/ -36.1  MC  27.6/1.105/ -36.6
+ window joined
+  VIXY C1 T18 h5   | Z:  41.3/1.741/ -20.1  MC  41.8/1.706/ -20.1 | S1:  27.4/1.159/ -32.7  MC  27.9/1.150/ -32.6 | S2:  23.0/0.969/ -37.8  MC  23.5/0.966/ -37.6
+  VIXY C1 T20 h5   | Z:  40.3/1.737/ -19.5  MC  41.5/1.707/ -19.7 | S1:  26.7/1.150/ -32.4  MC  27.7/1.150/ -32.1 | S2:  22.4/0.960/ -37.6  MC  23.3/0.965/ -37.2
+  VIXM C1 T18 h10  | Z:  40.1/1.736/ -20.1  MC  40.9/1.720/ -20.1 | S1:  26.5/1.150/ -32.7  MC  27.2/1.152/ -32.5 | S2:  22.2/0.960/ -37.9  MC  22.8/0.966/ -37.5
+  VIXY C5 h5       | Z:  42.5/1.712/ -20.1  MC  42.4/1.694/ -20.1 | S1:  28.4/1.153/ -32.3  MC  28.2/1.145/ -32.4 | S2:  23.9/0.969/ -37.3  MC  23.7/0.963/ -37.4
+  VIXM C5 h10      | Z:  42.4/1.718/ -20.1  MC  42.1/1.697/ -20.1 | S1:  28.2/1.153/ -32.9  MC  27.9/1.142/ -32.2 | S2:  23.6/0.967/ -38.0  MC  23.4/0.960/ -37.1
+  VIXM C5 h20      | Z:  42.0/1.728/ -20.1  MC  41.4/1.697/ -20.1 | S1:  27.8/1.152/ -33.1  MC  27.3/1.137/ -31.8 | S2:  23.3/0.964/ -38.3  MC  22.8/0.953/ -36.6
+  VIXY C3 h5       | Z:  37.7/1.693/ -19.1  MC  40.6/1.698/ -19.5 | S1:  24.9/1.114/ -31.5  MC  27.1/1.142/ -31.7 | S2:  20.9/0.927/ -36.1  MC  22.8/0.958/ -36.6
+
+=== VIEW C: net realized gain per full calendar year (ST+LT after wash adjustments; no tax drag), mean / median, $ per $600k of start-of-year account value and % of NAV; pre-tax P&L $ same basis ===
+  full year = >= 240 sessions in the window (real: 2016-2025; oos: 2011-2014; late: 2016-2025; joined: 2011-2025)
+ window real
+  Base                   gain mean $   340,086 median $   359,752 ( 56.7% /  60.0% NAV); ST share 99.3%; pre-tax P&L mean $   348,063
+  VIXY C1 T18 h5         arm mean $   333,504 med $   364,512 ( 55.6%/ 60.8%) | MC mean $   331,173 med $   351,125 ( 55.2%/ 58.5%) | gain removed/yr $   -2,331; pre-tax P&L given up/yr $   +3,896; ratio n/a (gain not reduced)
+  VIXY C1 T20 h5         arm mean $   328,724 med $   353,690 ( 54.8%/ 58.9%) | MC mean $   327,905 med $   350,695 ( 54.7%/ 58.4%) | gain removed/yr $     -819; pre-tax P&L given up/yr $   +7,388; ratio n/a (gain not reduced)
+  VIXM C1 T18 h10        arm mean $   324,707 med $   353,040 ( 54.1%/ 58.8%) | MC mean $   321,832 med $   339,931 ( 53.6%/ 56.7%) | gain removed/yr $   -2,875; pre-tax P&L given up/yr $   +2,223; ratio n/a (gain not reduced)
+  VIXY C5 h5             arm mean $   346,346 med $   393,507 ( 57.7%/ 65.6%) | MC mean $   338,583 med $   379,024 ( 56.4%/ 63.2%) | gain removed/yr $   -7,764; pre-tax P&L given up/yr $   -5,465; ratio n/a (gain not reduced)
+  VIXM C5 h10            arm mean $   346,459 med $   401,064 ( 57.7%/ 66.8%) | MC mean $   337,072 med $   393,348 ( 56.2%/ 65.6%) | gain removed/yr $   -9,387; pre-tax P&L given up/yr $   -7,641; ratio n/a (gain not reduced)
+  VIXM C5 h20            arm mean $   350,522 med $   415,056 ( 58.4%/ 69.2%) | MC mean $   332,529 med $   390,754 ( 55.4%/ 65.1%) | gain removed/yr $  -17,994; pre-tax P&L given up/yr $  -14,874; ratio n/a (gain not reduced)
+  VIXY C3 h5             arm mean $   309,492 med $   320,152 ( 51.6%/ 53.4%) | MC mean $   320,950 med $   339,535 ( 53.5%/ 56.6%) | gain removed/yr $  +11,458; pre-tax P&L given up/yr $  +23,147; ratio 2.02
+ window oos
+  Base                   gain mean $   119,093 median $    89,777 ( 19.8% /  15.0% NAV); ST share 95.2%; pre-tax P&L mean $   155,591
+  VIXY C1 T18 h5         arm mean $   117,468 med $    96,736 ( 19.6%/ 16.1%) | MC mean $   117,340 med $    92,928 ( 19.6%/ 15.5%) | gain removed/yr $     -128; pre-tax P&L given up/yr $   +7,284; ratio n/a (gain not reduced)
+  VIXY C1 T20 h5         arm mean $   113,398 med $    86,356 ( 18.9%/ 14.4%) | MC mean $   115,563 med $    86,516 ( 19.3%/ 14.4%) | gain removed/yr $   +2,165; pre-tax P&L given up/yr $  +11,336; ratio 5.24
+  VIXM C1 T18 h10        arm mean $   111,689 med $    96,625 ( 18.6%/ 16.1%) | MC mean $   115,565 med $   103,396 ( 19.3%/ 17.2%) | gain removed/yr $   +3,876; pre-tax P&L given up/yr $  +13,555; ratio 3.50
+  VIXY C5 h5             arm mean $   122,252 med $   100,087 ( 20.4%/ 16.7%) | MC mean $   124,895 med $   104,535 ( 20.8%/ 17.4%) | gain removed/yr $   +2,643; pre-tax P&L given up/yr $   +3,776; ratio 1.43
+  VIXM C5 h10            arm mean $   127,167 med $   115,386 ( 21.2%/ 19.2%) | MC mean $   130,197 med $   118,325 ( 21.7%/ 19.7%) | gain removed/yr $   +3,030; pre-tax P&L given up/yr $   +4,048; ratio 1.34
+  VIXM C5 h20            arm mean $   131,818 med $   135,642 ( 22.0%/ 22.6%) | MC mean $   137,409 med $   136,861 ( 22.9%/ 22.8%) | gain removed/yr $   +5,591; pre-tax P&L given up/yr $   +8,171; ratio 1.46
+  VIXY C3 h5             arm mean $   104,564 med $    70,280 ( 17.4%/ 11.7%) | MC mean $   114,138 med $    83,324 ( 19.0%/ 13.9%) | gain removed/yr $   +9,574; pre-tax P&L given up/yr $  +17,351; ratio 1.81
+ window late
+  Base                   gain mean $   344,263 median $   359,408 ( 57.4% /  59.9% NAV); ST share 99.3%; pre-tax P&L mean $   354,990
+  VIXY C1 T18 h5         arm mean $   338,709 med $   353,229 ( 56.5%/ 58.9%) | MC mean $   336,015 med $   343,921 ( 56.0%/ 57.3%) | gain removed/yr $   -2,694; pre-tax P&L given up/yr $   +3,586; ratio n/a (gain not reduced)
+  VIXY C1 T20 h5         arm mean $   333,347 med $   343,013 ( 55.6%/ 57.2%) | MC mean $   332,678 med $   341,763 ( 55.4%/ 57.0%) | gain removed/yr $     -669; pre-tax P&L given up/yr $   +7,767; ratio n/a (gain not reduced)
+  VIXM C1 T18 h10        arm mean $   330,287 med $   348,416 ( 55.0%/ 58.1%) | MC mean $   327,601 med $   336,325 ( 54.6%/ 56.1%) | gain removed/yr $   -2,685; pre-tax P&L given up/yr $   +2,663; ratio n/a (gain not reduced)
+  VIXY C5 h5             arm mean $   351,760 med $   398,532 ( 58.6%/ 66.4%) | MC mean $   344,106 med $   390,743 ( 57.4%/ 65.1%) | gain removed/yr $   -7,654; pre-tax P&L given up/yr $   -5,036; ratio n/a (gain not reduced)
+  VIXM C5 h10            arm mean $   353,146 med $   416,937 ( 58.9%/ 69.5%) | MC mean $   343,767 med $   414,108 ( 57.3%/ 69.0%) | gain removed/yr $   -9,379; pre-tax P&L given up/yr $   -7,338; ratio n/a (gain not reduced)
+  VIXM C5 h20            arm mean $   358,973 med $   424,534 ( 59.8%/ 70.8%) | MC mean $   341,165 med $   393,983 ( 56.9%/ 65.7%) | gain removed/yr $  -17,808; pre-tax P&L given up/yr $  -14,145; ratio n/a (gain not reduced)
+  VIXY C3 h5             arm mean $   314,064 med $   312,448 ( 52.3%/ 52.1%) | MC mean $   324,819 med $   337,464 ( 54.1%/ 56.2%) | gain removed/yr $  +10,755; pre-tax P&L given up/yr $  +22,863; ratio 2.13
+ window joined
+  Base                   gain mean $   267,808 median $   258,797 ( 44.6% /  43.1% NAV); ST share 98.8%; pre-tax P&L mean $   282,213
+  VIXY C1 T18 h5         arm mean $   263,070 med $   252,969 ( 43.8%/ 42.2%) | MC mean $   261,920 med $   258,547 ( 43.7%/ 43.1%) | gain removed/yr $   -1,150; pre-tax P&L given up/yr $   +3,973; ratio n/a (gain not reduced)
+  VIXY C1 T20 h5         arm mean $   257,811 med $   253,247 ( 43.0%/ 42.2%) | MC mean $   259,090 med $   250,436 ( 43.2%/ 41.7%) | gain removed/yr $   +1,278; pre-tax P&L given up/yr $   +8,059; ratio 6.30
+  VIXM C1 T18 h10        arm mean $   255,754 med $   243,496 ( 42.6%/ 40.6%) | MC mean $   256,132 med $   240,926 ( 42.7%/ 40.2%) | gain removed/yr $     +379; pre-tax P&L given up/yr $   +4,965; ratio 13.11
+  VIXY C5 h5             arm mean $   272,797 med $   271,293 ( 45.5%/ 45.2%) | MC mean $   268,439 med $   269,255 ( 44.7%/ 44.9%) | gain removed/yr $   -4,358; pre-tax P&L given up/yr $   -2,321; ratio n/a (gain not reduced)
+  VIXM C5 h10            arm mean $   274,164 med $   272,714 ( 45.7%/ 45.5%) | MC mean $   268,841 med $   271,573 ( 44.8%/ 45.3%) | gain removed/yr $   -5,323; pre-tax P&L given up/yr $   -3,698; ratio n/a (gain not reduced)
+  VIXM C5 h20            arm mean $   277,991 med $   264,467 ( 46.3%/ 44.1%) | MC mean $   267,845 med $   266,415 ( 44.6%/ 44.4%) | gain removed/yr $  -10,146; pre-tax P&L given up/yr $   -7,022; ratio n/a (gain not reduced)
+  VIXY C3 h5             arm mean $   242,223 med $   246,007 ( 40.4%/ 41.0%) | MC mean $   253,399 med $   243,274 ( 42.2%/ 40.5%) | gain removed/yr $  +11,177; pre-tax P&L given up/yr $  +20,398; ratio 1.82
+
+=== REALIZED GAIN/LOSS BY CALENDAR YEAR (no-tax path), % of start-of-year NAV: book ST / LT for arm and MC; hedge leg ST / LT (arm only; matched-cash hedge share sits in BOXX and is not separable) ===
+ window real
+  VIXY C1 T18 h5
+    2015* book arm ST   -7.50 LT  +0.00 | MC ST   -9.13 LT  +0.00 | hedge leg ST  +1.71 LT +0.00
+    2016  book arm ST  +22.42 LT  +0.00 | MC ST  +21.87 LT  +0.00 | hedge leg ST  +0.22 LT +0.00
+    2017  book arm ST  +40.04 LT  +0.02 | MC ST  +41.42 LT  +0.02 | hedge leg ST  +0.00 LT +0.00
+    2018  book arm ST  +82.01 LT  +0.69 | MC ST  +82.99 LT  +2.64 | hedge leg ST  +1.45 LT +0.00
+    2019  book arm ST  +47.91 LT  +0.00 | MC ST  +42.10 LT  +0.00 | hedge leg ST  +2.49 LT +0.00
+    2020  book arm ST  +74.94 LT  +0.00 | MC ST  +75.18 LT  +0.00 | hedge leg ST  -0.54 LT +0.00
+    2021  book arm ST  +92.73 LT  -0.13 | MC ST  +90.74 LT  -0.11 | hedge leg ST  +0.49 LT +0.00
+    2022  book arm ST   -0.99 LT  -0.08 | MC ST   -1.02 LT  -0.06 | hedge leg ST  +0.00 LT +0.00
+    2023  book arm ST  +80.56 LT  +0.00 | MC ST  +79.50 LT  +0.00 | hedge leg ST  +1.02 LT +0.00
+    2024  book arm ST  +74.24 LT  -0.65 | MC ST  +74.51 LT  +0.43 | hedge leg ST  +1.52 LT +0.00
+    2025  book arm ST  +42.15 LT  -0.03 | MC ST  +41.81 LT  -0.09 | hedge leg ST  +1.04 LT +0.00
+    2026* book arm ST  +18.05 LT  +0.00 | MC ST  +17.51 LT  +0.00 | hedge leg ST  -0.91 LT +0.00
+  VIXY C1 T20 h5
+    2015* book arm ST   -6.51 LT  +0.00 | MC ST   -8.82 LT  +0.00 | hedge leg ST  +2.34 LT +0.00
+    2016  book arm ST  +23.39 LT  +0.00 | MC ST  +21.95 LT  +0.00 | hedge leg ST  +0.75 LT +0.00
+    2017  book arm ST  +40.04 LT  +0.02 | MC ST  +41.44 LT  +0.02 | hedge leg ST  +0.00 LT +0.00
+    2018  book arm ST  +82.16 LT  +1.20 | MC ST  +83.08 LT  +2.64 | hedge leg ST  +2.66 LT +0.00
+    2019  book arm ST  +44.00 LT  +0.00 | MC ST  +40.31 LT  +0.00 | hedge leg ST  +1.73 LT +0.00
+    2020  book arm ST  +73.90 LT  +0.00 | MC ST  +75.09 LT  +0.00 | hedge leg ST  -1.27 LT +0.00
+    2021  book arm ST  +92.80 LT  -0.13 | MC ST  +89.15 LT  -0.14 | hedge leg ST  +2.15 LT +0.00
+    2022  book arm ST   -0.84 LT  -0.02 | MC ST   -0.48 LT  -0.04 | hedge leg ST  +0.16 LT +0.00
+    2023  book arm ST  +75.28 LT  +0.08 | MC ST  +76.55 LT  +0.03 | hedge leg ST  +0.44 LT +0.00
+    2024  book arm ST  +74.46 LT  +0.00 | MC ST  +74.93 LT  +0.02 | hedge leg ST  +1.37 LT +0.00
+    2025  book arm ST  +42.36 LT  -0.83 | MC ST  +42.02 LT  -0.07 | hedge leg ST  +1.22 LT +0.00
+    2026* book arm ST  +15.95 LT  +0.00 | MC ST  +17.14 LT  +0.00 | hedge leg ST  -0.19 LT +0.00
+  VIXM C1 T18 h10
+    2015* book arm ST   -7.15 LT  +0.00 | MC ST   -8.49 LT  +0.00 | hedge leg ST  +1.41 LT +0.00
+    2016  book arm ST  +21.74 LT  +0.00 | MC ST  +20.97 LT  +0.00 | hedge leg ST  +0.85 LT +0.00
+    2017  book arm ST  +37.50 LT  +0.02 | MC ST  +38.90 LT  +0.03 | hedge leg ST  +0.00 LT +0.00
+    2018  book arm ST  +79.61 LT  -1.43 | MC ST  +80.87 LT  +1.66 | hedge leg ST  -2.46 LT -3.54
+    2019  book arm ST  +49.43 LT  +0.00 | MC ST  +43.06 LT  +0.00 | hedge leg ST  +5.02 LT +0.00
+    2020  book arm ST  +73.12 LT  +0.00 | MC ST  +73.97 LT  +0.00 | hedge leg ST  -0.56 LT +0.00
+    2021  book arm ST  +92.32 LT  -0.11 | MC ST  +89.22 LT  -0.09 | hedge leg ST  +2.54 LT +0.00
+    2022  book arm ST   -1.10 LT  +0.00 | MC ST   -1.12 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2023  book arm ST  +78.31 LT  +0.00 | MC ST  +77.61 LT  +0.00 | hedge leg ST  +1.42 LT +0.00
+    2024  book arm ST  +70.15 LT  -1.89 | MC ST  +69.92 LT  +0.34 | hedge leg ST  +1.48 LT -2.23
+    2025  book arm ST  +43.52 LT  +0.00 | MC ST  +41.06 LT  +0.00 | hedge leg ST  +2.24 LT +0.00
+    2026* book arm ST  +18.76 LT  +0.00 | MC ST  +20.18 LT  +0.00 | hedge leg ST  -1.31 LT +0.00
+  VIXY C5 h5
+    2015* book arm ST   -9.71 LT  +0.00 | MC ST   -9.71 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2016  book arm ST  +22.75 LT  +0.00 | MC ST  +22.75 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2017  book arm ST  +54.86 LT  +0.02 | MC ST  +52.99 LT  +0.00 | hedge leg ST  +1.95 LT +0.00
+    2018  book arm ST  +86.22 LT  +0.00 | MC ST  +81.14 LT  +0.00 | hedge leg ST  +4.73 LT +0.00
+    2019  book arm ST  +43.94 LT  +0.00 | MC ST  +43.60 LT  +0.00 | hedge leg ST  +0.12 LT +0.00
+    2020  book arm ST  +76.29 LT  +0.00 | MC ST  +73.35 LT  +0.00 | hedge leg ST  +2.15 LT +0.00
+    2021  book arm ST  +93.10 LT  -0.13 | MC ST  +90.60 LT  -0.13 | hedge leg ST  +3.47 LT +0.00
+    2022  book arm ST   -0.57 LT  -0.00 | MC ST   -0.59 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2023  book arm ST  +79.71 LT  +0.00 | MC ST  +80.19 LT  +0.00 | hedge leg ST  -0.11 LT +0.00
+    2024  book arm ST  +78.79 LT  -0.92 | MC ST  +77.28 LT  +0.00 | hedge leg ST  +2.39 LT +0.00
+    2025  book arm ST  +43.21 LT  -0.03 | MC ST  +43.18 LT  -0.06 | hedge leg ST  +0.50 LT +0.00
+    2026* book arm ST  +14.91 LT  +0.00 | MC ST  +16.40 LT  +0.00 | hedge leg ST  -0.34 LT +0.00
+  VIXM C5 h10
+    2015* book arm ST   -9.71 LT  +0.00 | MC ST   -9.71 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2016  book arm ST  +22.75 LT  +0.00 | MC ST  +22.75 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2017  book arm ST  +60.26 LT  +0.02 | MC ST  +60.27 LT  +0.00 | hedge leg ST  +0.42 LT +0.00
+    2018  book arm ST  +78.19 LT  +0.00 | MC ST  +75.33 LT  +0.00 | hedge leg ST  +2.01 LT +0.00
+    2019  book arm ST  +45.97 LT  +0.00 | MC ST  +45.51 LT  +0.00 | hedge leg ST  +0.45 LT +0.00
+    2020  book arm ST  +73.41 LT  +0.00 | MC ST  +70.85 LT  +0.00 | hedge leg ST  +2.13 LT +0.00
+    2021  book arm ST  +97.47 LT  -0.13 | MC ST  +89.43 LT  -0.15 | hedge leg ST  +6.04 LT +0.00
+    2022  book arm ST   -0.39 LT  +0.00 | MC ST   -0.45 LT  +0.03 | hedge leg ST  +0.00 LT +0.00
+    2023  book arm ST  +78.97 LT  +0.00 | MC ST  +79.71 LT  +0.00 | hedge leg ST  +0.37 LT +0.00
+    2024  book arm ST  +75.95 LT  -0.05 | MC ST  +74.84 LT  +0.20 | hedge leg ST  +1.35 LT -0.25
+    2025  book arm ST  +45.01 LT  +0.00 | MC ST  +43.47 LT  +0.00 | hedge leg ST  +1.43 LT +0.00
+    2026* book arm ST  +16.24 LT  +0.00 | MC ST  +17.77 LT  +0.00 | hedge leg ST  -1.32 LT +0.00
+  VIXM C5 h20
+    2015* book arm ST   -9.71 LT  +0.00 | MC ST   -9.71 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2016  book arm ST  +22.75 LT  +0.00 | MC ST  +22.75 LT  +0.00 | hedge leg ST  +0.00 LT +0.00
+    2017  book arm ST  +69.97 LT  +0.01 | MC ST  +70.00 LT  +0.00 | hedge leg ST  +0.74 LT +0.00
+    2018  book arm ST  +72.12 LT  +0.00 | MC ST  +66.48 LT  +0.00 | hedge leg ST  +3.92 LT +0.00
+    2019  book arm ST  +52.12 LT  +0.00 | MC ST  +51.12 LT  +0.00 | hedge leg ST  +0.90 LT +0.00
+    2020  book arm ST  +68.37 LT  +0.00 | MC ST  +63.77 LT  +0.00 | hedge leg ST  +4.03 LT +0.00
+    2021  book arm ST +103.16 LT  -0.13 | MC ST  +87.48 LT  -0.25 | hedge leg ST +12.23 LT +0.00
+    2022  book arm ST   -0.19 LT  +0.00 | MC ST   -0.25 LT  +0.01 | hedge leg ST  +0.00 LT +0.00
+    2023  book arm ST  +76.49 LT  +0.00 | MC ST  +78.27 LT  +0.00 | hedge leg ST  +0.55 LT +0.00
+    2024  book arm ST  +72.30 LT  -0.40 | MC ST  +70.23 LT  +0.00 | hedge leg ST  +2.28 LT -0.40
+    2025  book arm ST  +47.66 LT  +0.00 | MC ST  +44.61 LT  +0.00 | hedge leg ST  +2.86 LT +0.00
+    2026* book arm ST  +17.18 LT  +0.00 | MC ST  +19.72 LT  +0.00 | hedge leg ST  -2.22 LT +0.00
+  VIXY C3 h5
+    2015* book arm ST   -7.73 LT  +0.00 | MC ST   -9.15 LT  +0.00 | hedge leg ST  +1.43 LT +0.00
+    2016  book arm ST  +22.91 LT  +0.00 | MC ST  +21.77 LT  +0.00 | hedge leg ST  +0.53 LT +0.00
+    2017  book arm ST  +40.04 LT  +0.02 | MC ST  +41.43 LT  +0.03 | hedge leg ST  +0.00 LT +0.00
+    2018  book arm ST  +79.02 LT  +0.56 | MC ST  +80.81 LT  +2.64 | hedge leg ST  +2.00 LT +0.01
+    2019  book arm ST  +40.97 LT  +0.00 | MC ST  +39.25 LT  +0.00 | hedge leg ST  +0.42 LT +0.00
+    2020  book arm ST  +72.58 LT  -0.36 | MC ST  +71.72 LT  +0.00 | hedge leg ST  +0.32 LT -0.36
+    2021  book arm ST  +84.58 LT  -1.10 | MC ST  +86.33 LT  -0.16 | hedge leg ST  +0.15 LT -0.00
+    2022  book arm ST   -2.19 LT  -2.11 | MC ST   -0.49 LT  +0.00 | hedge leg ST  +0.09 LT +0.00
+    2023  book arm ST  +75.21 LT  +0.00 | MC ST  +76.94 LT  +0.00 | hedge leg ST  +0.25 LT +0.00
+    2024  book arm ST  +68.94 LT  -3.19 | MC ST  +73.53 LT  +0.00 | hedge leg ST  +0.24 LT -0.00
+    2025  book arm ST  +40.06 LT  -0.10 | MC ST  +41.14 LT  -0.03 | hedge leg ST  +0.41 LT +0.00
+    2026* book arm ST  +14.69 LT  -0.63 | MC ST  +16.34 LT  +0.00 | hedge leg ST  +0.18 LT -0.00
+ window oos
+  VIXY C1 T18 h5
+    2011  book arm ST   +1.92 LT  +0.00 | MC ST   +2.37 LT  +0.00 | hedge leg ST  -0.49 LT +0.00
+    2012  book arm ST  +18.10 LT  -0.04 | MC ST  +19.80 LT  -0.06 | hedge leg ST  -3.19 LT +0.00
+    2013  book arm ST  +14.19 LT  +0.00 | MC ST  +11.24 LT  +0.00 | hedge leg ST  +1.52 LT +0.00
+    2014  book arm ST  +42.24 LT  +1.90 | MC ST  +42.82 LT  +2.05 | hedge leg ST  +0.36 LT +0.00
+    2015* book arm ST  +11.30 LT  -2.69 | MC ST  +12.04 LT  +0.00 | hedge leg ST  -0.87 LT -2.69
+  VIXY C1 T20 h5
+    2011  book arm ST   +1.47 LT  +0.00 | MC ST   +2.77 LT  +0.00 | hedge leg ST  -1.37 LT +0.00
+    2012  book arm ST  +16.44 LT  -0.02 | MC ST  +19.19 LT  -0.09 | hedge leg ST  -4.03 LT +0.00
+    2013  book arm ST  +12.36 LT  +0.00 | MC ST   +9.73 LT  -0.00 | hedge leg ST  +1.20 LT +0.00
+    2014  book arm ST  +42.89 LT  +2.45 | MC ST  +42.95 LT  +2.49 | hedge leg ST  +0.85 LT -0.00
+    2015* book arm ST  +10.03 LT  -3.90 | MC ST  +11.44 LT  +0.00 | hedge leg ST  -1.44 LT -3.90
+  VIXM C1 T18 h10
+    2011  book arm ST   +1.67 LT  +0.00 | MC ST   +2.42 LT  +0.00 | hedge leg ST  -0.78 LT +0.00
+    2012  book arm ST  +16.27 LT  -0.02 | MC ST  +19.51 LT  -0.04 | hedge leg ST  -3.28 LT +0.00
+    2013  book arm ST  +15.96 LT  +0.00 | MC ST  +15.00 LT  +0.00 | hedge leg ST  +1.00 LT +0.00
+    2014  book arm ST  +40.35 LT  +0.23 | MC ST  +39.85 LT  +0.30 | hedge leg ST  +0.22 LT +0.00
+    2015* book arm ST  +11.59 LT  -3.67 | MC ST  +12.13 LT  +0.00 | hedge leg ST  -0.36 LT -3.67
+  VIXY C5 h5
+    2011  book arm ST   +1.52 LT  +0.00 | MC ST   +2.19 LT  +0.00 | hedge leg ST  -0.69 LT +0.00
+    2012  book arm ST  +18.29 LT  -0.02 | MC ST  +20.31 LT  -0.06 | hedge leg ST  -1.95 LT +0.00
+    2013  book arm ST  +15.09 LT  +0.00 | MC ST  +14.59 LT  +0.00 | hedge leg ST  +0.69 LT +0.00
+    2014  book arm ST  +44.26 LT  +2.36 | MC ST  +43.89 LT  +2.34 | hedge leg ST  -0.02 LT +0.00
+    2015* book arm ST  +11.70 LT  -1.12 | MC ST  +11.78 LT  -1.10 | hedge leg ST  -0.07 LT +0.00
+  VIXM C5 h10
+    2011  book arm ST   +0.86 LT  +0.00 | MC ST   +2.09 LT  +0.00 | hedge leg ST  -1.25 LT +0.00
+    2012  book arm ST  +19.23 LT  -0.42 | MC ST  +20.67 LT  -0.37 | hedge leg ST  -1.51 LT +0.00
+    2013  book arm ST  +19.66 LT  +0.00 | MC ST  +19.14 LT  +0.00 | hedge leg ST  +0.90 LT +0.00
+    2014  book arm ST  +45.29 LT  +0.17 | MC ST  +45.09 LT  +0.18 | hedge leg ST  -0.45 LT +0.00
+    2015* book arm ST  +10.67 LT  -2.25 | MC ST  +10.95 LT  -2.24 | hedge leg ST  -0.29 LT +0.00
+  VIXM C5 h20
+    2011  book arm ST   -0.86 LT  +0.00 | MC ST   +1.58 LT  +0.00 | hedge leg ST  -2.51 LT +0.00
+    2012  book arm ST  +17.84 LT  -0.02 | MC ST  +20.81 LT  -0.03 | hedge leg ST  -2.95 LT +0.00
+    2013  book arm ST  +27.39 LT  +0.00 | MC ST  +24.84 LT  +0.00 | hedge leg ST  +1.79 LT +0.00
+    2014  book arm ST  +43.56 LT  -0.03 | MC ST  +44.43 LT  -0.03 | hedge leg ST  -0.89 LT +0.00
+    2015* book arm ST  +10.10 LT  -4.92 | MC ST  +10.69 LT  -4.94 | hedge leg ST  -0.57 LT +0.00
+  VIXY C3 h5
+    2011  book arm ST   +0.99 LT  +0.00 | MC ST   +2.07 LT  +0.00 | hedge leg ST  -1.15 LT +0.00
+    2012  book arm ST  +12.96 LT  -0.03 | MC ST  +18.91 LT  -0.11 | hedge leg ST  -4.95 LT +0.00
+    2013  book arm ST  +10.50 LT  +0.00 | MC ST   +8.97 LT  +0.00 | hedge leg ST  +0.13 LT +0.00
+    2014  book arm ST  +41.85 LT  +3.44 | MC ST  +42.58 LT  +3.67 | hedge leg ST  +0.73 LT -0.28
+    2015* book arm ST  +10.22 LT  -3.53 | MC ST  +11.76 LT  -0.09 | hedge leg ST  -1.53 LT -3.53
+  (* = partial year; ST share of the book's realized gains is ~100% in every path, as in the existing test)
+
+=== WASH SALES ON THE HEDGE LEG (no-tax path, per $1 starting capital): disallowed hedge loss total; deferral across year-ends = sum over years of positive part of (realized with wash rule - realized without it) on hedge lots ===
+ window real
+  VIXY C1 T18 h5   disallowed hedge loss 14.9431 (1.3565/yr); hedge net realized without wash rule -0.0158; across-year-end deferral 0.7438 (0.0675/yr); => within-year share of disallowed 95% ; book wash n 2347
+  VIXY C1 T20 h5   disallowed hedge loss 16.8918 (1.5334/yr); hedge net realized without wash rule -0.4439; across-year-end deferral 1.6113 (0.1463/yr); => within-year share of disallowed 90% ; book wash n 2689
+  VIXM C1 T18 h10  disallowed hedge loss 6.8324 (0.6202/yr); hedge net realized without wash rule +0.4672; across-year-end deferral 0.2858 (0.0259/yr); => within-year share of disallowed 96% ; book wash n 1874
+  VIXY C5 h5       disallowed hedge loss 11.3926 (1.0342/yr); hedge net realized without wash rule +0.1176; across-year-end deferral 1.1802 (0.1071/yr); => within-year share of disallowed 90% ; book wash n 1784
+  VIXM C5 h10      disallowed hedge loss 7.5696 (0.6872/yr); hedge net realized without wash rule +0.8925; across-year-end deferral 0.8371 (0.0760/yr); => within-year share of disallowed 89% ; book wash n 1676
+  VIXM C5 h20      disallowed hedge loss 13.8213 (1.2547/yr); hedge net realized without wash rule +1.8769; across-year-end deferral 1.6793 (0.1524/yr); => within-year share of disallowed 88% ; book wash n 1683
+  VIXY C3 h5       disallowed hedge loss 14.5432 (1.3202/yr); hedge net realized without wash rule -1.3049; across-year-end deferral 1.9512 (0.1771/yr); => within-year share of disallowed 87% ; book wash n 2610
+ window oos
+  VIXY C1 T18 h5   disallowed hedge loss 1.0240 (0.2198/yr); hedge net realized without wash rule -0.0784; across-year-end deferral 0.0567 (0.0122/yr); => within-year share of disallowed 94% ; book wash n 1372
+  VIXY C1 T20 h5   disallowed hedge loss 1.1309 (0.2427/yr); hedge net realized without wash rule -0.1315; across-year-end deferral 0.0666 (0.0143/yr); => within-year share of disallowed 94% ; book wash n 1208
+  VIXM C1 T18 h10  disallowed hedge loss 1.3662 (0.2933/yr); hedge net realized without wash rule -0.1057; across-year-end deferral 0.0799 (0.0172/yr); => within-year share of disallowed 94% ; book wash n 1485
+  VIXY C5 h5       disallowed hedge loss 0.0615 (0.0132/yr); hedge net realized without wash rule -0.0189; across-year-end deferral 0.0000 (0.0000/yr); => within-year share of disallowed 100% ; book wash n 862
+  VIXM C5 h10      disallowed hedge loss 0.0791 (0.0170/yr); hedge net realized without wash rule -0.0305; across-year-end deferral 0.0000 (0.0000/yr); => within-year share of disallowed 100% ; book wash n 897
+  VIXM C5 h20      disallowed hedge loss 0.1630 (0.0350/yr); hedge net realized without wash rule -0.0590; across-year-end deferral 0.0000 (0.0000/yr); => within-year share of disallowed 100% ; book wash n 934
+  VIXY C3 h5       disallowed hedge loss 0.6910 (0.1483/yr); hedge net realized without wash rule -0.1509; across-year-end deferral 0.0533 (0.0114/yr); => within-year share of disallowed 92% ; book wash n 939
+ window late
+  VIXY C1 T18 h5   disallowed hedge loss 17.0366 (1.5235/yr); hedge net realized without wash rule +0.0202; across-year-end deferral 0.8605 (0.0770/yr); => within-year share of disallowed 95% ; book wash n 2353
+  VIXY C1 T20 h5   disallowed hedge loss 19.0792 (1.7062/yr); hedge net realized without wash rule -0.4858; across-year-end deferral 1.7956 (0.1606/yr); => within-year share of disallowed 91% ; book wash n 2748
+  VIXM C1 T18 h10  disallowed hedge loss 7.7597 (0.6939/yr); hedge net realized without wash rule +0.5062; across-year-end deferral 0.3246 (0.0290/yr); => within-year share of disallowed 96% ; book wash n 1972
+  VIXY C5 h5       disallowed hedge loss 12.8709 (1.1510/yr); hedge net realized without wash rule +0.1336; across-year-end deferral 1.3391 (0.1197/yr); => within-year share of disallowed 90% ; book wash n 1832
+  VIXM C5 h10      disallowed hedge loss 8.6661 (0.7750/yr); hedge net realized without wash rule +1.0123; across-year-end deferral 0.9623 (0.0861/yr); => within-year share of disallowed 89% ; book wash n 1730
+  VIXM C5 h20      disallowed hedge loss 15.8461 (1.4170/yr); hedge net realized without wash rule +2.1678; across-year-end deferral 1.9327 (0.1728/yr); => within-year share of disallowed 88% ; book wash n 1695
+  VIXY C3 h5       disallowed hedge loss 16.7356 (1.4966/yr); hedge net realized without wash rule -1.4604; across-year-end deferral 2.2291 (0.1993/yr); => within-year share of disallowed 87% ; book wash n 2660
+ window joined
+  VIXY C1 T18 h5   disallowed hedge loss 41.9149 (2.6466/yr); hedge net realized without wash rule -0.0299; across-year-end deferral 2.1221 (0.1340/yr); => within-year share of disallowed 95% ; book wash n 3745
+  VIXY C1 T20 h5   disallowed hedge loss 44.8061 (2.8291/yr); hedge net realized without wash rule -1.2435; across-year-end deferral 4.1771 (0.2637/yr); => within-year share of disallowed 91% ; book wash n 3975
+  VIXM C1 T18 h10  disallowed hedge loss 18.9681 (1.1977/yr); hedge net realized without wash rule +1.0426; across-year-end deferral 0.8162 (0.0515/yr); => within-year share of disallowed 96% ; book wash n 3474
+  VIXY C5 h5       disallowed hedge loss 32.4281 (2.0476/yr); hedge net realized without wash rule +0.3172; across-year-end deferral 3.3674 (0.2126/yr); => within-year share of disallowed 90% ; book wash n 2725
+  VIXM C5 h10      disallowed hedge loss 21.5826 (1.3628/yr); hedge net realized without wash rule +2.4814; across-year-end deferral 2.3878 (0.1508/yr); => within-year share of disallowed 89% ; book wash n 2658
+  VIXM C5 h20      disallowed hedge loss 37.8820 (2.3919/yr); hedge net realized without wash rule +5.1011; across-year-end deferral 4.6006 (0.2905/yr); => within-year share of disallowed 88% ; book wash n 2660
+  VIXY C3 h5       disallowed hedge loss 37.5252 (2.3694/yr); hedge net realized without wash rule -3.3651; across-year-end deferral 4.9595 (0.3132/yr); => within-year share of disallowed 87% ; book wash n 3618
+  yearly shift (with minus without wash rule, hedge lots, $ per $1 start), real window; + = loss pushed out of that year, - = loss arriving from earlier years
+    VIXY C1 T18 h5   2015:+0.0000 2016:+0.0159 2018:+0.0690 2019:-0.0511 2020:-0.0027 2021:-0.0347 2023:+0.1564 2024:+0.2974 2025:+0.1257 2026:+0.0794
+    VIXY C1 T20 h5   2015:+0.0000 2016:+0.0147 2018:+0.0528 2019:+0.0018 2020:-0.0080 2021:+0.0387 2022:-0.0000 2023:+0.3243 2024:+0.3266 2025:+0.4365 2026:+0.4158
+    VIXM C1 T18 h10  2015:+0.0000 2016:+0.0126 2018:-0.0126 2019:+0.0000 2020:-0.0000 2021:+0.0000 2023:+0.2655 2024:-0.2655 2025:+0.0077 2026:-0.0077
+    VIXY C5 h5       2017:+0.0035 2018:-0.0027 2019:-0.0073 2020:+0.0855 2021:+0.0797 2023:+0.4603 2024:+0.0173 2025:+0.2097 2026:+0.3242
+    VIXM C5 h10      2017:+0.0085 2018:-0.0085 2019:-0.0000 2020:+0.0010 2021:-0.0010 2023:+0.6125 2024:-0.6125 2025:+0.2151 2026:-0.2151
+    VIXM C5 h20      2017:+0.0169 2018:-0.0169 2019:-0.0000 2020:+0.0089 2021:-0.0089 2023:+1.2326 2024:-1.2326 2025:+0.4209 2026:-0.4209
+    VIXY C3 h5       2015:+0.0000 2016:+0.0090 2018:+0.0804 2019:-0.0056 2020:+0.0012 2021:+0.4620 2022:-0.0000 2023:+0.2356 2024:+0.9614 2025:+0.2015 2026:-0.2243
+
+=== YEAR BY YEAR, real window, accrual basis (S2 top+CA): pre-tax return diff vs matched cash; hedge-leg realized P&L (% of start NAV); tax saved vs MC (tax on that year's gains with carryforward, % of start NAV); after-tax return diff = pre + saved ===
+  VIXY C1 T18 h5   (year: pre-tax diff pp | hedge realized % NAV | tax arm % | tax MC % | tax saved pp | after-tax diff pp)
+    2015    +1.63 |  +1.71 |   0.00 |   0.00 |  +0.00 |   +1.63
+    2016    -2.76 |  +0.22 |   7.14 |   5.89 |  -1.25 |   -4.01
+    2017    -9.78 |  +0.00 |  20.06 |  20.76 |  +0.69 |   -9.09
+    2018    +2.87 |  +1.45 |  41.32 |  42.46 |  +1.14 |   +4.01
+    2019    +2.17 |  +2.49 |  24.00 |  21.09 |  -2.91 |   -0.74
+    2020    +2.19 |  -0.54 |  37.55 |  37.67 |  +0.12 |   +2.31
+    2021    +1.90 |  +0.49 |  46.39 |  45.41 |  -0.99 |   +0.91
+    2022    +0.00 |  +0.00 |   0.00 |   0.00 |  +0.00 |   +0.00
+    2023    -3.25 |  +1.02 |  39.84 |  39.30 |  -0.53 |   -3.78
+    2024    +1.22 |  +1.52 |  36.87 |  37.47 |  +0.60 |   +1.82
+    2025    -1.06 |  +1.04 |  21.11 |  20.90 |  -0.20 |   -1.26
+    2026    +1.06 |  -0.91 |   9.05 |   8.77 |  -0.27 |   +0.78
+    sum     -3.81   (pre-tax diffs, simple sum)  tax saved -3.60  after-tax -7.41
+  VIXM C5 h10   (year: pre-tax diff pp | hedge realized % NAV | tax arm % | tax MC % | tax saved pp | after-tax diff pp)
+    2015    +0.00 |  +0.00 |   0.00 |   0.00 |  +0.00 |   +0.00
+    2016    +0.00 |  +0.00 |   5.98 |   5.98 |  +0.00 |   +0.00
+    2017    -0.84 |  +0.42 |  30.20 |  30.19 |  -0.00 |   -0.84
+    2018    +3.35 |  +2.01 |  39.17 |  37.74 |  -1.44 |   +1.91
+    2019    +0.67 |  +0.45 |  23.03 |  22.80 |  -0.23 |   +0.44
+    2020    +1.61 |  +2.13 |  36.78 |  35.50 |  -1.28 |   +0.33
+    2021    +8.31 |  +6.04 |  48.77 |  44.73 |  -4.04 |   +4.28
+    2022    -0.00 |  +0.00 |   0.00 |   0.00 |  +0.00 |   -0.00
+    2023    -4.93 |  +0.37 |  39.37 |  39.73 |  +0.36 |   -4.58
+    2024    +3.33 |  +1.10 |  38.03 |  37.56 |  -0.46 |   +2.86
+    2025    +1.24 |  +1.43 |  22.55 |  21.78 |  -0.77 |   +0.47
+    2026    -1.48 |  -1.32 |   8.14 |   8.90 |  +0.76 |   -0.72
+    sum    +11.25   (pre-tax diffs, simple sum)  tax saved -7.11  after-tax +4.15
+
+=== ARITHMETIC CHECK (S1 / S2): cumulative tax saved vs MC divided by cumulative net realized gain removed vs MC (accrual basis over full years); must be <= ST rate ===
+  real   VIXY C1 T18 h5  S1: gain removed -3.89% NAV-yrs, tax saved -1.98, ratio 0.511 (ST rate 0.388) | S2: gain removed -3.89% NAV-yrs, tax saved -2.35, ratio 0.605 (ST rate 0.501)
+  real   VIXY C1 T20 h5  S1: gain removed -1.36% NAV-yrs, tax saved -0.81, ratio 0.594 (ST rate 0.388) | S2: gain removed -1.36% NAV-yrs, tax saved -0.92, ratio 0.677 (ST rate 0.501)
+  real   VIXM C1 T18 h10 S1: gain removed -4.79% NAV-yrs, tax saved -2.26, ratio 0.471 (ST rate 0.388) | S2: gain removed -4.79% NAV-yrs, tax saved -2.74, ratio 0.572 (ST rate 0.501)
+  real   VIXY C5 h5      S1: gain removed -12.94% NAV-yrs, tax saved -5.02, ratio 0.388 (ST rate 0.388) | S2: gain removed -12.94% NAV-yrs, tax saved -6.48, ratio 0.501 (ST rate 0.501)
+  real   VIXM C5 h10     S1: gain removed -15.65% NAV-yrs, tax saved -6.11, ratio 0.390 (ST rate 0.388) | S2: gain removed -15.65% NAV-yrs, tax saved -7.87, ratio 0.503 (ST rate 0.501)
+  real   VIXM C5 h20     S1: gain removed -29.99% NAV-yrs, tax saved -11.63, ratio 0.388 (ST rate 0.388) | S2: gain removed -29.99% NAV-yrs, tax saved -15.02, ratio 0.501 (ST rate 0.501)
+  real   VIXY C3 h5      S1: gain removed +19.10% NAV-yrs, tax saved +6.95, ratio 0.364 (ST rate 0.388) | S2: gain removed +19.10% NAV-yrs, tax saved +9.16, ratio 0.480 (ST rate 0.501)
+  oos    VIXY C1 T18 h5  S1: gain removed -0.09% NAV-yrs, tax saved -0.06, ratio 0.741 (ST rate 0.388) | S2: gain removed -0.09% NAV-yrs, tax saved -0.07, ratio 0.801 (ST rate 0.501)
+  oos    VIXY C1 T20 h5  S1: gain removed +1.44% NAV-yrs, tax saved +0.55, ratio 0.383 (ST rate 0.388) | S2: gain removed +1.44% NAV-yrs, tax saved +0.72, ratio 0.497 (ST rate 0.501)
+  oos    VIXM C1 T18 h10 S1: gain removed +2.58% NAV-yrs, tax saved +0.99, ratio 0.382 (ST rate 0.388) | S2: gain removed +2.58% NAV-yrs, tax saved +1.28, ratio 0.496 (ST rate 0.501)
+  oos    VIXY C5 h5      S1: gain removed +1.76% NAV-yrs, tax saved +0.69, ratio 0.390 (ST rate 0.388) FLAG | S2: gain removed +1.76% NAV-yrs, tax saved +0.89, ratio 0.503 (ST rate 0.501) FLAG
+  oos    VIXM C5 h10     S1: gain removed +2.02% NAV-yrs, tax saved +0.78, ratio 0.387 (ST rate 0.388) | S2: gain removed +2.02% NAV-yrs, tax saved +1.01, ratio 0.500 (ST rate 0.501)
+  oos    VIXM C5 h20     S1: gain removed +3.73% NAV-yrs, tax saved +1.48, ratio 0.397 (ST rate 0.388) FLAG | S2: gain removed +3.73% NAV-yrs, tax saved +1.91, ratio 0.512 (ST rate 0.501) FLAG
+  oos    VIXY C3 h5      S1: gain removed +6.38% NAV-yrs, tax saved +2.43, ratio 0.381 (ST rate 0.388) | S2: gain removed +6.38% NAV-yrs, tax saved +3.16, ratio 0.495 (ST rate 0.501)
+  late   VIXY C1 T18 h5  S1: gain removed -4.49% NAV-yrs, tax saved -2.24, ratio 0.499 (ST rate 0.388) | S2: gain removed -4.49% NAV-yrs, tax saved -2.67, ratio 0.595 (ST rate 0.501)
+  late   VIXY C1 T20 h5  S1: gain removed -1.11% NAV-yrs, tax saved -0.83, ratio 0.740 (ST rate 0.388) | S2: gain removed -1.11% NAV-yrs, tax saved -0.89, ratio 0.799 (ST rate 0.501)
+  late   VIXM C1 T18 h10 S1: gain removed -4.48% NAV-yrs, tax saved -2.15, ratio 0.481 (ST rate 0.388) | S2: gain removed -4.48% NAV-yrs, tax saved -2.60, ratio 0.580 (ST rate 0.501)
+  late   VIXY C5 h5      S1: gain removed -12.76% NAV-yrs, tax saved -4.93, ratio 0.387 (ST rate 0.388) | S2: gain removed -12.76% NAV-yrs, tax saved -6.38, ratio 0.500 (ST rate 0.501)
+  late   VIXM C5 h10     S1: gain removed -15.63% NAV-yrs, tax saved -6.06, ratio 0.388 (ST rate 0.388) | S2: gain removed -15.63% NAV-yrs, tax saved -7.83, ratio 0.501 (ST rate 0.501)
+  late   VIXM C5 h20     S1: gain removed -29.68% NAV-yrs, tax saved -11.51, ratio 0.388 (ST rate 0.388) | S2: gain removed -29.68% NAV-yrs, tax saved -14.87, ratio 0.501 (ST rate 0.501)
+  late   VIXY C3 h5      S1: gain removed +17.92% NAV-yrs, tax saved +6.49, ratio 0.362 (ST rate 0.388) | S2: gain removed +17.92% NAV-yrs, tax saved +8.62, ratio 0.481 (ST rate 0.501)
+  joined VIXY C1 T18 h5  S1: gain removed -2.87% NAV-yrs, tax saved -1.64, ratio 0.571 (ST rate 0.388) | S2: gain removed -2.87% NAV-yrs, tax saved -1.89, ratio 0.657 (ST rate 0.501)
+  joined VIXY C1 T20 h5  S1: gain removed +3.20% NAV-yrs, tax saved +0.84, ratio 0.263 (ST rate 0.388) | S2: gain removed +3.20% NAV-yrs, tax saved +1.26, ratio 0.395 (ST rate 0.501)
+  joined VIXM C1 T18 h10 S1: gain removed +0.95% NAV-yrs, tax saved -0.06, ratio -0.065 (ST rate 0.388) | S2: gain removed +0.95% NAV-yrs, tax saved +0.11, ratio 0.115 (ST rate 0.501)
+  joined VIXY C5 h5      S1: gain removed -10.90% NAV-yrs, tax saved -4.21, ratio 0.386 (ST rate 0.388) | S2: gain removed -10.90% NAV-yrs, tax saved -5.44, ratio 0.499 (ST rate 0.501)
+  joined VIXM C5 h10     S1: gain removed -13.31% NAV-yrs, tax saved -5.16, ratio 0.388 (ST rate 0.388) | S2: gain removed -13.31% NAV-yrs, tax saved -6.67, ratio 0.501 (ST rate 0.501)
+  joined VIXM C5 h20     S1: gain removed -25.37% NAV-yrs, tax saved -9.81, ratio 0.387 (ST rate 0.388) | S2: gain removed -25.37% NAV-yrs, tax saved -12.67, ratio 0.499 (ST rate 0.501)
+  joined VIXY C3 h5      S1: gain removed +27.94% NAV-yrs, tax saved +10.33, ratio 0.370 (ST rate 0.388) | S2: gain removed +27.94% NAV-yrs, tax saved +13.60, ratio 0.487 (ST rate 0.501)
+  flags where ratio exceeds the ST rate: 4
+  Also (pre-tax vs after-tax for the hedge leg): after-tax diff should lie between pre-tax diff and pre-tax diff x (1 - rate) when the hedge leg loses money and the gains it removes are taxed at the ST rate -- see table above; deviations come from Sharpe/drawdown effects, compounding and carryforward timing.
+
+=== VERDICTS under the pre-registered reading rule ===
+  rescue: arm beats matched cash on CAGR and Sharpe after tax under S1 and S2 in BOTH oos and late windows; partly: flips only late, or only one tax view; else no change
+  VIXY C1 T18 h5   NO CHANGE  oos pre dC/dSh -1.19/-0.009 -> S1 -0.98/-0.024 S2 -0.83/-0.028 | late pre -0.22/+0.049 -> S1 -0.36/+0.013 S2 -0.36/+0.005
+  VIXY C1 T20 h5   NO CHANGE  oos pre dC/dSh -2.08/-0.037 -> S1 -1.55/-0.050 S2 -1.30/-0.053 | late pre -0.69/+0.055 -> S1 -0.71/+0.009 S2 -0.66/+0.000
+  VIXM C1 T18 h10  NO CHANGE  oos pre dC/dSh -1.90/-0.041 -> S1 -1.40/-0.048 S2 -1.18/-0.049 | late pre -0.23/+0.034 -> S1 -0.33/+0.006 S2 -0.32/-0.000
+  VIXY C5 h5       PARTLY     oos pre dC/dSh -0.53/-0.013 -> S1 -0.34/-0.009 S2 -0.28/-0.007 | late pre +0.50/+0.034 -> S1 +0.35/+0.015 S2 +0.31/+0.009
+  VIXM C5 h10      PARTLY     oos pre dC/dSh -0.66/-0.019 -> S1 -0.43/-0.013 S2 -0.35/-0.012 | late pre +0.86/+0.040 -> S1 +0.61/+0.019 S2 +0.53/+0.013
+  VIXM C5 h20      PARTLY     oos pre dC/dSh -1.35/-0.042 -> S1 -0.90/-0.031 S2 -0.76/-0.027 | late pre +1.68/+0.065 -> S1 +1.18/+0.032 S2 +1.02/+0.023
+  VIXY C3 h5       NO CHANGE  oos pre dC/dSh -3.02/-0.058 -> S1 -2.14/-0.062 S2 -1.80/-0.063 | late pre -2.87/+0.012 -> S1 -2.29/-0.025 S2 -2.03/-0.030
+
+run time 5s
