@@ -1,0 +1,105 @@
+data check VIXY: new file 2011-01-04..2026-11-16 (3991 rows); overlap with original series 2015-09-01..2026-11-10 n=2815; daily-return max abs diff 0.267%, mean abs 0.0019%
+data check VIXM: new file 2011-01-04..2026-11-16 (3991 rows); overlap with original series 2015-09-01..2026-11-13 n=2818; daily-return max abs diff 0.036%, mean abs 0.0013%
+==================================================================================================================================
+run_oos.py: out-of-sample 2011-2015 check of the calm hedge (PLAN.md Addendum 2). Research only.
+==================================================================================================================================
+Proxy panel legs: core QQQ price +0.6%/yr div; TQQQ/QLD synthetic 3x/2x with T-bill+0.3% financing and 0.84%/0.95% ER; XLU long history +3% yield; cash = 3m T-bill accrual; QQQ cash legs = QQQ. VIXY/VIXM real (split-adjusted closes).
+Signals: close of t decides hedge traded at close t (same-day VIX/VIX3M, rv30, gap200). Sleeve: VIXY 35% of cash leg, same latch (harness VIX/VIX3M history), VIXY returns for the whole history.
+window oos: returns 2011-01-05..2015-09-02 (1173 sessions); calm-crack days inside: 2
+window late: returns 2015-09-03..2026-11-16 (2817 sessions); calm-crack days inside: 20
+window joined: returns 2011-01-05..2026-11-16 (3990 sessions); calm-crack days inside: 22
+calm-crack days (analyze.log list) in OOS window: ['2014-04-10', '2015-08-21']
+share of OOS sessions with sleeve allowed (latch on, any cash): 1.4%; sleeve actually holding: 1.4%; leveraged state (A or ungated D): 84.4%; state A: 68.6%; VIX<18: 71.7%; VIX<20: 82.2%
+
+BASELINES (proxy panel, cap 2.0, VIXY 35% sleeve)
+  Base oos     CAGR 22.6% Sharpe 0.963 maxDD -16.4% vol 24.2% worst1 -5.89% worst5 -11.12% trades/yr 33.3
+  Base late    CAGR 52.0% Sharpe 2.029 maxDD -20.1% vol 21.8% worst1 -6.97% worst5 -13.74% trades/yr 47.8
+  Base joined  CAGR 42.7% Sharpe 1.690 maxDD -20.1% vol 22.6% worst1 -6.97% worst5 -13.74% trades/yr 43.6
+  (original run.log 'vera' Base for the late window: 52.1% / 2.031 / -20.1%)
+
+=== ARM vs MATCHED CASH, window oos (2011-01-05..2015-09-02) ; pro-rata funding ===
+  arm                   CAGR arm/MC  dCAGR   Sharpe arm/MC    dSh      maxDD arm/MC   dDD   on%   avgW |   worst1 arm/MC     worst5 arm/MC
+  VIXY C1 T18 h5      20.7/ 21.9%  -1.19   0.956/0.965 -0.009   -15.6/ -16.1% +0.47  65.6  3.09% |  -5.89/ -5.89%  -10.95/-10.95%
+  VIXY C1 T20 h5      19.5/ 21.6%  -2.08   0.921/0.958 -0.037   -15.6/ -15.7% +0.04  74.0  3.47% |  -5.89/ -5.89%  -10.94/-10.94%
+  VIXM C1 T18 h10     19.2/ 21.1%  -1.90   0.924/0.966 -0.041   -15.7/ -15.9% +0.19  65.6  6.37% |  -5.89/ -5.89%  -10.95/-10.95%
+  VIXY C5 h5          21.9/ 22.4%  -0.53   0.951/0.964 -0.013   -16.2/ -16.2% +0.02  26.0  1.23% |  -5.89/ -5.89%  -11.12/-11.12%
+  VIXM C5 h10         21.6/ 22.2%  -0.66   0.942/0.961 -0.019   -16.1/ -16.1% +0.04  26.0  2.52% |  -5.89/ -5.89%  -11.12/-11.12%
+  VIXM C5 h20         20.5/ 21.8%  -1.35   0.913/0.956 -0.042   -15.8/ -15.8% +0.08  26.0  5.10% |  -5.89/ -5.89%  -11.12/-11.12%
+  VIXY C3 h5          18.5/ 21.5%  -3.02   0.907/0.965 -0.058   -15.4/ -15.6% +0.19  83.0  3.93% |  -4.84/ -5.50%  -10.04/-10.54%
+
+=== ARM vs MATCHED CASH, window late (2015-09-03..2026-11-16) ; pro-rata funding ===
+  arm                   CAGR arm/MC  dCAGR   Sharpe arm/MC    dSh      maxDD arm/MC   dDD   on%   avgW |   worst1 arm/MC     worst5 arm/MC
+  VIXY C1 T18 h5      50.8/ 51.1%  -0.22   2.096/2.048 +0.049   -20.1/ -20.1% +0.00  51.7  2.45% |  -6.01/ -6.54%  -11.89/-12.98%
+  VIXY C1 T20 h5      50.0/ 50.7%  -0.69   2.109/2.054 +0.055   -19.5/ -19.7% +0.14  58.9  2.80% |  -6.01/ -6.54%  -11.52/-12.98%
+  VIXM C1 T18 h10     49.8/ 50.0%  -0.23   2.098/2.064 +0.034   -20.1/ -20.1% -0.00  51.7  5.03% |  -5.84/ -6.11%  -11.72/-12.26%
+  VIXY C5 h5          52.1/ 51.6%  +0.50   2.070/2.035 +0.034   -20.1/ -20.1% +0.00  35.3  1.70% |  -6.99/ -6.99%  -13.36/-13.70%
+  VIXM C5 h10         52.1/ 51.2%  +0.86   2.082/2.042 +0.040   -20.1/ -20.1% +0.00  35.3  3.46% |  -6.99/ -6.99%  -13.15/-13.52%
+  VIXM C5 h20         52.1/ 50.4%  +1.68   2.111/2.046 +0.065   -20.1/ -20.1% +0.00  35.3  6.73% |  -6.99/ -6.99%  -12.43/-13.17%
+  VIXY C3 h5          46.6/ 49.4%  -2.87   2.049/2.037 +0.012   -19.1/ -19.5% +0.42  72.0  3.46% |  -6.01/ -6.54%  -11.52/-12.98%
+
+=== ARM vs MATCHED CASH, window joined (2011-01-05..2026-11-16) ; pro-rata funding ===
+  arm                   CAGR arm/MC  dCAGR   Sharpe arm/MC    dSh      maxDD arm/MC   dDD   on%   avgW |   worst1 arm/MC     worst5 arm/MC
+  VIXY C1 T18 h5      41.3/ 41.8%  -0.56   1.741/1.706 +0.035   -20.1/ -20.1% -0.00  55.8  2.64% |  -6.01/ -6.54%  -11.89/-12.98%
+  VIXY C1 T20 h5      40.3/ 41.5%  -1.17   1.737/1.707 +0.030   -19.5/ -19.7% +0.14  63.3  3.00% |  -6.01/ -6.54%  -11.52/-12.98%
+  VIXM C1 T18 h10     40.1/ 40.9%  -0.80   1.736/1.720 +0.016   -20.1/ -20.1% -0.00  55.8  5.43% |  -5.89/ -6.11%  -11.72/-12.26%
+  VIXY C5 h5          42.5/ 42.4%  +0.14   1.712/1.694 +0.018   -20.1/ -20.1% +0.00  32.5  1.56% |  -6.99/ -6.99%  -13.36/-13.70%
+  VIXM C5 h10         42.4/ 42.1%  +0.34   1.718/1.697 +0.021   -20.1/ -20.1% +0.00  32.5  3.19% |  -6.99/ -6.99%  -13.15/-13.52%
+  VIXM C5 h20         42.0/ 41.4%  +0.65   1.728/1.697 +0.031   -20.1/ -20.1% +0.00  32.5  6.25% |  -6.99/ -6.99%  -12.43/-13.17%
+  VIXY C3 h5          37.7/ 40.6%  -2.93   1.693/1.698 -0.005   -19.1/ -19.5% +0.42  75.3  3.60% |  -6.01/ -6.54%  -11.52/-12.98%
+
+=== HEDGE-LEG STANDALONE P&L, % of NAV per year: total | calm-crack days | other days | net of cash carry | crack days hedge on/n | instrument ann. return on hedge-on non-crack days (arith/geo, n days) ===
+ window oos
+  VIXY C1 T18 h5     tot  -1.130 | crack  +0.065 | other  -1.196 | net  -1.132 | 1/2 |   -34.0% /   -37.7% (n=768)
+  VIXY C1 T20 h5     tot  -1.901 | crack  +0.065 | other  -1.966 | net  -1.903 | 1/2 |   -49.9% /   -47.6% (n=867)
+  VIXM C1 T18 h10    tot  -1.662 | crack  +0.052 | other  -1.715 | net  -1.666 | 1/2 |   -25.8% /   -25.1% (n=768)
+  VIXY C5 h5         tot  -0.461 | crack  +0.000 | other  -0.461 | net  -0.461 | 0/2 |   -28.8% /   -34.0% (n=305)
+  VIXM C5 h10        tot  -0.581 | crack  +0.000 | other  -0.581 | net  -0.583 | 0/2 |   -21.1% /   -21.4% (n=305)
+  VIXM C5 h20        tot  -1.127 | crack  +0.000 | other  -1.127 | net  -1.131 | 0/2 |   -21.1% /   -21.4% (n=305)
+  VIXY C3 h5         tot  -2.693 | crack  +0.065 | other  -2.759 | net  -2.696 | 1/2 |   -62.5% /   -55.0% (n=973)
+ window late
+  VIXY C1 T18 h5     tot  -0.203 | crack  +0.713 | other  -0.916 | net  -0.270 | 10/20 |   -36.0% /   -37.7% (n=1446)
+  VIXY C1 T20 h5     tot  -0.555 | crack  +0.734 | other  -1.289 | net  -0.631 | 11/20 |   -43.4% /   -43.2% (n=1647)
+  VIXM C1 T18 h10    tot  -0.098 | crack  +0.426 | other  -0.524 | net  -0.233 | 10/20 |   -10.4% /   -11.8% (n=1446)
+  VIXY C5 h5         tot  +0.336 | crack  +0.520 | other  -0.185 | net  +0.292 | 7/20 |    -8.3% /   -21.1% (n=986)
+  VIXM C5 h10        tot  +0.634 | crack  +0.303 | other  +0.331 | net  +0.546 | 7/20 |    +9.8% /    +7.3% (n=986)
+  VIXM C5 h20        tot  +1.281 | crack  +0.597 | other  +0.684 | net  +1.108 | 7/20 |    +9.8% /    +7.3% (n=986)
+  VIXY C3 h5         tot  -2.133 | crack  +0.734 | other  -2.866 | net  -2.215 | 11/20 |   -80.0% /   -62.4% (n=2018)
+ window joined
+  VIXY C1 T18 h5     tot  -0.476 | crack  +0.523 | other  -0.998 | net  -0.524 | 11/22 |   -35.3% /   -37.7% (n=2214)
+  VIXY C1 T20 h5     tot  -0.950 | crack  +0.537 | other  -1.488 | net  -1.005 | 12/22 |   -45.6% /   -44.8% (n=2514)
+  VIXM C1 T18 h10    tot  -0.558 | crack  +0.316 | other  -0.874 | net  -0.654 | 11/22 |   -15.7% /   -16.6% (n=2214)
+  VIXY C5 h5         tot  +0.102 | crack  +0.367 | other  -0.266 | net  +0.070 | 7/22 |   -13.2% /   -24.4% (n=1291)
+  VIXM C5 h10        tot  +0.277 | crack  +0.214 | other  +0.063 | net  +0.214 | 7/22 |    +2.5% /    -0.3% (n=1291)
+  VIXM C5 h20        tot  +0.573 | crack  +0.422 | other  +0.151 | net  +0.450 | 7/22 |    +2.5% /    -0.3% (n=1291)
+  VIXY C3 h5         tot  -2.297 | crack  +0.537 | other  -2.835 | net  -2.356 | 12/22 |   -74.3% /   -60.1% (n=2991)
+
+=== OOS CALM-CRACK DAYS: state at prior close, base/arm/matched-cash book return, hedge on? ===
+  2014-04-10: QQQ -3.10% prior-close state D, prior VIX 13.82, sleeve holding False; Base -4.36% | VIXY C1 T18 h5: -3.82% (MC -4.13%) ON | VIXY C1 T20 h5: -3.82% (MC -4.13%) ON | VIXM C1 T18 h10: -3.65% (MC -3.89%) ON | VIXY C5 h5: -4.36% (MC -4.36%) off | VIXM C5 h10: -4.36% (MC -4.36%) off | VIXM C5 h20: -4.36% (MC -4.36%) off | VIXY C3 h5: -3.82% (MC -4.13%) ON
+  2015-08-21: QQQ -4.37% prior-close state D(gated), prior VIX 19.14, sleeve holding False; Base -0.04% | VIXY C1 T18 h5: -0.04% (MC -0.04%) off | VIXY C1 T20 h5: -0.04% (MC -0.04%) off | VIXM C1 T18 h10: -0.04% (MC -0.04%) off | VIXY C5 h5: -0.04% (MC -0.04%) off | VIXM C5 h10: -0.04% (MC -0.04%) off | VIXM C5 h20: -0.04% (MC -0.04%) off | VIXY C3 h5: -0.04% (MC -0.04%) off
+
+=== YEAR BY YEAR in the OOS window: arm minus matched cash (pp); 2015 = Jan..Sep-02 ===
+  year      Base     VIXY C1 T18 h5     VIXY C1 T20 h5    VIXM C1 T18 h10         VIXY C5 h5        VIXM C5 h10        VIXM C5 h20         VIXY C3 h5
+  2011     -5.8%              -0.40              -1.17              -0.68              -0.62              -1.13              -2.26              -0.98
+  2012     27.7%              -1.69              -2.69              -3.19              -1.97              -1.48              -2.91              -5.85
+  2013     56.2%              -1.46              -2.99              -3.21              -1.31              -1.27              -2.47              -4.01
+  2014     25.6%              -1.31              -0.71              -1.95               1.38               1.18               2.19              -0.72
+  2015      9.5%              -0.88              -2.29              -0.37              -0.07              -0.28              -0.57              -2.89
+
+=== NAMED OOS EPISODES: cumulative book return % over the span (Base | arm (matched cash) per arm). Span inclusive of both ends; single dates also show day+5 sessions ===
+  2011-08-04..08-10        Base   -1.29% | VIXY C1 T18 h5 -1.29 (-1.29) | VIXY C1 T20 h5 -1.29 (-1.29) | VIXM C1 T18 h10 -1.29 (-1.29) | VIXY C5 h5 -1.29 (-1.29) | VIXM C5 h10 -1.29 (-1.29) | VIXM C5 h20 -1.29 (-1.29) | VIXY C3 h5 -1.29 (-1.29)
+  2012 full year           Base  +27.70% | VIXY C1 T18 h5 +25.72 (+27.41) | VIXY C1 T20 h5 +24.23 (+26.93) | VIXM C1 T18 h10 +23.98 (+27.18) | VIXY C5 h5 +26.05 (+28.02) | VIXM C5 h10 +26.69 (+28.17) | VIXM C5 h20 +25.59 (+28.50) | VIXY C3 h5 +19.83 (+25.68)
+  2013-06 (month)          Base   -5.71% | VIXY C1 T18 h5 -4.39 (-5.29) | VIXY C1 T20 h5 -4.54 (-5.43) | VIXM C1 T18 h10 -3.93 (-4.87) | VIXY C5 h5 -5.71 (-5.71) | VIXM C5 h10 -5.71 (-5.71) | VIXM C5 h20 -5.71 (-5.71) | VIXY C3 h5 -4.89 (-5.42)
+  2014-04-10 day           Base   -4.36% | VIXY C1 T18 h5 -3.82 (-4.13) | VIXY C1 T20 h5 -3.82 (-4.13) | VIXM C1 T18 h10 -3.65 (-3.89) | VIXY C5 h5 -4.36 (-4.36) | VIXM C5 h10 -4.36 (-4.36) | VIXM C5 h20 -4.36 (-4.36) | VIXY C3 h5 -3.82 (-4.13)
+  2014-04-10 +5 sessions   Base   -3.37% | VIXY C1 T18 h5 -3.06 (-3.22) | VIXY C1 T20 h5 -3.06 (-3.22) | VIXM C1 T18 h10 -2.96 (-3.08) | VIXY C5 h5 -3.37 (-3.37) | VIXM C5 h10 -3.37 (-3.37) | VIXM C5 h20 -3.37 (-3.37) | VIXY C3 h5 -3.06 (-3.22)
+  2014-10-09..10-15        Base   -9.08% | VIXY C1 T18 h5 -8.60 (-8.97) | VIXY C1 T20 h5 -7.88 (-8.79) | VIXM C1 T18 h10 -8.54 (-8.86) | VIXY C5 h5 -9.08 (-9.08) | VIXM C5 h10 -9.08 (-9.08) | VIXM C5 h20 -9.08 (-9.08) | VIXY C3 h5 -7.21 (-8.61)
+  2015-08-21..08-26        Base   +3.41% | VIXY C1 T18 h5 +3.41 (+3.41) | VIXY C1 T20 h5 +3.41 (+3.41) | VIXM C1 T18 h10 +3.41 (+3.41) | VIXY C5 h5 +3.41 (+3.41) | VIXM C5 h10 +3.41 (+3.41) | VIXM C5 h20 +3.41 (+3.41) | VIXY C3 h5 +3.41 (+3.41)
+
+=== READING RULE (PLAN.md Addendum 2), OOS window alone ===
+  calm-crack days in OOS window: 2 (2014-04-10, 2015-08-21).
+  VIXY C1 T18 h5     dSh -0.009  dCAGR -1.19 pp  dDD +0.47 pp  -> INCONCLUSIVE
+  VIXY C1 T20 h5     dSh -0.037  dCAGR -2.08 pp  dDD +0.04 pp  -> CONTRADICTED
+  VIXM C1 T18 h10    dSh -0.041  dCAGR -1.90 pp  dDD +0.19 pp  -> CONTRADICTED
+  VIXY C5 h5         dSh -0.013  dCAGR -0.53 pp  dDD +0.02 pp  -> INCONCLUSIVE
+  VIXM C5 h10        dSh -0.019  dCAGR -0.66 pp  dDD +0.04 pp  -> INCONCLUSIVE
+  VIXM C5 h20        dSh -0.042  dCAGR -1.35 pp  dDD +0.08 pp  -> CONTRADICTED
+  VIXY C3 h5         dSh -0.058  dCAGR -3.02 pp  dDD +0.19 pp  -> CONTRADICTED

@@ -94,3 +94,27 @@ VIXM C2 / C3 (second half negative). Ontop funding: same pattern, 18 passes (add
 - Matched cash arm is a de-risking control; it reduces equity exposure equally. The vol-target matched de-lever was not run (cannot bind in calm).
 - Pass-bar neighbour rule makes C4 (two cells) unpassable by construction; reported as "would pass otherwise".
 - The concentration table was added after the first run (not part of the pass bar).
+
+## Out-of-sample 2011-2015 (follow-up, `run_oos.py` / `run_oos.log`; PLAN.md Addendum 2 written before the run)
+Data: `vixy_yahoo_full.csv`, `vixm_yahoo_full.csv` (split-adjusted closes, 2011-01-04..2026-11-16). They match the earlier series on the overlap (VIXM max daily-return
+difference 0.04%; VIXY 0.27% on one day, mean 0.002%). Proxy panel only (no SPMO before 2015): core = QQQ + 0.6%/yr dividend, TQQQ/QLD synthetic 3x/2x with T-bill + 0.3% financing
+and 0.84%/0.95% expense ratios, XLU long history + 3% yield, cash = 3-month T-bill accrual. Same rules, sizes and pro-rata funding as before; nothing re-tuned.
+Baseline (cap 2.0, VIXY 35% sleeve; the sleeve was allowed on only 1.4% of 2011-15 sessions): OOS 2011-01-05..2015-09-02 **22.6% / 0.963 / -16.4%**;
+2015-09-03..2026-11-16 52.0% / 2.029 / -20.1% (original vera 52.1 / 2.031, difference is the new VIXY return file); joined 42.7% / 1.690 / -20.1%.
+
+**The OOS window contains only 2 calm-crack days** (2014-04-10, state D ungated, hedge on for the VIX cells, off for C5; 2015-08-21, state D gated = cash, hedge off for every arm). It therefore
+mostly measures the decay cost, not the payoff. VIX was under 18 on 72% of OOS sessions and the book was leveraged on 84% (state A 69%), so the C1 hedge was on 66-74% of days.
+
+OOS, arm vs matched cash (dCAGR pp / dSharpe / dmaxDD pp; hedge on %): VIXY C1 T18 h5 -1.19 / -0.009 / +0.47 (66%); VIXY C1 T20 h5 -2.08 / -0.037 / +0.04 (74%); VIXM C1 T18 h10 -1.90 / -0.041 / +0.19 (66%);
+VIXY C5 h5 -0.53 / -0.013 / +0.02 (26%); VIXM C5 h10 -0.66 / -0.019 / +0.04 (26%); VIXM C5 h20 -1.35 / -0.042 / +0.08 (26%); VIXY C3 h5 -3.02 / -0.058 / +0.19 (83%).
+Late window (2015-09+, same code): C1/C5 cells again +0.03 to +0.07 Sharpe as in the main study; joined window dSharpe +0.016 to +0.035 (C1), +0.018 to +0.031 (C5), C3 -0.005.
+Hedge-leg P&L OOS, % NAV/yr (crack / other): VIXY C1 T18 h5 +0.07 / -1.20; T20 h5 +0.07 / -1.97; VIXM C1 T18 h10 +0.05 / -1.72; VIXY C5 h5 0 / -0.46; VIXM C5 h10 0 / -0.58; VIXM C5 h20 0 / -1.13;
+VIXY C3 h5 +0.07 / -2.76. Instrument return on hedge-on non-crack days OOS: VIXY -34% (C1 T18), -50% (T20), -29% (C5), -63% (C3); VIXM -26% (C1), -21% (C5). In 2011-15 even VIXM C5 lost 21%/yr
+on hedge-on days, versus +9.8%/yr in 2015-2026.
+Year by year (OOS, arm minus matched cash, pp): the C1 cells lose 1-3 pp in each of 2012 and 2013 (calm bull years: 2012 Base +27.7%, hedged T18 h5 +25.7% vs matched cash +27.4%); C5 cells are about -1 to -3 pp in 2011-13
+and positive in 2014 (+1.4, +1.2, +2.2). Episodes: Aug 2011 and Aug 2015 show no hedge effect (VIX above 20 / book in cash); 2013-06 hedged arms -3.9 to -4.5% vs Base -5.7%
+(matched cash -4.9 to -5.3); 2014-04-10 day -3.8% vs Base -4.4% (matched cash -4.1%); 2014-10-09..15 T20 h5 -7.9% vs Base -9.1% (matched cash -8.8%).
+
+Verdicts under the pre-registered reading rule (OOS alone): VIXY C1 T18 h5 INCONCLUSIVE; VIXY C1 T20 h5 CONTRADICTED; VIXM C1 T18 h10 CONTRADICTED; VIXY C5 h5 INCONCLUSIVE; VIXM C5 h10 INCONCLUSIVE;
+VIXM C5 h20 CONTRADICTED; VIXY C3 h5 CONTRADICTED (expected). None is confirmed. Caveat: with 2 crack days the window cannot test the payoff; it shows the drag (-0.5 to -3 pp CAGR/yr and
+-0.01 to -0.06 Sharpe vs matched cash) in 2011-15, when the hedge was on far more often. Both worst-day and worst-5-day were unchanged in the OOS window except C3, and max DD gains were at most 0.5 pp.
