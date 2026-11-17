@@ -4,9 +4,9 @@
 ====================================================================================================
 sessions 6833 1999-09-16 2026-11-16
 z available: main 6803, rv30 6803, vix 6833, vxn 6483, ewma 6803
-check1 p_rv30[t] == rv30 rebuilt through t-1: max abs diff 3.09e-04 (n=6803); p_rv10: 4.73e-04
+check1 p_rv30[t] vs rv30 rebuilt from ret through t-1 (differences are 6-decimal rounding in days.csv; vol points): max abs diff 3.09e-04 (n=6803); p_rv10: 4.73e-04
 check2 p_ret1[t] == ret[t-1]: max abs diff 0.00e+00
-check3 perturbation of ret[t], 25 random days x 2 estimators: denominator at t changed in 25 cases (must be 0); denominator at t+1 unchanged in 0 cases (must be 0)
+check3 perturbation of ret[t], 25 random days x 2 estimators: denominator at t changed in 0 cases (must be 0); denominator at t+1 unchanged in 0 cases (must be 0)
 Other columns used are p_ columns (prior close) of days.csv; extras below are rebuilt with .shift(1).
 
 ====================================================================================================
@@ -570,15 +570,34 @@ WIDE set features: ['l_vix', 'l_rv10', 'l_rv30', 'p_vrp', 'p_vix_pct252', 'p_rv_
 ====================================================================================================
 4c. verdict against the pre-registered bar (pooled OOS AUC >= 0.60 AND >= 0.55 in each of 05-09, 10-19, 20-26)
 ====================================================================================================
-  y_dn3    VIX only         pooled 0.549 eras ['0.618', '0.527', '0.529'] -> does not pass | beats 0.55 pooled: False
-  y_dn3    rv10+rv30        pooled 0.676 eras ['0.767', '0.656', '0.697'] -> PASSES | beats 0.55 pooled: True
-  y_dn3    VIX+rv10+rv30    pooled 0.708 eras ['0.643', '0.700', '0.724'] -> PASSES | beats 0.55 pooled: True
-  y_dn3    WIDE (primary)   pooled 0.714 eras ['0.960', '0.660', '0.769'] -> PASSES | beats 0.55 pooled: True
-  y_dn25   VIX only         pooled 0.542 eras ['0.450', '0.549', '0.493'] -> does not pass | beats 0.55 pooled: False
-  y_dn25   rv10+rv30        pooled 0.681 eras ['0.552', '0.737', '0.679'] -> PASSES | beats 0.55 pooled: True
-  y_dn25   VIX+rv10+rv30    pooled 0.709 eras ['0.517', '0.761', '0.740'] -> does not pass | beats 0.55 pooled: True
-  y_dn25   WIDE (primary)   pooled 0.714 eras ['0.594', '0.719', '0.767'] -> PASSES | beats 0.55 pooled: True
+  y_dn3    VIX only         pooled 0.549 eras ['0.618', '0.527', '0.529'] (events per era [3, 21, 13], era 05-09 has <15 events: not informative) -> does not pass | beats 0.55 pooled: False
+  y_dn3    rv10+rv30        pooled 0.676 eras ['0.767', '0.656', '0.697'] (events per era [3, 21, 13], era 05-09 has <15 events: not informative) -> PASSES literal bar | beats 0.55 pooled: True
+  y_dn3    VIX+rv10+rv30    pooled 0.708 eras ['0.643', '0.700', '0.724'] (events per era [3, 21, 13], era 05-09 has <15 events: not informative) -> PASSES literal bar | beats 0.55 pooled: True
+  y_dn3    WIDE (primary)   pooled 0.714 eras ['0.960', '0.660', '0.769'] (events per era [1, 21, 13], era 05-09 has <15 events: not informative) -> PASSES literal bar | beats 0.55 pooled: True
+  y_dn25   VIX only         pooled 0.542 eras ['0.450', '0.549', '0.493'] (events per era [12, 37, 26], era 05-09 has <15 events: not informative) -> does not pass | beats 0.55 pooled: False
+  y_dn25   rv10+rv30        pooled 0.681 eras ['0.552', '0.737', '0.679'] (events per era [12, 37, 26], era 05-09 has <15 events: not informative) -> PASSES literal bar | beats 0.55 pooled: True
+  y_dn25   VIX+rv10+rv30    pooled 0.709 eras ['0.517', '0.761', '0.740'] (events per era [12, 37, 26], era 05-09 has <15 events: not informative) -> does not pass | beats 0.55 pooled: True
+  y_dn25   WIDE (primary)   pooled 0.714 eras ['0.594', '0.719', '0.767'] (events per era [11, 37, 26], era 05-09 has <15 events: not informative) -> PASSES literal bar | beats 0.55 pooled: True
+  CAUTION: z divides by the prior realized vol, so low rv10/rv30 mechanically raises P(z <= -3) for a given return. The rv10+rv30 model is the denominator-only benchmark; anything the WIDE model adds is its edge over that.
   (VIX-only / vol-only are references; the pre-registered model is WIDE on z<=-3.)
+
+====================================================================================================
+4d. EXPLORATORY (added after seeing 4b/4c; NOT pre-registered): is the signal just the small denominator?
+====================================================================================================
+z<=-3 days: n 42; ret quantiles (%) min/25/50/75/max: -8.50 / -4.58 / -3.47 / -2.40 / -1.52; share with ret <= -2%: 95.2%; share with ret <= -1.5%: 100.0%; median p_rv30 on those days 12.5 vs 18.1 on all days
+events: z<=-3 AND ret<=-2%: 40; raw ret<=-3%: 269; raw ret<=-2%: 584
+ event: z<=-3 AND ret<=-2%
+  VIX only         OOS AUC 0.531 | 05-09 0.618 (ev 3) | 10-19 0.501 (ev 20) | 20-26 0.516 (ev 12) | top decile hit 0.6% vs base 0.70%, capture 8.6%
+  rv10+rv30        OOS AUC 0.654 | 05-09 0.767 (ev 3) | 10-19 0.630 (ev 20) | 20-26 0.668 (ev 12) | top decile hit 1.4% vs base 0.70%, capture 20.0%
+  WIDE (primary)   OOS AUC 0.700 | 05-09 0.960 (ev 1) | 10-19 0.647 (ev 20) | 20-26 0.754 (ev 12) | top decile hit 2.7% vs base 0.73%, capture 36.4%
+ event: raw ret<=-3% (any vol regime)
+  VIX only         OOS AUC 0.776 | 05-09 0.867 (ev 32) | 10-19 0.772 (ev 34) | 20-26 0.762 (ev 52) | top decile hit 8.5% vs base 2.14%, capture 39.8%
+  rv10+rv30        OOS AUC 0.807 | 05-09 0.853 (ev 32) | 10-19 0.799 (ev 34) | 20-26 0.766 (ev 52) | top decile hit 10.5% vs base 2.14%, capture 49.2%
+  WIDE (primary)   OOS AUC 0.828 | 05-09 0.825 (ev 32) | 10-19 0.852 (ev 34) | 20-26 0.800 (ev 52) | top decile hit 10.9% vs base 2.14%, capture 50.8%
+ event: raw ret<=-2%
+  VIX only         OOS AUC 0.718 | 05-09 0.769 (ev 93) | 10-19 0.706 (ev 100) | 20-26 0.679 (ev 132) | top decile hit 16.2% vs base 5.91%, capture 27.4%
+  rv10+rv30        OOS AUC 0.720 | 05-09 0.744 (ev 93) | 10-19 0.704 (ev 100) | 20-26 0.669 (ev 132) | top decile hit 16.9% vs base 5.91%, capture 28.6%
+  WIDE (primary)   OOS AUC 0.740 | 05-09 0.737 (ev 93) | 10-19 0.742 (ev 100) | 20-26 0.707 (ev 132) | top decile hit 17.2% vs base 5.91%, capture 29.2%
 
 ====================================================================================================
 5. share of the damage: 2x holder (2*ret per day, no financing or fees), days with ret <= -2%
@@ -655,27 +674,29 @@ note: p_state is the strategy state at the prior close, used only as a label; no
 ====================================================================================================
 6. after the surprise: forward QQQ return from the close of the event day
 ====================================================================================================
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3641, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 168, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 197, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7668, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7676, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'f1'
 
-The above exception was the direct cause of the following exception:
+--- surprise DOWN top100 (main z) (flag: split with n < 20 is not a conclusion; 5- and 20-day windows overlap and events cluster in time) ---
+     split                         group    n   n1  mean1 %  med1 %  pos1 %   n5  mean5 %  med5 %  pos5 %  n20  mean20 %  med20 %  pos20 %
+       all surprise DOWN top100 (main z)   99   99     0.14    0.21   56.57   99     0.39    0.57   53.54   98      0.40     1.81    59.18
+       all                      all days 6634 6633     0.04    0.10   54.29 6629     0.21    0.46   57.17 6614      0.81     1.51    61.84
+above 200d surprise DOWN top100 (main z)   83   83     0.06    0.21   56.63   83     0.45    0.63   55.42   82      1.06     1.86    63.41
+above 200d                      all days 4837 4837     0.05    0.11   55.57 4835     0.26    0.47   58.66 4822      1.06     1.54    64.31
+below 200d surprise DOWN top100 (main z)   16   16     0.57    0.14   56.25   16     0.08   -0.41   43.75   16     -2.98    -2.33    37.50
+below 200d                      all days 1797 1796     0.02    0.04   50.84 1794     0.06    0.43   53.18 1792      0.14     1.18    55.19
 
-Traceback (most recent call last):
-  File "/home/user/Robinhood-stock/paper-track/research_notes/vol_predict_2026_11/normalized/run.py", line 276, in <module>
-    fwd_table(sdn, 'surprise DOWN top100 (main z)', base); fwd_table(sup, 'surprise UP top100 (main z)', base)
-    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/Robinhood-stock/paper-track/research_notes/vol_predict_2026_11/normalized/run.py", line 272, in fwd_table
-    v = g['f%d' % k].dropna(); r['n%d' % k] = len(v); r['mean%d %%' % k] = v.mean() * 100; r['med%d %%' % k] = v.median() * 100; r['pos%d %%' % k] = (v > 0).mean() * 100
-        ~^^^^^^^^^^^
-  File "/usr/local/lib/python3.13/site-packages/pandas/core/frame.py", line 4378, in __getitem__
-    indexer = self.columns.get_loc(key)
-  File "/usr/local/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3648, in get_loc
-    raise KeyError(key) from err
-KeyError: 'f1'
+--- surprise UP top100 (main z) (flag: split with n < 20 is not a conclusion; 5- and 20-day windows overlap and events cluster in time) ---
+     split                       group    n   n1  mean1 %  med1 %  pos1 %   n5  mean5 %  med5 %  pos5 %  n20  mean20 %  med20 %  pos20 %
+       all surprise UP top100 (main z)   97   97    -0.01    0.22   60.82   97     0.41    0.76   63.92   97      0.71     1.51    63.92
+       all                    all days 6634 6633     0.04    0.10   54.29 6629     0.21    0.46   57.17 6614      0.81     1.51    61.84
+above 200d surprise UP top100 (main z)   62   62     0.15    0.27   66.13   62     0.30    0.68   67.74   62      0.58     0.92    64.52
+above 200d                    all days 4837 4837     0.05    0.11   55.57 4835     0.26    0.47   58.66 4822      1.06     1.54    64.31
+below 200d surprise UP top100 (main z)   35   35    -0.31    0.03   51.43   35     0.62    1.17   57.14   35      0.95     4.34    62.86
+below 200d                    all days 1797 1796     0.02    0.04   50.84 1794     0.06    0.43   53.18 1792      0.14     1.18    55.19
+
+clustering: distinct calendar years among surprise-down: 26 , surprise-up: 28 ; distinct 20-day-separated clusters (events more than 20 sessions apart start a new cluster): down 71, up 78
+
+robustness: next-day only for z_vix and z_ewma lists:
+  z_vix down top100: mean f1 0.34% f5 1.02% f20 1.23% | up top100: f1 0.19% f5 -0.30% f20 -1.48%
+  z_ewma down top100: mean f1 0.44% f5 0.45% f20 1.12% | up top100: f1 -0.00% f5 0.54% f20 0.69%
+
+DONE

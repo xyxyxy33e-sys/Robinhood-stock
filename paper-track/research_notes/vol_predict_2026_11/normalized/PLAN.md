@@ -37,3 +37,7 @@ Similarity: Pearson correlation of the ranks of |z| (= Spearman) on the common s
    and as sum of -ln(1+2*ret). Full sample and 2010+.
 6. After the surprise: forward 1/5/20-session return from the close of the surprise day (mean, median, share positive) for the top-100 down and top-100 up lists
    vs all days, split by above/below 200d at the prior close. Descriptive; overlapping windows and clustering flagged; n<20 flagged.
+
+## Addendum (written after the first run; exploratory, not pre-registered)
+- Walk-forward guard: a test year is skipped if the training window holds fewer than 5 events. For the WIDE model (needs 252 days of history) this means the first scored year is 2009, so its "2005-09" era is really 2009 (1 event).
+- Section 4d added after seeing 4b/4c, because z divides by prior realized vol and so a small denominator mechanically produces large |z|: events "z<=-3 AND ret<=-2%" and raw "ret<=-3%" / "ret<=-2%" for comparison.

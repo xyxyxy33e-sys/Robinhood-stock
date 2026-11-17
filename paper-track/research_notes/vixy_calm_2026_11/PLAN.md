@@ -95,3 +95,32 @@ Same code path as run.py (copied into run_oos.py; run.py/run.log untouched). Out
   * else INCONCLUSIVE.
   The number of calm-crack days inside the OOS window is stated with the verdict; if it is only a handful the window mostly measures the decay cost and the
   verdict is read that way. No bootstrap is part of this reading rule.
+
+## Addendum 3 (2026-11-17, written before run_tax.py was run): after-tax view
+Owner follow-up: the account is taxable; the owner offsets its gains by harvesting losses elsewhere. Research only; nothing adopted.
+Method = `review_2026_11/after_tax_test.py` (Book / lot simulator copied into run_tax.py, extended): FIFO lots per ticker, ST if held <= 365 days, wash sales on
+same-ticker buys within +/-30 days (disallowed loss added to the replacement lots' basis, holding period carried), price-only returns (no dividends taxed; the proxy
+panel's modelled dividend/T-bill accrual stays inside price), taxes for year Y paid at the first session on/after 15 April Y+1 by a pro-rata sale of every holding
+(2 bp), ST and LT netted separately incl. carryforwards then cross-netted, a net loss carried forward (character kept), no $3k offset, BOXX "deferred" (capital asset)
+as in the headline of the existing test; after-tax CAGR on the liquidation basis (value at the end minus tax on YTD realized + all unrealized gains treated as LT).
+Rates exactly as the existing test: S1 federal 35% + 3.8% NIIT = 38.8% ST, 15% + 3.8% = 18.8% LT; S2 top + California 37% + 9.3% + 3.8% = 50.1% ST, 20% + 9.3% + 3.8% = 33.1% LT.
+VIXY/VIXM are treated as ordinary ETFs (the existing test's simplification); as commodity pools / ETNs their real tax treatment (K-1, 60/40 Section 1256 mark-to-market
+for VIXM and the like) is NOT modelled and could change the result materially.
+- Arms: Base and, each with its matched cash arm (pro-rata funding): VIXY C1 T18 h5; VIXY C1 T20 h5; VIXM C1 T18 h10; VIXY C5 h5; VIXM C5 h10; VIXM C5 h20; VIXY C3 h5.
+- Windows (separate fresh $1 simulations): `real` 2015-11 onward (real instruments, main); proxy panel `joined` 2011-01-05..2026-11-16, `oos` 2011-01-05..2015-09-02,
+  `late` 2015-09-03..2026-11-16 (as run_oos.py). Hedge/sleeve instruments from vixy_yahoo_full.csv / vixm_yahoo_full.csv. Baseline sleeve VIXY 35% of the cash leg.
+  Tickers: SPMO (real core) / CORE (proxy core, a separate ticker from QQQ because the panel adds a dividend accrual to it), TQQQ, QLD, XLU, VIXY (sleeve and VIXY hedge: one
+  ticker, so wash sales run across both), VIXM (VIXM hedge), QQQ (both QQQ cash legs), BOXX (cash leg and, in matched-cash arms, the hedge share).
+- Per arm and window: (1) realized gain/loss by calendar year, ST/LT, whole book and the hedge leg alone (hedge lots tagged; realized attributed to the tag of the lot sold, after wash adjustments);
+  (2) wash sales on the hedge leg: total disallowed hedge loss, and deferral across year-ends estimated as the sum over years of the positive part of (realized with the wash rule minus realized
+  without it) on hedge-tagged lots (a loss merely deferred within a year nets to zero in that year); (3) after-tax CAGR, Sharpe (daily account-value returns including the tax-payment sales) and
+  max DD under view a (S1), view b (S2), and view c (no tax drag: mean and median NET realized gain per full calendar year in $ per $600k of starting-year account value and in % of NAV;
+  full year = at least 240 sessions in the window; dollars of pre-tax return given up per dollar of taxable gain removed = mean annual pre-tax $ P&L difference / mean annual net
+  realized gain difference, arm minus matched cash, shown only where the gain is reduced); (4) after-tax difference arm minus matched cash next to the pre-tax difference;
+  (5) year-by-year table (real) for VIXY C1 T18 h5 and VIXM C5 h10 on an accrual basis: pre-tax return difference, hedge-leg realized P&L, tax saved (S2, tax on that year's net gains with
+  carryforward, as a % of start-of-year value) and after-tax return difference = pre-tax difference + tax saved.
+- READING RULE: the after-tax view "rescues" a cell only if, after tax under BOTH view a and view b, the arm beats its matched cash on CAGR AND Sharpe in the OOS window AND in the late window;
+  "partly" if it flips only the late window, or only one tax view; otherwise "no change". A "flip" means pre-tax negative (CAGR or Sharpe diff) becoming positive after tax.
+- Arithmetic to check: a pre-tax hedge-leg loss X is worth at most X times the ST rate back (38.8% / 50.1%); tax can soften the decay cost but cannot turn a hedge-leg loss into a gain. Check:
+  cumulative taxes saved (arm vs matched cash, $ per $1 start) divided by cumulative net realized gain difference must not exceed the ST rate; flagged if it does. Any other path to a better after-tax
+  ranking is the Sharpe / drawdown effect or timing.

@@ -45,19 +45,20 @@ print('z available: main %d, rv30 %d, vix %d, vxn %d, ewma %d' % tuple(d[c].notn
 lr = np.log1p(d.ret)
 rv10 = lr.rolling(10).std() * S252 * 100; rv30 = lr.rolling(30).std() * S252 * 100
 m = d.p_rv30.notna()
-print('check1 p_rv30[t] == rv30 rebuilt through t-1: max abs diff %.2e (n=%d); p_rv10: %.2e' % (
+print('check1 p_rv30[t] vs rv30 rebuilt from ret through t-1 (differences are 6-decimal rounding in days.csv; vol points): max abs diff %.2e (n=%d); p_rv10: %.2e' % (
     (d.p_rv30[m] - rv30.shift(1)[m]).abs().max(), m.sum(), (d.p_rv10[d.p_rv10.notna()] - rv10.shift(1)[d.p_rv10.notna()]).abs().max()))
 print('check2 p_ret1[t] == ret[t-1]: max abs diff %.2e' % (d.p_ret1.iloc[1:] - d.ret.shift(1).iloc[1:]).abs().max())
 # check 3: perturb ret at t -> denominators at t unchanged, t+1 changed
-base = build_scores(d.assign(**{}))
+def rebuilt(r):
+    l = np.log1p(r); a10 = (l.rolling(10).std() * S252 * 100).shift(1); a30 = (l.rolling(30).std() * S252 * 100).shift(1)
+    return np.maximum(a10, a30) / 100 / S252, ewma_sigma(r)
+b_main, b_ewma = rebuilt(d.ret)      # same formulas on unperturbed returns (days.csv p_rv carries 6-decimal rounding, so compare like with like)
 rng = np.random.RandomState(0); idx = rng.choice(np.arange(300, len(d) - 2), 25, replace=False)
 bad_same = 0; bad_next = 0
 for i in idx:
-    # rebuild everything from perturbed returns (rv from log returns, EWMA); p_vix is exogenous and not a function of QQQ ret
     r2 = d.ret.copy(); r2.iloc[i] = r2.iloc[i] * 5 + 0.01
-    l2 = np.log1p(r2); a10 = (l2.rolling(10).std() * S252 * 100).shift(1); a30 = (l2.rolling(30).std() * S252 * 100).shift(1)
-    sig = np.maximum(a10, a30) / 100 / S252; e2 = ewma_sigma(r2)
-    for nm, new, old in (('main', sig, base.sig_main), ('ewma', e2, base.sig_ewma)):
+    sig, e2 = rebuilt(r2)
+    for new, old in ((sig, b_main), (e2, b_ewma)):
         if abs(new.iloc[i] - old.iloc[i]) > 1e-12: bad_same += 1
         if abs(new.iloc[i + 1] - old.iloc[i + 1]) < 1e-12: bad_next += 1
 print('check3 perturbation of ret[t], 25 random days x 2 estimators: denominator at t changed in %d cases (must be 0); denominator at t+1 unchanged in %d cases (must be 0)' % (bad_same, bad_next))
@@ -239,8 +240,24 @@ for ycol in ('y_dn3', 'y_dn25'):
     for nm in SETS:
         p, y, yr = results[(ycol, nm)]; a = auc(p, y); ers = [auc(p[m], y[m]) for m in ((yr <= 2009), (yr >= 2010) & (yr <= 2019), (yr >= 2020))]
         ok = a >= .60 and all(e >= .55 for e in ers)
-        print('  %-8s %-16s pooled %.3f eras %s -> %s | beats 0.55 pooled: %s' % (ycol, nm, a, ['%.3f' % e for e in ers], 'PASSES' if ok else 'does not pass', a >= .55))
+        ne = [int(y[m].sum()) for m in ((yr <= 2009), (yr >= 2010) & (yr <= 2019), (yr >= 2020))]
+        print('  %-8s %-16s pooled %.3f eras %s (events per era %s%s) -> %s | beats 0.55 pooled: %s' % (ycol, nm, a, ['%.3f' % e for e in ers], ne, ', era 05-09 has <15 events: not informative' if ne[0] < 15 else '', 'PASSES literal bar' if ok else 'does not pass', a >= .55))
+print('  CAUTION: z divides by the prior realized vol, so low rv10/rv30 mechanically raises P(z <= -3) for a given return. The rv10+rv30 model is the denominator-only benchmark; anything the WIDE model adds is its edge over that.')
 print('  (VIX-only / vol-only are references; the pre-registered model is WIDE on z<=-3.)')
+
+hdr('4d. EXPLORATORY (added after seeing 4b/4c; NOT pre-registered): is the signal just the small denominator?')
+zd = d[d.y_dn3 == 1]
+print('z<=-3 days: n %d; ret quantiles (%%) min/25/50/75/max: %s; share with ret <= -2%%: %.1f%%; share with ret <= -1.5%%: %.1f%%; median p_rv30 on those days %.1f vs %.1f on all days' % (
+    len(zd), ' / '.join('%.2f' % (zd.ret.quantile(q) * 100) for q in (0, .25, .5, .75, 1)), (zd.ret <= -.02).mean() * 100, (zd.ret <= -.015).mean() * 100, zd.p_rv30.median(), d.p_rv30.median()))
+d['y_dn3_r2'] = ((d.z <= -3) & (d.ret <= -0.02)).astype(float).where(d.z.notna()); d['y_r3'] = (d.ret <= -0.03).astype(float); d['y_r2'] = (d.ret <= -0.02).astype(float)
+print('events: z<=-3 AND ret<=-2%%: %d; raw ret<=-3%%: %d; raw ret<=-2%%: %d' % (d.y_dn3_r2.sum(), d.y_r3.sum(), d.y_r2.sum()))
+for ycol, lab in (('y_dn3_r2', 'z<=-3 AND ret<=-2%'), ('y_r3', 'raw ret<=-3% (any vol regime)'), ('y_r2', 'raw ret<=-2%')):
+    print(' event:', lab)
+    for nm in ('VIX only', 'rv10+rv30', 'WIDE (primary)'):
+        p, y, yr = walk(SETS[nm], ycol); top = p >= p.quantile(.9)
+        print('  %-16s OOS AUC %.3f | 05-09 %.3f (ev %d) | 10-19 %.3f (ev %d) | 20-26 %.3f (ev %d) | top decile hit %.1f%% vs base %.2f%%, capture %.1f%%' % (nm, auc(p, y),
+              auc(p[yr <= 2009], y[yr <= 2009]), y[yr <= 2009].sum(), auc(p[(yr >= 2010) & (yr <= 2019)], y[(yr >= 2010) & (yr <= 2019)]), y[(yr >= 2010) & (yr <= 2019)].sum(),
+              auc(p[yr >= 2020], y[yr >= 2020]), y[yr >= 2020].sum(), y[top].mean() * 100, y.mean() * 100, y[top].sum() / y.sum() * 100))
 
 # ---------------------------------------------------------------- 5. damage share
 hdr('5. share of the damage: 2x holder (2*ret per day, no financing or fees), days with ret <= -2%')
@@ -272,7 +289,7 @@ def fwd_table(sel, label, base):
                 v = g['f%d' % k].dropna(); r['n%d' % k] = len(v); r['mean%d %%' % k] = v.mean() * 100; r['med%d %%' % k] = v.median() * 100; r['pos%d %%' % k] = (v > 0).mean() * 100
             rows.append(r)
     t = pd.DataFrame(rows).round(2); print('\n--- %s (flag: split with n < 20 is not a conclusion; 5- and 20-day windows overlap and events cluster in time) ---' % label); print(t.to_string(index=False))
-base = d[d.z.notna()]
+base = d[d.z.notna()]; sdn = d.loc[sdn.index]; sup = d.loc[sup.index]
 fwd_table(sdn, 'surprise DOWN top100 (main z)', base); fwd_table(sup, 'surprise UP top100 (main z)', base)
 print('\nclustering: distinct calendar years among surprise-down:', sdn.year.nunique(), ', surprise-up:', sup.year.nunique(), '; distinct 20-day-separated clusters (events more than 20 sessions apart start a new cluster): ', end='')
 pos = {dt: i for i, dt in enumerate(d.index)}
@@ -283,6 +300,6 @@ def clusters(x):
 print('down %d, up %d' % (clusters(sdn), clusters(sup)))
 print('\nrobustness: next-day only for z_vix and z_ewma lists:')
 for nm, zc in (('z_vix', 'z_vix'), ('z_ewma', 'z_ewma')):
-    a, b = lists(zc)
+    a, b = lists(zc, d); a = d.loc[a.index]; b = d.loc[b.index]
     print('  %s down top100: mean f1 %.2f%% f5 %.2f%% f20 %.2f%% | up top100: f1 %.2f%% f5 %.2f%% f20 %.2f%%' % (nm, a.f1.mean() * 100, a.f5.mean() * 100, a.f20.mean() * 100, b.f1.mean() * 100, b.f5.mean() * 100, b.f20.mean() * 100))
 print('\nDONE')
