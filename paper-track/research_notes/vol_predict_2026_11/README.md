@@ -40,3 +40,22 @@ Single-signal AUCs are in-sample rankings; only section 6 of analyze.log is out 
 `build.py` -> `days.csv`, `top100_up.csv`, `top100_down.csv`; `analyze.py` -> `analyze.log`;
 `page_gen.py` + `page_template.html` -> the published page; `VIXCLS/VXVCLS/VXNCLS/NASDAQ100.csv`
 are the FRED downloads of 2026-11-17.
+
+## Since 2010 only (owner follow-up, same day)
+
+`python3 analyze.py 2010 > analyze_2010.log`. 4,243 sessions; top-100 cut-offs +2.61% / -2.85%;
+2022 holds 44 of the 200 and 2020 holds 35. The walk-forward there tests 2014-2026.
+
+- Size still predictable, direction still not: VIX AUC 0.785 for |r| >= 2% (walk-forward 0.787);
+  down-day AUC 0.49-0.52 for every signal, 0.47-0.50 walk-forward.
+- **VIX now beats realized vol**: 0.785 vs 0.756 (rv10) and 0.744 (rv30); walk-forward VIX 0.787,
+  rv10 0.760, VIX + rv 0.787. Over the full history they were level.
+- **More of the worst days come out of calm**: prior VIX < 20 before 28% of the top-100 down days
+  (8% full history) and 16% of the up days; state A or D before 53% of the down days. Moves of 3%+
+  with prior VIX < 20: 22 down, 7 up.
+- VIX rose the same day on 98 of the top-100 down days, the day before on 42 (all days 45%).
+- Among |r| >= 2% days: 58% down above the 200-day, 44% below it; after a -2% day the next big day
+  was up 62% (n = 47). A lean in which way a big day goes, not a predictor of up vs down overall.
+- The big-down and big-up forecasts correlate 0.655 here (0.954 full history).
+
+Follow-up backtest of VIX in the vol target: `../vol_target_vix_2026_11/`.

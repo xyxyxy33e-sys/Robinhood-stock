@@ -132,11 +132,35 @@ code{font-family:var(--mono);font-size:12px}
   </section>
 
   <section>
+    <h2>Since 2010 only</h2>
+    <p class="sub">The full history is dominated by 2000&ndash;2002 and 2008. Re-ranked on the 4,243 sessions from 2010, the top 100 up days are +2.61% or more and the top 100 down days are &minus;2.85% or worse. 2022 holds 44 of the 200 and 2020 holds 35.</p>
+    <div class="panel" style="padding:0"><div class="scroll">
+      <table style="min-width:620px"><thead><tr><th class="l">Condition at the prior close, 2010 on</th><th>All days</th><th>Before a top-100 down day</th><th>Before a top-100 up day</th></tr></thead><tbody>
+        <tr><td class="l">Median VIX</td><td>16.7</td><td>24.0</td><td>27.8</td></tr>
+        <tr><td class="l">VIX 25 or higher</td><td>13%</td><td>47%</td><td>69%</td></tr>
+        <tr><td class="l">VIX under 20</td><td>71%</td><td>28%</td><td>16%</td></tr>
+        <tr><td class="l">QQQ below its 200-day average</td><td>16%</td><td>49%</td><td>63%</td></tr>
+        <tr><td class="l">QQQ 10% or more below its one-year high</td><td>14%</td><td>44%</td><td>68%</td></tr>
+        <tr><td class="l">Strategy in a cash state (E or F)</td><td>13%</td><td>42%</td><td>56%</td></tr>
+        <tr><td class="l">Strategy in a leveraged state (A or D)</td><td>78%</td><td>53%</td><td>35%</td></tr>
+      </tbody></table>
+    </div></div>
+    <div class="find">
+      <div class="panel"><div class="tag yes">Same</div><h3>Size predictable, direction not</h3><p>VIX finds 2%+ days with a score of 0.79, and 0.79 on the forward test (2014&ndash;2026). For up versus down every signal still scores 0.49 to 0.52, and the forward test scores 0.47 to 0.50. VIX rose the same day on 98 of the top 100 down days, and the day before on 42 (all days: 45%).</p></div>
+      <div class="panel"><div class="tag mix">Different</div><h3>VIX now beats realized volatility</h3><p>Since 2010 VIX ranks big days better than 10-day realized volatility (0.79 against 0.76), and adding realized volatility to VIX adds nothing. Over the full history the two were level. This is the case for testing VIX in the vol target.</p></div>
+      <div class="panel"><div class="tag mix">Different</div><h3>More of the worst days come out of calm</h3><p>28% of the top-100 down days followed a VIX under 20, against 8% over the full history, and 53% arrived with the strategy in a leveraged state. Drops of 3% or more out of calm: 22, against 7 rallies. The big up days still lean to high VIX: 69% followed VIX of 25 or more.</p></div>
+      <div class="panel"><div class="tag mix">Weak lean, not a signal</div><h3>Big days after a fall tend to be up</h3><p>Among 2%+ days, 58% were down when QQQ was above its 200-day and 44% when below it. After a drop of 2% or more, the next big day was up 62% of the time (47 cases). This only says which way a big day leans once it happens. Across all days it does not predict up or down.</p></div>
+    </div>
+  </section>
+
+  <section>
     <h2>The 100 biggest days each way</h2>
-    <p class="sub">Every column except the day&rsquo;s return is the reading at the prior close. 125 of the 200 fall in 1999&ndash;2002 and 29 in 2008&ndash;2009; 2010&ndash;2019 holds 12 and 2020&ndash;2026 holds 31. State is the strategy&rsquo;s six-state read; the first 200 sessions have none.</p>
-    <div class="tabs" role="tablist"><button id="tab-down" role="tab" aria-selected="true" aria-controls="p-down">Top 100 down days</button><button id="tab-up" role="tab" aria-selected="false" aria-controls="p-up">Top 100 up days</button></div>
+    <p class="sub">Every column except the day&rsquo;s return is the reading at the prior close. Since 1999, 125 of the 200 fall in 1999&ndash;2002 and 29 in 2008&ndash;2009; 2010&ndash;2019 holds 12 and 2020&ndash;2026 holds 31. State is the strategy&rsquo;s six-state read; the first 200 sessions have none.</p>
+    <div class="tabs" role="tablist"><button id="tab-down" role="tab" aria-selected="true" aria-controls="p-down">Down, since 1999</button><button id="tab-up" role="tab" aria-selected="false" aria-controls="p-up">Up, since 1999</button><button id="tab-down10" role="tab" aria-selected="false" aria-controls="p-down10">Down, since 2010</button><button id="tab-up10" role="tab" aria-selected="false" aria-controls="p-up10">Up, since 2010</button></div>
     <div class="panel" style="padding:0" id="p-down" role="tabpanel">{{DOWN}}</div>
     <div class="panel" style="padding:0" id="p-up" role="tabpanel" hidden>{{UP}}</div>
+    <div class="panel" style="padding:0" id="p-down10" role="tabpanel" hidden>{{DOWN10}}</div>
+    <div class="panel" style="padding:0" id="p-up10" role="tabpanel" hidden>{{UP10}}</div>
   </section>
 
   <footer>
@@ -145,7 +169,7 @@ code{font-family:var(--mono);font-size:12px}
 </div>
 <script>
 (function(){
-  var t=[['tab-down','p-down'],['tab-up','p-up']];
+  var t=[['tab-down','p-down'],['tab-up','p-up'],['tab-down10','p-down10'],['tab-up10','p-up10']];
   t.forEach(function(x){document.getElementById(x[0]).addEventListener('click',function(){
     t.forEach(function(y){var on=y===x;document.getElementById(y[0]).setAttribute('aria-selected',on?'true':'false');document.getElementById(y[1]).hidden=!on;});
   });});

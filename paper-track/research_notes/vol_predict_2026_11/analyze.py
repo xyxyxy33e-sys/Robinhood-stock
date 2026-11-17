@@ -2,10 +2,12 @@
 
     python3 paper-track/research_notes/vol_predict_2026_11/analyze.py > analyze.log
 """
-import os
+import os, sys
 import numpy as np, pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 d = pd.read_csv(os.path.join(HERE, 'days.csv'), index_col=0)
+START = sys.argv[1] if len(sys.argv) > 1 else '1999'
+d = d[d.index >= START]
 d['abs'] = d.ret.abs()
 d['year'] = d.index.str[:4].astype(int)
 up = d.sort_values('ret', ascending=False).head(100)
@@ -91,7 +93,7 @@ def fit_logit(X, y, l2=1.0, it=50):
         H = X.T @ (X * W[:, None]) + l2 * np.eye(X.shape[1]); g = X.T @ (y - p) - l2 * w
         w = w + np.linalg.solve(H, g)
     return w
-def walk(feats, target, start=2005):
+def walk(feats, target, start=max(2005, int(START[:4]) + 4)):
     x = d[feats + ['year']].copy(); x['y'] = target.astype(float); x = x.dropna()
     pred = pd.Series(index=x.index, dtype=float)
     for yr in range(start, 2027):

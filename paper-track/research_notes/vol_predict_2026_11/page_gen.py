@@ -26,5 +26,9 @@ for lab, n, sh, ma, pd_, pu, tdn, tup in rows:
     bars.append('<div class="brow"><div class="blab">%s</div><div class="btrack"><span class="bdn" style="width:%.1f%%"></span><span class="bup" style="width:%.1f%%"></span></div><div class="bval">%.0f%% <small>(%.0f down + %.0f up)</small></div></div>' % (lab, pd_/mx*100*.98, pu/mx*100*.98, pd_+pu, pd_, pu))
 brows = ''.join('<tr><td class="l">%s</td><td>%s</td><td>%.0f%%</td><td>%.2f%%</td><td>%.1f%%</td><td>%.1f%%</td><td>%d</td><td>%d</td></tr>' % (lab, format(n, ','), sh, ma, pd_, pu, tdn, tup) for lab, n, sh, ma, pd_, pu, tdn, tup in rows)
 html = open('page_template.html').read()
+html = open('page_template.html').read()
+e = d[d.index >= '2010']
+up10 = e.sort_values('ret', ascending=False).head(100); dn10 = e.sort_values('ret').head(100)
+html = html.replace('{{DOWN10}}', table(dn10, 'neg')).replace('{{UP10}}', table(up10, 'pos'))
 html = html.replace('{{BARS}}', '\n'.join(bars)).replace('{{BROWS}}', brows).replace('{{DOWN}}', table(dn, 'neg')).replace('{{UP}}', table(up, 'pos'))
 open(sys.argv[1], 'w').write(html); print('ok', len(html))
