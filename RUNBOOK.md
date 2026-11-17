@@ -118,6 +118,14 @@ Only after the orders are placed: one short line to the session ("traded / no tr
     basis that the next sale will release. Add the change since last Friday, and the 2027 projection range from
     `paper-track/research_notes/tax_2026_11/` until January, then the projection for the year in progress.
     Robinhood's numbers are before its own wash-sale adjustments; say so. Not tax advice.
+    **K-1 split** (owner 2026-11-17): VIXY and VIXM (and VIXM before them) are ProShares Trust II commodity
+    pools that issue a Schedule K-1, not a 1099-DIV; their futures gains pass through as roughly 60% long-term /
+    40% short-term whatever the holding period. In the table, show the VIXY+VIXM realized gain/loss on its own
+    row with that 60/40 estimate beside it, every other symbol as short-term, and the netted total under both
+    views (all short-term as Robinhood reports it, and the K-1 estimate). Say that the true split comes on the
+    K-1s in mid-March and that the 1099-B for these funds needs the K-1 basis adjustment. The owner is in New
+    York City: state and city tax treat all capital gains as ordinary income, so the 60/40 saving is federal
+    only.
   - **December year-end wash check** (owner 2026-11-11; every Friday report from the first Friday of December
     through the last Friday of January). List each loss sale in the prior 30 days that is still open to a wash
     (symbol, date, shares, realized loss, the date its 30-day window closes) and say, for each, whether the
