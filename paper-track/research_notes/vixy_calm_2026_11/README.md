@@ -118,3 +118,24 @@ and positive in 2014 (+1.4, +1.2, +2.2). Episodes: Aug 2011 and Aug 2015 show no
 Verdicts under the pre-registered reading rule (OOS alone): VIXY C1 T18 h5 INCONCLUSIVE; VIXY C1 T20 h5 CONTRADICTED; VIXM C1 T18 h10 CONTRADICTED; VIXY C5 h5 INCONCLUSIVE; VIXM C5 h10 INCONCLUSIVE;
 VIXM C5 h20 CONTRADICTED; VIXY C3 h5 CONTRADICTED (expected). None is confirmed. Caveat: with 2 crack days the window cannot test the payoff; it shows the drag (-0.5 to -3 pp CAGR/yr and
 -0.01 to -0.06 Sharpe vs matched cash) in 2011-15, when the hedge was on far more often. Both worst-day and worst-5-day were unchanged in the OOS window except C3, and max DD gains were at most 0.5 pp.
+
+## After-tax view (`run_tax.py` / `run_tax.log`; PLAN.md Addendum 3 written before the run)
+Method and rates are those of `review_2026_11/after_tax_test.py`: FIFO lots, ST if held <= 365 days, wash sales +/-30 days same ticker, price-only, tax for year Y paid 15 April Y+1 by pro-rata
+sale, ST and LT netted separately with carryforwards (a net-loss year pays nothing and the loss is carried forward), no $3k offset, BOXX deferred, liquidation-basis after-tax CAGR. S1 federal
+38.8% ST / 18.8% LT; S2 top + California 50.1% / 33.1%. VIXY and VIXM are modelled as ordinary ETFs (their real pool/ETN tax treatment is not). The lot simulation reproduces the engine's daily returns
+to 1e-9. After-tax Sharpe / max DD are on the taxed account's daily value changes including the April payments; an accrual alternative (tax or credit at the rate on each day's realized gain) is in the log.
+Baseline after tax (S1 / S2 CAGR / Sharpe / DD): real 34.2% / 1.364 / -26.3% and 28.8% / 1.127 / -31.4%; OOS 15.1% / 0.739 and 12.6% / 0.663; late 34.8% / 1.341 and 29.3% / 1.117.
+
+Result: **the hedge does not shrink the net realized gain in the cells that looked best pre-tax, so tax does not rescue any cell.** Net realized gain per full year (mean, $ per $600k): real Base $340k; VIXY C1 T18 h5
+$334k vs matched cash $331k (hedge arm +$2.3k MORE); VIXM C5 h10 $346k vs $337k (+$9.4k more); VIXM C5 h20 +$18k more; VIXY C3 h5 is the only real-window cell that removes gain ($11.5k/yr, at a cost of $23.1k/yr
+of pre-tax P&L: 2.0 pre-tax dollars per dollar of gain removed). In the OOS window gains are removed by 6 of 7 cells ($2-10k/yr) at 1.3-5.2 pre-tax dollars given up per dollar removed. The crack-day payoffs are
+realized short-term gains, and the decay losses are partly deferred by wash sales, so the stream of "losses to offset elsewhere" is small: hedge-leg net realized P&L (real, % NAV/yr, no wash adjustment) is +0.2 (C1 T18),
++0.1 (C1 T20), +0.3 (VIXM C1), +0.7 (VIXY C5), +0.9 (VIXM C5 h10), -1.0 (C3).
+Wash sales on the hedge leg (real window): the loss that crosses a year-end (December loss re-bought within 30 days into January) is on average 0.3-1.5% of NAV per year (worst year 1.8-7.2%, e.g. 2018, 2023 for
+the VIXY cells), i.e. a loss realized in December that lands in the next tax year.
+Pre-tax vs after-tax differences (arm minus matched cash, dCAGR pp / dSharpe), late window: VIXY C1 T18 h5 -0.22 / +0.049 pre, -0.36 / +0.013 S1, -0.36 / +0.005 S2; VIXM C5 h10 +0.86 / +0.040 pre, +0.61 / +0.019, +0.53 / +0.013.
+OOS: VIXY C1 T18 h5 -1.19 / -0.009 pre, -0.98 / -0.024 S1, -0.83 / -0.028 S2; VIXM C5 h10 -0.66 / -0.019 pre, -0.43 / -0.013, -0.35 / -0.012. Taxes shrink the CAGR gap where the hedge removes gains (OOS) and widen it where the hedge adds
+gains (real/late C1, C5), and cut the late-window Sharpe edge by roughly 50-90%. No cell flips from negative pre-tax to positive after tax in the OOS window. Verdicts under the reading rule: all seven cells NO CHANGE.
+Arithmetic check: where gain is removed, tax saved / gain removed equals the ST rate (0.36-0.40 S1, 0.48-0.50 S2) as it must; four OOS/late cells show 0.390-0.397 vs 0.388 (ST/LT mix in the net-gain denominator), so tax cannot turn a hedge loss
+into a gain, and after-tax differences stay on the same side of zero as pre-tax. Limits: commodity-pool / ETN tax treatment of VIXY/VIXM not modelled (K-1 / Section 1256 could change this); proxy-panel OOS is synthetic for the leveraged legs;
+wash-sale cross-year estimate is an approximation (with-vs-without-rule difference on hedge-tagged lots); the owner's loss harvesting elsewhere is not modelled.

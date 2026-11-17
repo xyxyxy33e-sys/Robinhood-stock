@@ -295,23 +295,21 @@ if __name__ == '__main__':
                 log(f"    {y}{'*' if yi[y][2] < 240 else ' '} book arm ST {ast/v0*100:+7.2f} LT {alt/v0*100:+6.2f} | MC ST {mst/yim[y]*100:+7.2f} LT {mlt/yim[y]*100:+6.2f} | hedge leg ST {hst/v0*100:+6.2f} LT {hlt/v0*100:+5.2f}")
     log("  (* = partial year; ST share of the book's realized gains is ~100% in every path, as in the existing test)")
     # ---------------- wash sales
-    log("\n=== WASH SALES ON THE HEDGE LEG (no-tax path, per $1 starting capital): disallowed hedge loss total; deferral across year-ends = sum over years of positive part of (realized with wash rule - realized without it) on hedge lots ===")
+    log("\n=== WASH SALES ON THE HEDGE LEG (no-tax path): deferral across year-ends = positive part, by year, of (hedge-lot realized with the wash rule minus without it), % of start-of-year NAV; the rest of the disallowed loss is released within the same year ===")
     WSH = {}
     for w in WIN:
         log(f" window {w}")
         for a in ARMS:
-            A = RES[(w, ('A', a), 'Z', False)]; N = RES[(w, ('A', a), 'Z', True)]; ys = sorted({y for (tg, y) in list(A['rt']) + list(N['rt']) if tg == 'H'})
-            sh_ = {}
-            for y in ys:
-                s1 = sum(A['rt'].get(('H', y), [0, 0])); s0_ = sum(N['rt'].get(('H', y), [0, 0])); sh_[y] = s1 - s0_
-            across = sum(max(v, 0) for v in sh_.values()); nyr = len(A['acct']) / 252
-            hedge_nw = sum(sum(N['rt'].get(('H', y), [0, 0])) for y in ys)
+            A = RES[(w, ('A', a), 'Z', False)]; N = RES[(w, ('A', a), 'Z', True)]; v0y = {y: v0 for y, v0, v1, n in yinfo(A)}; ys = sorted(v0y)
+            sh_ = {y: (sum(A['rt'].get(('H', y), [0, 0])) - sum(N['rt'].get(('H', y), [0, 0]))) / v0y[y] * 100 for y in ys}   # % of start-of-year NAV
+            pos = [max(v, 0) for v in sh_.values()]; across = float(np.mean(pos)); mx = max(pos)
+            hnw = np.mean([sum(N['rt'].get(('H', y), [0, 0])) / v0y[y] * 100 for y in ys])
             WSH[(w, a)] = (A['wash_tag']['H'], across, sh_)
-            log(f"  {lab(a):<16} disallowed hedge loss {A['wash_tag']['H']:.4f} ({A['wash_tag']['H']/nyr:.4f}/yr); hedge net realized without wash rule {hedge_nw:+.4f}; across-year-end deferral {across:.4f} ({across/nyr:.4f}/yr); "
-                f"=> within-year share of disallowed {(1-min(across/max(A['wash_tag']['H'],1e-12),1))*100:.0f}% ; book wash n {A['wash_n']}")
-    log("  yearly shift (with minus without wash rule, hedge lots, $ per $1 start), real window; + = loss pushed out of that year, - = loss arriving from earlier years")
+            log(f"  {lab(a):<16} mean hedge realized without wash rule {hnw:+.3f}% NAV/yr; across-year-end deferral (loss pushed into a later tax year): mean {across:.3f}% NAV per year, worst year {mx:.3f}% NAV; "
+                f"hedge wash events (book total) {A['wash_n']}; disallowed hedge loss counted per event incl. re-washes {A['wash_tag']['H']:.2f} per $1 start (inflated by compounding and chains; use the % columns)")
+    log("  yearly shift (with minus without wash rule, hedge lots, % of start-of-year NAV), real window; + = loss pushed out of that year, - = loss arriving from earlier years")
     for a in ARMS:
-        sh_ = WSH[('real', a)][2]; log(f"    {lab(a):<16} " + ' '.join(f"{y}:{v:+.4f}" for y, v in sh_.items()))
+        sh_ = WSH[('real', a)][2]; log(f"    {lab(a):<16} " + ' '.join(f"{y}:{v:+.3f}" for y, v in sh_.items()))
     # ---------------- year by year featured arms
     log("\n=== YEAR BY YEAR, real window, accrual basis (S2 top+CA): pre-tax return diff vs matched cash; hedge-leg realized P&L (% of start NAV); tax saved vs MC (tax on that year's gains with carryforward, % of start NAV); after-tax return diff = pre + saved ===")
     for a in (ARMS[0], ARMS[4]):
@@ -346,8 +344,13 @@ if __name__ == '__main__':
     log("  rescue: arm beats matched cash on CAGR and Sharpe after tax under S1 and S2 in BOTH oos and late windows; partly: flips only late, or only one tax view; else no change")
     for a in ARMS:
         ok = {(w, sc): DIFF[(w, a, sc)][0] > 0 and DIFF[(w, a, sc)][1] > 0 for w in ('oos', 'late') for sc in ('S1', 'S2')}
-        resc = all(ok.values()); late_both = ok[('late', 'S1')] and ok[('late', 'S2')]; one_view = any(ok[('oos', sc)] and ok[('late', sc)] for sc in ('S1', 'S2'))
-        v = 'RESCUED' if resc else ('PARTLY' if (late_both or one_view or any(ok[('late', sc)] for sc in ('S1', 'S2'))) else 'NO CHANGE')
+        pre_ok = {w: DIFF[(w, a, 'Z')][0] > 0 and DIFF[(w, a, 'Z')][1] > 0 for w in ('oos', 'late')}
+        flip = {(w, sc): ok[(w, sc)] and not pre_ok[w] for (w, sc) in ok}
+        resc = all(ok.values())
+        late_only = flip[('late', 'S1')] and flip[('late', 'S2')] and not any(flip[('oos', sc)] for sc in ('S1', 'S2'))
+        one_view = any(flip.values()) and not resc
+        v = 'RESCUED' if resc else ('PARTLY' if (late_only or one_view) else 'NO CHANGE')
         pre = {w: DIFF[(w, a, 'Z')] for w in ('oos', 'late')}
-        log(f"  {lab(a):<16} {v:<10} oos pre dC/dSh {pre['oos'][0]*100:+.2f}/{pre['oos'][1]:+.3f} -> S1 {DIFF[('oos',a,'S1')][0]*100:+.2f}/{DIFF[('oos',a,'S1')][1]:+.3f} S2 {DIFF[('oos',a,'S2')][0]*100:+.2f}/{DIFF[('oos',a,'S2')][1]:+.3f} | late pre {pre['late'][0]*100:+.2f}/{pre['late'][1]:+.3f} -> S1 {DIFF[('late',a,'S1')][0]*100:+.2f}/{DIFF[('late',a,'S1')][1]:+.3f} S2 {DIFF[('late',a,'S2')][0]*100:+.2f}/{DIFF[('late',a,'S2')][1]:+.3f}")
+        log(f"  {lab(a):<16} {v:<10} flips (pre-tax fails CAGR or Sharpe -> after-tax passes both): {[k for k, x in flip.items() if x] or 'none'}; after-tax passes: {[k for k, x in ok.items() if x] or 'none'}")
+        log(f"{'':20}oos pre dC/dSh {pre['oos'][0]*100:+.2f}/{pre['oos'][1]:+.3f} -> S1 {DIFF[('oos',a,'S1')][0]*100:+.2f}/{DIFF[('oos',a,'S1')][1]:+.3f} S2 {DIFF[('oos',a,'S2')][0]*100:+.2f}/{DIFF[('oos',a,'S2')][1]:+.3f} | late pre {pre['late'][0]*100:+.2f}/{pre['late'][1]:+.3f} -> S1 {DIFF[('late',a,'S1')][0]*100:+.2f}/{DIFF[('late',a,'S1')][1]:+.3f} S2 {DIFF[('late',a,'S2')][0]*100:+.2f}/{DIFF[('late',a,'S2')][1]:+.3f}")
     log(f"\nrun time {time.time()-t0:.0f}s")
