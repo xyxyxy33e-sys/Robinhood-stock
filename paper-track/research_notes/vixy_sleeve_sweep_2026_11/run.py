@@ -438,4 +438,23 @@ log(f"  {'cell':<30}{'wstSlv real/joined':>22}{'dMaxDD real/joined pp':>24}{'dCA
 for l in fl:
     c = ALL[l][0]; mr, mj = met(c, 'real'), met(c, 'joined')
     log(f"  {l:<30}{mr['wsd']:10.2f}/{mj['wsd']:.2f}%{(mr['m']-LV['real']['m'])*100:+12.2f}/{(mj['m']-LV['joined']['m'])*100:+.2f}{(mr['c']-LV['real']['c'])*100:+13.2f}/{(mj['c']-LV['joined']['c'])*100:+.2f}{mr['sh']-LV['real']['sh']:+10.3f}/{mj['sh']-LV['joined']['sh']:+.3f}")
+
+# ------------------------------------------------------------------ extra: VIXY daily moves while held; concentration robustness
+log("\n##### EXTRA 1: VIXY one-day moves. Live cell: worst VIXY daily return on a session where the sleeve was held, and all sessions with a VIXY drop of 10% or more (held or not)")
+for w in WN:
+    tn_, s0_, e_ = WIN[w]; y = INSTR[tn_]['Y'][s0_ + 1:e_ + 1]; hw_ = run(LIVE, w)['hw']; on_ = hw_ > 1e-9
+    big = np.where(y <= -0.10)[0]
+    log(f"  {w}: worst VIXY day while held {y[on_].min()*100:.1f}% ({RDS[w][np.where(on_)[0][np.argmin(y[on_])]]}); sessions with VIXY <= -10%: {len(big)}, of which sleeve held {int(on_[big].sum())}; worst VIXY day overall {y.min()*100:.1f}% ({RDS[w][int(np.argmin(y))]}), held? {bool(on_[int(np.argmin(y))])}")
+    for i in big[on_[big]][:12]: log(f"      held on {RDS[w][i]}: VIXY {y[i]*100:+.1f}%, sleeve weight {hw_[i]*100:.1f}% NAV, sleeve P&L {run(LIVE,w)['ctb'][i]*100:+.2f}% NAV")
+log("\n##### EXTRA 2: concentration of the weight effect (real window): Sharpe difference vs live after dropping, from BOTH books, all sessions of the live cell's best 1 / best 3 spells (by contribution)")
+tn_, s0_, e_ = WIN['real']; hl = run(LIVE, 'real')['hw']; ct = run(LIVE, 'real')['ctb']; spl = spells(hl); cbs = np.array([ct[a_:b_ + 1].sum() for a_, b_ in spl]); od = np.argsort(-cbs)
+log(f"  {'cell':<30}{'full':>8}{'-best1':>8}{'-best3':>8}")
+for k in (1, 3): pass
+def dropmask(k):
+    m = np.ones(len(hl), bool)
+    for i in od[:k]: m[spl[i][0]:spl[i][1] + 1] = False
+    return m
+for l in SHORT[1:]:
+    ra, rl = run(ALL[l][0], 'real')['r'], run(LIVE, 'real')['r']; log(f"  {l:<30}{sh(ra)-sh(rl):+8.3f}" + ''.join(f"{sh(ra[dropmask(k)])-sh(rl[dropmask(k)]):+8.3f}" for k in (1, 3)))
+log(f"  (live Sharpe on remaining sessions: best1 dropped {sh(run(LIVE,'real')['r'][dropmask(1)]):.3f}, best3 dropped {sh(run(LIVE,'real')['r'][dropmask(3)]):.3f}; w=0 book: {sh(run(mk(w=0.0),'real')['r'][dropmask(1)]):.3f} / {sh(run(mk(w=0.0),'real')['r'][dropmask(3)]):.3f})")
 log(f"\nrun time {time.time()-T0:.0f}s")
