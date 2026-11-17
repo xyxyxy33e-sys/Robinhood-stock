@@ -72,3 +72,26 @@ An arm passes only if ALL hold:
 Otherwise rejected. Results within bootstrap noise are called so.
 Flag (not a pass): "insurance trade-off" = Sharpe lower than MC but, on `real`, max DD >= 1.0 pp shallower AND worst-5-day >= 0.5 pp better
 than MC; reported with the annual cost (CAGR diff in pp, and hedge-leg net P&L in % NAV/yr).
+
+## Addendum 2 (2026-11-17, written before run_oos.py was run): out-of-sample 2011-01-04..2015-09-02
+Owner follow-up. New data in this folder: `vixy_yahoo_full.csv`, `vixm_yahoo_full.csv` (d, close_split_adj, adjclose; 2011-01-04..2026-11-16);
+returns use close_split_adj. Nothing is re-tuned: thresholds, sizes, funding (pro-rata only) and rules are exactly those of the original run.
+Same code path as run.py (copied into run_oos.py; run.py/run.log untouched). Output: run_oos.log.
+- Arms (each against its matched cash arm): VIXY C1 T18 h5; VIXY C1 T20 h5; VIXM C1 T18 h10 (VIX-based cells); VIXY C5 h5; VIXM C5 h10; VIXM C5 h20
+  (stretched-uptrend cells); context: VIXY C3 h5 (always on).
+- Track: proxy panel only (the real track cannot start before 2015-11: SPMO). Legs on the proxy panel: core = QQQ price return + 0.6%/yr dividend accrual,
+  TQQQ/QLD = synthetic 3x/2x of that with financing (T-bill + 0.3%) and expense ratios 0.84% / 0.95%, XLU = long-history XLU + 3% yield, cash/BOXX = 3-month T-bill
+  accrual (DGS3MO), QQQ cash legs = QQQ. Hedge/sleeve instruments VIXY / VIXM are the real ETFs (split-adjusted closes).
+- Baseline sleeve: VIXY 35% of the cash leg, same latch as "vera", now run with VIXY returns for the whole history (so it also operates in 2011-2015).
+- Windows: (1) OOS 2011-01-04..2015-09-02 (indicators warmed up on earlier data; first return day 2011-01-05); (2) 2015-09-03..2026-11-16 (the original
+  "vera" window, same code path, with the new return files; compared with the original vera numbers as a data check); (3) joined 2011-01-05..2026-11-16.
+- Reported per arm and window: CAGR / Sharpe / max DD for arm and matched cash and the differences, share of days hedge on, hedge-leg P&L in % NAV/yr (total,
+  calm-crack days, other days), instrument annualised return on hedge-on non-crack days, worst day and worst 5-day. Calm-crack days in the OOS window are listed with
+  whether each hedge was on. Year-by-year arm minus matched cash 2011-2015 and the named OOS episodes (2011-08-04..08-10, 2012 full year, 2013-06, 2014-04-10,
+  2014-10-09..10-15, 2015-08-21..08-26).
+- READING RULE (OOS window alone, arm vs its matched cash; d = arm minus matched cash):
+  * CONTRADICTED if dSharpe < -0.02, OR (dCAGR < -1.0 pp AND no drawdown benefit, i.e. max DD not shallower than matched cash by at least 0.1 pp). Checked first.
+  * else CONFIRMED if dSharpe > 0 AND max DD not deeper than matched cash by more than 0.5 pp.
+  * else INCONCLUSIVE.
+  The number of calm-crack days inside the OOS window is stated with the verdict; if it is only a handful the window mostly measures the decay cost and the
+  verdict is read that way. No bootstrap is part of this reading rule.
