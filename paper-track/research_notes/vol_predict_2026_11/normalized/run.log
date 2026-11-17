@@ -1,0 +1,681 @@
+
+====================================================================================================
+0. sample and look-ahead checks
+====================================================================================================
+sessions 6833 1999-09-16 2026-11-16
+z available: main 6803, rv30 6803, vix 6833, vxn 6483, ewma 6803
+check1 p_rv30[t] == rv30 rebuilt through t-1: max abs diff 3.09e-04 (n=6803); p_rv10: 4.73e-04
+check2 p_ret1[t] == ret[t-1]: max abs diff 0.00e+00
+check3 perturbation of ret[t], 25 random days x 2 estimators: denominator at t changed in 25 cases (must be 0); denominator at t+1 unchanged in 0 cases (must be 0)
+Other columns used are p_ columns (prior close) of days.csv; extras below are rebuilt with .shift(1).
+
+====================================================================================================
+1a. how similar are the rankings? (common sample: all five scores available)
+====================================================================================================
+common sample n = 6483 2001-02-05 2026-11-16
+rank correlation of |z| (Spearman via ranks + Pearson):
+            z  z_rv30  z_vix  z_vxn  z_ewma
+z       1.000   0.992  0.945  0.965   0.993
+z_rv30  0.992   1.000  0.946  0.969   0.994
+z_vix   0.945   0.946  1.000  0.982   0.957
+z_vxn   0.965   0.969  0.982  1.000   0.979
+z_ewma  0.993   0.994  0.957  0.979   1.000
+rank correlation of signed z:
+            z  z_rv30  z_vix  z_vxn  z_ewma
+z       1.000   0.998  0.985  0.991   0.998
+z_rv30  0.998   1.000  0.986  0.992   0.998
+z_vix   0.985   0.986  1.000  0.995   0.989
+z_vxn   0.991   0.992  0.995  1.000   0.994
+z_ewma  0.998   0.998  0.989  0.994   1.000
+overlap of top-100 by |z| lists (of 100):
+          z  z_rv30  z_vix  z_vxn  z_ewma
+z       100      76     37     56      79
+z_rv30   76     100     40     65      84
+z_vix    37      40    100     57      43
+z_vxn    56      65     57    100      65
+z_ewma   79      84     43     65     100
+overlap of top-100 down lists (of 100):
+          z  z_rv30  z_vix  z_vxn  z_ewma
+z       100      81     42     61      81
+z_rv30   81     100     45     67      87
+z_vix    42      45    100     57      49
+z_vxn    61      67     57    100      73
+z_ewma   81      87     49     73     100
+overlap of top-100 up lists (of 100):
+          z  z_rv30  z_vix  z_vxn  z_ewma
+z       100      79     45     63      84
+z_rv30   79     100     40     58      80
+z_vix    45      40    100     65      46
+z_vxn    63      58     65    100      67
+z_ewma   84      80     46     67     100
+also: overlap with the raw-percent top-100 (same common sample): z down 26 up 26 | z_rv30 down 29 up 28 | z_vix down 58 up 47 | z_vxn down 40 up 42 | z_ewma down 32 up 28 | 
+
+====================================================================================================
+1b. year distribution of the top-100 lists (counts per era)
+====================================================================================================
+           share of all days %  raw down  raw up  main down  main up  z_rv30 down  z_rv30 up  z_vix down  z_vix up  z_vxn down  z_vxn up  z_ewma down  z_ewma up
+era                                                                                                                                                             
+1999-2002                 12.1        61      64          3       12            4         14          56        65           3        13            4         14
+2003-2007                 18.4         0       3         11       22            9         19           7        15           7        21            9         26
+2008-2009                  7.4        16      13          8        8            6          8           3         2           8        12            5         10
+2010-2019                 36.8         6       6         46       35           51         39          16         7          53        29           49         32
+2020-2026                 25.3        17      14         32       23           30         20          18        11          29        25           33         18
+
+main-score cut-offs: down z <= -2.36 (ret range -8.50% .. -1.14%), up z >= 2.17 (ret range 1.09% .. 16.84%)
+year counts, main surprise down: {2000: 2, 2001: 1, 2003: 2, 2004: 2, 2005: 2, 2006: 3, 2007: 2, 2008: 5, 2009: 3, 2010: 5, 2011: 7, 2012: 2, 2013: 3, 2014: 6, 2015: 5, 2016: 4, 2017: 5, 2018: 5, 2019: 4, 2020: 6, 2021: 7, 2022: 2, 2023: 2, 2024: 5, 2025: 6, 2026: 4}
+year counts, main surprise up:   {1999: 1, 2000: 5, 2001: 3, 2002: 3, 2003: 3, 2004: 4, 2005: 6, 2006: 6, 2007: 3, 2008: 4, 2009: 4, 2010: 4, 2011: 2, 2012: 7, 2013: 4, 2014: 4, 2015: 3, 2016: 1, 2017: 3, 2018: 4, 2019: 3, 2020: 3, 2021: 4, 2022: 2, 2023: 4, 2024: 5, 2025: 2, 2026: 3}
+wrote top100_surprise_down.csv, top100_surprise_up.csv
+
+top 15 surprise-down days:
+              ret      z  z_vix  z_ewma  p_vix  p_rv30 p_state
+date                                                          
+2016-09-09 -0.025 -6.501 -3.193  -4.975  12.51   6.145       A
+2017-05-17 -0.025 -6.073 -3.790  -5.911  10.65   6.646       A
+2025-10-10 -0.035 -6.024 -3.354  -5.505  16.43   9.148       A
+2018-10-10 -0.044 -5.406 -4.377  -5.653  15.95  12.116       D
+2026-06-05 -0.048 -5.031 -4.948  -4.796  15.40  15.147       A
+2016-06-24 -0.041 -4.790 -3.790  -5.328  17.25  12.191       D
+2007-02-27 -0.041 -4.769 -5.848  -5.000  11.15  13.672       A
+2017-03-21 -0.015 -4.398 -2.124  -3.866  11.34   5.476       A
+2020-09-03 -0.051 -4.217 -3.029  -4.080  26.57  19.083       A
+2017-06-09 -0.025 -3.941 -3.907  -4.028  10.16  10.072       A
+2020-06-11 -0.050 -3.916 -2.853  -2.947  27.57  20.088       A
+2019-05-13 -0.035 -3.910 -3.434  -4.393  16.04  10.827       A
+2015-08-21 -0.044 -3.874 -3.625  -4.223  19.14  16.129       D
+2020-02-24 -0.039 -3.859 -3.584  -3.873  17.08  15.864       A
+2019-08-05 -0.035 -3.791 -3.185  -4.061  17.61  12.282       A
+
+top 15 surprise-up days:
+              ret      z  z_vix  z_ewma  p_vix  p_rv30 p_state
+date                                                          
+2017-10-27  0.029  6.622  4.091   6.163  11.30   6.982       A
+2002-05-08  0.107  5.253  7.740   4.934  21.94  32.328       F
+2025-04-09  0.120  4.740  3.641   5.190  52.33  34.028       E
+2016-11-07  0.024  3.856  1.675   3.558  22.51   9.780       D
+2008-10-13  0.122  3.780  2.761   4.058  69.95  43.690       F
+2003-03-13  0.057  3.761  2.718   3.699  33.51  23.008       E
+2022-11-10  0.074  3.533  4.490   3.780  26.09  33.156       F
+2001-01-03  0.168  3.330  8.915   3.501  29.99  74.093       F
+2000-01-07  0.124  3.297  7.631   4.071  25.73  44.099     NaN
+2018-12-26  0.062  3.291  2.748   3.098  36.07  30.119       F
+2026-09-21  0.028  3.289  2.974   2.707  14.81  13.259       A
+2024-02-22  0.029  3.213  3.030   3.181  15.34  14.403       A
+2006-01-03  0.022  3.168  2.923   3.146  12.07  11.109       A
+2012-09-06  0.022  3.046  1.986   2.986  17.74  11.569       A
+2013-04-10  0.019  3.033  2.403   2.895  12.84   9.660       A
+
+====================================================================================================
+2. what the day before looked like (full history, top 100 within full history)
+====================================================================================================
+
+--- MAIN z (rv max10,30) (n all days 6803; shares of state use rows with a state; prior-VIX shares use all rows) ---
+              all days  surprise down  surprise up
+p_vix          17.8100        16.6500      19.0000
+p_vxn          21.2500        20.0300      21.6800
+p_ratio         0.8911         0.8988       0.9043
+p_vix_chg1     -0.0055         0.0045       0.0088
+p_vix_chg5     -0.0087         0.0682       0.0631
+p_vix_pct252    0.4306         0.3968       0.5437
+p_rv10         17.7801        13.6409      15.2349
+p_rv30         18.0586        13.5863      16.1381
+p_vrp          -0.8188         3.0597       3.0683
+p_ret1          0.0011         0.0005      -0.0032
+p_absret1       0.0075         0.0073       0.0069
+p_ret5          0.0048        -0.0020      -0.0119
+p_gap50         0.0182         0.0217       0.0011
+p_gap200        0.0635         0.0949       0.0287
+p_dd252        -0.0413        -0.0220      -0.0668
+shares (%):
+  prior VIX < 13               all  16.1   down  15.0   up  14.0
+  prior VIX < 20               all  61.8   down  68.0   up  57.0
+  prior VIX >= 25              all  18.7   down  11.0   up  31.0
+  prior VIX >= 30              all   9.2   down   6.0   up  19.0
+  below 200d SMA               all  26.4   down  16.0   up  35.0
+  below 50d SMA                all  35.2   down  28.0   up  49.0
+  rv10 >= 30%                  all  20.1   down   4.0   up  17.0
+  prior day |move| >= 2%       all  16.1   down   4.0   up  17.0
+  prior day quiet |r| < 0.5%   all  37.2   down  40.0   up  37.0
+  prior day down               all  45.1   down  49.0   up  59.0
+  VIX > VIX3M (2008+)          all  10.1   down  14.0   up  27.3
+  drawdown <= -10%             all  28.3   down  13.0   up  40.0
+  state A or D (levered)       all  65.1   down  84.0   up  57.0
+  state E or F                 all  20.2   down  11.0   up  30.0
+state at prior close (share %, rows with a state; missing state: all 170, down 1, up 3):
+p_state     A    B    C     D     E     F
+all      52.4  5.7  6.7  14.3   5.8  15.0
+down     67.7  2.0  2.0  17.2   8.1   3.0
+up       45.4  6.2  4.1  13.4  10.3  20.6
+  VIX rose on the surprise day itself is not used (it is same-day, not a prior-close signal).
+
+--- z_vix (n all days 6833; shares of state use rows with a state; prior-VIX shares use all rows) ---
+              all days  surprise down  surprise up
+p_vix          17.8400        21.4850      22.8500
+p_vxn          21.2500        27.6700      35.1700
+p_ratio         0.8911         0.9194       0.9357
+p_vix_chg1     -0.0054         0.0005      -0.0050
+p_vix_chg5     -0.0088         0.0134       0.0024
+p_vix_pct252    0.4306         0.5645       0.5456
+p_rv10         17.8153        32.9788      42.7985
+p_rv30         18.0586        37.4859      42.5381
+p_vrp          -0.8188       -13.7106     -17.5556
+p_ret1          0.0011        -0.0010      -0.0021
+p_absret1       0.0075         0.0142       0.0177
+p_ret5          0.0048        -0.0037      -0.0129
+p_gap50         0.0182        -0.0078      -0.0377
+p_gap200        0.0635        -0.0371      -0.1397
+p_dd252        -0.0413        -0.1881      -0.2713
+shares (%):
+  prior VIX < 13               all  16.0   down   8.0   up   7.0
+  prior VIX < 20               all  61.5   down  39.0   up  28.0
+  prior VIX >= 25              all  18.8   down  29.0   up  37.0
+  prior VIX >= 30              all   9.1   down   6.0   up  13.0
+  below 200d SMA               all  26.3   down  50.0   up  57.0
+  below 50d SMA                all  35.0   down  59.0   up  59.0
+  rv10 >= 30%                  all  20.2   down  58.0   up  68.0
+  prior day |move| >= 2%       all  16.1   down  31.0   up  45.0
+  prior day quiet |r| < 0.5%   all  37.2   down  28.0   up  22.0
+  prior day down               all  45.1   down  53.0   up  52.0
+  VIX > VIX3M (2008+)          all  10.1   down  21.6   up  20.0
+  drawdown <= -10%             all  28.2   down  58.0   up  71.0
+  state A or D (levered)       all  64.8   down  37.0   up  17.0
+  state E or F                 all  20.2   down  42.0   up  46.0
+state at prior close (share %, rows with a state; missing state: all 200, down 13, up 23):
+p_state     A    B     C     D    E     F
+all      52.4  5.7   6.7  14.3  5.8  15.0
+down     29.9  0.0   9.2  12.6  6.9  41.4
+up       16.9  3.9  14.3   5.2  7.8  51.9
+  VIX rose on the surprise day itself is not used (it is same-day, not a prior-close signal).
+
+--- z_ewma (n all days 6803; shares of state use rows with a state; prior-VIX shares use all rows) ---
+              all days  surprise down  surprise up
+p_vix          17.8100        17.1400      19.5200
+p_vxn          21.2500        20.9100      22.4350
+p_ratio         0.8911         0.9194       0.9426
+p_vix_chg1     -0.0055         0.0045       0.0102
+p_vix_chg5     -0.0087         0.0820       0.0614
+p_vix_pct252    0.4306         0.4940       0.5942
+p_rv10         17.7801        14.9729      17.6249
+p_rv30         18.0586        14.0986      16.9415
+p_vrp          -0.8188         2.4718       2.5831
+p_ret1          0.0011        -0.0010      -0.0032
+p_absret1       0.0075         0.0075       0.0073
+p_ret5          0.0048        -0.0027      -0.0143
+p_gap50         0.0182         0.0142      -0.0070
+p_gap200        0.0635         0.0888       0.0241
+p_dd252        -0.0413        -0.0262      -0.0890
+shares (%):
+  prior VIX < 13               all  16.1   down  15.0   up  12.0
+  prior VIX < 20               all  61.8   down  62.0   up  53.0
+  prior VIX >= 25              all  18.7   down  18.0   up  33.0
+  prior VIX >= 30              all   9.2   down  10.0   up  19.0
+  below 200d SMA               all  26.4   down  18.0   up  40.0
+  below 50d SMA                all  35.2   down  35.0   up  54.0
+  rv10 >= 30%                  all  20.1   down  10.0   up  20.0
+  prior day |move| >= 2%       all  16.1   down   8.0   up  15.0
+  prior day quiet |r| < 0.5%   all  37.2   down  38.0   up  37.0
+  prior day down               all  45.1   down  55.0   up  60.0
+  VIX > VIX3M (2008+)          all  10.1   down  20.7   up  31.7
+  drawdown <= -10%             all  28.3   down  14.0   up  46.0
+  state A or D (levered)       all  65.1   down  83.0   up  53.0
+  state E or F                 all  20.2   down  13.0   up  35.0
+state at prior close (share %, rows with a state; missing state: all 170, down 2, up 4):
+p_state     A    B    C     D     E     F
+all      52.4  5.7  6.7  14.3   5.8  15.0
+down     62.2  0.0  2.0  22.4  10.2   3.1
+up       40.6  3.1  5.2  14.6  11.5  25.0
+  VIX rose on the surprise day itself is not used (it is same-day, not a prior-close signal).
+
+====================================================================================================
+2b. same, top 100 taken within 2010-2026 only
+====================================================================================================
+
+--- MAIN z, 2010+ (n all days 4243; shares of state use rows with a state; prior-VIX shares use all rows) ---
+              all days  surprise down  surprise up
+p_vix          16.7300        16.4300      18.2900
+p_vxn          19.7800        19.1250      20.7250
+p_ratio         0.8839         0.8926       0.9137
+p_vix_chg1     -0.0067         0.0015       0.0052
+p_vix_chg5     -0.0105         0.0572       0.0873
+p_vix_pct252    0.4365         0.4663       0.5744
+p_rv10         15.6711        13.4677      14.0928
+p_rv30         16.2916        12.8135      14.2737
+p_vrp           0.4084         3.1586       4.2417
+p_ret1          0.0011        -0.0012      -0.0027
+p_absret1       0.0064         0.0064       0.0065
+p_ret5          0.0056        -0.0014      -0.0119
+p_gap50         0.0219         0.0243       0.0118
+p_gap200        0.0815         0.0954       0.0707
+p_dd252        -0.0250        -0.0174      -0.0373
+shares (%):
+  prior VIX < 13               all  16.3   down  15.0   up   9.0
+  prior VIX < 20               all  71.3   down  74.0   up  62.0
+  prior VIX >= 25              all  13.2   down  10.0   up  20.0
+  prior VIX >= 30              all   6.0   down   4.0   up  12.0
+  below 200d SMA               all  15.9   down  10.0   up  23.0
+  below 50d SMA                all  29.2   down  24.0   up  40.0
+  rv10 >= 30%                  all  10.6   down   2.0   up   4.0
+  prior day |move| >= 2%       all  10.5   down   3.0   up  12.0
+  prior day quiet |r| < 0.5%   all  41.9   down  42.0   up  37.0
+  prior day down               all  44.1   down  55.0   up  59.0
+  VIX > VIX3M (2008+)          all   7.6   down  13.0   up  19.0
+  drawdown <= -10%             all  13.7   down   6.0   up  22.0
+  state A or D (levered)       all  78.2   down  91.0   up  75.0
+  state E or F                 all  12.9   down   5.0   up  19.0
+state at prior close (share %, rows with a state; missing state: all 0, down 0, up 0):
+p_state     A    B    C     D     E    F
+all      62.1  5.2  3.6  16.1   6.0  7.0
+down     71.0  2.0  2.0  20.0   5.0  0.0
+up       57.0  4.0  2.0  18.0  11.0  8.0
+  VIX rose on the surprise day itself is not used (it is same-day, not a prior-close signal).
+
+--- z_vix, 2010+ (n all days 4243; shares of state use rows with a state; prior-VIX shares use all rows) ---
+              all days  surprise down  surprise up
+p_vix          16.7300        16.6850      17.9950
+p_vxn          19.7800        21.6150      21.4800
+p_ratio         0.8839         0.9038       0.8995
+p_vix_chg1     -0.0067        -0.0120      -0.0099
+p_vix_chg5     -0.0105         0.0224      -0.0163
+p_vix_pct252    0.4365         0.5546       0.5446
+p_rv10         15.6711        16.4572      18.4005
+p_rv30         16.2916        16.8728      19.2939
+p_vrp           0.4084         0.3621      -1.3357
+p_ret1          0.0011        -0.0005      -0.0011
+p_absret1       0.0064         0.0077       0.0082
+p_ret5          0.0056         0.0010      -0.0029
+p_gap50         0.0219         0.0070       0.0052
+p_gap200        0.0815         0.0776       0.0590
+p_dd252        -0.0250        -0.0361      -0.0616
+shares (%):
+  prior VIX < 13               all  16.3   down  12.0   up   8.0
+  prior VIX < 20               all  71.3   down  70.0   up  67.0
+  prior VIX >= 25              all  13.2   down  15.0   up  18.0
+  prior VIX >= 30              all   6.0   down   7.0   up   9.0
+  below 200d SMA               all  15.9   down  22.0   up  30.0
+  below 50d SMA                all  29.2   down  40.0   up  47.0
+  rv10 >= 30%                  all  10.6   down  17.0   up  18.0
+  prior day |move| >= 2%       all  10.5   down  11.0   up  15.0
+  prior day quiet |r| < 0.5%   all  41.9   down  35.0   up  28.0
+  prior day down               all  44.1   down  53.0   up  56.0
+  VIX > VIX3M (2008+)          all   7.6   down  16.0   up  16.0
+  drawdown <= -10%             all  13.7   down  17.0   up  29.0
+  state A or D (levered)       all  78.2   down  79.0   up  67.0
+  state E or F                 all  12.9   down  17.0   up  23.0
+state at prior close (share %, rows with a state; missing state: all 0, down 0, up 0):
+p_state     A    B    C     D     E     F
+all      62.1  5.2  3.6  16.1   6.0   7.0
+down     52.0  1.0  3.0  27.0   9.0   8.0
+up       44.0  4.0  6.0  23.0  13.0  10.0
+  VIX rose on the surprise day itself is not used (it is same-day, not a prior-close signal).
+
+--- z_ewma, 2010+ (n all days 4243; shares of state use rows with a state; prior-VIX shares use all rows) ---
+              all days  surprise down  surprise up
+p_vix          16.7300        16.9950      19.6550
+p_vxn          19.7800        20.7450      22.2350
+p_ratio         0.8839         0.9067       0.9347
+p_vix_chg1     -0.0067         0.0045       0.0052
+p_vix_chg5     -0.0105         0.0646       0.0895
+p_vix_pct252    0.4365         0.5129       0.6290
+p_rv10         15.6711        15.1524      16.4504
+p_rv30         16.2916        14.5007      14.8563
+p_vrp           0.4084         3.0597       4.5517
+p_ret1          0.0011        -0.0013      -0.0039
+p_absret1       0.0064         0.0064       0.0098
+p_ret5          0.0056        -0.0032      -0.0138
+p_gap50         0.0219         0.0140       0.0036
+p_gap200        0.0815         0.0923       0.0693
+p_dd252        -0.0250        -0.0232      -0.0422
+shares (%):
+  prior VIX < 13               all  16.3   down  12.0   up   7.0
+  prior VIX < 20               all  71.3   down  66.0   up  53.0
+  prior VIX >= 25              all  13.2   down  13.0   up  24.0
+  prior VIX >= 30              all   6.0   down   7.0   up  14.0
+  below 200d SMA               all  15.9   down  12.0   up  25.0
+  below 50d SMA                all  29.2   down  33.0   up  47.0
+  rv10 >= 30%                  all  10.6   down   7.0   up   6.0
+  prior day |move| >= 2%       all  10.5   down   5.0   up  16.0
+  prior day quiet |r| < 0.5%   all  41.9   down  41.0   up  28.0
+  prior day down               all  44.1   down  56.0   up  64.0
+  VIX > VIX3M (2008+)          all   7.6   down  18.0   up  23.0
+  drawdown <= -10%             all  13.7   down   9.0   up  23.0
+  state A or D (levered)       all  78.2   down  90.0   up  74.0
+  state E or F                 all  12.9   down   8.0   up  21.0
+state at prior close (share %, rows with a state; missing state: all 0, down 0, up 0):
+p_state     A    B    C     D     E    F
+all      62.1  5.2  3.6  16.1   6.0  7.0
+down     63.0  0.0  2.0  27.0   8.0  0.0
+up       50.0  3.0  2.0  24.0  13.0  8.0
+  VIX rose on the surprise day itself is not used (it is same-day, not a prior-close signal).
+
+====================================================================================================
+3. asymmetry: days beyond -k sigma vs +k sigma. cell = down/up (ratio). * = a side has <20 events: no conclusion
+====================================================================================================
+
+--- MAIN z, FULL HISTORY ---
+                      z<=-2 / z>=+2  z<=-3 / z>=+3 z<=-4 / z>=+4 z<=-5 / z>=+5
+ALL (n=6803)         188/143 (1.31)  42/17 (2.47)*   9/3 (3.00)*   5/2 (2.50)*
+VIX <13 (n=1095)      25/16 (1.56)*    8/4 (2.00)*   4/1 (4.00)*   2/1 (2.00)*
+VIX 13-16 (n=1489)     53/26 (2.04)   10/3 (3.33)*    2/0 (inf)*    2/0 (inf)*
+VIX 16-20 (n=1619)     41/35 (1.17)  13/1 (13.00)*    2/0 (inf)*    1/0 (inf)*
+VIX 20-25 (n=1326)     40/24 (1.67)    6/2 (3.00)*   0/1 (0.00)*   0/1 (0.00)*
+VIX 25-30 (n=651)     17/16 (1.06)*    3/3 (1.00)*    1/0 (inf)*    0/0 (n/a)*
+VIX 30+ (n=623)       12/26 (0.46)*    2/4 (0.50)*   0/1 (0.00)*    0/0 (n/a)*
+state A (n=3479)      113/63 (1.79)   29/8 (3.62)*   7/1 (7.00)*   4/1 (4.00)*
+state B (n=381)         6/6 (1.00)*     1/0 (inf)*    0/0 (n/a)*    0/0 (n/a)*
+state C (n=445)         4/5 (0.80)*     1/0 (inf)*    0/0 (n/a)*    0/0 (n/a)*
+state D (n=951)        32/20 (1.60)    6/1 (6.00)*    2/0 (inf)*    1/0 (inf)*
+state E (n=384)       14/14 (1.00)*    3/2 (1.50)*   0/1 (0.00)*    0/0 (n/a)*
+state F (n=993)       14/30 (0.47)*    1/5 (0.20)*   0/1 (0.00)*   0/1 (0.00)*
+above 200d (n=4837)   149/87 (1.71)   36/9 (4.00)*   9/1 (9.00)*   5/1 (5.00)*
+below 200d (n=1797)    34/51 (0.67)    5/7 (0.71)*   0/2 (0.00)*   0/1 (0.00)*
+
+--- z_vix, FULL HISTORY ---
+                      z<=-2 / z>=+2  z<=-3 / z>=+3  z<=-4 / z>=+4 z<=-5 / z>=+5
+ALL (n=6833)         351/228 (1.54)   97/55 (1.76)   22/25 (0.88)  5/10 (0.50)*
+VIX <13 (n=1095)       34/23 (1.48)    8/3 (2.67)*    1/1 (1.00)*    1/0 (inf)*
+VIX 13-16 (n=1489)     60/30 (2.00)   10/5 (2.00)*     2/0 (inf)*    0/0 (n/a)*
+VIX 16-20 (n=1619)     76/43 (1.77)   21/4 (5.25)*     4/0 (inf)*    2/0 (inf)*
+VIX 20-25 (n=1342)    107/64 (1.67)   30/20 (1.50)   6/12 (0.50)*   0/4 (0.00)*
+VIX 25-30 (n=665)      55/39 (1.41)  22/15 (1.47)*    8/9 (0.89)*   2/5 (0.40)*
+VIX 30+ (n=623)       19/29 (0.66)*    6/8 (0.75)*    1/3 (0.33)*   0/1 (0.00)*
+state A (n=3479)      109/50 (2.18)   26/4 (6.50)*    3/1 (3.00)*    1/0 (inf)*
+state B (n=381)         9/6 (1.50)*    0/3 (0.00)*     0/0 (n/a)*    0/0 (n/a)*
+state C (n=445)        25/27 (0.93)    6/5 (1.20)*    3/1 (3.00)*    0/0 (n/a)*
+state D (n=951)        52/29 (1.79)  11/1 (11.00)*     2/0 (inf)*    1/0 (inf)*
+state E (n=384)        20/21 (0.95)    6/3 (2.00)*    1/1 (1.00)*    1/0 (inf)*
+state F (n=993)       105/62 (1.69)   35/26 (1.35)   9/15 (0.60)*   1/6 (0.17)*
+above 200d (n=4837)   167/84 (1.99)   37/8 (4.62)*    5/1 (5.00)*    2/0 (inf)*
+below 200d (n=1797)  153/111 (1.38)   47/34 (1.38)  13/17 (0.76)*   2/6 (0.33)*
+
+--- z_ewma, FULL HISTORY ---
+                      z<=-2 / z>=+2  z<=-3 / z>=+3  z<=-4 / z>=+4 z<=-5 / z>=+5
+ALL (n=6803)         226/181 (1.25)  54/16 (3.38)*   14/5 (2.80)*   5/2 (2.50)*
+VIX <13 (n=1095)      28/17 (1.65)*   10/3 (3.33)*    4/1 (4.00)*   2/1 (2.00)*
+VIX 13-16 (n=1489)     53/30 (1.77)  13/1 (13.00)*     2/0 (inf)*    1/0 (inf)*
+VIX 16-20 (n=1619)     53/43 (1.23)  13/1 (13.00)*     7/0 (inf)*    2/0 (inf)*
+VIX 20-25 (n=1326)     51/38 (1.34)    9/2 (4.50)*    0/1 (0.00)*    0/0 (n/a)*
+VIX 25-30 (n=651)      23/24 (0.96)    4/3 (1.33)*    1/1 (1.00)*    0/0 (n/a)*
+VIX 30+ (n=623)       18/29 (0.62)*    5/6 (0.83)*    0/2 (0.00)*   0/1 (0.00)*
+state A (n=3479)      126/71 (1.77)   35/4 (8.75)*  10/1 (10.00)*   3/1 (3.00)*
+state B (n=381)         7/6 (1.17)*     0/0 (n/a)*     0/0 (n/a)*    0/0 (n/a)*
+state C (n=445)         3/7 (0.43)*     1/0 (inf)*     0/0 (n/a)*    0/0 (n/a)*
+state D (n=951)        44/35 (1.26)   10/2 (5.00)*     4/0 (inf)*    2/0 (inf)*
+state E (n=384)       15/20 (0.75)*    4/3 (1.33)*    0/1 (0.00)*   0/1 (0.00)*
+state F (n=993)        25/36 (0.69)    3/6 (0.50)*    0/2 (0.00)*    0/0 (n/a)*
+above 200d (n=4837)  175/110 (1.59)   45/6 (7.50)*  14/1 (14.00)*   5/1 (5.00)*
+below 200d (n=1797)    45/65 (0.69)    8/9 (0.89)*    0/3 (0.00)*   0/1 (0.00)*
+
+--- MAIN z, 2010 ONWARD ---
+                     z<=-2 / z>=+2  z<=-3 / z>=+3 z<=-4 / z>=+4 z<=-5 / z>=+5
+ALL (n=4243)         126/83 (1.52)  34/11 (3.09)*   8/2 (4.00)*   5/1 (5.00)*
+VIX <13 (n=693)       16/7 (2.29)*    5/3 (1.67)*   3/1 (3.00)*   2/1 (2.00)*
+VIX 13-16 (n=1139)   40/18 (2.22)*   10/3 (3.33)*    2/0 (inf)*    2/0 (inf)*
+VIX 16-20 (n=1193)    33/25 (1.32)  12/1 (12.00)*    2/0 (inf)*    1/0 (inf)*
+VIX 20-25 (n=659)    22/14 (1.57)*    4/1 (4.00)*    0/0 (n/a)*    0/0 (n/a)*
+VIX 25-30 (n=303)      8/7 (1.14)*    2/1 (2.00)*    1/0 (inf)*    0/0 (n/a)*
+VIX 30+ (n=256)       7/12 (0.58)*    1/2 (0.50)*   0/1 (0.00)*    0/0 (n/a)*
+state A (n=2636)      85/47 (1.81)   25/7 (3.57)*   6/1 (6.00)*   4/1 (4.00)*
+state B (n=222)        3/3 (1.00)*     1/0 (inf)*    0/0 (n/a)*    0/0 (n/a)*
+state C (n=154)        2/2 (1.00)*     1/0 (inf)*    0/0 (n/a)*    0/0 (n/a)*
+state D (n=683)      27/15 (1.80)*    5/1 (5.00)*    2/0 (inf)*    1/0 (inf)*
+state E (n=253)        9/9 (1.00)*    2/1 (2.00)*   0/1 (0.00)*    0/0 (n/a)*
+state F (n=295)        0/7 (0.00)*    0/2 (0.00)*    0/0 (n/a)*    0/0 (n/a)*
+above 200d (n=3568)  113/63 (1.79)   31/8 (3.88)*   8/1 (8.00)*   5/1 (5.00)*
+below 200d (n=675)   13/20 (0.65)*    3/3 (1.00)*   0/1 (0.00)*    0/0 (n/a)*
+
+--- z_vix, 2010 ONWARD ---
+                     z<=-2 / z>=+2  z<=-3 / z>=+3 z<=-4 / z>=+4 z<=-5 / z>=+5
+ALL (n=4243)         149/72 (2.07)   33/8 (4.12)*   3/2 (1.50)*    1/0 (inf)*
+VIX <13 (n=693)       18/7 (2.57)*    4/1 (4.00)*   0/1 (0.00)*    0/0 (n/a)*
+VIX 13-16 (n=1139)   40/19 (2.11)*    9/3 (3.00)*    2/0 (inf)*    0/0 (n/a)*
+VIX 16-20 (n=1193)    43/24 (1.79)  12/1 (12.00)*    1/0 (inf)*    1/0 (inf)*
+VIX 20-25 (n=659)    24/11 (2.18)*    4/1 (4.00)*    0/0 (n/a)*    0/0 (n/a)*
+VIX 25-30 (n=303)     15/5 (3.00)*    2/1 (2.00)*   0/1 (0.00)*    0/0 (n/a)*
+VIX 30+ (n=256)        9/6 (1.50)*    2/1 (2.00)*    0/0 (n/a)*    0/0 (n/a)*
+state A (n=2636)      74/30 (2.47)   17/2 (8.50)*   1/1 (1.00)*    0/0 (n/a)*
+state B (n=222)        2/3 (0.67)*    0/2 (0.00)*    0/0 (n/a)*    0/0 (n/a)*
+state C (n=154)        4/6 (0.67)*    1/1 (1.00)*    0/0 (n/a)*    0/0 (n/a)*
+state D (n=683)      42/18 (2.33)*  10/1 (10.00)*    2/0 (inf)*    1/0 (inf)*
+state E (n=253)      13/10 (1.30)*    3/1 (3.00)*    0/0 (n/a)*    0/0 (n/a)*
+state F (n=295)       14/5 (2.80)*    2/1 (2.00)*   0/1 (0.00)*    0/0 (n/a)*
+above 200d (n=3568)  114/50 (2.28)   27/5 (5.40)*   3/1 (3.00)*    1/0 (inf)*
+below 200d (n=675)    35/22 (1.59)    6/3 (2.00)*   0/1 (0.00)*    0/0 (n/a)*
+
+--- z_ewma, 2010 ONWARD ---
+                      z<=-2 / z>=+2  z<=-3 / z>=+3  z<=-4 / z>=+4 z<=-5 / z>=+5
+ALL (n=4243)         155/105 (1.48)  43/10 (4.30)*   13/2 (6.50)*   4/2 (2.00)*
+VIX <13 (n=693)        19/7 (2.71)*    6/2 (3.00)*    3/1 (3.00)*   1/1 (1.00)*
+VIX 13-16 (n=1139)     41/22 (1.86)  13/1 (13.00)*     2/0 (inf)*    1/0 (inf)*
+VIX 16-20 (n=1193)     42/28 (1.50)  12/1 (12.00)*     7/0 (inf)*    2/0 (inf)*
+VIX 20-25 (n=659)      31/24 (1.29)    7/1 (7.00)*     0/0 (n/a)*    0/0 (n/a)*
+VIX 25-30 (n=303)     12/10 (1.20)*    3/1 (3.00)*     1/0 (inf)*    0/0 (n/a)*
+VIX 30+ (n=256)       10/14 (0.71)*    2/4 (0.50)*    0/1 (0.00)*   0/1 (0.00)*
+state A (n=2636)       96/52 (1.85)  30/3 (10.00)*    9/1 (9.00)*   2/1 (2.00)*
+state B (n=222)         3/3 (1.00)*     0/0 (n/a)*     0/0 (n/a)*    0/0 (n/a)*
+state C (n=154)         2/2 (1.00)*     1/0 (inf)*     0/0 (n/a)*    0/0 (n/a)*
+state D (n=683)        38/26 (1.46)    9/2 (4.50)*     4/0 (inf)*    2/0 (inf)*
+state E (n=253)        9/14 (0.64)*    3/2 (1.50)*    0/1 (0.00)*   0/1 (0.00)*
+state F (n=295)         7/8 (0.88)*    0/3 (0.00)*     0/0 (n/a)*    0/0 (n/a)*
+above 200d (n=3568)   135/79 (1.71)   39/5 (7.80)*  13/1 (13.00)*   4/1 (4.00)*
+below 200d (n=675)     20/26 (0.77)    4/5 (0.80)*    0/1 (0.00)*   0/1 (0.00)*
+
+reference: under a symmetric fat-tailed distribution the ratio would be ~1; ratios from cells with a star are not conclusions.
+
+====================================================================================================
+4. can surprises be predicted?
+====================================================================================================
+check4 days-since-2%-move at row 1000 uses only earlier rows: ok
+extras are built from returns/closes up to the prior close (days since 2%% move: rows before day t; days since 252d high: measured at t-1; day of week is the calendar day of t, known in advance).
+event counts (n days with z = 6803):
+           y_dn3  y_up3  y_ab3  y_dn25  y_up25  y_ab25
+total      42.00  17.00  59.00   81.00   52.00  133.00
+1999-2009   8.00   6.00  14.00   18.00   23.00   41.00
+2010-2019  21.00   6.00  27.00   37.00   20.00   57.00
+2020-2026  13.00   5.00  18.00   26.00    9.00   35.00
+rate %      0.62   0.25   0.87    1.19    0.76    1.96
+
+--- single-signal AUC (raw AUC: >0.5 means a higher reading goes with the event; 0.5 = no information), threshold 3 sigma ---
+                    AUC dn3  AUC up3  AUC ab3  dn AUC 1999-2009  dn AUC 2010-2019  dn AUC 2020-2026  n valid
+signal                                                                                                      
+p_vix                 0.428    0.571    0.469             0.440             0.463             0.442     6803
+p_vxn                 0.413    0.518    0.441             0.380             0.480             0.445     6483
+p_ratio               0.526    0.622    0.550             0.526             0.553             0.522     4766
+p_vix_chg1            0.582    0.599    0.587             0.596             0.533             0.652     6803
+p_vix_chg5            0.698    0.747    0.713             0.834             0.663             0.678     6803
+p_vix_pct252          0.529    0.613    0.553             0.468             0.529             0.566     6582
+p_rv10                0.307    0.477    0.356             0.356             0.370             0.260     6803
+p_rv30                0.283    0.452    0.331             0.354             0.273             0.297     6803
+p_vrp                 0.709    0.681    0.702             0.578             0.746             0.701     6803
+p_ret1                0.489    0.322    0.441             0.656             0.417             0.465     6803
+p_absret1             0.434    0.538    0.464             0.362             0.488             0.464     6803
+p_ret5                0.442    0.218    0.377             0.449             0.380             0.514     6803
+p_gap50               0.582    0.324    0.507             0.571             0.528             0.643     6784
+p_gap200              0.627    0.363    0.553             0.652             0.562             0.651     6634
+p_dd252               0.645    0.394    0.572             0.685             0.543             0.627     6774
+p_rv_pct252           0.385    0.391    0.387             0.381             0.356             0.384     6678
+p_days_since_2pct     0.670    0.550    0.636             0.592             0.680             0.683     6803
+p_days_since_252hi    0.318    0.583    0.392             0.291             0.411             0.301     6581
+p_ret20               0.539    0.328    0.478             0.598             0.464             0.574     6803
+p_vxn_vix             0.475    0.416    0.459             0.497             0.541             0.518     6483
+dow                   0.511    0.520    0.513             0.496             0.496             0.544     6803
+p_monday              0.537    0.494    0.525             0.531             0.550             0.522     6803
+p_quiet               0.528    0.490    0.517             0.602             0.503             0.482     6803
+
+--- single-signal AUC (raw AUC: >0.5 means a higher reading goes with the event; 0.5 = no information), threshold 2.5 sigma ---
+                    AUC dn25  AUC up25  AUC ab25  dn AUC 1999-2009  dn AUC 2010-2019  dn AUC 2020-2026  n valid
+signal                                                                                                         
+p_vix                  0.438     0.564     0.488             0.441             0.440             0.483     6803
+p_vxn                  0.427     0.528     0.464             0.398             0.440             0.491     6483
+p_ratio                0.542     0.610     0.565             0.565             0.563             0.530     4766
+p_vix_chg1             0.563     0.576     0.569             0.490             0.579             0.590     6803
+p_vix_chg5             0.653     0.675     0.663             0.701             0.620             0.670     6803
+p_vix_pct252           0.507     0.594     0.541             0.476             0.494             0.547     6582
+p_rv10                 0.322     0.463     0.376             0.352             0.364             0.295     6803
+p_rv30                 0.292     0.448     0.351             0.343             0.254             0.303     6803
+p_vrp                  0.724     0.677     0.708             0.653             0.736             0.744     6803
+p_ret1                 0.474     0.350     0.424             0.575             0.402             0.472     6803
+p_absret1              0.438     0.512     0.467             0.434             0.478             0.432     6803
+p_ret5                 0.435     0.287     0.376             0.431             0.427             0.442     6803
+p_gap50                0.543     0.358     0.470             0.536             0.522             0.553     6784
+p_gap200               0.626     0.401     0.540             0.616             0.600             0.623     6634
+p_dd252                0.616     0.411     0.536             0.636             0.567             0.583     6774
+p_rv_pct252            0.370     0.401     0.381             0.406             0.314             0.392     6678
+p_days_since_2pct      0.668     0.526     0.614             0.627             0.702             0.647     6803
+p_days_since_252hi     0.364     0.553     0.435             0.405             0.405             0.354     6581
+p_ret20                0.496     0.339     0.434             0.504             0.446             0.522     6803
+p_vxn_vix              0.460     0.444     0.454             0.412             0.510             0.523     6483
+dow                    0.526     0.433     0.489             0.485             0.517             0.567     6803
+p_monday               0.511     0.522     0.515             0.545             0.515             0.483     6803
+p_quiet                0.518     0.516     0.517             0.491             0.522             0.502     6803
+note: in-sample rankings, no fitting; with ~23 signals x 3 events some will stray from 0.5 by chance. Event counts above show how noisy small-era AUCs are (SE of an AUC with n events is roughly 0.29/sqrt(n)).
+
+WIDE set features: ['l_vix', 'l_rv10', 'l_rv30', 'p_vrp', 'p_vix_pct252', 'p_rv_pct252', 'l_dsince2', 'l_dsincehi', 'p_gap50', 'p_gap200', 'p_dd252', 'p_ret1', 'p_absret1', 'p_ret5', 'p_ret20', 'p_vix_chg1', 'p_vix_chg5', 'p_vxn_vix', 'p_quiet', 'p_monday'] (p_ratio / VIX3M left out: not available before Dec 2007)
+
+====================================================================================================
+4b. walk-forward logistic (expanding window, refit each January, test next year; test years 2005-2026)
+====================================================================================================
+
+ event: DOWN surprise z<=-3 (PRIMARY)
+  VIX only         | OOS AUC 0.549 | 05-09 0.618 (ev 3) | 10-19 0.527 (ev 21) | 20-26 0.529 (ev 13) | top decile: n 500, events 3, hit 0.6% vs base 0.74%, capture 8.1%
+  rv10+rv30        | OOS AUC 0.676 | 05-09 0.767 (ev 3) | 10-19 0.656 (ev 21) | 20-26 0.697 (ev 13) | top decile: n 500, events 10, hit 2.0% vs base 0.74%, capture 27.0%
+  VIX+rv10+rv30    | OOS AUC 0.708 | 05-09 0.643 (ev 3) | 10-19 0.700 (ev 21) | 20-26 0.724 (ev 13) | top decile: n 500, events 9, hit 1.8% vs base 0.74%, capture 24.3%
+  WIDE (primary)   | OOS AUC 0.714 | 05-09 0.960 (ev 1) | 10-19 0.660 (ev 21) | 20-26 0.769 (ev 13) | top decile: n 450, events 14, hit 3.1% vs base 0.78%, capture 40.0%
+
+ event: DOWN z<=-2.5
+  VIX only         | OOS AUC 0.542 | 05-09 0.450 (ev 12) | 10-19 0.549 (ev 37) | 20-26 0.493 (ev 26) | top decile: n 551, events 8, hit 1.5% vs base 1.36%, capture 10.7%
+  rv10+rv30        | OOS AUC 0.681 | 05-09 0.552 (ev 12) | 10-19 0.737 (ev 37) | 20-26 0.679 (ev 26) | top decile: n 551, events 19, hit 3.4% vs base 1.36%, capture 25.3%
+  VIX+rv10+rv30    | OOS AUC 0.709 | 05-09 0.517 (ev 12) | 10-19 0.761 (ev 37) | 20-26 0.740 (ev 26) | top decile: n 551, events 23, hit 4.2% vs base 1.36%, capture 30.7%
+  WIDE (primary)   | OOS AUC 0.714 | 05-09 0.594 (ev 11) | 10-19 0.719 (ev 37) | 20-26 0.767 (ev 26) | top decile: n 525, events 18, hit 3.4% vs base 1.41%, capture 24.3%
+
+ event: UP z>=+3
+  VIX only         | OOS AUC 0.440 | 05-09 0.991 (ev 1) | 10-19 0.440 (ev 6) | 20-26 0.428 (ev 5) | top decile: n 500, events 2, hit 0.4% vs base 0.24%, capture 16.7%
+  rv10+rv30        | OOS AUC 0.330 | 05-09 0.919 (ev 1) | 10-19 0.229 (ev 6) | 20-26 0.472 (ev 5) | top decile: n 500, events 1, hit 0.2% vs base 0.24%, capture 8.3%
+  VIX+rv10+rv30    | OOS AUC 0.578 | 05-09 0.993 (ev 1) | 10-19 0.595 (ev 6) | 20-26 0.621 (ev 5) | top decile: n 500, events 2, hit 0.4% vs base 0.24%, capture 16.7%
+  WIDE (primary)   | OOS AUC 0.833 | 05-09 nan (ev 0) | 10-19 0.956 (ev 5) | 20-26 0.761 (ev 5) | top decile: n 349, events 7, hit 2.0% vs base 0.29%, capture 70.0%
+
+ event: |z|>=3
+  VIX only         | OOS AUC 0.489 | 05-09 0.427 (ev 7) | 10-19 0.480 (ev 27) | 20-26 0.477 (ev 18) | top decile: n 551, events 2, hit 0.4% vs base 0.95%, capture 3.8%
+  rv10+rv30        | OOS AUC 0.631 | 05-09 0.370 (ev 7) | 10-19 0.666 (ev 27) | 20-26 0.657 (ev 18) | top decile: n 551, events 17, hit 3.1% vs base 0.95%, capture 32.7%
+  VIX+rv10+rv30    | OOS AUC 0.684 | 05-09 0.457 (ev 7) | 10-19 0.758 (ev 27) | 20-26 0.702 (ev 18) | top decile: n 551, events 19, hit 3.4% vs base 0.95%, capture 36.5%
+  WIDE (primary)   | OOS AUC 0.736 | 05-09 0.824 (ev 4) | 10-19 0.734 (ev 27) | 20-26 0.727 (ev 18) | top decile: n 500, events 20, hit 4.0% vs base 0.98%, capture 40.8%
+
+ event: |z|>=2.5
+  VIX only         | OOS AUC 0.470 | 05-09 0.485 (ev 22) | 10-19 0.472 (ev 57) | 20-26 0.386 (ev 35) | top decile: n 551, events 5, hit 0.9% vs base 2.07%, capture 4.4%
+  rv10+rv30        | OOS AUC 0.639 | 05-09 0.419 (ev 22) | 10-19 0.689 (ev 57) | 20-26 0.679 (ev 35) | top decile: n 551, events 30, hit 5.4% vs base 2.07%, capture 26.3%
+  VIX+rv10+rv30    | OOS AUC 0.701 | 05-09 0.538 (ev 22) | 10-19 0.757 (ev 57) | 20-26 0.747 (ev 35) | top decile: n 551, events 28, hit 5.1% vs base 2.07%, capture 24.6%
+  WIDE (primary)   | OOS AUC 0.752 | 05-09 0.608 (ev 22) | 10-19 0.793 (ev 57) | 20-26 0.786 (ev 35) | top decile: n 551, events 35, hit 6.4% vs base 2.07%, capture 30.7%
+
+ per-year OOS AUC, WIDE model, DOWN z<=-3 (events in brackets):
+  2009: 0.96 (1), 2010: 0.81 (1), 2011: 0.77 (4), 2012: nan (0), 2013: nan (0), 2014: nan (0), 2015: 0.38 (4), 2016: 0.52 (2), 2017: 0.74 (4), 2018: 0.92 (3), 2019: 0.75 (3), 2020: 0.93 (4), 2021: 0.98 (1), 2022: 0.54 (1), 2023: nan (0), 2024: 0.61 (2), 2025: 0.75 (3), 2026: 0.64 (2)
+
+====================================================================================================
+4c. verdict against the pre-registered bar (pooled OOS AUC >= 0.60 AND >= 0.55 in each of 05-09, 10-19, 20-26)
+====================================================================================================
+  y_dn3    VIX only         pooled 0.549 eras ['0.618', '0.527', '0.529'] -> does not pass | beats 0.55 pooled: False
+  y_dn3    rv10+rv30        pooled 0.676 eras ['0.767', '0.656', '0.697'] -> PASSES | beats 0.55 pooled: True
+  y_dn3    VIX+rv10+rv30    pooled 0.708 eras ['0.643', '0.700', '0.724'] -> PASSES | beats 0.55 pooled: True
+  y_dn3    WIDE (primary)   pooled 0.714 eras ['0.960', '0.660', '0.769'] -> PASSES | beats 0.55 pooled: True
+  y_dn25   VIX only         pooled 0.542 eras ['0.450', '0.549', '0.493'] -> does not pass | beats 0.55 pooled: False
+  y_dn25   rv10+rv30        pooled 0.681 eras ['0.552', '0.737', '0.679'] -> PASSES | beats 0.55 pooled: True
+  y_dn25   VIX+rv10+rv30    pooled 0.709 eras ['0.517', '0.761', '0.740'] -> does not pass | beats 0.55 pooled: True
+  y_dn25   WIDE (primary)   pooled 0.714 eras ['0.594', '0.719', '0.767'] -> PASSES | beats 0.55 pooled: True
+  (VIX-only / vol-only are references; the pre-registered model is WIDE on z<=-3.)
+
+====================================================================================================
+5. share of the damage: 2x holder (2*ret per day, no financing or fees), days with ret <= -2%
+====================================================================================================
+
+--- FULL, all states: 578 down days of -2% or worse (of 6803 days with z); total arithmetic loss 38.455 (=3845.5% of capital summed), log loss 40.047
+  prior VIX < 20       days 154 (26.6% of days)  arithmetic loss share  22.0%  log-loss share  21.8%  mean ret  -2.75%
+  prior VIX < 16       days  51 ( 8.8% of days)  arithmetic loss share   6.7%  log-loss share   6.6%  mean ret  -2.52%
+  z <= -3 (main)       days  40 ( 6.9% of days)  arithmetic loss share   8.0%  log-loss share   8.0%  mean ret  -3.83%
+  z_vix <= -3          days  97 (16.8% of days)  arithmetic loss share  25.5%  log-loss share  26.0%  mean ret  -5.06%
+  z_ewma <= -3         days  52 ( 9.0% of days)  arithmetic loss share  10.4%  log-loss share  10.5%  mean ret  -3.86%
+  z <= -2              days 144 (24.9% of days)  arithmetic loss share  27.2%  log-loss share  27.4%  mean ret  -3.63%
+  VIX<20 AND z<=-3     days  29 ( 5.0% of days)  arithmetic loss share   5.0%  log-loss share   5.0%  mean ret  -3.34%
+  VIX<20 OR z<=-3      days 165 (28.5% of days)  arithmetic loss share  25.0%  log-loss share  24.8%  mean ret  -2.91%
+  size of the whole 2x loss series against gross: this group sum -2*ret on these days vs all negative days: 52.4% of gross arithmetic loss on all down days
+
+--- FULL, prior state A or D (stand-in for the levered states; D treated as ungated): 195 down days of -2% or worse (of 4430 days with z); total arithmetic loss 11.119 (=1111.9% of capital summed), log loss 11.480
+  prior VIX < 20       days 116 (59.5% of days)  arithmetic loss share  57.1%  log-loss share  57.0%  mean ret  -2.74%
+  prior VIX < 16       days  42 (21.5% of days)  arithmetic loss share  19.4%  log-loss share  19.4%  mean ret  -2.57%
+  z <= -3 (main)       days  33 (16.9% of days)  arithmetic loss share  20.1%  log-loss share  20.2%  mean ret  -3.38%
+  z_vix <= -3          days  37 (19.0% of days)  arithmetic loss share  24.2%  log-loss share  24.4%  mean ret  -3.64%
+  z_ewma <= -3         days  43 (22.1% of days)  arithmetic loss share  25.5%  log-loss share  25.7%  mean ret  -3.30%
+  z <= -2              days 102 (52.3% of days)  arithmetic loss share  55.9%  log-loss share  56.1%  mean ret  -3.05%
+  VIX<20 AND z<=-3     days  27 (13.8% of days)  arithmetic loss share  15.7%  log-loss share  15.8%  mean ret  -3.23%
+  VIX<20 OR z<=-3      days 122 (62.6% of days)  arithmetic loss share  61.5%  log-loss share  61.4%  mean ret  -2.80%
+  size of the whole 2x loss series against gross: this group sum -2*ret on these days vs all negative days: 33.0% of gross arithmetic loss on all down days
+
+--- FULL, prior state E or F (for contrast): 257 down days of -2% or worse (of 1377 days with z); total arithmetic loss 18.690 (=1869.0% of capital summed), log loss 19.555
+  prior VIX < 20       days  25 ( 9.7% of days)  arithmetic loss share   8.2%  log-loss share   8.1%  mean ret  -3.05%
+  prior VIX < 16       days   6 ( 2.3% of days)  arithmetic loss share   1.5%  log-loss share   1.4%  mean ret  -2.30%
+  z <= -3 (main)       days   4 ( 1.6% of days)  arithmetic loss share   2.9%  log-loss share   3.0%  mean ret  -6.79%
+  z_vix <= -3          days  41 (16.0% of days)  arithmetic loss share  25.8%  log-loss share  26.5%  mean ret  -5.89%
+  z_ewma <= -3         days   7 ( 2.7% of days)  arithmetic loss share   4.9%  log-loss share   5.1%  mean ret  -6.59%
+  z <= -2              days  28 (10.9% of days)  arithmetic loss share  15.9%  log-loss share  16.2%  mean ret  -5.29%
+  VIX<20 AND z<=-3     days   1 ( 0.4% of days)  arithmetic loss share   0.8%  log-loss share   0.8%  mean ret  -7.27%
+  VIX<20 OR z<=-3      days  28 (10.9% of days)  arithmetic loss share  10.3%  log-loss share  10.3%  mean ret  -3.43%
+  size of the whole 2x loss series against gross: this group sum -2*ret on these days vs all negative days: 71.6% of gross arithmetic loss on all down days
+
+--- 2010+, all states: 232 down days of -2% or worse (of 4243 days with z); total arithmetic loss 14.069 (=1406.9% of capital summed), log loss 14.587
+  prior VIX < 20       days  94 (40.5% of days)  arithmetic loss share  35.9%  log-loss share  35.7%  mean ret  -2.69%
+  prior VIX < 16       days  34 (14.7% of days)  arithmetic loss share  12.5%  log-loss share  12.4%  mean ret  -2.58%
+  z <= -3 (main)       days  32 (13.8% of days)  arithmetic loss share  16.2%  log-loss share  16.3%  mean ret  -3.56%
+  z_vix <= -3          days  33 (14.2% of days)  arithmetic loss share  19.3%  log-loss share  19.7%  mean ret  -4.12%
+  z_ewma <= -3         days  41 (17.7% of days)  arithmetic loss share  20.8%  log-loss share  20.9%  mean ret  -3.56%
+  z <= -2              days  92 (39.7% of days)  arithmetic loss share  44.3%  log-loss share  44.6%  mean ret  -3.39%
+  VIX<20 AND z<=-3     days  25 (10.8% of days)  arithmetic loss share  11.4%  log-loss share  11.4%  mean ret  -3.21%
+  VIX<20 OR z<=-3      days 101 (43.5% of days)  arithmetic loss share  40.7%  log-loss share  40.6%  mean ret  -2.84%
+  size of the whole 2x loss series against gross: this group sum -2*ret on these days vs all negative days: 39.6% of gross arithmetic loss on all down days
+
+--- 2010+, prior state A or D (stand-in for the levered states; D treated as ungated): 139 down days of -2% or worse (of 3319 days with z); total arithmetic loss 8.011 (=801.1% of capital summed), log loss 8.276
+  prior VIX < 20       days  85 (61.2% of days)  arithmetic loss share  57.4%  log-loss share  57.3%  mean ret  -2.71%
+  prior VIX < 16       days  33 (23.7% of days)  arithmetic loss share  21.4%  log-loss share  21.3%  mean ret  -2.59%
+  z <= -3 (main)       days  28 (20.1% of days)  arithmetic loss share  23.7%  log-loss share  23.8%  mean ret  -3.39%
+  z_vix <= -3          days  27 (19.4% of days)  arithmetic loss share  24.5%  log-loss share  24.7%  mean ret  -3.64%
+  z_ewma <= -3         days  37 (26.6% of days)  arithmetic loss share  30.7%  log-loss share  30.9%  mean ret  -3.33%
+  z <= -2              days  79 (56.8% of days)  arithmetic loss share  60.9%  log-loss share  61.1%  mean ret  -3.09%
+  VIX<20 AND z<=-3     days  24 (17.3% of days)  arithmetic loss share  19.5%  log-loss share  19.6%  mean ret  -3.25%
+  VIX<20 OR z<=-3      days  89 (64.0% of days)  arithmetic loss share  61.6%  log-loss share  61.6%  mean ret  -2.77%
+  size of the whole 2x loss series against gross: this group sum -2*ret on these days vs all negative days: 33.0% of gross arithmetic loss on all down days
+
+--- 2010+, prior state E or F (for contrast): 74 down days of -2% or worse (of 548 days with z); total arithmetic loss 5.010 (=501.0% of capital summed), log loss 5.232
+  prior VIX < 20       days   5 ( 6.8% of days)  arithmetic loss share   5.6%  log-loss share   5.6%  mean ret  -2.83%
+  prior VIX < 16       days   0 ( 0.0% of days)  arithmetic loss share   0.0%  log-loss share   0.0%  mean ret    nan%
+  z <= -3 (main)       days   2 ( 2.7% of days)  arithmetic loss share   4.5%  log-loss share   4.6%  mean ret  -5.69%
+  z_vix <= -3          days   5 ( 6.8% of days)  arithmetic loss share  12.9%  log-loss share  13.5%  mean ret  -6.48%
+  z_ewma <= -3         days   3 ( 4.1% of days)  arithmetic loss share   7.0%  log-loss share   7.2%  mean ret  -5.86%
+  z <= -2              days   9 (12.2% of days)  arithmetic loss share  20.9%  log-loss share  21.7%  mean ret  -5.83%
+  VIX<20 AND z<=-3     days   0 ( 0.0% of days)  arithmetic loss share   0.0%  log-loss share   0.0%  mean ret    nan%
+  VIX<20 OR z<=-3      days   7 ( 9.5% of days)  arithmetic loss share  10.2%  log-loss share  10.2%  mean ret  -3.65%
+  size of the whole 2x loss series against gross: this group sum -2*ret on these days vs all negative days: 63.2% of gross arithmetic loss on all down days
+
+note: p_state is the strategy state at the prior close, used only as a label; no strategy harness is run and A/D days are all counted as 2x exposure, which overstates the exposure of D when its gate is applied.
+
+====================================================================================================
+6. after the surprise: forward QQQ return from the close of the event day
+====================================================================================================
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3641, in get_loc
+    return self._engine.get_loc(casted_key)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "pandas/_libs/index.pyx", line 168, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 197, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7668, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7676, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'f1'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/user/Robinhood-stock/paper-track/research_notes/vol_predict_2026_11/normalized/run.py", line 276, in <module>
+    fwd_table(sdn, 'surprise DOWN top100 (main z)', base); fwd_table(sup, 'surprise UP top100 (main z)', base)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Robinhood-stock/paper-track/research_notes/vol_predict_2026_11/normalized/run.py", line 272, in fwd_table
+    v = g['f%d' % k].dropna(); r['n%d' % k] = len(v); r['mean%d %%' % k] = v.mean() * 100; r['med%d %%' % k] = v.median() * 100; r['pos%d %%' % k] = (v > 0).mean() * 100
+        ~^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pandas/core/frame.py", line 4378, in __getitem__
+    indexer = self.columns.get_loc(key)
+  File "/usr/local/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3648, in get_loc
+    raise KeyError(key) from err
+KeyError: 'f1'
