@@ -1,0 +1,6 @@
+date,source,max_high_through_1550,time_of_max_ET,full_day_high_in_backtest,note
+2026-03-06,robinhood 30min bars to 15:30 + 5min bars 15:30-15:50,605.99,12:00 (bar 17:00Z),see run,tail 15:30-15:50 max 600.86
+2026-10-30,robinhood 30min bars (EDT: 15:30-16:00 bar high 687.70),697.94,09:30 bar (first 30min),see run,5-min tail request returned empty (DST: 15:50 ET = 19:50Z); last 30-min bar high far below
+2026-11-02,robinhood 30min bars to 15:30 + 5min bars 15:30-15:50,699.43,10:00-10:30 bar,see run,tail max 684.15
+2026-11-04,robinhood 5min bars full day,701.45,10:15 ET (bar 15:15Z),see run,full-day high 701.45 identical
+2026-11-11,data/qqq_highs.csv live 15:50 high,695.395,n/a,live,live value

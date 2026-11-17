@@ -1,0 +1,344 @@
+15:50 high substituted 2026-03-06: full-day 606.000 -> 15:50 605.990
+15:50 high substituted 2026-10-30: full-day 698.630 -> 15:50 697.940
+15:50 high substituted 2026-11-02: full-day 699.430 -> 15:50 699.430
+15:50 high substituted 2026-11-04: full-day 701.450 -> 15:50 701.450
+15:50 high substituted 2026-11-11: full-day 695.395 -> 15:50 695.395
+
+============================== FULL-DAY HIGHS ==============================
+cell = CAGR% / Sharpe / maxDD% / worst-20-sessions%   (extra: worst day, worst 5, L1-only opening sessions, avg gross)
+
+-- REAL 2015-11..2026-11-16
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           51.1 / 2.100 /  -16.5 /  -16.5          w1   -7.0 w5  -13.1 open   0 gross 1.130
+L1           50.6 / 2.064 /  -25.4 /  -23.6          w1   -9.2 w5  -16.8 open  19 gross 1.143
+H2.5         50.7 / 2.077 /  -25.4 /  -23.6          w1   -9.2 w5  -16.8 open  15 gross 1.140
+H3.0         50.0 / 2.058 /  -24.2 /  -22.3          w1   -9.2 w5  -15.5 open   8 gross 1.135
+H4.0         52.6 / 2.136 /  -16.5 /  -16.5          w1   -7.0 w5  -13.1 open   6 gross 1.134
+HC0.0        50.6 / 2.064 /  -25.4 /  -23.6          w1   -9.2 w5  -16.8 open  19 gross 1.143
+HC0.5        50.8 / 2.073 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open  17 gross 1.141
+HC1.0        49.6 / 2.043 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open  13 gross 1.139
+HC1.5        49.6 / 2.041 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open   9 gross 1.136
+R0.5         50.7 / 2.081 /  -20.6 /  -19.6          w1   -7.0 w5  -13.1 open   2 gross 1.131
+R1.0         50.6 / 2.077 /  -20.6 /  -19.6          w1   -7.0 w5  -13.1 open   3 gross 1.132
+R1.5         48.2 / 1.999 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open   7 gross 1.135
+TP3          53.7 / 2.172 /  -16.5 /  -16.5          w1   -7.0 w5  -13.1 open   6 gross 1.134
+TP2          50.1 / 2.050 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open  14 gross 1.140
+P2           53.0 / 2.137 /  -18.8 /  -18.3          w1   -7.0 w5  -13.1 open  16 gross 1.141
+HALF         51.1 / 2.114 /  -17.8 /  -17.2          w1   -7.0 w5  -13.1 open  19 gross 1.137
+VIXF         48.0 / 1.995 /  -24.2 /  -22.3          w1   -9.2 w5  -15.5 open   4 gross 1.132
+VIXFa        48.7 / 2.026 /  -24.2 /  -22.3          w1   -9.2 w5  -15.5 open   3 gross 1.132
+VIXopp       53.8 / 2.168 /  -18.8 /  -18.3          w1   -7.0 w5  -13.1 open  15 gross 1.140
+OPEN-ONLY    49.5 / 2.045 /  -23.3 /  -21.4          w1   -9.2 w5  -14.5 open   9 gross 1.136
+CLOSE-ONLY   53.0 / 2.141 /  -18.8 /  -18.3          w1   -7.0 w5  -13.1 open  13 gross 1.139
+
+-- PROXY 2001
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           34.0 / 1.480 /  -22.1 /  -18.3          w1   -8.3 w5  -13.7 open   0 gross 1.054
+L1           35.1 / 1.505 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  49 gross 1.068
+H2.5         34.7 / 1.495 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  33 gross 1.064
+H3.0         33.5 / 1.459 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  15 gross 1.058
+H4.0         34.6 / 1.497 /  -22.1 /  -18.3          w1   -8.3 w5  -13.7 open   6 gross 1.056
+HC0.0        35.1 / 1.505 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  49 gross 1.068
+HC0.5        35.3 / 1.512 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  45 gross 1.067
+HC1.0        34.7 / 1.495 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  37 gross 1.065
+HC1.5        34.0 / 1.473 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  22 gross 1.060
+R0.5         34.0 / 1.478 /  -22.1 /  -20.6          w1   -8.3 w5  -13.7 open   6 gross 1.056
+R1.0         34.5 / 1.491 /  -22.1 /  -20.6          w1   -8.3 w5  -13.7 open  11 gross 1.057
+R1.5         33.7 / 1.461 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  24 gross 1.061
+TP3          34.9 / 1.506 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  11 gross 1.057
+TP2          34.4 / 1.485 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  32 gross 1.063
+P2           35.8 / 1.531 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  42 gross 1.066
+HALF         34.8 / 1.507 /  -22.1 /  -19.1          w1   -8.3 w5  -13.7 open  49 gross 1.063
+VIXF         33.6 / 1.460 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  15 gross 1.058
+VIXFa        33.7 / 1.468 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  10 gross 1.057
+VIXopp       35.5 / 1.524 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  34 gross 1.064
+OPEN-ONLY    33.9 / 1.472 /  -22.8 /  -21.0          w1   -9.6 w5  -14.8 open  21 gross 1.060
+CLOSE-ONLY   35.4 / 1.522 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  32 gross 1.063
+
+-- PROXY 2010
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           43.9 / 1.739 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open   0 gross 1.214
+L1           45.2 / 1.762 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  30 gross 1.227
+H2.5         44.7 / 1.755 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  21 gross 1.224
+H3.0         43.5 / 1.721 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  11 gross 1.219
+H4.0         44.9 / 1.764 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open   6 gross 1.217
+HC0.0        45.2 / 1.762 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  30 gross 1.227
+HC0.5        45.3 / 1.767 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  28 gross 1.227
+HC1.0        44.2 / 1.739 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  23 gross 1.224
+HC1.5        43.2 / 1.712 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  11 gross 1.219
+R0.5         43.8 / 1.733 /  -21.6 /  -20.6          w1   -7.0 w5  -13.7 open   3 gross 1.216
+R1.0         44.0 / 1.737 /  -21.6 /  -20.6          w1   -7.0 w5  -13.7 open   5 gross 1.216
+R1.5         42.7 / 1.696 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  13 gross 1.220
+TP3          45.7 / 1.789 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open   7 gross 1.217
+TP2          44.1 / 1.731 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  19 gross 1.223
+P2           46.1 / 1.792 /  -20.1 /  -17.2          w1   -7.0 w5  -13.7 open  25 gross 1.225
+HALF         44.8 / 1.771 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open  30 gross 1.222
+VIXF         42.6 / 1.691 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open   8 gross 1.218
+VIXFa        42.8 / 1.702 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open   4 gross 1.216
+VIXopp       46.5 / 1.810 /  -20.1 /  -17.2          w1   -7.0 w5  -13.7 open  22 gross 1.224
+OPEN-ONLY    43.7 / 1.726 /  -22.8 /  -21.0          w1   -9.6 w5  -14.8 open  14 gross 1.220
+CLOSE-ONLY   45.4 / 1.775 /  -20.1 /  -17.2          w1   -7.0 w5  -13.7 open  18 gross 1.222
+
+-- REAL ex 2026-10-26..11-16 (ends 2026-10-23)
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           49.8 / 2.090 /  -15.9 /  -14.8          w1   -6.7 w5  -13.1 open   0 gross 1.133
+L1           52.4 / 2.149 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  15 gross 1.143
+H2.5         52.3 / 2.159 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open  12 gross 1.141
+H3.0         51.4 / 2.131 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open   7 gross 1.138
+H4.0         51.3 / 2.127 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open   6 gross 1.137
+HC0.0        52.4 / 2.149 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  15 gross 1.143
+HC0.5        52.8 / 2.163 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  14 gross 1.142
+HC1.0        51.5 / 2.134 /  -18.8 /  -17.7          w1   -6.7 w5  -13.1 open  10 gross 1.140
+HC1.5        51.3 / 2.128 /  -18.2 /  -17.1          w1   -6.7 w5  -13.1 open   7 gross 1.138
+R0.5         49.5 / 2.070 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   2 gross 1.134
+R1.0         49.5 / 2.070 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   2 gross 1.134
+R1.5         50.1 / 2.089 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   4 gross 1.136
+TP3          52.4 / 2.164 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open   6 gross 1.137
+TP2          51.9 / 2.136 /  -18.8 /  -17.7          w1   -6.7 w5  -13.1 open  12 gross 1.141
+P2           51.9 / 2.137 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  14 gross 1.142
+HALF         51.4 / 2.135 /  -15.7 /  -14.6          w1   -6.7 w5  -13.1 open  15 gross 1.139
+VIXF         49.5 / 2.070 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   2 gross 1.134
+VIXFa        50.2 / 2.103 /  -15.9 /  -14.8          w1   -6.7 w5  -13.1 open   1 gross 1.134
+VIXopp       52.7 / 2.169 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open  13 gross 1.142
+OPEN-ONLY    50.8 / 2.117 /  -15.9 /  -13.0          w1   -6.7 w5  -13.1 open   6 gross 1.137
+CLOSE-ONLY   52.0 / 2.141 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  11 gross 1.141
+
+-- reading-rule flags vs C0 (FULL-DAY HIGHS)
+arm         dS real/p01/p10/rex           dDD(pp) real/p01/p10/rex        halves dS(p01)    r1 r2 r3 r4 r5
+L1          -0.036 +0.025 +0.023 +0.059       -8.9  -2.8  -4.9  -0.7     +0.057 -0.004   n  n  n  n  n/a
+H2.5        -0.023 +0.015 +0.016 +0.069       -8.9  -2.8  -4.9  +1.1     +0.032 +0.001   n  n  n  Y  n
+H3.0        -0.042 -0.021 -0.018 +0.041       -7.6  -1.6  -3.6  +1.1     -0.015 -0.027   n  n  n  n  n
+H4.0        +0.036 +0.017 +0.025 +0.037       +0.0  +0.0  -0.0  +1.1     +0.000 +0.032   n  Y  Y  n  n
+HC0.0       -0.036 +0.025 +0.023 +0.059       -8.9  -2.8  -4.9  -0.7     +0.057 -0.004   n  n  n  n  n
+HC0.5       -0.028 +0.032 +0.027 +0.073       -9.8  -3.7  -5.8  -0.7     +0.065 +0.002   n  n  n  Y  n
+HC1.0       -0.057 +0.015 -0.000 +0.044       -9.8  -3.7  -5.8  -2.8     +0.058 -0.025   n  n  n  n  n
+HC1.5       -0.059 -0.007 -0.027 +0.037       -9.8  -3.7  -5.8  -2.2     +0.030 -0.041   n  n  n  n  n
+R0.5        -0.019 -0.002 -0.007 -0.020       -4.0  +0.0  -1.6  -4.7     +0.011 -0.014   n  n  n  n  n
+R1.0        -0.023 +0.011 -0.002 -0.020       -4.0  +0.0  -1.6  -4.7     +0.032 -0.008   n  n  n  n  n
+R1.5        -0.101 -0.019 -0.043 -0.001       -9.8  -3.7  -5.8  -4.7     +0.034 -0.067   n  n  n  n  n
+TP3         +0.072 +0.026 +0.050 +0.074       +0.0  +0.0  +0.0  +1.1     -0.018 +0.065   Y  Y  Y  n  n
+TP2         -0.050 +0.005 -0.008 +0.046       -9.8  -3.7  -5.8  -2.8     +0.044 -0.031   n  n  n  n  Y
+P2          +0.037 +0.051 +0.053 +0.046       -2.3  -0.0  -0.0  -0.7     +0.054 +0.047   Y  n  Y  Y  n/a
+HALF        +0.014 +0.027 +0.032 +0.045       -1.2  +0.0  -0.0  +0.3     +0.035 +0.023   n  n  n  Y  n/a
+VIXF        -0.105 -0.020 -0.048 -0.020       -7.6  -1.6  -3.6  -4.7     +0.048 -0.080   n  n  n  n  n
+VIXFa       -0.074 -0.012 -0.037 +0.013       -7.6  -1.6  -3.6  +0.0     +0.043 -0.061   n  n  n  n  n
+VIXopp      +0.068 +0.045 +0.071 +0.079       -2.3  +0.0  -0.0  +1.1     +0.010 +0.075   Y  n  Y  Y  n/a
+OPEN-ONLY   -0.055 -0.007 -0.013 +0.027       -6.8  -0.7  -2.7  +0.0     +0.027 -0.038   n  n  n  n  n/a
+CLOSE-ONLY  +0.041 +0.042 +0.035 +0.051       -2.3  +0.0  -0.0  -0.7     +0.045 +0.038   Y  n  Y  Y  n/a
+
+Arms with Sharpe above C0 on real, p01 and p10 (full-day highs): ['H4.0', 'TP3', 'P2', 'HALF', 'VIXopp', 'CLOSE-ONLY']
+
+===== ROBUSTNESS (lag, halves, ex-2020, bootstrap)
+
+  [L1] robustness (Sharpe difference vs C0)
+   real: full -0.036 | half1 +0.018 half2 -0.081 | ex-2020 -0.039 | lag1 +0.041 (lag1 DD -19.0 vs C0 -19.8) | boot med +0.032 P(<=0) 0.337 5-95% [-0.102, +0.116]
+   p01 : full +0.025 | half1 +0.057 half2 -0.004 | ex-2020 +0.027 | lag1 +0.085 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.054 P(<=0) 0.085 5-95% [-0.010, +0.103]
+   p10 : full +0.023 | half1 +0.097 half2 -0.055 | ex-2020 +0.025 | lag1 +0.060 (lag1 DD -25.4 vs C0 -26.1) | boot med +0.064 P(<=0) 0.108 5-95% [-0.024, +0.123]
+   rex : full +0.059 | half1 +0.018 half2 +0.100 | ex-2020 +0.066 | lag1 +0.026 (lag1 DD -17.6 vs C0 -18.1) | boot med +0.058 P(<=0) 0.077 5-95% [-0.008, +0.129]
+
+  [H4.0] robustness (Sharpe difference vs C0)
+   real: full +0.036 | half1 -0.014 half2 +0.083 | ex-2020 +0.040 | lag1 +0.030 (lag1 DD -19.8 vs C0 -19.8) | boot med +0.034 P(<=0) 0.090 5-95% [-0.010, +0.087]
+   p01 : full +0.017 | half1 +0.000 half2 +0.032 | ex-2020 +0.018 | lag1 +0.014 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.017 P(<=0) 0.081 5-95% [-0.002, +0.040]
+   p10 : full +0.025 | half1 +0.010 half2 +0.039 | ex-2020 +0.027 | lag1 +0.020 (lag1 DD -26.1 vs C0 -26.1) | boot med +0.023 P(<=0) 0.086 5-95% [-0.004, +0.057]
+   rex : full +0.037 | half1 -0.014 half2 +0.085 | ex-2020 +0.041 | lag1 +0.030 (lag1 DD -18.1 vs C0 -18.1) | boot med +0.036 P(<=0) 0.111 5-95% [-0.011, +0.088]
+
+  [TP3] robustness (Sharpe difference vs C0)
+   real: full +0.072 | half1 +0.016 half2 +0.125 | ex-2020 +0.079 | lag1 +0.006 (lag1 DD -19.8 vs C0 -19.8) | boot med +0.071 P(<=0) 0.001 5-95% [+0.029, +0.127]
+   p01 : full +0.026 | half1 -0.018 half2 +0.065 | ex-2020 +0.027 | lag1 +0.017 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.025 P(<=0) 0.043 5-95% [+0.001, +0.053]
+   p10 : full +0.050 | half1 +0.018 half2 +0.081 | ex-2020 +0.053 | lag1 +0.006 (lag1 DD -26.1 vs C0 -26.1) | boot med +0.048 P(<=0) 0.000 5-95% [+0.020, +0.084]
+   rex : full +0.074 | half1 +0.016 half2 +0.129 | ex-2020 +0.081 | lag1 +0.006 (lag1 DD -18.1 vs C0 -18.1) | boot med +0.072 P(<=0) 0.001 5-95% [+0.028, +0.127]
+
+  [P2] robustness (Sharpe difference vs C0)
+   real: full +0.037 | half1 -0.008 half2 +0.081 | ex-2020 +0.041 | lag1 +0.030 (lag1 DD -19.0 vs C0 -19.8) | boot med +0.040 P(<=0) 0.151 5-95% [-0.022, +0.108]
+   p01 : full +0.051 | half1 +0.054 half2 +0.047 | ex-2020 +0.053 | lag1 +0.071 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.053 P(<=0) 0.013 5-95% [+0.014, +0.093]
+   p10 : full +0.053 | half1 +0.064 half2 +0.038 | ex-2020 +0.056 | lag1 +0.039 (lag1 DD -25.4 vs C0 -26.1) | boot med +0.054 P(<=0) 0.021 5-95% [+0.011, +0.102]
+   rex : full +0.046 | half1 -0.008 half2 +0.100 | ex-2020 +0.052 | lag1 +0.015 (lag1 DD -17.6 vs C0 -18.1) | boot med +0.046 P(<=0) 0.118 5-95% [-0.019, +0.115]
+
+  [HALF] robustness (Sharpe difference vs C0)
+   real: full +0.014 | half1 +0.009 half2 +0.014 | ex-2020 +0.014 | lag1 +0.027 (lag1 DD -19.0 vs C0 -19.8) | boot med +0.032 P(<=0) 0.145 5-95% [-0.020, +0.079]
+   p01 : full +0.027 | half1 +0.035 half2 +0.023 | ex-2020 +0.028 | lag1 +0.055 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.038 P(<=0) 0.025 5-95% [+0.008, +0.066]
+   p10 : full +0.032 | half1 +0.058 half2 +0.008 | ex-2020 +0.034 | lag1 +0.039 (lag1 DD -25.7 vs C0 -26.1) | boot med +0.046 P(<=0) 0.029 5-95% [+0.008, +0.080]
+   rex : full +0.045 | half1 +0.009 half2 +0.079 | ex-2020 +0.049 | lag1 +0.017 (lag1 DD -17.9 vs C0 -18.1) | boot med +0.044 P(<=0) 0.028 5-95% [+0.006, +0.087]
+
+  [VIXopp] robustness (Sharpe difference vs C0)
+   real: full +0.068 | half1 -0.008 half2 +0.139 | ex-2020 +0.075 | lag1 +0.024 (lag1 DD -19.0 vs C0 -19.8) | boot med +0.072 P(<=0) 0.029 5-95% [+0.010, +0.141]
+   p01 : full +0.045 | half1 +0.010 half2 +0.075 | ex-2020 +0.047 | lag1 +0.053 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.046 P(<=0) 0.017 5-95% [+0.010, +0.084]
+   p10 : full +0.071 | half1 +0.064 half2 +0.076 | ex-2020 +0.075 | lag1 +0.035 (lag1 DD -25.4 vs C0 -26.1) | boot med +0.072 P(<=0) 0.002 5-95% [+0.030, +0.120]
+   rex : full +0.079 | half1 -0.008 half2 +0.161 | ex-2020 +0.087 | lag1 +0.009 (lag1 DD -17.6 vs C0 -18.1) | boot med +0.078 P(<=0) 0.015 5-95% [+0.015, +0.148]
+
+  [CLOSE-ONLY] robustness (Sharpe difference vs C0)
+   real: full +0.041 | half1 +0.014 half2 +0.070 | ex-2020 +0.046 | lag1 +0.017 (lag1 DD -19.0 vs C0 -19.8) | boot med +0.044 P(<=0) 0.089 5-95% [-0.010, +0.104]
+   p01 : full +0.042 | half1 +0.045 half2 +0.038 | ex-2020 +0.044 | lag1 +0.043 (lag1 DD -26.7 vs C0 -26.7) | boot med +0.043 P(<=0) 0.011 5-95% [+0.012, +0.079]
+   p10 : full +0.035 | half1 +0.022 half2 +0.046 | ex-2020 +0.038 | lag1 +0.006 (lag1 DD -26.1 vs C0 -26.1) | boot med +0.036 P(<=0) 0.037 5-95% [+0.002, +0.075]
+   rex : full +0.051 | half1 +0.014 half2 +0.089 | ex-2020 +0.056 | lag1 +0.003 (lag1 DD -18.1 vs C0 -18.1) | boot med +0.050 P(<=0) 0.065 5-95% [-0.004, +0.111]
+
+===== PLACEBO
+
+  PLACEBO (200 draws; random same-year (H/C-1, L/C-1) pairs on this session close). real gain -> percentile among placebo gains
+   L1         real: real dSharpe -0.036; placebo mean -0.058 sd 0.049 [5%,95%] [-0.120,+0.033] -> percentile 72
+   L1         p01 : real dSharpe +0.025; placebo mean -0.008 sd 0.024 [5%,95%] [-0.041,+0.034] -> percentile 87
+   L1         p10 : real dSharpe +0.023; placebo mean -0.030 sd 0.034 [5%,95%] [-0.077,+0.030] -> percentile 92
+   H4.0       real: real dSharpe +0.036; placebo mean -0.007 sd 0.025 [5%,95%] [-0.074,+0.018] -> percentile 100
+   H4.0       p01 : real dSharpe +0.017; placebo mean -0.002 sd 0.011 [5%,95%] [-0.032,+0.009] -> percentile 100
+   H4.0       p10 : real dSharpe +0.025; placebo mean -0.004 sd 0.016 [5%,95%] [-0.047,+0.012] -> percentile 100
+   TP3        real: real dSharpe +0.072; placebo mean -0.009 sd 0.038 [5%,95%] [-0.099,+0.033] -> percentile 100
+   TP3        p01 : real dSharpe +0.026; placebo mean +0.001 sd 0.017 [5%,95%] [-0.036,+0.020] -> percentile 99
+   TP3        p10 : real dSharpe +0.050; placebo mean -0.004 sd 0.025 [5%,95%] [-0.059,+0.023] -> percentile 100
+   P2         real: real dSharpe +0.037; placebo mean +0.014 sd 0.035 [5%,95%] [-0.062,+0.061] -> percentile 76
+   P2         p01 : real dSharpe +0.051; placebo mean +0.019 sd 0.017 [5%,95%] [-0.012,+0.042] -> percentile 98
+   P2         p10 : real dSharpe +0.053; placebo mean +0.014 sd 0.023 [5%,95%] [-0.030,+0.045] -> percentile 98
+   HALF       real: real dSharpe +0.014; placebo mean -0.007 sd 0.021 [5%,95%] [-0.039,+0.032] -> percentile 83
+   HALF       p01 : real dSharpe +0.027; placebo mean +0.005 sd 0.012 [5%,95%] [-0.012,+0.026] -> percentile 96
+   HALF       p10 : real dSharpe +0.032; placebo mean -0.005 sd 0.016 [5%,95%] [-0.030,+0.021] -> percentile 98
+   VIXopp     real: real dSharpe +0.068; placebo mean +0.035 sd 0.016 [5%,95%] [+0.008,+0.060] -> percentile 98
+   VIXopp     p01 : real dSharpe +0.045; placebo mean +0.021 sd 0.009 [5%,95%] [+0.006,+0.036] -> percentile 100
+   VIXopp     p10 : real dSharpe +0.071; placebo mean +0.029 sd 0.011 [5%,95%] [+0.009,+0.048] -> percentile 100
+   CLOSE-ONLY real: real dSharpe +0.041; placebo mean +0.028 sd 0.018 [5%,95%] [-0.004,+0.060] -> percentile 80
+   CLOSE-ONLY p01 : real dSharpe +0.042; placebo mean +0.025 sd 0.009 [5%,95%] [+0.009,+0.039] -> percentile 97
+   CLOSE-ONLY p10 : real dSharpe +0.035; placebo mean +0.022 sd 0.012 [5%,95%] [+0.002,+0.039] -> percentile 90
+
+===== READING RULE verdicts (full-day highs)
+L1          r1 False r2 False r3 False r4 False r5 None r6(placebo>=90 on a track) True  => fail
+H2.5        r1 False r2 False r3 False r4 True r5 False r6(placebo>=90 on a track) None  => fail
+H3.0        r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+H4.0        r1 False r2 True r3 True r4 False r5 False r6(placebo>=90 on a track) True  => fail
+HC0.0       r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+HC0.5       r1 False r2 False r3 False r4 True r5 False r6(placebo>=90 on a track) None  => fail
+HC1.0       r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+HC1.5       r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+R0.5        r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+R1.0        r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+R1.5        r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+TP3         r1 True r2 True r3 True r4 False r5 False r6(placebo>=90 on a track) True  => fail
+TP2         r1 False r2 False r3 False r4 False r5 True r6(placebo>=90 on a track) None  => fail
+P2          r1 True r2 False r3 True r4 True r5 None r6(placebo>=90 on a track) True  => fail
+HALF        r1 False r2 False r3 False r4 True r5 None r6(placebo>=90 on a track) True  => fail
+VIXF        r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+VIXFa       r1 False r2 False r3 False r4 False r5 False r6(placebo>=90 on a track) None  => fail
+VIXopp      r1 True r2 False r3 True r4 True r5 None r6(placebo>=90 on a track) True  => fail
+OPEN-ONLY   r1 False r2 False r3 False r4 False r5 None r6(placebo>=90 on a track) None  => fail
+CLOSE-ONLY  r1 True r2 False r3 True r4 True r5 None r6(placebo>=90 on a track) True  => fail
+
+============================== 15:50 HIGHS WHERE FETCHED (5 days) ==============================
+cell = CAGR% / Sharpe / maxDD% / worst-20-sessions%   (extra: worst day, worst 5, L1-only opening sessions, avg gross)
+
+-- REAL 2015-11..2026-11-16
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           51.1 / 2.100 /  -16.5 /  -16.5          w1   -7.0 w5  -13.1 open   0 gross 1.130
+L1           50.6 / 2.064 /  -25.4 /  -23.6          w1   -9.2 w5  -16.8 open  19 gross 1.143
+H2.5         50.7 / 2.077 /  -25.4 /  -23.6          w1   -9.2 w5  -16.8 open  15 gross 1.140
+H3.0         50.0 / 2.058 /  -24.2 /  -22.3          w1   -9.2 w5  -15.5 open   8 gross 1.135
+H4.0         52.6 / 2.136 /  -16.5 /  -16.5          w1   -7.0 w5  -13.1 open   6 gross 1.134
+HC0.0        50.6 / 2.064 /  -25.4 /  -23.6          w1   -9.2 w5  -16.8 open  19 gross 1.143
+HC0.5        50.8 / 2.073 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open  17 gross 1.141
+HC1.0        49.6 / 2.043 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open  13 gross 1.139
+HC1.5        49.6 / 2.041 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open   9 gross 1.136
+R0.5         50.7 / 2.081 /  -20.6 /  -19.6          w1   -7.0 w5  -13.1 open   2 gross 1.131
+R1.0         50.6 / 2.077 /  -20.6 /  -19.6          w1   -7.0 w5  -13.1 open   3 gross 1.132
+R1.5         48.2 / 1.999 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open   7 gross 1.135
+TP3          53.7 / 2.172 /  -16.5 /  -16.5          w1   -7.0 w5  -13.1 open   6 gross 1.134
+TP2          50.1 / 2.050 /  -26.3 /  -24.5          w1   -9.2 w5  -17.8 open  14 gross 1.140
+P2           53.0 / 2.137 /  -18.8 /  -18.3          w1   -7.0 w5  -13.1 open  16 gross 1.141
+HALF         51.1 / 2.114 /  -17.8 /  -17.2          w1   -7.0 w5  -13.1 open  19 gross 1.137
+VIXF         48.0 / 1.995 /  -24.2 /  -22.3          w1   -9.2 w5  -15.5 open   4 gross 1.132
+VIXFa        48.7 / 2.026 /  -24.2 /  -22.3          w1   -9.2 w5  -15.5 open   3 gross 1.132
+VIXopp       53.8 / 2.168 /  -18.8 /  -18.3          w1   -7.0 w5  -13.1 open  15 gross 1.140
+OPEN-ONLY    49.5 / 2.045 /  -23.3 /  -21.4          w1   -9.2 w5  -14.5 open   9 gross 1.136
+CLOSE-ONLY   53.0 / 2.141 /  -18.8 /  -18.3          w1   -7.0 w5  -13.1 open  13 gross 1.139
+
+-- PROXY 2001
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           34.0 / 1.480 /  -22.1 /  -18.3          w1   -8.3 w5  -13.7 open   0 gross 1.054
+L1           35.1 / 1.505 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  49 gross 1.068
+H2.5         34.7 / 1.495 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  33 gross 1.064
+H3.0         33.5 / 1.459 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  15 gross 1.058
+H4.0         34.6 / 1.497 /  -22.1 /  -18.3          w1   -8.3 w5  -13.7 open   6 gross 1.056
+HC0.0        35.1 / 1.505 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  49 gross 1.068
+HC0.5        35.3 / 1.512 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  45 gross 1.067
+HC1.0        34.7 / 1.495 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  37 gross 1.065
+HC1.5        34.0 / 1.473 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  22 gross 1.060
+R0.5         34.0 / 1.478 /  -22.1 /  -20.6          w1   -8.3 w5  -13.7 open   6 gross 1.056
+R1.0         34.5 / 1.491 /  -22.1 /  -20.6          w1   -8.3 w5  -13.7 open  11 gross 1.057
+R1.5         33.7 / 1.461 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  24 gross 1.061
+TP3          34.9 / 1.506 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  11 gross 1.057
+TP2          34.4 / 1.485 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  32 gross 1.063
+P2           35.8 / 1.531 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  42 gross 1.066
+HALF         34.8 / 1.507 /  -22.1 /  -19.1          w1   -8.3 w5  -13.7 open  49 gross 1.063
+VIXF         33.6 / 1.460 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  15 gross 1.058
+VIXFa        33.7 / 1.468 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  10 gross 1.057
+VIXopp       35.5 / 1.524 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  34 gross 1.064
+OPEN-ONLY    33.9 / 1.472 /  -22.8 /  -21.0          w1   -9.6 w5  -14.8 open  21 gross 1.060
+CLOSE-ONLY   35.4 / 1.522 /  -22.1 /  -19.8          w1   -8.3 w5  -13.7 open  32 gross 1.063
+
+-- PROXY 2010
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           43.9 / 1.739 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open   0 gross 1.214
+L1           45.2 / 1.762 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  30 gross 1.227
+H2.5         44.7 / 1.755 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  21 gross 1.224
+H3.0         43.5 / 1.721 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open  11 gross 1.219
+H4.0         44.9 / 1.764 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open   6 gross 1.217
+HC0.0        45.2 / 1.762 /  -24.9 /  -23.2          w1   -9.6 w5  -17.2 open  30 gross 1.227
+HC0.5        45.3 / 1.767 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  28 gross 1.227
+HC1.0        44.2 / 1.739 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  23 gross 1.224
+HC1.5        43.2 / 1.712 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  11 gross 1.219
+R0.5         43.8 / 1.733 /  -21.6 /  -20.6          w1   -7.0 w5  -13.7 open   3 gross 1.216
+R1.0         44.0 / 1.737 /  -21.6 /  -20.6          w1   -7.0 w5  -13.7 open   5 gross 1.216
+R1.5         42.7 / 1.696 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  13 gross 1.220
+TP3          45.7 / 1.789 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open   7 gross 1.217
+TP2          44.1 / 1.731 /  -25.8 /  -24.1          w1   -9.6 w5  -18.2 open  19 gross 1.223
+P2           46.1 / 1.792 /  -20.1 /  -17.2          w1   -7.0 w5  -13.7 open  25 gross 1.225
+HALF         44.8 / 1.771 /  -20.1 /  -16.3          w1   -7.0 w5  -13.7 open  30 gross 1.222
+VIXF         42.6 / 1.691 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open   8 gross 1.218
+VIXFa        42.8 / 1.702 /  -23.7 /  -21.9          w1   -9.6 w5  -15.8 open   4 gross 1.216
+VIXopp       46.5 / 1.810 /  -20.1 /  -17.2          w1   -7.0 w5  -13.7 open  22 gross 1.224
+OPEN-ONLY    43.7 / 1.726 /  -22.8 /  -21.0          w1   -9.6 w5  -14.8 open  14 gross 1.220
+CLOSE-ONLY   45.4 / 1.775 /  -20.1 /  -17.2          w1   -7.0 w5  -13.7 open  18 gross 1.222
+
+-- REAL ex 2026-10-26..11-16 (ends 2026-10-23)
+arm         CAGR / Sharpe / DD / W20                 extra
+C0           49.8 / 2.090 /  -15.9 /  -14.8          w1   -6.7 w5  -13.1 open   0 gross 1.133
+L1           52.4 / 2.149 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  15 gross 1.143
+H2.5         52.3 / 2.159 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open  12 gross 1.141
+H3.0         51.4 / 2.131 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open   7 gross 1.138
+H4.0         51.3 / 2.127 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open   6 gross 1.137
+HC0.0        52.4 / 2.149 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  15 gross 1.143
+HC0.5        52.8 / 2.163 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  14 gross 1.142
+HC1.0        51.5 / 2.134 /  -18.8 /  -17.7          w1   -6.7 w5  -13.1 open  10 gross 1.140
+HC1.5        51.3 / 2.128 /  -18.2 /  -17.1          w1   -6.7 w5  -13.1 open   7 gross 1.138
+R0.5         49.5 / 2.070 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   2 gross 1.134
+R1.0         49.5 / 2.070 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   2 gross 1.134
+R1.5         50.1 / 2.089 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   4 gross 1.136
+TP3          52.4 / 2.164 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open   6 gross 1.137
+TP2          51.9 / 2.136 /  -18.8 /  -17.7          w1   -6.7 w5  -13.1 open  12 gross 1.141
+P2           51.9 / 2.137 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  14 gross 1.142
+HALF         51.4 / 2.135 /  -15.7 /  -14.6          w1   -6.7 w5  -13.1 open  15 gross 1.139
+VIXF         49.5 / 2.070 /  -20.6 /  -19.6          w1   -6.7 w5  -13.1 open   2 gross 1.134
+VIXFa        50.2 / 2.103 /  -15.9 /  -14.8          w1   -6.7 w5  -13.1 open   1 gross 1.134
+VIXopp       52.7 / 2.169 /  -14.8 /  -13.0          w1   -6.7 w5  -13.1 open  13 gross 1.142
+OPEN-ONLY    50.8 / 2.117 /  -15.9 /  -13.0          w1   -6.7 w5  -13.1 open   6 gross 1.137
+CLOSE-ONLY   52.0 / 2.141 /  -16.6 /  -15.5          w1   -6.7 w5  -13.1 open  11 gross 1.141
+
+-- reading-rule flags vs C0 (15:50 HIGHS WHERE FETCHED (5 days))
+arm         dS real/p01/p10/rex           dDD(pp) real/p01/p10/rex        halves dS(p01)    r1 r2 r3 r4 r5
+L1          -0.036 +0.025 +0.023 +0.059       -8.9  -2.8  -4.9  -0.7     +0.057 -0.004   n  n  n  n  n/a
+H2.5        -0.023 +0.015 +0.016 +0.069       -8.9  -2.8  -4.9  +1.1     +0.032 +0.001   n  n  n  Y  n
+H3.0        -0.042 -0.021 -0.018 +0.041       -7.6  -1.6  -3.6  +1.1     -0.015 -0.027   n  n  n  n  n
+H4.0        +0.036 +0.017 +0.025 +0.037       +0.0  +0.0  -0.0  +1.1     +0.000 +0.032   n  Y  Y  n  n
+HC0.0       -0.036 +0.025 +0.023 +0.059       -8.9  -2.8  -4.9  -0.7     +0.057 -0.004   n  n  n  n  n
+HC0.5       -0.028 +0.032 +0.027 +0.073       -9.8  -3.7  -5.8  -0.7     +0.065 +0.002   n  n  n  Y  n
+HC1.0       -0.057 +0.015 -0.000 +0.044       -9.8  -3.7  -5.8  -2.8     +0.058 -0.025   n  n  n  n  n
+HC1.5       -0.059 -0.007 -0.027 +0.037       -9.8  -3.7  -5.8  -2.2     +0.030 -0.041   n  n  n  n  n
+R0.5        -0.019 -0.002 -0.007 -0.020       -4.0  +0.0  -1.6  -4.7     +0.011 -0.014   n  n  n  n  n
+R1.0        -0.023 +0.011 -0.002 -0.020       -4.0  +0.0  -1.6  -4.7     +0.032 -0.008   n  n  n  n  n
+R1.5        -0.101 -0.019 -0.043 -0.001       -9.8  -3.7  -5.8  -4.7     +0.034 -0.067   n  n  n  n  n
+TP3         +0.072 +0.026 +0.050 +0.074       +0.0  +0.0  +0.0  +1.1     -0.018 +0.065   Y  Y  Y  n  n
+TP2         -0.050 +0.005 -0.008 +0.046       -9.8  -3.7  -5.8  -2.8     +0.044 -0.031   n  n  n  n  Y
+P2          +0.037 +0.051 +0.053 +0.046       -2.3  -0.0  -0.0  -0.7     +0.054 +0.047   Y  n  Y  Y  n/a
+HALF        +0.014 +0.027 +0.032 +0.045       -1.2  +0.0  -0.0  +0.3     +0.035 +0.023   n  n  n  Y  n/a
+VIXF        -0.105 -0.020 -0.048 -0.020       -7.6  -1.6  -3.6  -4.7     +0.048 -0.080   n  n  n  n  n
+VIXFa       -0.074 -0.012 -0.037 +0.013       -7.6  -1.6  -3.6  +0.0     +0.043 -0.061   n  n  n  n  n
+VIXopp      +0.068 +0.045 +0.071 +0.079       -2.3  +0.0  -0.0  +1.1     +0.010 +0.075   Y  n  Y  Y  n/a
+OPEN-ONLY   -0.055 -0.007 -0.013 +0.027       -6.8  -0.7  -2.7  +0.0     +0.027 -0.038   n  n  n  n  n/a
+CLOSE-ONLY  +0.041 +0.042 +0.035 +0.051       -2.3  +0.0  -0.0  -0.7     +0.045 +0.038   Y  n  Y  Y  n/a
+
+runtime 823 s
