@@ -1,0 +1,14 @@
+==================================================================================================================================
+run.py: calm VIXY / VIXM hedge study (2026-11-17); PLAN.md pre-registered; research only, nothing adopted
+==================================================================================================================================
+Convention: close of session t (VIX, VIX3M, QQQ rv30, SMA gap) decides the hedge traded at close t, earned from t+1 (harness sleeve convention).
+Harness VIX last 2026-11-16; FRED VIXCLS last used: 19.3 on 2026-11-16 (ffill). VIXY file 2015-09-01..2026-11-10 +live_closes to 2026-11-16; VIXM file+live_closes 2015-09-01..2026-11-13
+VIXM last real print 2026-11-13; the last session 2026-11-16 has no VIXM print so its VIXM return is 0 (forward fill); VIXM column is the only one affected.
+window real: returns 2015-11-03 .. 2026-11-16 (2775 sessions); calm-crack days in window: 20 of 42 listed (listed since 2000: pre-2015-09 ones untested: 22)
+window vera: returns 2015-09-03 .. 2026-11-16 (2817 sessions); calm-crack days in window: 20 of 42 listed (listed since 2000: pre-2015-09 ones untested: 22)
+
+BASELINE REPRODUCTION (CUR + gross_cap 2.0 + VIXY 35% sleeve)
+  harness default VIXM 75% sleeve + cap, real:   47.3% / 2.009 /  -17.1%
+  Base real  CAGR 51.1% Sharpe 2.100 maxDD -16.5% vol 20.7% trades/yr 46.9 worst1 -6.97% worst5 -13.08%  (== harness.run exactly; harness trades/yr 46.9)
+  Base vera  CAGR 52.1% Sharpe 2.031 maxDD -20.1% vol 21.8% trades/yr 47.7 worst1 -6.97% worst5 -13.74%
+  Base sleeve: VIXY 35% of the cash leg (harness VIXM latch/gating logic, VIXY returns). vera = proxy panel with the sleeve switched on (harness has none there).
