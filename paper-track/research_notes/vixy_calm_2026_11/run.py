@@ -384,6 +384,15 @@ for tn in TRK:
             if ay not in ARMS or am2 not in ARMS: continue
             log("  " + sbs(ay, tn)); log("     " + sbs(am1, tn)); log("     " + sbs(am2, tn))
 
+
+# ------------------------------------------------------------------ concentration
+log("\n=== CONCENTRATION (added after the first run, not part of the pass bar): real window, prorata. dSharpe vs MC full / dropping the 1 / 3 / 5 days with the largest (arm - MC) daily gain; and the dates of the top 3 ===")
+for a in ARMS:
+    A, M = run_arm('real', a, 'prorata'); d = A['r'] - M['r']; o = np.argsort(-d); row = []
+    for k in (0, 1, 3, 5):
+        keep = np.ones(len(d), bool); keep[o[:k]] = False; row.append(sh(A['r'][keep]) - sh(M['r'][keep]))
+    log(f"  {lab(a):<20} full {row[0]:+.3f} | -1 day {row[1]:+.3f} | -3 days {row[2]:+.3f} | -5 days {row[3]:+.3f} | top days " + ', '.join(f"{RDS['real'][i]} {d[i]*100:+.2f}%" for i in o[:3]))
+
 # ------------------------------------------------------------------ final
 log("\n=== FINAL VERDICTS vs pass bar (PLAN.md) ===")
 for var in VARS:
