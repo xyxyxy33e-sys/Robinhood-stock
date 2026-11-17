@@ -43,7 +43,8 @@ LIVE_CFG = {
     'vol_target': (S.VOL_TARGET_PA, 'state.VOL_TARGET_PA 20%; estimator max(10d, 30d) via H.CUR vol=max10_30 (state.VOL_ESTIMATOR_MAX_ENABLED)'),
     'risky_scale': (1.0, 'research hook, not live: flat multiplier on the 4 risky legs after vol target and cap (matched de-lever)'),
     'vixy_source': ('full', "'full' = research_notes/vixy_calm_2026_11/vixy_yahoo_full.csv close_split_adj (2011-); 'old' = vixm_followups vixy_daily.csv + live_closes (what harness-era studies used)"),
-    'use_live_highs': (True, 'data/qqq_highs.csv (live 15:50 highs) for 2026-11-11..; AV full-day highs file for 2026-09-08..2026-11-10 (qqq_ohlc.csv ends 2026-09-04)'),
+    'use_live_highs': (True, "True = highs complete: data/qqq_ohlc.csv to 2026-09-04, then research_notes/leverage_a_2026_11/qqq_highs_av_2026_09_11.csv (full-day highs 2026-09-08..11-10, AlphaVantage QQQ daily), then data/qqq_highs.csv (live 15:50 highs 2026-11-11..). "
+                         "False = qqq_ohlc.csv only (50 sessions after 2026-09-04 read the close): this is what the recorded L1 references (52.9%/2.136, STRATEGY.md 53.0%/2.139) had"),
     # inherited unchanged from harness.CUR / monte_carlo.LIVE (live values)
     'inherited': ('H.CUR', 'B 50/50 SPMO/BOXX, C 100% SPMO, D ladder state.D_LADDER_ROWS + zone buffer state.D_ZONE_BUFFER, E/F cash, fast 20/100, trim v2, '
                            'band state.REBALANCE_DRIFT_BAND 5%, cost MC.COST 2bp/side, deep-E state.DEEP_E_*, VIX-panic state.VIX_PANIC_*, VIXM latch state.vixm_series (+ off in ungated D2)'),

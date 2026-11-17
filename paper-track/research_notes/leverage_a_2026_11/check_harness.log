@@ -1,0 +1,16 @@
+harness_live validation (CAGR / Sharpe / maxDD; Sharpe = mean*252/vol as harness.stats)
+
+REAL ETFs, Nov 2015 -> latest
+L1, highs as the recorded studies (file only), to 2026-11-10       2015-11-03..2026-11-10   53.0% / 2.139 /  -16.6%   ref 53.0% / 2.139 (STRATEGY.md); tax study 52.9% / 2.136 / -16.6%
+L1, same highs, to latest                                          2015-11-03..2026-11-16   53.7% / 2.158 /  -16.6%   ref (n/a: later sample)
+no L1 (cap 2.0 + VIXY 35%), to latest                              2015-11-03..2026-11-16   51.1% / 2.100 /  -16.5%   ref 51.1% / 2.100 / -16.5% (vixy_sleeve_sweep)
+DEFAULT: L1 with complete highs (AV full-day 09-08..11-10 + live), to latest 2015-11-03..2026-11-16   50.6% / 2.064 /  -25.4%   ref (no reference; 50 sessions had no high in the recorded runs)
+  no-L1, old-VIXY-series run_live == harness.run(cap 2.0, VIXY 35%) exactly: True (max abs diff 0.00e+00)
+
+PROXY 2001 -> latest
+L1 (file-only highs), sleeve OFF on proxy                          2001-01-03..2026-11-16   34.0% / 1.474 /  -22.1%   ref 34.0% / 1.474 (with L1)
+no L1, sleeve OFF on proxy                                         2001-01-03..2026-11-16   31.8% / 1.409 /  -22.1%   ref 31.8% / 1.409 / -22.1% (cap, no L1, no sleeve)
+L1 (file-only highs), sleeve ON from 2011                          2001-01-03..2026-11-16   36.3% / 1.546 /  -22.1%   ref (no reference)
+no L1, sleeve ON from 2011                                         2001-01-03..2026-11-16   34.0% / 1.480 /  -22.1%   ref (no reference)
+DEFAULT: L1 complete highs, sleeve ON from 2011                    2001-01-03..2026-11-16   35.1% / 1.505 /  -24.9%   ref (no reference)
+L1 complete highs, sleeve OFF                                      2001-01-03..2026-11-16   33.2% / 1.435 /  -28.1%   ref (no reference)
