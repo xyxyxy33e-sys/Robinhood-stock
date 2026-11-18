@@ -1,0 +1,15 @@
+{"date": "2026-11-18", "time": "15:51 ET",
+ "quotes": {
+  "QQQ": {"last": 659.1788, "bid": 659.14, "ask": 659.19, "close": 656.95, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "QQEW": {"last": 142.8143, "bid": 142.78, "ask": 142.87, "close": 142.9899, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "SPMO": {"last": 126.65, "bid": 126.61, "ask": 126.63, "close": 127.29, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "TQQQ": {"last": 52.365, "bid": 52.36, "ask": 52.37, "close": 51.81, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "QLD": {"last": 74.46, "bid": 74.42, "ask": 74.44, "close": 73.98, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "XLU": {"last": 43.60, "bid": 43.59, "ask": 43.60, "close": 43.42, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "BOXX": {"last": 119.0882, "bid": 119.08, "ask": 119.09, "close": 119.07, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"},
+  "VIXY": {"last": 20.36, "bid": 20.36, "ask": 20.37, "close": 21.01, "close_date": "2026-11-17", "last_trade_date": "2026-11-18"}
+ },
+ "vix": 24.59,
+ "qqq_high": 662.7987,
+ "positions": {"BOXX": 5344.875087},
+ "idle_cash": 0.82, "total_value": 636512.3733356734}
