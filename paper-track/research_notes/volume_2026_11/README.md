@@ -45,3 +45,15 @@ Rules: every one lower on real CAGR; the only Sharpe gains are era-specific and 
   three eras, so the volume rule is "hold less in A", not timing.
 - All risk halved when the 5d avg is below both: real 39.5% / 2.006 (better) but holdout 17.7% / 1.023 (worse).
 Not adopted.
+
+## Volume as a trigger to act on the fast 20/100 state (owner follow-up) — no
+
+`vfast.py`. When a volume flag is on, the effective state takes the fast 20/100 state where it is worse (faster
+exit), better (faster entry) or both; "always" is the control. Current: 45.2% / 1.93 / -19.3% real,
+31.8% / 1.41 / -22.1% proxy, 22.4% / 1.07 holdout.
+- Faster exit: always 23.1% / 1.24 real, 13.8% / 0.79 holdout (the fast state whipsaws). Heavy-volume conditioning
+  cuts the damage (5d avg above both: 33.2% / 1.59 / -16.2% real, 15.9% / 0.83 holdout) but stays far below current.
+- Faster entry: real ties at best (45.7% / 1.95 with 5d avg below both, or above 20d), proxy and holdout worse
+  (21.3-21.9% / 1.03-1.05 holdout, drawdown -24.7% in most).
+- Both ways: worse than either.
+The live overlay (fast read only on the way back up, only from B/C/F) already takes the part that works. Not adopted.
