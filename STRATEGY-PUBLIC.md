@@ -45,3 +45,11 @@ run). Go-live needs: capital in the account (it is currently all individual stoc
 setting `enabled=true`, and two scheduled tasks in a session that has the Public connector.
 
 Dashboard: https://claude.ai/artifact/Ut3LWwtHC9ztXDCviogdZK (five attached CSV files: status, holdings, stats, years, nav; regenerate from `public_run.py` and `backtest.py`).
+
+## Rotation check day: stays on the last session of the month (tested 2026-11-19)
+
+The rotation check was moved 0 to 20 trading days after month-end (`public-strategy/research_notes/rebalance_day.py`,
+results in `rebalance_day.txt`). Across the 21 days the combined strategy returned 9.9% to 12.3% a year (mean 11.2%,
+Sharpe 0.63 to 0.76). Month-end (12.0%, 0.75) is near the top; mid-month (days 8 to 12) averaged 10.9% and 0.68 and was
+not better in either half. The spread between neighbouring days is noise, so the honest expectation is the mean, about
+11%, not the month-end 12.0%. No change.
