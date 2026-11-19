@@ -1259,18 +1259,18 @@ def check_margin_funding():
     led4, closed = MF.settle_if_sent(json_copy(led), '2026-11-02', 10.0)
     assert closed and led4['status'] == 'closed' and MF.principal(led4) == 0 and led4['history']
     # whole-share basket (owner: "calculate based on full share so can be bought after hours")
-    bk, cost = MF.whole_share_basket(10_290, {'SPMO': 0.25, 'TQQQ': 0.75, 'BOXX': 0.0},
-                                     {'SPMO': 148.0099, 'TQQQ': 78.8099, 'BOXX': 118.57})
-    assert set(bk) == {'SPMO', 'TQQQ'} and all(isinstance(b['shares'], int) for b in bk.values())
+    bk, cost = MF.whole_share_basket(10_290, {'SPY': 0.25, 'TQQQ': 0.75, 'BOXX': 0.0},
+                                     {'SPY': 148.0099, 'TQQQ': 78.8099, 'BOXX': 118.57})
+    assert set(bk) == {'SPY', 'TQQQ'} and all(isinstance(b['shares'], int) for b in bk.values())
     assert cost <= 10_290 and cost > 10_290 - 160, cost
-    assert bk['TQQQ']['limit'] == 79.04 and bk['SPMO']['limit'] == 148.45, bk
+    assert bk['TQQQ']['limit'] == 79.04 and bk['SPY']['limit'] == 148.45, bk
     lb, a5, _ = MF.request_draw({'collateral_value': 139_000.0}, '2026-10-13', 'tier-5', 10_290, 500_000,
-                                '2026-10-06', 1.11, 1.05, weights={'SPMO': 0.25, 'TQQQ': 0.75},
-                                prices={'SPMO': 148.0099, 'TQQQ': 78.8099})
+                                '2026-10-06', 1.11, 1.05, weights={'SPY': 0.25, 'TQQQ': 0.75},
+                                prices={'SPY': 148.0099, 'TQQQ': 78.8099})
     assert a5 == float(int(a5)) and a5 >= cost and lb['draws'][-1]['basket'], "whole-dollar draw = basket cost"
     _, a6, _ = MF.request_draw({'collateral_value': 139_000.0}, '2026-10-13', 'tier-5', 50_000, 500_000,
-                               '2026-10-06', 1.11, 1.05, weights={'SPMO': 0.25, 'TQQQ': 0.75},
-                               prices={'SPMO': 148.0099, 'TQQQ': 78.8099})
+                               '2026-10-06', 1.11, 1.05, weights={'SPY': 0.25, 'TQQQ': 0.75},
+                               prices={'SPY': 148.0099, 'TQQQ': 78.8099})
     assert a6 <= 34_750, "basket respects the cap (25% of the collateral)"
     import live_run as L
     q = {s: dict(last=100.0, bid=100.0, ask=100.0) for s in L.LEGS6}
@@ -1379,7 +1379,8 @@ def check_deep_e():
         pass
     else:
         raise AssertionError("validate_weights_live7 accepted QQQ above 75% of the cash leg (deep-E 50% + VIX-panic 25%)")
-    assert L.LEGS == L.LEGS7 == ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXY', 'QQQ', 'BOXX')
+    assert L.LEGS == L.LEGS7 == ('SPY', 'TQQQ', 'QLD', 'XLU', 'VIXY', 'QQQ', 'BOXX') and S.CORE_INSTRUMENT == 'SPY'  # core SPY from 2026-11-20 (owner)
+    assert 'SPMO' in L.SYMS, 'legacy SPMO closes column kept for the shadow tracks'
     assert 'VIXM' in L.SYMS, "keep the VIXM closes column (sleeve until 2026-11-10)"
     assert L.to7([0.1, 0.2, 0.3, 0.0, 0.25, 0.15]) == [0.1, 0.2, 0.3, 0.0, 0.25, 0.0, 0.15], "old 6-leg run files"
     t = DP.dollar_targets((0, 0, 0, 0, 0, 0.5, 0.5), 1000.0, 0.0)

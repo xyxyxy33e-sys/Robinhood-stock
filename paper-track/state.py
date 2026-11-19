@@ -1773,6 +1773,10 @@ VIXM_OVERLAY_ENABLED = True
 # read data/vixm_daily.csv as the sleeve: use the VIXY file for studies of the live sleeve from here.
 # The 'vixm' leg name is kept internally (LIVE_LEGS); VIXM_INSTRUMENT is the ticker it trades.
 VIXM_INSTRUMENT = 'VIXY'
+# Core leg ticker (owner 2026-11-19, "Switch to SPY"): the 'core' leg trades SPY instead of SPMO from the
+# 2026-11-20 run. Inside the live design the core choice moves real 2015-26 by ~1 pp (research_notes/ira_2026_11);
+# SPY frees the owner's IRA to hold SPMO with no wash-sale overlap. Research panels keep SPMO as 'core'.
+CORE_INSTRUMENT = 'SPY'
 VIXM_ENTRY_VIX = 18.0
 VIXM_EXIT_RATIO = 1.0
 VIXM_MIN_VOL = 0.20          # == VOL_TARGET_PA; frozen

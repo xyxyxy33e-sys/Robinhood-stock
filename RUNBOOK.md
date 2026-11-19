@@ -43,7 +43,7 @@ Account `576391551` only. Everything below is US/Eastern.
 ## 1. Trade run — 15:50, Mon–Fri
 
 1.1 **Fetch** (four calls, nothing else):
-- `get_equity_quotes` for `QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY` (the volatility sleeve trades VIXY from 2026-11-11; VIXM before)
+- `get_equity_quotes` for `QQQ QQEW SPY TQQQ QLD XLU BOXX VIXY` (the core trades SPY from 2026-11-20, SPMO before; the volatility sleeve trades VIXY from 2026-11-11, VIXM before)
 - `get_index_quotes` for VIX, id `3b912aa2-88f9-4682-8ae3-e39520bdf4db`
 - `get_equity_positions` and `get_portfolio` for `576391551`
 - `get_equity_historicals` for `["QQQ"]`, interval `30minute`, start_time `<today>T14:30:00Z` (regular session):
@@ -100,7 +100,7 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 
 2.3 **Record.** Write `data/runs/in/<today>-record.json`:
 ```json
-{"date": "<today>", "closes": {"<SYM>": <last_trade_price now, for all 8: QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY>},
+{"date": "<today>", "closes": {"<SYM>": <last_trade_price now, for all 8: QQQ QQEW SPY TQQQ QLD XLU BOXX VIXY, plus SPMO for the shadow tracks>},
  "fills": [{"symbol": "...", "side": "buy|sell", "quantity": <cumulative_quantity>, "price": <average_price>}],
  "session_lag": 0, "total_value": <get_portfolio total_value>}
 ```
@@ -108,6 +108,10 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - Run `python3 paper-track/live_run.py record data/runs/in/<today>-record.json`.
 - It logs the fills and their slippage, the NAV row and drawdown, the shadow tracks with the trim-v2 revert rule,
   and the breadth log on D days. It prints any funding push.
+
+2.3a **Core is SPY (owner 2026-11-19, from the 2026-11-20 run).** The core leg (`state.CORE_INSTRUMENT`) is SPY.
+Any SPMO left in this account is outside the strategy: `live_run.py` raises the positions guard. Never buy SPMO here:
+the owner's IRA holds SPMO, and the switch removes the wash-sale overlap.
 
 2.3b **Simple-rule yardstick (owner 2026-11-19).** Run `python3 paper-track/simple_sp_track.py`. It rebuilds
 `data/simple_sp_paper.csv` (2x S&P above SPY's 200-day, T-bills below; paper only, nothing traded) and prints two
@@ -219,7 +223,7 @@ This is not a strategy review and changes nothing.
 ## 5. Morning brief — about 10:00, Mon–Fri (owner 2026-11-19)
 
 Read-only. Never place, modify or cancel an order, and write nothing under `data/`.
-5.1 **Fetch** the first three calls of 1.1 (quotes for all 8 plus `SPY`, VIX, positions/portfolio for `576391551`),
+5.1 **Fetch** the first three calls of 1.1 (quotes for all 8, SPY among them, VIX, positions/portfolio for `576391551`),
     and `get_index_quotes` with symbols `["SPX"]` for the S&P 500 level. The S&P 500 is reported only, not used by the rules.
     If QQQ's last trade is not today: market closed, stop, no push.
 5.2 **Write** the 1.2 JSON (with `"time"`, SPY in `quotes`, `"spx": <SPX value>`, no `qqq_high` needed) to `/tmp/morning_<today>.json`, not `data/`.

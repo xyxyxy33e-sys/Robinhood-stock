@@ -232,6 +232,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-20 | **Core leg SPMO → SPY** (`state.CORE_INSTRUMENT = 'SPY'`; `live_run`/`cash_sweep`/`deposit_plan`/`l1_tracker` use it; `live_closes.csv` keeps an SPMO column for the shadow tracks, which still model SPMO); no trade on the day (no core held, state E) | **owner decision** ("Switch to SPY"): frees the owner's IRA to hold SPMO with no wash-sale overlap; inside the live design the core moves results little — real total return 2015-11..2026 SPMO 45.7% / 1.95 / −19.3% vs SPY 44.5% / 1.92 / −19.3%, 2018-03..2026 45.2% / 1.87 vs 44.8% / 1.90 (JMOM 45.0% / 1.89); research panels keep SPMO as 'core' (`research_notes/ira_2026_11/`) |
 | 2026-11-19 | **Pre-committed rules**: (1) **risk brake** — every non-BOXX leg at half size once the strategy NAV is 40% below its peak, full size again once the full-size strategy is within 20% of the peak (`live_run.RISK_BRAKE_*`, `brake_step`, `data/risk_brake.json`); (2) **pause** — `data/trading_paused.json` stops all trading until the owner deletes it; written on the same guard 3 runs in a row or a ≥3 pp cumulative live-vs-model tracking gap (monthly check); (3) **review flag** — rolling 3-year live return below cash (from 2029-09) | **owner decision** ("Do all 3"); 500×10y Monte Carlo of the overlay: −0.0..−0.8 pp median CAGR, 5th-pct max DD −56→−49% (holdout L60), −55→−49% (proxy L60), fires on 21–51% of 10-year paths, never in history; −30% / to-cash / permanent-stop / vs-QQQ variants worse (`research_notes/stop_rules_2026_11/`) |
 | 2026-11-17 | **D gate on the day's high ("L1") switched OFF** (`DGATE_HIGH_ENABLED = False`); the gate reads the 15:50 price only, as before 2026-11-11. `qqq_high` is still fetched and logged; `l1_tracker.py` follows L1 on paper | **owner decision** ("turn L1 off") after the adoption backtest was found to read the close after 2026-09-04 (`data/qqq_ohlc.csv` ends there). With complete highs (`harness_live.py`): real without L1 51.1% / 2.100 / -16.5%, with L1 50.6% / 2.064 / -25.4% (it opens the gate on 2026-11-04 on a 10:15 ET high, +3.07% over the 200-day, and is 2.0x long into the -6.4% day of 11-05); proxy 2001 34.0% / 1.480 / -22.1% vs 35.1% / 1.505 / -24.9%. L1's effect is one spell: real total -2.75 pp, +16.8 pp without the 10-30..11-04 spell. 21 variants (higher bar, close confirmation, reversal filter, typical price, two days, half size, VIX filters) all fail the pre-registered rule (`research_notes/l1_variants_2026_11/`) |
 | 2026-11-11 | **D gate on the day's high ("L1")**: the gap200 half of the D gate reads max(15:50 price, QQQ intraday high up to the run) against the 200-day SMA; the trade still fills at 15:50 (`DGATE_HIGH_ENABLED`, `DGATE_HIGH_FROM_SESSION`, `gate_gap200`; `live_run` input `qqq_high`, `data/qqq_highs.csv`; RUNBOOK 1.1 fourth call) | **owner decision** ("Embed L1", live from the 11 Nov 15:50 run); research on daily H/L, fill at the close: real 53.1% / 2.053 / −18.3% → 56.0% / 2.109 / −18.3%, proxy 34.4% / 1.411 / −22.1% → 37.1% / 1.485 / −22.9% (pre-cap, pre-VIXY design); 12 extra entries real, 33 proxy; **not verified on 15:50 intraday highs** (daily high includes 15:50–16:00; a crude cut kept ~80% with maxDD −20.4% / −24.5%); exit on the low hurts and was not adopted (`research_notes/dgate_high_2026_11/`) |
@@ -5197,6 +5198,15 @@ scored against the flat-de-levering null.
   45.0–45.5%, Sharpe 1.60–1.62) and fails the holdout at every N (0.710–0.721 vs
   live 0.754) — structural, not a parameter problem. One-step on a 15-day high
   remains the shadow pick. Not applied.
+
+### Core leg is SPY from 2026-11-20 (owner decision)
+
+Every row that says "SPMO" (A 40/60, B 50/50, C 100%, D1 50/50) trades **SPY** in the live account from the
+2026-11-20 run (`state.CORE_INSTRUMENT`). Reason: the owner's IRA holds SPMO, and an IRA purchase within 30 days
+of a loss sale of SPMO here would make that loss permanent. Inside the live design the core is a small lever:
+2015-11 to 2026, total return, current design, sleeve off, SPMO 45.7% / Sharpe 1.95 / −19.3% vs SPY 44.5% /
+1.92 / −19.3%; 2018-03 to 2026 45.2% / 1.87 vs 44.8% / 1.90. Research figures in this file were produced with
+SPMO as the core and are not restated.
 
 ### Pre-committed rules — 2026-11-19 (owner decision)
 

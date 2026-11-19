@@ -20,7 +20,7 @@ signal input (all numbers straight from the MCP tools; see RUNBOOK.md):
    "time": "15:51",                           # ET wall clock of the snapshot
    "quotes": {SYM: {"last": x, "bid": x, "ask": x,
                     "close": x, "close_date": "YYYY-MM-DD",   # official prior close
-                    "last_trade_date": "YYYY-MM-DD"}}         # for QQQ QQEW SPMO TQQQ QLD XLU BOXX VIXY (VIXM until 2026-11-10)
+                    "last_trade_date": "YYYY-MM-DD"}}         # for QQQ QQEW SPY TQQQ QLD XLU BOXX VIXY (SPMO core until 2026-11-19, VIXM until 2026-11-10)
    "vix": x,                                  # get_index_quotes VIX value
    "positions": {SYM: qty},                   # get_equity_positions quantity (0s may be omitted)
    "idle_cash": x, "total_value": x}          # get_portfolio cash / total_value
@@ -54,7 +54,7 @@ ROOT = os.path.dirname(HERE)
 CLOSES_CSV = os.path.join(ROOT, 'data', 'live_closes.csv')
 RUNS_DIR = os.path.join(ROOT, 'data', 'runs')
 LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')     # == state.LIVE_LEGS order (run files to 2026-11-10)
-LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', S.VIXM_INSTRUMENT, 'QQQ', 'BOXX')   # == state.LIVE_LEGS7 order; the sleeve's ticker is state.VIXM_INSTRUMENT (VIXY from 2026-11-11)
+LEGS7 = (S.CORE_INSTRUMENT, 'TQQQ', 'QLD', 'XLU', S.VIXM_INSTRUMENT, 'QQQ', 'BOXX')   # == state.LIVE_LEGS7 order; core ticker = state.CORE_INSTRUMENT (SPY from 2026-11-20, SPMO before), sleeve = state.VIXM_INSTRUMENT (VIXY from 2026-11-11)
 # NYSE early closes (13:00 ET): the trade run fires at 12:50 on these days (RUNBOOK 4); the regular 15:50 run
 # exits 3. Source: NYSE Group 2026-2028 holiday and early-closings calendar. Add each new year's dates here.
 EARLY_CLOSES = {'2026-11-27': '13:00', '2026-12-24': '13:00', '2027-11-26': '13:00'}
@@ -101,7 +101,7 @@ def brake_step(st, dd_live, nav_rows, boxx, share=RISK_BRAKE_SHARE):
 LEGS = LEGS7                                               # the live legs
 LEGS5 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')             # shadow tracks / old NAV
 SYMS = ('QQQ', 'QQEW') + tuple(l for l in LEGS if l not in ('QQQ', 'QQEW'))
-SYMS = SYMS + tuple(l for l in ('VIXM',) if l not in SYMS)       # keep the VIXM closes column (sleeve until 2026-11-10)
+SYMS = SYMS + tuple(l for l in ('VIXM', 'SPMO') if l not in SYMS)   # legacy columns: VIXM (sleeve until 2026-11-10), SPMO (core until 2026-11-19; shadow tracks)
 # Funding-policy triggers (drawdown tiers, D/E/F -> A/B/C turn) and their margin draws:
 # OFF from 2026-10-19 (owner: "remove the funding trigger"). The drawdown log still
 # records the tiers (drawdown_tracker); nothing is pushed and nothing is borrowed.
@@ -607,7 +607,7 @@ def cmd_signal(inp, write=True):
           f"{'' if r['state'] == 'D' else ' (informational outside D)'}")
     if r['eff'] == 'D':
         z = r.get('d_zone')
-        print(f"D ladder zone: {z or 'n/a (gated)'}" + (f" -> row SPMO/TQQQ/QLD {S.D_LADDER_ROWS[z]}" if z else '')
+        print(f"D ladder zone: {z or 'n/a (gated)'}" + (f" -> row {S.CORE_INSTRUMENT}/TQQQ/QLD {S.D_LADDER_ROWS[z]}" if z else '')
               + (f" (held by the +/-{S.D_ZONE_BUFFER:.1%} buffer; plain reading {r['d_zone_plain']})"
                  if z and r.get('d_zone_plain') and r['d_zone_plain'] != z else ''))
     print(f"QQQ vol {'max(10d,30d)' if S.VOL_ESTIMATOR_MAX_ENABLED else '30d'} {r['vol']*100:.1f}% -> multiplier {r['mult']:.3f}")
@@ -660,6 +660,23 @@ def cmd_signal(inp, write=True):
 
 
 # ------------------------------------------------------------------ record
+def _shadow_closes(closes, c, date):
+    """The shadow tracks model the SPMO core (LEGS5). SPMO is no longer a live leg from 2026-11-20: take it from the
+    record input if given, else the closes cache, else Yahoo."""
+    out = {}
+    for s in LEGS5:
+        v = closes.get(s) or c.get(s, {}).get(date)
+        if v is None:
+            try:
+                v = _yahoo(s).get(date)
+            except Exception:   # noqa: BLE001
+                v = None
+        if v is None:
+            raise Guard(f'shadow tracks need a {s} close for {date}: add "{s}" to the record closes')
+        out[s] = float(v)
+    return out
+
+
 def cmd_record(inp):
     date = inp['date']
     run = _load_run(date)
@@ -733,7 +750,7 @@ def cmd_record(inp):
     # 4. shadow tracks + breadth D log, on the inputs the book traded on
     if run and run.get('reading'):
         r = _restore_reading(run['reading'])
-        ST.update(date, {s: closes[s] for s in LEGS5}, closes['QQQ'], r['state'], r['micro'], r['vol'],
+        ST.update(date, _shadow_closes(closes, c, date), closes['QQQ'], r['state'], r['micro'], r['vol'],
                   r['fast'], r['gaps'], r['breadth_pct'], r['a_trim'], zone=_zone(r))
         v = ST.revert_check()
         out_lines.append(ST.summary_line())

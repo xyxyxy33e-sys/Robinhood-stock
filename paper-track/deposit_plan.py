@@ -35,7 +35,7 @@ Evidence for the backtest: see STRATEGY.md "Staged deposit (2026-09-24)".
 import json
 import os
 
-from state import VIXM_INSTRUMENT  # the sleeve's ticker (VIXY from 2026-11-11)
+from state import VIXM_INSTRUMENT, CORE_INSTRUMENT  # sleeve (VIXY from 2026-11-11) and core (SPY from 2026-11-20) tickers
 
 PLAN_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'deposit_plan.json')
 ARRIVAL_MIN = 1000.0       # idle cash below this is rounding / dividends, not the deposit
@@ -140,7 +140,7 @@ def held_weights(values, idle_cash, total_value, res, with_vixm=False, with_qqq=
     if inv <= 0:
         raise ValueError("reserve is larger than the account")
     cash_leg = values.get('BOXX', 0.0) + idle_cash - res
-    head = (values.get('SPMO', 0.0) / inv, values.get('TQQQ', 0.0) / inv,
+    head = (values.get(CORE_INSTRUMENT if with_qqq else 'SPMO', 0.0) / inv, values.get('TQQQ', 0.0) / inv,
             values.get('QLD', 0.0) / inv, values.get('XLU', 0.0) / inv)
     if with_qqq:      # 7-tuple, state.LIVE_LEGS7 order (deep-E QQQ before cash, 2026-11-11)
         return head + (values.get(VIXM_INSTRUMENT, 0.0) / inv, values.get('QQQ', 0.0) / inv, cash_leg / inv)
@@ -155,7 +155,7 @@ def dollar_targets(weights, total_value, res):
     leg; BOXX carries the reserve on top of its strategy weight. Sums to
     total_value, i.e. no idle cash is left."""
     inv = total_value - res
-    legs = {7: ('SPMO', 'TQQQ', 'QLD', 'XLU', VIXM_INSTRUMENT, 'QQQ', 'BOXX'),
+    legs = {7: (CORE_INSTRUMENT, 'TQQQ', 'QLD', 'XLU', VIXM_INSTRUMENT, 'QQQ', 'BOXX'),
             6: ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')}.get(len(weights), ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX'))
     out = {l: w * inv for l, w in zip(legs, weights)}
     out['BOXX'] += res

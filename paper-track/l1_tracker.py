@@ -21,8 +21,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import state as S  # noqa: E402
 
-LEG_LEV = {'SPMO': 1.0, 'TQQQ': 3.0, 'QLD': 2.0}
-LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXY', 'QQQ', 'BOXX')
+LEG_LEV = {'SPMO': 1.0, 'SPY': 1.0, 'TQQQ': 3.0, 'QLD': 2.0}
+LEGS7 = ('SPY', 'TQQQ', 'QLD', 'XLU', 'VIXY', 'QQQ', 'BOXX')   # core SPMO until 2026-11-19 (same leverage)
 
 
 def closes():
