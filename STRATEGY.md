@@ -5212,7 +5212,14 @@ Decided in advance, while the account is calm, so no rule is invented in the mid
 2. **Pause (operational).** A broken machine, not a bad market: the same guard on 3 runs in a row, or live
    trailing the model by 3 pp or more cumulative, writes `data/trading_paused.json`; nothing trades until the
    owner deletes it.
-3. **Review flag (judgment).** From 2029-09, a rolling 3-year live return below the T-bill return flags a
+3. **One-year review against a simple yardstick (owner, 2026-11-19).** Around 2027-11-19, compare the live
+   account with the simple S&P rule's paper track (`data/simple_sp_paper.csv`: 2x S&P above SPY's 200-day,
+   T-bills below; 76-year record 15.5% vs 11.4% S&P, max DD -39% vs -55%; after federal tax since 1990
+   10.3% vs 9.7%; `research_notes/ira_2026_11/`), on after-tax return and max drawdown over the same year, and
+   on SPY/QQQ total return for context. If the live strategy trails the simple rule on both, the default is to
+   switch the Robinhood account to the simple rule (owner decides). One year is noisy: a trendless year is the
+   live design's known weak case.
+4. **Review flag (judgment).** From 2029-09, a rolling 3-year live return below the T-bill return flags a
    full strategy review for the owner. Nothing changes automatically.
 
 ### Monte Carlo of the live design — 2026-10-21/22 (max(10d, 30d) estimator RE-ENABLED 2026-10-22, owner decision)

@@ -109,6 +109,12 @@ Only after the orders are placed: one short line to the session ("traded / no tr
 - It logs the fills and their slippage, the NAV row and drawdown, the shadow tracks with the trim-v2 revert rule,
   and the breadth log on D days. It prints any funding push.
 
+2.3b **Simple-rule yardstick (owner 2026-11-19).** Run `python3 paper-track/simple_sp_track.py`. It rebuilds
+`data/simple_sp_paper.csv` (2x S&P above SPY's 200-day, T-bills below; paper only, nothing traded) and prints two
+lines: the yardstick's holding and NAV since 19 Nov 2026, and the IRA SPMO buy window. Commit the CSV with the
+day's data. Put both lines in the Friday weekly report; add nothing to the daily push. If Yahoo fails, say so and
+carry on.
+
 2.4 **Fridays only.** Do these before the dashboard:
 - **Weekly report.** Append one entry, newest at top, to `https://claude.ai/artifact/65u1kZeRoYha2Amps9mESw` from the week's
   `data/runs/*.json` files. It covers:
