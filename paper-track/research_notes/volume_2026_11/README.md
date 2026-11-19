@@ -34,3 +34,14 @@ below both (48%), 20d line above 100d line (44%). Latest 16 Nov: 43.6M vs 20d 49
   (A halved on 20d > 100d: 1.076 vs 1.074 for -2.1 pp CAGR). Drawdown cuts (to -14% real at most) cost far more
   CAGR than holding less across the board (~0.53 pp drawdown per 1 pp CAGR). The daily flags also flip often,
   adding trades. Not adopted.
+
+## 5-day average volume against the 20d and 100d lines (owner follow-up) — also no
+
+`v5.py`. Latest 16 Nov: 5d 41.3M, 20d 49.7M, 100d 38.9M. Same tests. By state, no flag keeps its sign across eras.
+Rules: every one lower on real CAGR; the only Sharpe gains are era-specific and opposite —
+- A halved when the 5d avg is above both lines: real 42.0% / 1.887 (worse), proxy 30.1% / 1.414, holdout
+  21.9% / 1.114, max DD -20.3%. Flags 23% of A days. But simply holding A at 0.85x-0.80x every day gives
+  41.0-39.7% / 1.942 real, 1.428-1.434 proxy, 1.097-1.105 holdout, -21.3/-21.0%: as good or better on two of
+  three eras, so the volume rule is "hold less in A", not timing.
+- All risk halved when the 5d avg is below both: real 39.5% / 2.006 (better) but holdout 17.7% / 1.023 (worse).
+Not adopted.
