@@ -4,12 +4,12 @@
     python3 public-strategy/public_run.py signal <input.json>    # prints the decision and the orders
 
 DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared with the Robinhood strategy
-(SPY TQQQ QLD QQQ VIXY BOXX XLU) or the IRA (SPMO):
+(SPY TQQQ QLD QQQ VIXY XLU) or the IRA (SPMO); BOXX, the cash fund, is shared with Robinhood on purpose:
   TREND sleeve 50%:    SSO (2x S&P 500) while SPY's adjusted close is above its 200-day average, 1% hysteresis
                        (in above +1%, out below -1%); otherwise IEF. Read every day at 15:50 on the live price.
   ROTATION sleeve 50%: the 2 strongest of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return at the last completed
                        month-end close, 25% each; a pick that does not beat T-bills over the same 6 months is held
-                       in SGOV instead. Changes take effect at the first 15:50 run of the new month.
+                       in BOXX instead. Changes take effect at the first 15:50 run of the new month.
   TRADE when a target holding is missing, a non-target holding is still held, or L1 drift exceeds 20%.
   Otherwise hold (no calendar rebalancing: fewer taxable sales).
 The strategy manages ONLY its own tickers (UNIVERSE) plus positive cash; every other position in the account is
@@ -25,8 +25,9 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 CONFIG = os.path.join(ROOT, 'data', 'public', 'config.json')
 RUNS = os.path.join(ROOT, 'data', 'public', 'runs')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
-UNIVERSE = ('SSO', 'IEF') + ROT + ('SGOV',)
-FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'BOXX', 'XLU', 'SPMO')   # the other two strategies
+CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
+UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
+FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the other two strategies (BOXX is shared on purpose)
 HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.01, 0.20, 0.005, 0.003
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 assert not set(UNIVERSE) & set(FORBIDDEN)
@@ -80,7 +81,7 @@ def rotation(series, sgov, today):
     e, s = ends[-1], ends[-7]
     hurdle = tbill_6m(sgov, s, e)
     mom = sorted(((series[x][e] / series[x][s] - 1, x) for x in ROT), reverse=True)
-    picks = [(x if m > hurdle else 'SGOV') for m, x in mom[:2]]
+    picks = [(x if m > hurdle else CASH) for m, x in mom[:2]]
     return picks, mom, hurdle, e
 
 
@@ -97,7 +98,7 @@ def compute(inp, need_account=True):
     cfg = json.load(open(CONFIG)) if os.path.exists(CONFIG) else {'enabled': False}
     spy = adj_series('SPY', today, q['SPY']['last'])
     series = {s: adj_series(s, today, q[s]['last']) for s in ROT}
-    sgov = adj_series('SGOV', today, q['SGOV']['last'])
+    sgov = adj_series(CASH, today, q[CASH]['last'])
     on, gap, sma = trend_on(spy, today)
     picks, mom, hurdle, asof = rotation(series, sgov, today)
     w = targets(on, picks)
@@ -106,7 +107,7 @@ def compute(inp, need_account=True):
     if not need_account:
         return out, cfg
     pos = {s: float(v) for s, v in inp.get('positions', {}).items()}
-    bad = [s for s in pos if s in FORBIDDEN and s != 'BOXX' and pos[s] > 0]
+    bad = [s for s in pos if s in FORBIDDEN and pos[s] > 0]
     if bad:
         raise Guard(f'account holds tickers reserved for the other strategies: {bad}')
     val = {s: pos.get(s, 0.0) * float(q[s]['last']) for s in UNIVERSE}

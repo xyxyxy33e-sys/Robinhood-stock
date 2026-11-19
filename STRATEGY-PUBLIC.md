@@ -7,17 +7,21 @@ Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
 - **Trend sleeve, 50%.** SSO (2x S&P 500) while SPY's dividend-adjusted price is above its 200-day average, with 1%
   hysteresis (in above +1%, out below -1%); otherwise IEF (7-10 year Treasuries). Read daily at 15:50.
 - **Rotation sleeve, 50%.** The 2 strongest of VTI, EFA, EEM, TLT, GLD, DBC, VNQ by 6-month total return at the
-  last completed month-end close, 25% each. A pick that does not beat T-bills (SGOV) over those 6 months is held in
-  SGOV. Changes trade at the first 15:50 run of the new month.
+  last completed month-end close, 25% each. A pick that does not beat T-bills (BOXX) over those 6 months is held in
+  BOXX. Changes trade at the first 15:50 run of the new month.
 - **Trading.** Trade only when a target holding is missing, a non-target holding is still held, or L1 drift is
   above 20%. No calendar rebalancing (fewer taxable sales). Whole-share limit orders, at most 0.3% through the touch.
 - **Scope.** The strategy manages only its ten tickers plus positive cash. Every other position in the account
   (the existing individual stocks) is ignored. `max_capital` in the config caps what it deploys.
 
 ## No wash-sale overlap
-Its tickers (SSO IEF VTI EFA EEM TLT GLD DBC VNQ SGOV) share none with the Robinhood strategy (SPY TQQQ QLD QQQ
-VIXY BOXX XLU; SPMO until 2026-11-19) or the IRA (SPMO). SPY is read as a signal and never traded here; the code
-refuses to run if the account holds a reserved ticker (BOXX dust excepted). SSO and VTI track the S&P 500 x2 and
+Its tickers (SSO IEF VTI EFA EEM TLT GLD DBC VNQ BOXX) share none with the Robinhood strategy (SPY TQQQ QLD QQQ
+VIXY XLU; SPMO until 2026-11-19) or the IRA (SPMO), except **BOXX, the cash fund, shared on purpose** (owner
+2026-11-19): BOXX almost never sells at a loss, a washed loss between two taxable accounts is only deferred, and
+its return is a capital gain that the owner's capital losses can offset (T-bill interest cannot be, beyond $3,000 a
+year). In the backtest the cash slot was used in 14 of 232 months, 6 months at most, about 2% of the account on
+average. The 8.5 BOXX shares already in the account (~$1,013) now count as strategy capital. SPY is read as a signal and never traded here; the code
+refuses to run if the account holds a reserved ticker. SSO and VTI track the S&P 500 x2 and
 the total US market: different securities from SPY, generally not "substantially identical", but the IRS has not
 ruled on it; a cautious reading avoids harvesting an SSO/VTI loss in a week the Robinhood account buys SPY.
 

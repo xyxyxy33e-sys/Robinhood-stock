@@ -10,7 +10,7 @@ Never trade any ticker outside the script's printed orders. Never sell the accou
 4. Public tools unavailable: do not guess; say so.
 
 ## 1. Fetch and write the input (both runs)
-- `get_quotes` (account `5OG87042`) for `SPY SSO IEF VTI EFA EEM TLT GLD DBC VNQ SGOV`.
+- `get_quotes` (account `5OG87042`) for `SPY SSO IEF VTI EFA EEM TLT GLD DBC VNQ BOXX`.
 - `get_portfolio` for `5OG87042` (large: read positions for those tickers and `cash` with jq).
 - Write `/tmp/public_<today>.json`:
   `{"date","time","quotes":{SYM:{"last","bid","ask","close":<previousClose>,"last_trade_date":<date of lastTimestamp, ET>}},"positions":{SYM:qty},"cash":<cash>}`
