@@ -159,13 +159,28 @@ def main(path):
             return f" (state {rs[2]} from ${rs[1]:,.0f}, no trade)"
         return ''
     dec = 'NO TRADE' if 'NO TRADE' in decision else ('TRADE' if 'TRADE' in decision else '?')
-    spx = ''
+    def short(w):           # compact weights: "cash", or e.g. "QQQ50" (BOXX is the rest)
+        legs = [f"{n}{x * 100:.0f}" for n, x in zip(NAMES, w) if x >= 0.005 and n != 'BOXX']
+        return ' '.join(legs) or 'cash'
+
+    def sh_edge(rw, sign):
+        return f"{sign}{rw[1]:.0f} {rw[2].split()[0]} {short(rw[3])}" if rw else None
+    parts = [f"10am QQQ {q0:.0f} {(q0 / pc - 1) * 100:+.1f}%"]
     if 'SPY' in q and q['SPY'].get('close'):
         sp = float(q['SPY']['last']) / float(q['SPY']['close']) - 1
-        lvl = f"{float(inp['spx']):,.0f} " if inp.get('spx') else ''
-        spx = f", S&P 500 {lvl}({sp * 100:+.1f}%)"
-    push = (f"10am: QQQ ${q0:,.2f} ({(q0 / pc - 1) * 100:+.1f}%){spx}, VIX {vix0:.1f}. Now {_label(r0)}, {_desc(w0)}: "
-            f"{dec} if it closed here. Up: {edge(up, 'above')}{sedge(up_s, up)}. Down: {edge(dn, 'below')}{sedge(dn_s, dn)}. {vtxt}.")
+        parts.append(f"SPX {float(inp['spx']):.0f} {sp * 100:+.1f}%" if inp.get('spx') else f"SPY {sp * 100:+.1f}%")
+    parts.append(f"VIX {vix0:.1f}")
+    dec = 'no trade' if 'NO TRADE' in decision else ('TRADE' if 'TRADE' in decision else '?')
+    parts.append(f"{_label(r0).split()[0]} {short(w0)}, 3:50 {dec} here")
+    opt = [sh_edge(dn, '<'), sh_edge(up, '>'),
+           f"VIX>={vup} {short(dict(vrows)[vup])}" if vup else None,
+           f"VIX<={vdn} {short(dict(vrows)[vdn])}" if vdn else None]
+    if not up:
+        opt[1] = 'no up trigger in 8%'
+    push = ' | '.join(parts)
+    for o in opt:            # keep it under 200 characters (phones truncate); most useful levels first
+        if o and len(push) + 3 + len(o) <= 200:
+            push += ' | ' + o
     print('PUSH:', push)
     return 0
 

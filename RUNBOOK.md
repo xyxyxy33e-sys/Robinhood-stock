@@ -204,8 +204,8 @@ Read-only. Never place, modify or cancel an order, and write nothing under `data
 5.3 **Run** `python3 paper-track/morning_brief.py /tmp/morning_<today>.json`. It runs `live_run.py check` on
     the morning price (what 15:50 would do if QQQ closed here), then the same live rules with QQQ moved
     −8%..+8% and VIX from 12 to 40, and prints where the target would change.
-5.4 **Push** exactly one notification: the script's `PUSH:` line, plus at most one short clause of your own
-    on the morning move (no forecasts beyond the printed levels). If a guard trips or the tools are
+5.4 **Push** exactly one notification: the script's `PUSH:` line exactly as printed (it is kept under 200
+    characters, because longer pushes are truncated or dropped on phones). Add nothing to it. If a guard trips or the tools are
     unavailable, push that instead. This push is separate from the post-close run's one push.
 
 ## 4. Schedule, sessions, recovery
