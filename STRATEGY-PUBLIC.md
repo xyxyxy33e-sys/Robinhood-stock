@@ -76,3 +76,12 @@ Combined strategy: 10.1% to 12.0% a year, Sharpe 0.66 to 0.75; 6 months is joint
 it before tax (the 3/6/12 blend is 0.4pp better after tax, within noise). Caution recorded: the rotation half alone
 shows a -19.9% maximum drawdown at 6 months but -23% to -38% at every other setting, so the 6-month figure is partly
 luck; plan on the rotation half being able to fall 30% or more. No change.
+
+## Rotation scoring system: not adopted, close call (tested 2026-11-19)
+
+Owner's idea: score each fund on several lookbacks with 6 months weighted most. Seven weightings, each as a weighted
+return over T-bills and as a weighted rank (`public-strategy/research_notes/score.py`, `score.txt`). All 14 land at
+11.4% to 12.4% a year and Sharpe 0.71 to 0.76 against 12.0% / 0.75 for 6 months alone. The return-weighted scores that
+include 12 months are 0.3 to 0.7pp better after tax (9.3% to 9.7% against 9.0%) and 2pp better on maximum drawdown,
+but all are worse in 2007-2015 (9.0% to 9.4% against 9.8%) and the rank versions show no gain, so the both-halves bar
+is not met. Kept 6 months. If revisited, the candidate is 3/6/12 = 25/50/25 (12.3% / 0.76 / -24.8%, 9.7% after tax).
