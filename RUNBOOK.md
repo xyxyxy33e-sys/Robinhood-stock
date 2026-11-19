@@ -194,9 +194,22 @@ This is not a strategy review and changes nothing.
   - Gap within about 1.5pp per month or 3pp cumulative, and nothing material: one paragraph.
   - Otherwise: find the dates, check the Routines' `last_run`, and report the cause. Change nothing.
 
+## 5. Morning brief — about 10:00, Mon–Fri (owner 2026-11-19)
+
+Read-only. Never place, modify or cancel an order, and write nothing under `data/`.
+5.1 **Fetch** the first three calls of 1.1 (quotes for all 8, VIX, positions/portfolio for `576391551`).
+    If QQQ's last trade is not today: market closed, stop, no push.
+5.2 **Write** the 1.2 JSON (with `"time"`, no `qqq_high` needed) to `/tmp/morning_<today>.json`, not `data/`.
+5.3 **Run** `python3 paper-track/morning_brief.py /tmp/morning_<today>.json`. It runs `live_run.py check` on
+    the morning price (what 15:50 would do if QQQ closed here), then the same live rules with QQQ moved
+    −8%..+8% and VIX from 12 to 40, and prints where the target would change.
+5.4 **Push** exactly one notification: the script's `PUSH:` line, plus at most one short clause of your own
+    on the morning move (no forecasts beyond the printed levels). If a guard trips or the tools are
+    unavailable, push that instead. This push is separate from the post-close run's one push.
+
 ## 4. Schedule, sessions, recovery
 
-- **Routines.** Trade run `50 15 * * 1-5`, post-close `10 16 * * 1-5`, monthly `0 10 1 * *`, all `CRON_TZ=America/New_York`.
+- **Routines.** Trade run `50 15 * * 1-5`, post-close `10 16 * * 1-5`, morning brief `57 9 * * 1-5`, monthly `0 10 1 * *`, all `CRON_TZ=America/New_York`.
   US daylight-saving changes need no edit.
 - **Session.** They fire into the lean runner session, not the owner's long conversation session.
 - **Missed trade run.** The post-close run's fallback (2.2) catches it. A missed post-close run is caught by the next trade run:
