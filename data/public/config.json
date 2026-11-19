@@ -1,0 +1,1 @@
+{"enabled": false, "max_capital": null, "note": "enabled=false: dry run, orders are printed and never placed. Owner sets enabled=true and (optionally) max_capital in dollars to go live."}
