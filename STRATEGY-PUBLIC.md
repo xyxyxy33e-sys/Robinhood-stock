@@ -114,3 +114,16 @@ Seven rules using the S&P's 50-day line, as the Robinhood strategy does on QQQ (
 and 11.3% to 14.4% against 16.8% on 2x S&P for 1951-2007, with two to three times the trades. The one rule ahead in
 2007-2026 (1x when below the 200-day but above the 50-day: 13.0%) is level on 1951-2007 (16.8% against 16.8%) with a
 deeper drawdown (-47.5% against -37.1%). Golden cross: fewer trades but -59% drawdown. No change.
+
+## VIX pieces from the Robinhood strategy (tested 2026-11-19): sleeve rejected, panic leg is a candidate
+
+`public-strategy/research_notes/vix.py`, `panic_long.py`. Both act only while the trend half is off.
+- **VIX sleeve (VIXY 20-50% or VIXM 75% of the fallback, live latch, S&P vol threshold 10-20%): rejected.** 2011-2026:
+  11.1% to 11.7% against 11.7%, Sharpe 0.73 to 0.76 against 0.77; on 0.5% to 1.5% of days; cost up to 6.5 points in 2015.
+  It would also need a VIX fund the Robinhood account does not trade.
+- **VIX-panic leg (VIX closes >= 30 on, < 25 off; that share of the fallback in 1x S&P, held as SSO at half weight):
+  candidate, owner to decide.** 2007-2026 at 25% / 50%: 12.3% / 0.77 / -22.8% and 12.6% / 0.78 / -23.0% against 12.0% /
+  0.75 / -22.9%; both halves better; after tax 9.3% / 9.4% against 9.0%. On 2x S&P / T-bills for 1990-2007, untouched:
+  13.4% and 14.0% against 12.8%, Sharpe 0.48 and 0.50 against 0.46, drawdown no worse; thresholds 25/20, 35/28 and 40/30
+  also ahead. Cost: it buys into falling markets, so 2008 is +14.8% / +12.2% against +17.1%, and at 100% the drawdown
+  grows to -28%.
