@@ -1,0 +1,18 @@
+
+## A bootstrap holdout, block 20
+               medCAGR  p5CAGR Sharpe  medDD   p5DD  >QQQ >QQQv  loss
+current           3.9%   -6.6%   0.29   -45%   -68%   48%   46%   25%
+no-trim           3.9%  -10.0%   0.28   -56%   -76%   48%   44%   35%
+bare              3.4%   -8.2%   0.26   -55%   -72%   52%   48%   34%
+simple            3.6%   -9.1%   0.27   -57%   -77%   48%   47%   37%
+QQQ               4.7%   -9.8%   0.30   -57%   -82%    0%   49%   29%
+QQQ same vol      4.7%   -5.0%   0.33   -43%   -63%   51%    0%   22%   [5s]
+
+## A bootstrap holdout, block 20 + CRASH
+               medCAGR  p5CAGR Sharpe  medDD   p5DD  >QQQ >QQQv  loss
+current           3.1%   -8.5%   0.25   -47%   -72%   60%   55%   33%
+no-trim           2.1%  -11.1%   0.21   -59%   -80%   57%   49%   43%
+bare              2.1%  -10.1%   0.21   -57%   -77%   61%   53%   41%
+simple            1.5%  -11.5%   0.20   -59%   -82%   56%   50%   44%
+QQQ               1.2%  -13.2%   0.19   -64%   -86%    0%   35%   44%
+QQQ same vol      2.3%   -6.9%   0.21   -49%   -68%   65%    0%   34%   [11s]
