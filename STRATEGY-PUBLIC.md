@@ -39,3 +39,5 @@ little cash idle.
 `public-strategy/public_run.py` does every calculation; RUNBOOK-PUBLIC.md has the steps (10:00 brief, 15:50 trade
 run). Go-live needs: capital in the account (it is currently all individual stocks with negative cash), the owner
 setting `enabled=true`, and two scheduled tasks in a session that has the Public connector.
+
+Dashboard: https://claude.ai/artifact/Ut3LWwtHC9ztXDCviogdZK (five attached CSV files: status, holdings, stats, years, nav; regenerate from `public_run.py` and `backtest.py`).
