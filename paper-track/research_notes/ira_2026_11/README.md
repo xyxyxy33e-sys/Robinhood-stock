@@ -34,3 +34,18 @@ Nov 2015 -> Nov 2026, $48,241 start + $7,500 each year:
 12.9% / 0.68 / -44.8% (only 5.7% in 2007-15).
 No diversified design beats SPMO's exceptional decade on money; they beat it on drawdown. Only the leveraged
 regime rules (live strategy, or its S&P twin) out-earned it, the twin by a thin, era-dependent margin.
+
+## Simple S&P trend rules vs S&P 500 total return, 1951-2026 — `spx.py` (owner: "simpler S&P version, beat SPY")
+
+CAGR / excess Sharpe / max DD (same-session execution):
+| | 1951-2026 | 1951-89 | 1990-2026 | 2007-26 |
+|---|---|---|---|---|
+| S&P 500 total return | 11.4 / 0.50 / -55% | 12.0 / 0.52 / -45% | 10.8 / 0.50 / -55% | 10.5 / 0.53 / -55% |
+| S1 200-day, 1x | 11.1 / 0.67 / -20% | 13.1 / 0.80 | 9.1 / 0.57 | 8.3 / 0.61 |
+| **S2 200-day, 2x** | **15.5 / 0.60 / -39%** | **18.6 / 0.73** | **12.3 / 0.50** | **12.1 / 0.54** |
+| S3 200-day + vol target (max 2x) | 12.3 / 0.56 / -27% | 16.0 / 0.72 | 8.6 / 0.42 | 8.7 / 0.50 |
+| S4 simple live (2x / 1x by 50/200, vol target) | 13.4 / 0.58 / -38% | 17.5 / 0.77 | 9.3 / 0.42 | 9.7 / 0.51 |
+S2 beats S&P total return on CAGR in every era with equal or better Sharpe and a shallower max DD; beats it in
+45 of 76 years; ~2.5 switches a year; one session late: 14.5% / -61.5% over 1951-2026 (1987), 12.4% / -40.5% since
+1990. Its edge since 1990 is leverage plus drawdown control (Sharpe ties), larger before 1990. It does not beat
+SPMO's 2015-26 decade (SSO/IEF variant 13.2% vs 16.8%).
