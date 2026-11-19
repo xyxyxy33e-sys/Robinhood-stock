@@ -53,3 +53,10 @@ results in `rebalance_day.txt`). Across the 21 days the combined strategy return
 Sharpe 0.63 to 0.76). Month-end (12.0%, 0.75) is near the top; mid-month (days 8 to 12) averaged 10.9% and 0.68 and was
 not better in either half. The spread between neighbouring days is noise, so the honest expectation is the mean, about
 11%, not the month-end 12.0%. No change.
+
+## Rotation check frequency: stays monthly (tested 2026-11-19)
+
+Weekly, two-weekly and daily rotation checks, all with a 126-trading-day lookback
+(`public-strategy/research_notes/rebalance_weekly.py`, results in `rebalance_weekly.txt`): 10.9% to 11.4% a year and
+Sharpe 0.69 to 0.71 against 11.1% and 0.70 monthly on the same lookback; after tax 8.2% to 8.6% against 8.6%. Weekly
+makes 14 to 15 rotation changes a year against about 6. No gain for more than twice the trading. No change.

@@ -1,0 +1,7 @@
+rotation check frequency (6-month lookback = 126 trading days in every row)
+ schedule                 | CAGR Sharpe  MaxDD | 2007-15 | 2016-26 | after-tax | rotation changes/yr
+ monthly, month-end       |  11.1  0.70  -27.2 |   9.0   |  12.7   |   8.6     |  5.8
+ every 2 weeks (2 phases) |  10.9  0.69  -26.0 |   8.5   |  12.9   |   8.2     |  9.7
+ weekly, Friday           |  11.2  0.71  -26.2 |   8.7   |  13.3   |   8.4     | 14.6
+ weekly, other weekdays   |  11.4  0.71  -28.0 |   9.1   |  13.3   |   8.6     | 13.8
+ daily                    |  11.0  0.70  -27.2 |   7.7   |  13.7   |   8.2     | 33.4
