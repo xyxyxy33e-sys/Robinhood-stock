@@ -68,3 +68,11 @@ stricter versions (above own 200-day average; beat T-bills by 2 or 5 points; at 
 T-bills), are in `public-strategy/research_notes/cash_rule.py` and `cash_rule.txt`. The current rule has the best
 return, Sharpe and maximum drawdown of the seven (12.0% / 0.75 / -26.7%); stricter rules hold 6% to 36% cash and return
 10.4% to 11.6%. No change.
+
+## Rotation lookback: stays 6 months (tested 2026-11-19)
+
+Lookbacks of 1, 3, 6, 9 and 12 months and six blends (`public-strategy/research_notes/lookback.py`, `lookback.txt`).
+Combined strategy: 10.1% to 12.0% a year, Sharpe 0.66 to 0.75; 6 months is joint best (12.0% / 0.75) and no blend beats
+it before tax (the 3/6/12 blend is 0.4pp better after tax, within noise). Caution recorded: the rotation half alone
+shows a -19.9% maximum drawdown at 6 months but -23% to -38% at every other setting, so the 6-month figure is partly
+luck; plan on the rotation half being able to fall 30% or more. No change.
