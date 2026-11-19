@@ -99,3 +99,11 @@ Scripts and outputs in `public-strategy/research_notes/` (`trend12`, `ideas34`, 
   trading and tax grounds only.
 - **Top 3 (or 1, 4) instead of top 2: rejected.** 10.3% to 11.6% against 12.0%; combined maximum drawdown no better.
 - **Split: stays 50/50.** 30/70 to 70/30 trade return for drawdown in a straight line (11.6% / -19.5% to 12.3% / -35.1%).
+
+## 50-day line in the trend half: rejected (tested 2026-11-19)
+
+Seven rules using the S&P's 50-day line, as the Robinhood strategy does on QQQ (`research_notes/fifty.py`,
+`fifty_long.py`). Rules that cut 2x to 1x or to bonds below the 50-day line: 9.9% to 11.2% against 12.0% in 2007-2026,
+and 11.3% to 14.4% against 16.8% on 2x S&P for 1951-2007, with two to three times the trades. The one rule ahead in
+2007-2026 (1x when below the 200-day but above the 50-day: 13.0%) is level on 1951-2007 (16.8% against 16.8%) with a
+deeper drawdown (-47.5% against -37.1%). Golden cross: fewer trades but -59% drawdown. No change.
