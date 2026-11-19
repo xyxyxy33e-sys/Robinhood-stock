@@ -6,6 +6,8 @@ Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
 ## Rules
 - **Trend sleeve, 50%.** SSO (2x S&P 500) while SPY's dividend-adjusted price is above its 200-day average, with 1%
   hysteresis (in above +1%, out below -1%); otherwise IEF (7-10 year Treasuries). Read daily at 15:50.
+  **Fallback filter (owner 2026-11-19):** IEF is held only if its 6-month total return at the last completed
+  month-end beats T-bills, the same test the rotation uses; otherwise the trend half sits in BOXX.
 - **Rotation sleeve, 50%.** The 2 strongest of VTI, EFA, EEM, TLT, GLD, DBC, VNQ by 6-month total return at the
   last completed month-end close, 25% each. A pick that does not beat T-bills (BOXX) over those 6 months is held in
   BOXX. Changes trade at the first 15:50 run of the new month.
@@ -28,13 +30,15 @@ ruled on it; a cautious reading avoids harvesting an SSO/VTI loss in a week the 
 ## Evidence (`public-strategy/backtest.py`, pre-registered, Jul 2007 - Nov 2026, adjusted closes, 5bp/side)
 | | CAGR | Sharpe | Max DD | Worst year |
 |---|---|---|---|---|
-| Combined 50/50 | 12.0% | 0.75 | -26.7% | -23.5% (2022) |
-| Trend sleeve alone | 12.3% | 0.60 | -46.0% | -37.5% |
+| Combined 50/50 | 12.0% | 0.75 | -22.9% | -18.5% (2022) |
+| Trend sleeve alone | 12.3% | 0.61 | -40.2% | -29.0% |
 | Rotation sleeve alone | 10.6% | 0.72 | -19.9% | -8.3% |
 | SPY buy & hold | 10.5% | 0.61 | -55.2% | -36.8% |
-2007-2015: 9.8% / 0.61 vs SPY 5.7% / 0.36. 2016-2026: 13.8% / 0.87 vs 14.4% / 0.85.
+2007-2015: 9.4% / 0.59 vs SPY 5.7% / 0.36. 2016-2026: 14.1% / 0.89 vs 14.4% / 0.85.
+These figures include the fallback filter. Before it (always IEF): 12.0% / 0.75 / -26.7%, worst year -23.5%, 2008 +22%;
+the research sections below that say "current" were run before the filter.
 After federal tax (38.8% short-term, 18.8% long-term, paid yearly): **9.0%** vs SPY buy & hold **9.2%**: in a
-taxable account the return ties the index; what it buys is the drawdown (-27% vs -55%; +22% in 2008) and a
+taxable account the return ties the index; what it buys is the drawdown (-23% vs -55%; +17% in 2008) and a
 0.56 daily correlation to the Robinhood strategy. Behind SPY in 2010, 2015 (-16% vs +1%), 2019, 2022, 2023, 2026.
 Differences from the backtest when live: rotation changes trade one session after month-end; whole shares leave a
 little cash idle.
@@ -89,9 +93,12 @@ is not met. Kept 6 months. If revisited, the candidate is 3/6/12 = 25/50/25 (12.
 ## Structure tests (2026-11-19): fallback filter is the one candidate; band, middle step, top-N, split unchanged
 
 Scripts and outputs in `public-strategy/research_notes/` (`trend12`, `ideas34`, `band_long`). Current = 12.0% / 0.75 / -26.7%.
-- **Bond fallback filter (candidate, owner to decide).** Trend half holds IEF below the 200-day line only if IEF's
+- **Bond fallback filter (ADOPTED by the owner 2026-11-19).** Trend half holds IEF below the 200-day line only if IEF's
   6-month return beats T-bills, else the cash slot: 12.3% / 0.77 / -22.8%, both halves no worse (9.9% and 14.2% against
   9.8% and 13.8%), 2022 -18.4% against -23.5%, 2023 +7.5% against +9.5%. Passes the bars, but the gain is one episode (2022).
+  That test used a 126-trading-day lookback. As built (month-end to month-end, the rotation's own dates) the return is
+  unchanged at 12.0% / 0.75, 2008 is +17% instead of +22%, and the maximum drawdown is -22.9%: it is drawdown
+  insurance, not extra return.
 - **Middle 1x step: rejected.** Eleven versions: 11.1% to 12.3%, more than twice the trend trades, after tax lower in all but one.
 - **Wider band: not adopted.** 1.5% to 4% bands show 13.1% to 13.7% in 2007-2026, but on 2x S&P / T-bills for
   1951-2007, untouched by this design, 1% gives 16.8% and 2.5% to 3% give 16.3% to 16.6%. The gain is a 2010/2015/2023

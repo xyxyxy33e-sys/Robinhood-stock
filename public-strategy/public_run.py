@@ -7,6 +7,8 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
 (SPY TQQQ QLD QQQ VIXY XLU) or the IRA (SPMO); BOXX, the cash fund, is shared with Robinhood on purpose:
   TREND sleeve 50%:    SSO (2x S&P 500) while SPY's adjusted close is above its 200-day average, 1% hysteresis
                        (in above +1%, out below -1%); otherwise IEF. Read every day at 15:50 on the live price.
+                       Fallback filter (owner 2026-11-19): IEF is held only if its 6-month total return at the last
+                       completed month-end beats T-bills (the rotation's own test); otherwise the trend half is in BOXX.
   ROTATION sleeve 50%: the 2 strongest of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return at the last completed
                        month-end close, 25% each; a pick that does not beat T-bills over the same 6 months is held
                        in BOXX instead. Changes take effect at the first 15:50 run of the new month.
@@ -82,12 +84,12 @@ def rotation(series, sgov, today):
     hurdle = tbill_6m(sgov, s, e)
     mom = sorted(((series[x][e] / series[x][s] - 1, x) for x in ROT), reverse=True)
     picks = [(x if m > hurdle else CASH) for m, x in mom[:2]]
-    return picks, mom, hurdle, e
+    return picks, mom, hurdle, e, s
 
 
-def targets(on, picks):
+def targets(on, picks, ief_ok=True):
     w = {s: 0.0 for s in UNIVERSE}
-    w['SSO' if on else 'IEF'] += 0.5
+    w['SSO' if on else ('IEF' if ief_ok else CASH)] += 0.5
     for p in picks:
         w[p] += 0.25
     return w
@@ -100,10 +102,14 @@ def compute(inp, need_account=True):
     series = {s: adj_series(s, today, q[s]['last']) for s in ROT}
     sgov = adj_series(CASH, today, q[CASH]['last'])
     on, gap, sma = trend_on(spy, today)
-    picks, mom, hurdle, asof = rotation(series, sgov, today)
-    w = targets(on, picks)
+    picks, mom, hurdle, asof, start = rotation(series, sgov, today)
+    ief = adj_series('IEF', today, q['IEF']['last'])
+    ief_mom = ief[asof] / ief[start] - 1; ief_ok = ief_mom > hurdle
+    fallback = 'IEF' if ief_ok else CASH
+    w = targets(on, picks, ief_ok)
     out = dict(date=today, time=inp.get('time'), trend_on=on, gap200=gap, spy_sma200_adj=sma, picks=picks,
-               rotation_asof=asof, momentum=[(x, m) for m, x in mom], hurdle=hurdle, target=w, enabled=bool(cfg.get('enabled')))
+               rotation_asof=asof, momentum=[(x, m) for m, x in mom], hurdle=hurdle, target=w,
+               ief_mom=ief_mom, ief_ok=ief_ok, fallback=fallback, trend_holding='SSO' if on else fallback, enabled=bool(cfg.get('enabled')))
     if not need_account:
         return out, cfg
     pos = {s: float(v) for s, v in inp.get('positions', {}).items()}
@@ -163,8 +169,10 @@ def main(argv):
         print(f'GUARD: {e}'); return 2
     g = out['gap200']
     print(f"=== Public strategy {out['date']} {out.get('time') or ''} ===")
-    print(f"TREND: SPY {g:+.2%} vs its 200-day -> {'ON, SSO' if out['trend_on'] else 'OFF, IEF'} "
+    print(f"TREND: SPY {g:+.2%} vs its 200-day -> {'ON, SSO' if out['trend_on'] else 'OFF, ' + out['fallback']} "
           f"(flips {'below -1%' if out['trend_on'] else 'above +1%'})")
+    print(f"FALLBACK: IEF 6-month {out['ief_mom']:+.2%} vs T-bills {out['hurdle']:+.2%} -> "
+          f"{'IEF' if out['ief_ok'] else CASH} when the trend is off")
     print(f"ROTATION (month-end {out['rotation_asof']}, hurdle {out['hurdle']:+.2%}): " +
           ', '.join(f"{x} {m:+.1%}" for x, m in out['momentum']) + f" -> {out['picks']}")
     print(f"target: {describe(out['target'])}")
@@ -177,7 +185,7 @@ def main(argv):
         print("DRY RUN: data/public/config.json has enabled=false. Do NOT place these orders.")
     if argv[1] == 'brief':
         spyq = q['SPY']; chg = f" {float(spyq['last']) / float(spyq['close']) - 1:+.1%}" if spyq.get('close') else ''
-        push = (f"Public 10am: SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF IEF'}, "
+        push = (f"Public 10am: SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
                 f"flips at {'-1%' if out['trend_on'] else '+1%'} | rotation {'+'.join(out['picks'])} | 3:50 "
                 f"{'TRADE' if out['decision'] else 'no trade'} here" + ('' if out['enabled'] else ' (dry run)'))
         print('PUSH:', push[:199])

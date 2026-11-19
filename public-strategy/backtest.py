@@ -2,6 +2,8 @@
 P = 50% TREND sleeve + 50% ROTATION sleeve, no ticker shared with the Robinhood strategy (SPY TQQQ QLD QQQ VIXY BOXX XLU)
 or the IRA (SPMO).
  TREND: SSO (2x S&P) while SPY adj close is above its 200-day average (1% hysteresis), else IEF. Checked daily.
+   FALLBACK FILTER (owner 2026-11-19): IEF only if its 6-month return at the last month-end beats T-bills, else cash.
+   Set FB_FILTER = False for the original always-IEF rule.
  ROTATION: top 2 of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return, 25% each, each must beat T-bills else that
    slot in T-bills. Last session of each month.
  Sleeves are reset to 50/50 only when a signal trades (no calendar rebalance). 5bp/side.
@@ -21,7 +23,9 @@ dates = [d for d in H.p['dates'] if d >= '2006-06-22' and all(d in px[s] for s i
 X = {s: np.array([px[s][d] for d in dates]) for s in SY}; R = {s: np.r_[0, X[s][1:] / X[s][:-1] - 1] for s in SY}
 C = np.array([cashd[d] for d in dates]); me = [i for i in range(n - 1) if dates[i][:7] != dates[i + 1][:7]]; mes = set(me)
 c = np.cumsum(np.insert(X['SPY'], 0, 0)); sma = np.full(n, np.nan); sma[199:] = (c[200:] - c[:-200]) / 200
+FB_FILTER = True
 def run(start, mode='P', tax=False):
+    iefok = True
     s0 = next(i for i, d in enumerate(dates) if d >= start)
     w = {}; on = None; rot = {}; V = 1.0; out = []; basis = {}; opened = {}; gst = glt = ordi = 0.0; cf = 0.0; yr = dates[s0][:4]
     for i in range(s0, n):
@@ -44,9 +48,13 @@ def run(start, mode='P', tax=False):
             for m, s in sorted(((X[s][i] / X[s][j] - 1, s) for s in ROT), reverse=True)[:2]:
                 if m > cr: nr[s] = 0.5
             if nr != rot: rot = nr; trade = True
+            ok = (X['IEF'][i] / X['IEF'][j] - 1 > cr) or not FB_FILTER
+            if ok != iefok:
+                iefok = ok
+                if on is not None and not on: trade = True
         if trade or i == s0:
             t = {}
-            if mode in ('P', 'T') and on is not None: t['SSO' if on else 'IEF'] = 0.5 if mode == 'P' else 1.0
+            if mode in ('P', 'T') and on is not None and (on or iefok): t['SSO' if on else 'IEF'] = 0.5 if mode == 'P' else 1.0
             if mode in ('P', 'R'):
                 for s, x in rot.items(): t[s] = t.get(s, 0) + x * (0.5 if mode == 'P' else 1.0)
             for s in set(w) | set(t):
@@ -88,3 +96,21 @@ dm = dict(zip(main[1], main[0])); cd = [d for d in ds if d in dm]; dr = dict(zip
 print('corr of P to the Robinhood strategy (daily):', round(float(np.corrcoef([dr[d] for d in cd], [dm[d] for d in cd])[0, 1]), 2))
 ann = st(r, ds)[1]; sp = st(R['SPY'][s0 + 1:], dates[s0 + 1:])[1]
 print('years: ' + '  '.join(f"{y} {ann[y]*100:+.0f}/{sp[y]*100:+.0f}" for y in sorted(ann)))
+
+# dashboard data (month-end NAV, yearly returns, headline stats)
+import os
+OUT = os.environ.get('PUB_OUT')
+if OUT:
+    nav = np.cumprod(1 + r); sn = np.cumprod(1 + R['SPY'][s0 + 1:]); dd = lambda x: (x / np.maximum.accumulate(x) - 1).min() * 100
+    with open(OUT + '/nav.csv', 'w') as f:
+        f.write('date,strategy,spy\n' + f"{dates[s0]},1.0000,1.0000\n")
+        for k, d in enumerate(ds):
+            if k == len(ds) - 1 or d[:7] != ds[k + 1][:7]: f.write(f"{d},{nav[k]:.4f},{sn[k]:.4f}\n")
+    with open(OUT + '/years.csv', 'w') as f:
+        f.write('year,strategy_pct,spy_pct\n')
+        for y in sorted(ann): f.write(f"{y + (' (part)' if y in (ds[0][:4], ds[-1][:4]) else '')},{ann[y]*100:.1f},{sp[y]*100:.1f}\n")
+    sh = lambda x: x.mean() * 252 / (x.std(ddof=1) * 252 ** .5); cg = lambda x: (x[-1] ** (252 / len(x)) - 1) * 100
+    with open(OUT + '/stats.csv', 'w') as f:
+        f.write('series,cagr_pct,sharpe,max_drawdown_pct,worst_year_pct,cagr_after_tax_pct,growth_of_1\n')
+        f.write(f"Public strategy,{cg(nav):.1f},{sh(r):.2f},{dd(nav):.1f},{min(ann.values())*100:.1f},{cg(np.cumprod(1+rt)):.1f},{nav[-1]:.2f}\n")
+        f.write(f"SPY buy and hold,{cg(sn):.1f},{sh(R['SPY'][s0+1:]):.2f},{dd(sn):.1f},{min(sp.values())*100:.1f},{(fin ** (252 / len(sn)) - 1) * 100:.1f},{sn[-1]:.2f}\n")
