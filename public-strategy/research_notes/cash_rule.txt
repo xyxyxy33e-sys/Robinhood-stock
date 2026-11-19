@@ -1,0 +1,8 @@
+ rule                           | CAGR Sharpe MaxDD AvgDD | 07-15 | 16-26 | aftertax | rot-only CAGR Sh MaxDD | cash share of rotation
+ current: must beat T-bills     |  12.0  0.75  -26.7  -7.1 |   9.8 |  13.8 |   9.0    |  10.6  0.72  -19.9 |    4%
+ no cash rule (always top 2)    |  11.8  0.73  -30.4  -7.5 |   9.6 |  13.5 |   8.9    |  10.0  0.67  -33.9 |    0%
+ + above own 200-day average    |  11.5  0.73  -27.4  -7.4 |   9.4 |  13.3 |   8.7    |   9.6  0.67  -20.9 |    6%
+ must beat T-bills by 2 pts     |  11.6  0.73  -27.2  -7.3 |   9.3 |  13.5 |   8.7    |   9.7  0.68  -21.7 |    8%
+ must beat T-bills by 5 pts     |  11.2  0.72  -29.6  -7.8 |   8.8 |  13.1 |   8.4    |   8.9  0.65  -21.1 |   15%
+ + at least 3 of 7 beat T-bills |  11.2  0.72  -28.5  -7.2 |   9.4 |  12.6 |   8.4    |   8.8  0.67  -18.2 |   22%
+ + at least 4 of 7 beat T-bills |  10.4  0.70  -27.2  -7.1 |   7.1 |  13.1 |   7.9    |   7.3  0.62  -18.0 |   36%

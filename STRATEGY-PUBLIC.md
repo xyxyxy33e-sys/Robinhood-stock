@@ -60,3 +60,11 @@ Weekly, two-weekly and daily rotation checks, all with a 126-trading-day lookbac
 (`public-strategy/research_notes/rebalance_weekly.py`, results in `rebalance_weekly.txt`): 10.9% to 11.4% a year and
 Sharpe 0.69 to 0.71 against 11.1% and 0.70 monthly on the same lookback; after tax 8.2% to 8.6% against 8.6%. Weekly
 makes 14 to 15 rotation changes a year against about 6. No gain for more than twice the trading. No change.
+
+## Rotation cash rule: unchanged (tested 2026-11-19)
+
+The rotation already goes to the cash slot when a pick fails to beat T-bills over 6 months. Removing the rule, and five
+stricter versions (above own 200-day average; beat T-bills by 2 or 5 points; at least 3 or 4 of 7 funds beating
+T-bills), are in `public-strategy/research_notes/cash_rule.py` and `cash_rule.txt`. The current rule has the best
+return, Sharpe and maximum drawdown of the seven (12.0% / 0.75 / -26.7%); stricter rules hold 6% to 36% cash and return
+10.4% to 11.6%. No change.
