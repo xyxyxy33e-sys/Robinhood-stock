@@ -85,3 +85,17 @@ return over T-bills and as a weighted rank (`public-strategy/research_notes/scor
 include 12 months are 0.3 to 0.7pp better after tax (9.3% to 9.7% against 9.0%) and 2pp better on maximum drawdown,
 but all are worse in 2007-2015 (9.0% to 9.4% against 9.8%) and the rank versions show no gain, so the both-halves bar
 is not met. Kept 6 months. If revisited, the candidate is 3/6/12 = 25/50/25 (12.3% / 0.76 / -24.8%, 9.7% after tax).
+
+## Structure tests (2026-11-19): fallback filter is the one candidate; band, middle step, top-N, split unchanged
+
+Scripts and outputs in `public-strategy/research_notes/` (`trend12`, `ideas34`, `band_long`). Current = 12.0% / 0.75 / -26.7%.
+- **Bond fallback filter (candidate, owner to decide).** Trend half holds IEF below the 200-day line only if IEF's
+  6-month return beats T-bills, else the cash slot: 12.3% / 0.77 / -22.8%, both halves no worse (9.9% and 14.2% against
+  9.8% and 13.8%), 2022 -18.4% against -23.5%, 2023 +7.5% against +9.5%. Passes the bars, but the gain is one episode (2022).
+- **Middle 1x step: rejected.** Eleven versions: 11.1% to 12.3%, more than twice the trend trades, after tax lower in all but one.
+- **Wider band: not adopted.** 1.5% to 4% bands show 13.1% to 13.7% in 2007-2026, but on 2x S&P / T-bills for
+  1951-2007, untouched by this design, 1% gives 16.8% and 2.5% to 3% give 16.3% to 16.6%. The gain is a 2010/2015/2023
+  artifact. A 3% band does switch 1.0 times a year against 2.5 for the same 75-year return, so it is a fair choice on
+  trading and tax grounds only.
+- **Top 3 (or 1, 4) instead of top 2: rejected.** 10.3% to 11.6% against 12.0%; combined maximum drawdown no better.
+- **Split: stays 50/50.** 30/70 to 70/30 trade return for drawdown in a straight line (11.6% / -19.5% to 12.3% / -35.1%).
