@@ -22,3 +22,15 @@ scratch copy of `review_2026_11/harness.py` with today's partial row skipped).
 - Rules (A halved / TQQQ out / D to cash / all risk halved at ratio >= 1.15, 1.3, 1.5; deep-E skipped at
   >= 1.15/1.3/1.5 or <= 0.85): all lower or equal on CAGR and Sharpe in real, proxy and holdout. Best: A TQQQ out
   at >= 1.3 ties the holdout (22.4%, 1.076) but costs 1.4pp real. Not adopted.
+
+## Volume above / below its 20-day and 100-day average lines (owner follow-up) — also no
+
+`vline.py`. Flags: today's volume above its 20d line (44% of days), above its 100d line (41%), above both (32%),
+below both (48%), 20d line above 100d line (44%). Latest 16 Nov: 43.6M vs 20d 49.7M / 100d 38.9M (between).
+- By state, next-day and next-20-day QQQ, yes vs no: no flag keeps its sign across 2001-15 and 2015-26 in A, D, E
+  or F; the few |t| ~2 cells (C, E next day) reverse in the other era.
+- Rules: A halved / TQQQ out / D cash / all halved / deep-E skipped on "above both", "20d > 100d" and "above 20d":
+  every one lower on CAGR (-1.6 to -11 pp real) and on Sharpe in real and proxy; holdout Sharpe at best ties
+  (A halved on 20d > 100d: 1.076 vs 1.074 for -2.1 pp CAGR). Drawdown cuts (to -14% real at most) cost far more
+  CAGR than holding less across the board (~0.53 pp drawdown per 1 pp CAGR). The daily flags also flip often,
+  adding trades. Not adopted.
