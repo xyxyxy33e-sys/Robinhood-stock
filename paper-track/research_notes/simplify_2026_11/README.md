@@ -19,3 +19,16 @@ Reading: the in-sample edge of the full design over the simple ones lives mostly
 ~90 variants) and the D gate; trim v2 is the one piece that is clearly worse out of sample. The trend + vol-target
 core is roughly as good as buy-and-hold on untouched data, with shallower drawdowns; the extras do not travel.
 No live change made (owner decision).
+
+## 20 years vs the S&P 500 (2006-11-17 -> 2026-11-16, $100k, before tax) — `sp20.py`
+
+| | CAGR | Sharpe | MaxDD | $100k -> |
+|---|---|---|---|---|
+| Live strategy (QQQ signals, QQQ-core proxy, cap 2.0, sleeve off) | 36.6% | 1.54 | -22.1% | $50.5M |
+| S&P 500 buy & hold (SPY + 1.8% div) | 10.7% | 0.62 | -55.3% | $0.76M |
+| QQQ buy & hold (+ 0.6% div) | 15.2% | 0.75 | -53.3% | $1.68M |
+| Live rules run on the S&P 500 itself (own signals, 2x/3x S&P) | 12.9% | 0.68 | -44.8% | $1.13M |
+| Bare rules on the S&P 500 | 14.4% | 0.72 | -40.6% | $1.47M |
+
+The QQQ-based figure is the in-sample backtest (rules fit on these years). The same rules on the S&P 500, which they
+were never fit to, beat S&P buy & hold by ~2pp/yr with a 10pp shallower drawdown and beat it in 10 of 19 full years.
