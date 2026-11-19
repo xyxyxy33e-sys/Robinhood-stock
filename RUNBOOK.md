@@ -63,7 +63,8 @@ the orders. It also writes `data/runs/<today>.json`, which every later step read
 - `LIMIT` lines are whole-share marketable limits. Never chase more than 0.3% beyond the printed limit.
 - `MARKET dollar-based` and `MARKET` stub lines are regular-hours market orders.
 - If a buy exceeds buying power, wait for the sells to fill.
-- Target 15:54–15:57; never place after 15:59.
+- Target 15:54–15:57; never place after 15:59. **Early-close days** (13:00 close, `live_run.EARLY_CLOSES`):
+  the trade run fires at 12:50 instead; target 12:54–12:57, never after 12:59. The 15:50 run then exits 3.
 - **VIXY trades in regular hours only on Robinhood (like VIXM before it).** It must fill in this window; if it cannot, it waits for the next open; report that.
 - **Gross cap 2.0x (2026-11-11):** `live_run.py` already applies it; trade the printed orders as they are.
 
@@ -219,5 +220,10 @@ Read-only. Never place, modify or cancel an order, and write nothing under `data
 - **Rollback.** The pre-2026-10-08 prompts are saved in `paper-track/trigger_prompts/archive-2026-10-08/`.
   Re-creating the old Routines from them restores the old workflow exactly. `state.VIXM_OVERLAY_ENABLED = False` removes VIXM alone;
   `state.DEEP_E_ENABLED = False` removes the deep-E QQQ leg alone (2026-11-11).
+- **Early closes (added 2026-11-19).** NYSE closes at 13:00 on the day after Thanksgiving and some Christmas
+  Eves (2026-11-27, 2026-12-24, 2027-11-26). One-shot Routines fire the trade run at 12:50 ET on those dates, into
+  the same runner session; the regular 15:50 run exits 3 (`EARLY_CLOSES` in `live_run.py`); the 16:10 post-close
+  run is unchanged and is the fallback if the 12:50 run was missed. Each December, add the next year's early
+  closes to `EARLY_CLOSES` and create their 12:50 one-shot Routines.
 - **Same account, other Routines.** The 0DTE/7DTE options Routines also name this account. They are dry-run.
   If they ever go live, their buying power must be fenced from this strategy first.

@@ -55,6 +55,9 @@ CLOSES_CSV = os.path.join(ROOT, 'data', 'live_closes.csv')
 RUNS_DIR = os.path.join(ROOT, 'data', 'runs')
 LEGS6 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'VIXM', 'BOXX')     # == state.LIVE_LEGS order (run files to 2026-11-10)
 LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', S.VIXM_INSTRUMENT, 'QQQ', 'BOXX')   # == state.LIVE_LEGS7 order; the sleeve's ticker is state.VIXM_INSTRUMENT (VIXY from 2026-11-11)
+# NYSE early closes (13:00 ET): the trade run fires at 12:50 on these days (RUNBOOK 4); the regular 15:50 run
+# exits 3. Source: NYSE Group 2026-2028 holiday and early-closings calendar. Add each new year's dates here.
+EARLY_CLOSES = {'2026-11-27': '13:00', '2026-12-24': '13:00', '2027-11-26': '13:00'}
 LEGS = LEGS7                                               # the live legs
 LEGS5 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')             # shadow tracks / old NAV
 SYMS = ('QQQ', 'QQEW') + tuple(l for l in LEGS if l not in ('QQQ', 'QQEW'))
@@ -343,6 +346,12 @@ def cmd_signal(inp, write=True):
     if q['QQQ'].get('last_trade_date') != today:
         print(f"MARKET CLOSED: QQQ last trade {q['QQQ'].get('last_trade_date')} != {today}. No action.")
         return 3
+    if today in EARLY_CLOSES:
+        hm = str(inp.get('time') or '').strip()[:5]
+        if '13:00' <= hm < '16:00':
+            print(f"MARKET CLOSED: {today} is an early close ({EARLY_CLOSES[today]} ET). The 12:50 trade run trades "
+                  f"this session; if it was missed, the 16:10 post-close fallback (RUNBOOK 2.2) handles it. No action.")
+            return 3
     prev = q['QQQ']['close_date']
 
     # closes: record the official prior closes carried by the quotes, fill gaps, append today's snapshot
