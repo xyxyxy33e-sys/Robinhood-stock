@@ -31,6 +31,14 @@ Account `576391551` only. Everything below is US/Eastern.
    Trade the printed orders as usual; never buy BOXX with cash the run is keeping back.
    **Draws are OFF (owner 2026-10-16, 6826 bonus hold):** no `MARGIN DRAW` lines are printed; funding
    triggers are still reported. The existing loan still repays (`MARGIN REPAY`, `MARGIN REPAY DUE`).
+8. **Pre-committed rules (owner 2026-11-19; STRATEGY.md "Pre-committed rules").**
+   - **Risk brake (automatic).** `live_run.py` halves every non-BOXX leg once the strategy NAV is 40% below its
+     peak, and goes back to full size once the full-size strategy is within 20% of the peak (state in
+     `data/risk_brake.json`). It prints `RISK BRAKE ON/OFF` and a push; trade the printed orders as usual.
+     Never edit the brake file by hand.
+   - **Pause.** While `data/trading_paused.json` exists, `live_run.py` exits 2 with `TRADING PAUSED`: trade
+     nothing, lead the push with it. `live_run.py` writes the file itself when the same guard trips on 3 runs in
+     a row; the monthly check writes it on a tracking breach (section 3). Only the owner deletes it.
 
 ## 1. Trade run — 15:50, Mon–Fri
 
@@ -194,6 +202,13 @@ This is not a strategy review and changes nothing.
 - **Report.**
   - Gap within about 1.5pp per month or 3pp cumulative, and nothing material: one paragraph.
   - Otherwise: find the dates, check the Routines' `last_run`, and report the cause. Change nothing.
+- **Pause on a tracking breach (owner 2026-11-19).** If live trails the model (what the rules say the account
+  should have earned on the same prices) by **3 pp or more cumulative**, write
+  `data/trading_paused.json` = `{"since": "<today>", "reason": "tracking breach: live <x>% vs model <y>% since <date>"}`,
+  commit it, and push "TRADING PAUSED: tracking breach …". The owner investigates and deletes the file to resume.
+- **Strategy review flag (owner 2026-11-19).** Once 3 years of live NAV exist (from 2029-09), report the rolling
+  3-year return of `data/live_nav_index.csv` against the T-bill return over the same window. Below cash: say
+  "STRATEGY REVIEW DUE" at the top of the report and in the push. This is a decision for the owner, not an action.
 
 ## 5. Morning brief — about 10:00, Mon–Fri (owner 2026-11-19)
 

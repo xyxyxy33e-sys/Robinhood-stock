@@ -232,6 +232,7 @@ and `fill_quality.py`, which now measures it.**
 
 | Date | Change | Evidence |
 |---|---|---|
+| 2026-11-19 | **Pre-committed rules**: (1) **risk brake** — every non-BOXX leg at half size once the strategy NAV is 40% below its peak, full size again once the full-size strategy is within 20% of the peak (`live_run.RISK_BRAKE_*`, `brake_step`, `data/risk_brake.json`); (2) **pause** — `data/trading_paused.json` stops all trading until the owner deletes it; written on the same guard 3 runs in a row or a ≥3 pp cumulative live-vs-model tracking gap (monthly check); (3) **review flag** — rolling 3-year live return below cash (from 2029-09) | **owner decision** ("Do all 3"); 500×10y Monte Carlo of the overlay: −0.0..−0.8 pp median CAGR, 5th-pct max DD −56→−49% (holdout L60), −55→−49% (proxy L60), fires on 21–51% of 10-year paths, never in history; −30% / to-cash / permanent-stop / vs-QQQ variants worse (`research_notes/stop_rules_2026_11/`) |
 | 2026-11-17 | **D gate on the day's high ("L1") switched OFF** (`DGATE_HIGH_ENABLED = False`); the gate reads the 15:50 price only, as before 2026-11-11. `qqq_high` is still fetched and logged; `l1_tracker.py` follows L1 on paper | **owner decision** ("turn L1 off") after the adoption backtest was found to read the close after 2026-09-04 (`data/qqq_ohlc.csv` ends there). With complete highs (`harness_live.py`): real without L1 51.1% / 2.100 / -16.5%, with L1 50.6% / 2.064 / -25.4% (it opens the gate on 2026-11-04 on a 10:15 ET high, +3.07% over the 200-day, and is 2.0x long into the -6.4% day of 11-05); proxy 2001 34.0% / 1.480 / -22.1% vs 35.1% / 1.505 / -24.9%. L1's effect is one spell: real total -2.75 pp, +16.8 pp without the 10-30..11-04 spell. 21 variants (higher bar, close confirmation, reversal filter, typical price, two days, half size, VIX filters) all fail the pre-registered rule (`research_notes/l1_variants_2026_11/`) |
 | 2026-11-11 | **D gate on the day's high ("L1")**: the gap200 half of the D gate reads max(15:50 price, QQQ intraday high up to the run) against the 200-day SMA; the trade still fills at 15:50 (`DGATE_HIGH_ENABLED`, `DGATE_HIGH_FROM_SESSION`, `gate_gap200`; `live_run` input `qqq_high`, `data/qqq_highs.csv`; RUNBOOK 1.1 fourth call) | **owner decision** ("Embed L1", live from the 11 Nov 15:50 run); research on daily H/L, fill at the close: real 53.1% / 2.053 / −18.3% → 56.0% / 2.109 / −18.3%, proxy 34.4% / 1.411 / −22.1% → 37.1% / 1.485 / −22.9% (pre-cap, pre-VIXY design); 12 extra entries real, 33 proxy; **not verified on 15:50 intraday highs** (daily high includes 15:50–16:00; a crude cut kept ~80% with maxDD −20.4% / −24.5%); exit on the low hurts and was not adopted (`research_notes/dgate_high_2026_11/`) |
 | 2026-11-11 | **Gross cap 2.0x** (`GROSS_CAP`, `apply_gross_cap`, passed by `live_target_weights`; engine `cfg['gross_cap']`) and **volatility sleeve VIXM 75% → VIXY 35% of the cash leg** (`VIXM_INSTRUMENT`, `VIXM_CASH_SHARE`; the leg keeps its internal name `vixm`; `live_run`/`cash_sweep`/`deposit_plan` use the ticker; `live_closes.csv` keeps the VIXM column and adds VIXY); book 100% BOXX on the day, no trade | **owner decision** ("add the 2.0x cap and VIXY swap") after the independent review; real 53.6% / 2.068 / −18.3% → cap 49.5% / 2.070 / −16.5%, VIXY 53.1% / 2.055 / −18.3%, both 49.1% / 2.058 / −16.5%; proxy cap 31.9% / 1.410 / −22.1%; `review_2026_11/` |
@@ -5196,6 +5197,23 @@ scored against the flat-de-levering null.
   45.0–45.5%, Sharpe 1.60–1.62) and fails the holdout at every N (0.710–0.721 vs
   live 0.754) — structural, not a parameter problem. One-step on a 15-day high
   remains the shadow pick. Not applied.
+
+### Pre-committed rules — 2026-11-19 (owner decision)
+
+Decided in advance, while the account is calm, so no rule is invented in the middle of a drawdown.
+1. **Risk brake (automatic).** When the strategy NAV (`data/live_nav_index.csv`, cash-flow-blind) is 40% or
+   more below its peak, every non-BOXX leg runs at half size, the rest in BOXX. Full size returns once the
+   full-size strategy, rebuilt from the live returns while the brake is on, is back within 20% of the peak.
+   Monte Carlo (500 × 10-year paths): costs 0.0–0.8 pp of median CAGR, cuts the 5th-percentile max drawdown by
+   4–7 pp, fires on 21–51% of 10-year paths; it would never have fired in history (worst about −21%). A −30%
+   trigger fires on most paths for a deeper cut; going to cash or stopping for good locks in the loss; a
+   12-month gap to QQQ fires on nearly every path. None of these rules adds money in bad paths: the brake
+   buys a shallower worst drawdown.
+2. **Pause (operational).** A broken machine, not a bad market: the same guard on 3 runs in a row, or live
+   trailing the model by 3 pp or more cumulative, writes `data/trading_paused.json`; nothing trades until the
+   owner deletes it.
+3. **Review flag (judgment).** From 2029-09, a rolling 3-year live return below the T-bill return flags a
+   full strategy review for the owner. Nothing changes automatically.
 
 ### Monte Carlo of the live design — 2026-10-21/22 (max(10d, 30d) estimator RE-ENABLED 2026-10-22, owner decision)
 

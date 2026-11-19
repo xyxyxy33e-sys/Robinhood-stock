@@ -1464,3 +1464,33 @@ def check_gross_cap():
 
 
 check_gross_cap()
+
+
+def check_risk_brake():
+    """Pre-committed rules (owner 2026-11-19): risk brake halves every non-BOXX leg at a -40% NAV drawdown and
+    releases once the rebuilt full-size path is within 20% of the peak; a pause file stops all trading."""
+    import live_run as L
+    assert L.RISK_BRAKE_ENABLED and (L.RISK_BRAKE_ON, L.RISK_BRAKE_OFF, L.RISK_BRAKE_SHARE) == (-0.40, -0.20, 0.5)
+    w = (0.10, 0.30, 0.0, 0.0, 0.05, 0.10, 0.45)
+    s = L.brake_scale(w, 0.5)
+    assert abs(sum(s) - 1) < 1e-12 and all(abs(a - b / 2) < 1e-12 for a, b in zip(s[:-1], w[:-1])) and abs(s[-1] - 0.725) < 1e-12
+    off = (-0.39, '2026-01-01', 1.0, '2026-06-01', 0.61)
+    st, f = L.brake_step(None, off, [], {})
+    assert not st['on'] and f is None
+    on = (-0.41, '2026-01-01', 1.0, '2026-06-01', 0.59)
+    st, f = L.brake_step(None, on, [], {})
+    assert st['on'] and f == 'on' and st['full'] == 0.59 and st['peak'] == 1.0
+    # live +6% on a day BOXX +0.02% at half size -> full-size ~ +11.98%: 0.59 * 1.1198 = 0.6607 (-33.9%), still on
+    boxx = {'2026-06-01': 100.0, '2026-06-02': 100.02}
+    st2, f2 = L.brake_step(st, on, [('2026-06-02', 0.06, 0.6254)], boxx)
+    assert st2['on'] and f2 is None and abs(st2['full'] - 0.59 * (1 + (0.06 - 0.5 * 0.0002) / 0.5)) < 1e-12
+    boxx['2026-06-03'] = 100.04
+    st3, f3 = L.brake_step(dict(st2), on, [('2026-06-02', 0.06, 0.6254), ('2026-06-03', 0.10, 0.688)], boxx)
+    assert st3['on'] and f3 is None and abs(st3['full'] - 0.7927) < 1e-3   # full-size +19.98% -> -20.7%, still on
+    st4, f4 = L.brake_step(dict(st2), on, [('2026-06-02', 0.06, 0.6254), ('2026-06-03', 0.12, 0.70)], boxx)
+    assert not st4['on'] and f4 == 'off'          # full-size +23.98% -> 0.819, -18.1%: released
+    assert L.PAUSE_PATH.endswith('trading_paused.json')
+    print("OK: risk brake halves non-BOXX legs at a -40% drawdown and releases on the rebuilt full-size path above -20%; pause file guard wired")
+
+
+check_risk_brake()

@@ -58,6 +58,46 @@ LEGS7 = ('SPMO', 'TQQQ', 'QLD', 'XLU', S.VIXM_INSTRUMENT, 'QQQ', 'BOXX')   # == 
 # NYSE early closes (13:00 ET): the trade run fires at 12:50 on these days (RUNBOOK 4); the regular 15:50 run
 # exits 3. Source: NYSE Group 2026-2028 holiday and early-closings calendar. Add each new year's dates here.
 EARLY_CLOSES = {'2026-11-27': '13:00', '2026-12-24': '13:00', '2027-11-26': '13:00'}
+
+# Pre-committed rules (owner, 2026-11-19; research_notes/stop_rules_2026_11):
+#  1. RISK BRAKE: strategy NAV drawdown <= -40% -> every non-BOXX leg at half size; back to full once the
+#     FULL-SIZE strategy is within 20% of the peak again. While on, the full-size path is rebuilt from the live
+#     NAV returns: r_full = (r_live - (1 - share) * r_boxx) / share.
+#  2. PAUSE: a file data/trading_paused.json stops all trading (guard, exit 2) until the owner deletes it. Written
+#     by this script when the same guard trips on 3 runs in a row, and by the monthly check (RUNBOOK 3) when live
+#     trails the model by 3 pp or more cumulative.
+RISK_BRAKE_ENABLED = True
+RISK_BRAKE_ON, RISK_BRAKE_OFF, RISK_BRAKE_SHARE = -0.40, -0.20, 0.5
+RISK_BRAKE_PATH = os.path.join(ROOT, 'data', 'risk_brake.json')
+PAUSE_PATH = os.path.join(ROOT, 'data', 'trading_paused.json')
+
+
+def brake_scale(w, share):
+    """Every non-BOXX leg x share, the rest to BOXX (LEGS order, BOXX last)."""
+    w = [x * share for x in w[:-1]]
+    return tuple(w) + (1.0 - sum(w),)
+
+
+def brake_step(st, dd_live, nav_rows, boxx, share=RISK_BRAKE_SHARE):
+    """Advance the brake state from the NAV log. st: dict(on, since, peak, full, last) or None.
+    dd_live: (drawdown, peak_date, peak_value, last_date, last_value) from drawdown_tracker.current_drawdown().
+    nav_rows: [(date, daily_return, index)] ; boxx: {date: close}. Returns (new_state, changed: 'on'|'off'|None)."""
+    st = dict(st or dict(on=False))
+    if not st['on']:
+        if dd_live[0] <= RISK_BRAKE_ON:
+            return dict(on=True, since=dd_live[3], peak=dd_live[2], full=dd_live[4], last=dd_live[3]), 'on'
+        return st, None
+    bd = sorted(boxx)
+    for d, r, _ in nav_rows:
+        if d <= st['last']:
+            continue
+        prev = [x for x in bd if x < d]
+        rb = (boxx[d] / boxx[prev[-1]] - 1) if d in boxx and prev else 0.0
+        st['full'] *= 1 + (r - (1 - share) * rb) / share
+        st['last'] = d
+    if st['full'] / st['peak'] - 1 > RISK_BRAKE_OFF:
+        return dict(on=False, released=st['last']), 'off'
+    return st, None
 LEGS = LEGS7                                               # the live legs
 LEGS5 = ('SPMO', 'TQQQ', 'QLD', 'XLU', 'BOXX')             # shadow tracks / old NAV
 SYMS = ('QQQ', 'QQEW') + tuple(l for l in LEGS if l not in ('QQQ', 'QQEW'))
@@ -399,8 +439,21 @@ def cmd_signal(inp, write=True):
             raise Guard(f'positions outside the strategy legs: {extra} -- ask the owner (XLU/IAU dust is sold by '
                         f'the band; anything else is not this strategy)')
         S.circuit_breaker_check(tv, implied)
+        if os.path.exists(PAUSE_PATH):
+            raise Guard(f'TRADING PAUSED by data/trading_paused.json ({json.load(open(PAUSE_PATH)).get("reason", "")}) '
+                        f'-- the owner deletes the file to resume (RUNBOOK 0.8)')
         w6 = weights7(r, vx)          # 7 legs from 2026-11-11 (name kept: the code below is leg-count agnostic)
         S.validate_weights_live7(r['state'], *w6)
+        brake_flip = None
+        if RISK_BRAKE_ENABLED:
+            bst = json.load(open(RISK_BRAKE_PATH)) if os.path.exists(RISK_BRAKE_PATH) else None
+            bst, brake_flip = brake_step(bst, DT.current_drawdown(), DT.load_log(), c.get('BOXX', {}))
+            if bst['on']:
+                w6 = brake_scale(w6, RISK_BRAKE_SHARE)
+                lines.append(f"RISK BRAKE ON since {bst['since']}: non-BOXX legs at {RISK_BRAKE_SHARE:.0%}; full-size "
+                             f"strategy {bst['full'] / bst['peak'] - 1:+.1%} from its peak, off above {RISK_BRAKE_OFF:.0%}")
+            if write:
+                json.dump(bst, open(RISK_BRAKE_PATH, 'w'), indent=1)
         # margin loan (margin_funding.py): settle a sent repay, flag a due one, size the cash hold
         repay_new = False
         if led and led.get('status') == 'repay_due':
@@ -476,6 +529,10 @@ def cmd_signal(inp, write=True):
         vp, vp_prev = S.vix_panic_active(vx, r['date']), S.vix_panic_active(vx_prev, rp['date'])
         if vp != vp_prev:
             changed.append(f"VIX-panic QQQ {'in' if vp else 'out'}")
+        if brake_flip:
+            changed.append(f"risk brake {brake_flip}")
+            pushes.append(f"RISK BRAKE {brake_flip.upper()}: " + ("strategy drawdown reached -40%, running at half size"
+                          if brake_flip == 'on' else "full-size strategy back within 20% of its peak, full size again"))
         if hold and idle < hold:
             changed.append(f"margin repay: raise ${hold:,.0f} cash")
         if net_plan['hold'] and idle < hold_all:
@@ -513,6 +570,16 @@ def cmd_signal(inp, write=True):
     except (Guard, S.WeightSanityError, S.CircuitBreakerTripped, S.MissingOverlayInputs) as e:
         out.update(status='guard', guard=f'{type(e).__name__}: {e}')
         code = 2
+        if write and not os.path.exists(PAUSE_PATH):
+            rd = os.path.dirname(_run_path(today))
+            prior = sorted(f for f in os.listdir(rd) if f.endswith('.json') and f[:10] < today)[-2:]
+            same = [json.load(open(os.path.join(rd, f))) for f in prior]
+            if len(same) == 2 and all(x.get('status') == 'guard' and (x.get('guard') or '')[:60] == out['guard'][:60]
+                                      for x in same):
+                json.dump(dict(since=today, reason=f'same guard on 3 runs in a row: {out["guard"][:120]}'),
+                          open(PAUSE_PATH, 'w'), indent=1)
+                pushes.append('TRADING PAUSED: the same guard tripped on 3 runs in a row -- see data/trading_paused.json')
+                out['pushes'] = pushes
 
     if write:
         out['input'] = inp
