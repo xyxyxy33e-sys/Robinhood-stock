@@ -49,3 +49,7 @@ S2 beats S&P total return on CAGR in every era with equal or better Sharpe and a
 45 of 76 years; ~2.5 switches a year; one session late: 14.5% / -61.5% over 1951-2026 (1987), 12.4% / -40.5% since
 1990. Its edge since 1990 is leverage plus drawdown control (Sharpe ties), larger before 1990. It does not beat
 SPMO's 2015-26 decade (SSO/IEF variant 13.2% vs 16.8%).
+
+After federal tax in a taxable account (`spx_tax.py`; ST 38.8% / LT 18.8%, tax paid yearly, 46 of 54 exits since
+1990 short-term): S2 12.3% -> 10.3% vs S&P buy & hold 10.8% -> 9.7% (1990-2026); 12.1% -> 10.1% vs 10.5% -> 9.1%
+(2007-2026). The edge shrinks to ~0.6-1.0 pp after tax; the drawdown advantage (-39% vs -55%) is untouched.
