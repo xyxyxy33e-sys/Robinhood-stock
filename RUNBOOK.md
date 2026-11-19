@@ -197,9 +197,10 @@ This is not a strategy review and changes nothing.
 ## 5. Morning brief — about 10:00, Mon–Fri (owner 2026-11-19)
 
 Read-only. Never place, modify or cancel an order, and write nothing under `data/`.
-5.1 **Fetch** the first three calls of 1.1 (quotes for all 8, VIX, positions/portfolio for `576391551`).
+5.1 **Fetch** the first three calls of 1.1 (quotes for all 8 plus `SPY`, VIX, positions/portfolio for `576391551`),
+    and `get_index_quotes` with symbols `["SPX"]` for the S&P 500 level. The S&P 500 is reported only, not used by the rules.
     If QQQ's last trade is not today: market closed, stop, no push.
-5.2 **Write** the 1.2 JSON (with `"time"`, no `qqq_high` needed) to `/tmp/morning_<today>.json`, not `data/`.
+5.2 **Write** the 1.2 JSON (with `"time"`, SPY in `quotes`, `"spx": <SPX value>`, no `qqq_high` needed) to `/tmp/morning_<today>.json`, not `data/`.
 5.3 **Run** `python3 paper-track/morning_brief.py /tmp/morning_<today>.json`. It runs `live_run.py check` on
     the morning price (what 15:50 would do if QQQ closed here), then the same live rules with QQQ moved
     −8%..+8% and VIX from 12 to 40, and prints where the target would change.

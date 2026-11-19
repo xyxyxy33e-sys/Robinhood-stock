@@ -11,7 +11,8 @@ reading and weights, so the levels it prints are the live rules, not a re-deriva
      VIX held at the morning level; prints the price at which the target changes;
   3. VIX ladder: the vol sleeve and the VIX-panic QQQ leg at VIX levels from the morning reading,
      QQQ held at the morning price.
-The last line is the push text (one line, under ~230 characters).
+The S&P 500 is reported only (it does not enter the rules): its level from the optional "spx" field
+(index quote) and its move from SPY in the quotes (optional). The last line is the push text.
 """
 import contextlib
 import io
@@ -158,7 +159,12 @@ def main(path):
             return f" (state {rs[2]} from ${rs[1]:,.0f}, no trade)"
         return ''
     dec = 'NO TRADE' if 'NO TRADE' in decision else ('TRADE' if 'TRADE' in decision else '?')
-    push = (f"10am: QQQ ${q0:,.2f} ({(q0 / pc - 1) * 100:+.1f}%), VIX {vix0:.1f}. Now {_label(r0)}, {_desc(w0)}: "
+    spx = ''
+    if 'SPY' in q and q['SPY'].get('close'):
+        sp = float(q['SPY']['last']) / float(q['SPY']['close']) - 1
+        lvl = f"{float(inp['spx']):,.0f} " if inp.get('spx') else ''
+        spx = f", S&P 500 {lvl}({sp * 100:+.1f}%)"
+    push = (f"10am: QQQ ${q0:,.2f} ({(q0 / pc - 1) * 100:+.1f}%){spx}, VIX {vix0:.1f}. Now {_label(r0)}, {_desc(w0)}: "
             f"{dec} if it closed here. Up: {edge(up, 'above')}{sedge(up_s, up)}. Down: {edge(dn, 'below')}{sedge(dn_s, dn)}. {vtxt}.")
     print('PUSH:', push)
     return 0
