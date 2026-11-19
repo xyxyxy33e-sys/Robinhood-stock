@@ -17,3 +17,20 @@ Pre-registered published rules, 2007-01 -> 2026-11, adjusted closes (Yahoo), 5bp
 C2 is the candidate: SPY-like return at less than half SPY's drawdown, steady in both halves, the lowest
 correlation to the live strategy, and monthly turnover that is costly in a taxable account but free in an IRA.
 C3 is a near-duplicate of the live bet. Not implemented; no account changes.
+
+## Against "buy & hold SPMO + $7,500/yr" (owner's IRA plan) — `ira2.py`
+
+Nov 2015 -> Nov 2026, $48,241 start + $7,500 each year:
+| | CAGR | Sharpe | MaxDD | ending $ |
+|---|---|---|---|---|
+| SPMO buy & hold | 16.8% | 0.86 | -30.9% | 521k |
+| SPY / MTUM buy & hold | 13.9% / 13.6% | 0.83 / 0.70 | -33.7 / -34.1% | 405k / 383k |
+| I1 rotation | 9.5% | 0.72 | -17.8% | 276k |
+| I3 SSO/IEF on SPY's 200-day | 13.2% | 0.63 | -46.0% | 396k |
+| I4 50/50 I1 + I3 | 12.0% | 0.77 | -27.0% | 349k |
+| I5 MTUM with a 10-month filter | 7.0% | 0.46 | -37.5% | 216k |
+| live rules on the S&P (SPY/SSO/UPRO, no overlap with the live ETFs) | 18.1% | 0.89 | -36.4% | 568k |
+2007-2026: I4 12.0% / 0.75 / -27% and I1 10.3% / 0.70 / -22.7% vs SPY 10.7% / 0.62 / -55%; S&P live rules
+12.9% / 0.68 / -44.8% (only 5.7% in 2007-15).
+No diversified design beats SPMO's exceptional decade on money; they beat it on drawdown. Only the leveraged
+regime rules (live strategy, or its S&P twin) out-earned it, the twin by a thin, era-dependent margin.
