@@ -283,3 +283,28 @@ SPY bought and held.** Jul 2007 - 19 Nov 2026:
   bands are not monotonic (3% is worse than 2% and 4% on 1960-2007; 4% is best), so the return gain is within noise;
   what is solid is about half the switching. The earlier "wider band" entry tested 2.5-3%, not 2%.
 - **In a taxable account the strategy costs about 1 point a year against SPY** for a worst drop of -20% instead of -55%.
+
+## Nasdaq-100 tilt (tested 2026-11-20, owner: "lean more towards qqq strategy"): era-dependent; owner decision pending
+
+`research_notes/nasdaq.py`, `nasdaq.txt`; same engine and taxes as `better.py`. QQQ/QLD prices stand in for the fund.
+Jul 2007 - 19 Nov 2026, whole strategy:
+
+| | CAGR | Sharpe | Max DD | After tax | 2007-15 pre / after | 2016-26 pre / after |
+|---|---|---|---|---|---|---|
+| Live (SSO on SPY's signal) | 11.9% | 0.79 | -19.8% | 8.0% | 10.1 / 6.3 | 13.5 / 9.2 |
+| Trend half = QLD on QQQ's signal and vol | 14.9% | 0.90 | -19.0% | 10.3% | 12.7 / 8.8 | 16.7 / 11.6 |
+| Trend half = 25% SSO + 25% QLD, own signals | 13.5% | 0.86 | -19.2% | 9.2% | 11.6 / 7.7 | 15.1 / 10.5 |
+| QLD switched by SPY's signal | 15.8% | 0.89 | -24.7% | 11.0% | | |
+| QQQ (1x) added to the rotation funds | 11.4% | 0.73 | -22.0% | 7.8% | | |
+| Trend half = QQQ unlevered on its own signal | 11.7% | 0.89 | -16.7% | 8.1% | | |
+| QQQ held / SPY held | 15.3% / 10.3% | 0.75 / 0.60 | -53.4% / -55.2% | 14.0% / 9.0% | | |
+
+Trend half alone on Dec 1999 - Jun 2007 (2x funds built from the index funds; the Nasdaq-100 fell 83%): SSO/SPY 6.4% a
+year, -22.2%; QLD/QQQ 1.8%, -35.1%; half each 4.5%, -25.0%; QLD on SPY's signal 2.8%, -53.3%. In the bust itself the
+two were alike (-7.0% and -5.9% a year to 2002); the Nasdaq version fell behind in 2003-2007 (7.0% against 16.2%).
+
+Reading: the Nasdaq version wins in both halves of 2007-2026 and loses on the one earlier period available, so it is a
+bet that the Nasdaq keeps leading, not a rule improvement. It also needs QLD (no other 2x Nasdaq-100 fund is known to
+the agent), which the Robinhood strategy trades: that ends the no-shared-ticker rule for this account (wash sales
+between the two taxable accounts defer losses and must be tracked by hand), and both accounts would then hold levered
+Nasdaq at the same times. Not applied; the live rules are unchanged.
