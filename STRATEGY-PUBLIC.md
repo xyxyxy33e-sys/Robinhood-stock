@@ -1,6 +1,6 @@
 # Public.com taxable account (5OG87042) — trend + rotation strategy
 
-Status: **built, dry run** (`data/public/config.json` `enabled=false`). Owner request 2026-11-19. Separate from the
+Status: **LIVE since 2026-11-20** with $15,000 (`data/public/config.json` `enabled=true`, `max_capital` 15000). Owner request 2026-11-19. Separate from the
 Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
 
 ## Rules
@@ -202,7 +202,8 @@ $65,362.52 cash. `enabled` is still false: with no `max_capital` set, enabling i
 Minutes after the liquidation, 93 dollar-amount market buys (11:17-11:23 ET, $49,999.89) put 77 individual stocks and
 14.97 BOXX in the account. Owner 2026-11-20: that $50,000 is managed by Public's autopilot and trades on its own.
 Account: $15,362.60 cash, $49,730.85 in 78 positions. The owner set this strategy's capital at $15,000
-(`max_capital`); `enabled` is still false.
+(`max_capital`) and told the agent to go live: `enabled=true`, first trade at the 15:50 run on 2026-11-20, with two
+weekday scheduled tasks in the Public strategy chat (about 10:00 brief, 15:50 trade run).
 
 Because the autopilot also holds BOXX, the account's positions cannot tell the two apart. `public_run.py` now counts
 only its own ledger (`data/public/ledger.json`: shares it bought and its cash, starting at `max_capital`), updated
