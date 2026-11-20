@@ -1,7 +1,7 @@
 """Public taxable strategy candidate (2026-11-19). PRE-REGISTERED:
 P = 50% TREND sleeve + 50% ROTATION sleeve, no ticker shared with the Robinhood strategy (SPY TQQQ QLD QQQ VIXY BOXX XLU)
 or the IRA (SPMO).
- TREND: SSO (2x S&P) while SPY adj close is above its 200-day average (1% hysteresis), else IEF. Checked daily.
+ TREND: SSO (2x S&P) while SPY adj close is above its 200-day average (BAND: 2% hysteresis since 2026-11-20, owner; 1% before), else IEF. Checked daily.
    FALLBACK FILTER (owner 2026-11-19): IEF only if its 6-month return at the last month-end beats T-bills, else cash.
    Set FB_FILTER = False for the original always-IEF rule.
    VIX-PANIC LEG (owner 2026-11-20): while the trend is off and the VIX latch is on (close >= 30 on, < 25 off),
@@ -45,6 +45,7 @@ X = {s: np.array([px[s][d] for d in dates]) for s in SY}; R = {s: np.r_[0, X[s][
 C = np.array([cashd[d] for d in dates]); me = [i for i in range(n - 1) if dates[i][:7] != dates[i + 1][:7]]; mes = set(me)
 c = np.cumsum(np.insert(X['SPY'], 0, 0)); sma = np.full(n, np.nan); sma[199:] = (c[200:] - c[:-200]) / 200
 FB_FILTER = True; PANIC_SHARE = 0.25
+BAND = 0.02
 VOL_TARGET = 0.30   # owner 2026-11-20; None switches the SSO volatility target off
 import csv as _csv
 _vx = {}
@@ -81,7 +82,7 @@ def run(start, mode='P', tax=False):
             out.append(V)
         trade = False
         if not np.isnan(sma[i]):
-            g = X['SPY'][i] / sma[i] - 1; new = (g > 0.01) if on is None else ((g > -0.01) if on else (g > 0.01))
+            g = X['SPY'][i] / sma[i] - 1; new = (g > BAND) if on is None else ((g > -BAND) if on else (g > BAND))
             if new != on: on = new; trade = True
         if i in mes and me.index(i) >= 6:
             j = me[me.index(i) - 6]; cr = np.prod(1 + C[j + 1:i + 1]) - 1; nr = {}

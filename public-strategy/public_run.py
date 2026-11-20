@@ -8,8 +8,8 @@
 
 DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared with the Robinhood strategy
 (SPY TQQQ QLD QQQ VIXY XLU) or the IRA (SPMO); BOXX, the cash fund, is shared with Robinhood on purpose:
-  TREND sleeve 50%:    SSO (2x S&P 500) while SPY's adjusted close is above its 200-day average, 1% hysteresis
-                       (in above +1%, out below -1%); otherwise IEF. Read every day at 15:50 on the live price.
+  TREND sleeve 50%:    SSO (2x S&P 500) while SPY's adjusted close is above its 200-day average, 2% hysteresis
+                       (in above +2%, out below -2%; owner 2026-11-20, was 1%); otherwise IEF. Read every day at 15:50 on the live price.
                        Fallback filter (owner 2026-11-19): IEF is held only if its 6-month total return at the last
                        completed month-end beats T-bills (the rotation's own test); otherwise the trend half is in BOXX.
                        VIX-panic leg (owner 2026-11-20): while the trend is off and the VIX latch is on (a close at or
@@ -46,7 +46,7 @@ ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
 UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
 FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the other two strategies (BOXX is shared on purpose)
-HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.01, 0.20, 0.005, 0.003
+HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.02, 0.20, 0.005, 0.003   # HYST: 2% since 2026-11-20 (owner), 1% before
 PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.25
 VOL_TARGET = 0.30      # owner 2026-11-20: SSO volatility target; None switches it off
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
@@ -245,7 +245,7 @@ def dash_files(inp, outdir):
     w('status.csv', [['as_of', 'spy_price', 'spy_gap_200d_pct', 'trend', 'trend_holding', 'flip_level', 'rotation_picks',
                       'rotation_month_end', 'tbill_hurdle_pct', 'mode', 'strategy_capital', 'account_value', 'vix'],
                      [out['date'], inp['quotes']['SPY']['last'], f"{out['gap200'] * 100:.1f}", 'On' if out['trend_on'] else 'Off',
-                      hold, '-1%' if out['trend_on'] else '+1%', ' + '.join(out['picks']), out['rotation_asof'],
+                      hold, f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}', ' + '.join(out['picks']), out['rotation_asof'],
                       f"{out['hurdle'] * 100:.1f}", 'Live' if out['enabled'] else 'Dry run', f"{out['total']:.2f}",
                       inp.get('account_value', ''), '' if out['vix'] is None else f"{out['vix']:.1f}"]])
     w('holdings.csv', [['ticker', 'asset', 'sleeve', 'six_month_return_pct', 'target_weight_pct', 'held_value']] + [
@@ -420,7 +420,7 @@ def review(inp):
     print("HOLDINGS (held vs target): " + ', '.join(f"{s} {out['held'][s]:.0%}/{out['target'][s]:.0%}" for s in UNIVERSE
           if out['held'][s] >= DUST or out['target'][s] > 0) + f"; drift {out['drift']:.1%} (trades above {DRIFT_BAND:.0%})")
     g = out['gap200']
-    print(f"SIGNALS: SPY {g:+.2%} vs 200-day, trend {'ON' if out['trend_on'] else 'OFF'} (flips {'below -1%' if out['trend_on'] else 'above +1%'}); "
+    print(f"SIGNALS: SPY {g:+.2%} vs 200-day, trend {'ON' if out['trend_on'] else 'OFF'} (flips {f'below -{HYST:.0%}' if out['trend_on'] else f'above +{HYST:.0%}'}); "
           + (f"VIX {out['vix']:.1f}, latch {'ON' if out['vix_panic'] else 'off'}; " if out['vix'] else 'VIX unavailable; ')
           + f"rotation {' + '.join(out['picks'])} from {out['rotation_asof']}; next action here: {'TRADE' if out['decision'] else 'none'} ({out['why']})")
     nxt = dt.date.fromisoformat(today) + dt.timedelta(days=7)
@@ -461,7 +461,7 @@ def main(argv):
     g = out['gap200']
     print(f"=== Public strategy {out['date']} {out.get('time') or ''} ===")
     print(f"TREND: SPY {g:+.2%} vs its 200-day -> {'ON, SSO' if out['trend_on'] else 'OFF, ' + out['fallback']} "
-          f"(flips {'below -1%' if out['trend_on'] else 'above +1%'})")
+          f"(flips {f'below -{HYST:.0%}' if out['trend_on'] else f'above +{HYST:.0%}'})")
     print(f"FALLBACK: IEF 6-month {out['ief_mom']:+.2%} vs T-bills {out['hurdle']:+.2%} -> "
           f"{'IEF' if out['ief_ok'] else CASH} when the trend is off")
     print(f"SSO VOL TARGET: S&P vol {out['spy_vol']:.1%} (x2 = {2 * out['spy_vol']:.1%} vs {VOL_TARGET:.0%} target) -> SSO at "
@@ -491,7 +491,7 @@ def main(argv):
     if argv[1] == 'brief':
         spyq = q['SPY']; chg = f" {float(spyq['last']) / float(spyq['close']) - 1:+.1%}" if spyq.get('close') else ''
         push = (f"Public 10am: SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
-                f"flips at {'-1%' if out['trend_on'] else '+1%'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rotation {'+'.join(out['picks'])} | 3:50 "
+                f"flips at {f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rotation {'+'.join(out['picks'])} | 3:50 "
                 f"{'TRADE' if out['decision'] else 'no trade'} here" + ('' if out['enabled'] else ' (dry run)'))
         print('PUSH:', push[:199])
     else:

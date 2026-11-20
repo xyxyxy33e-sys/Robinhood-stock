@@ -1,11 +1,11 @@
 # Public.com taxable account (5OG87042) — trend + rotation strategy
 
-Status: **LIVE since 2026-11-20** with $15,000, SSO volatility target 30% (`data/public/config.json` `enabled=true`, `max_capital` 15000). Owner request 2026-11-19. Separate from the
+Status: **LIVE since 2026-11-20** with $15,000, 2% trend band, SSO volatility target 30% (`data/public/config.json` `enabled=true`, `max_capital` 15000). Owner request 2026-11-19. Separate from the
 Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
 
 ## Rules
-- **Trend sleeve, 50%.** SSO (2x S&P 500) while SPY's dividend-adjusted price is above its 200-day average, with 1%
-  hysteresis (in above +1%, out below -1%); otherwise IEF (7-10 year Treasuries). Read daily at 15:50.
+- **Trend sleeve, 50%.** SSO (2x S&P 500) while SPY's dividend-adjusted price is above its 200-day average, with 2%
+  hysteresis (in above +2%, out below -2%; 1% until 2026-11-20); otherwise IEF (7-10 year Treasuries). Read daily at 15:50.
   **Fallback filter (owner 2026-11-19):** IEF is held only if its 6-month total return at the last completed
   month-end beats T-bills, the same test the rotation uses; otherwise the trend half sits in BOXX.
   **VIX-panic leg (owner 2026-11-20):** while the trend is off and the VIX latch is on (a close at or above 30 turns it
@@ -355,3 +355,13 @@ one traded) and XLP for staples. Three roles, Jul 2007 - 19 Nov 2026 (live: 11.9
   20% utilities 11.3% / 0.79 / -17.7%, 7.7% after tax. Berkshire pays no dividend and a held slice is never sold, so
   the gain is mostly tax; Berkshire itself returned 11.3% a year with a -54% fall, about the S&P's.
 Not applied; live rules unchanged.
+
+## Owner decisions 2026-11-20 (afternoon): 2% band ADOPTED; no Nasdaq tilt, no structural port, no Berkshire or utilities
+
+After the four studies above the owner said: "leave it as is, add the 2% band". `HYST` in `public_run.py` and `BAND` in
+`backtest.py` are 0.02. The trend was off at the change (SPY 3.8% below its 200-day), so nothing traded on it; it turns
+back on above +2%. Live rules now, Jul 2007 - 19 Nov 2026 (`backtest.py`): **12.9% / 0.84 / -19.0%**, worst year
+-13.5%; 2007-2015 12.4%, 2016-2026 13.1%; after tax with distributions taxed 8.8% against 9.0% for SPY held
+(`backtest.py`'s own after-tax line, 9.2%, leaves distributions out). The Nasdaq tilt, the regime port and the
+Berkshire / defensive ideas are not adopted. The agent's advice, accepted: no further rule changes for three to six
+months unless something breaks.
