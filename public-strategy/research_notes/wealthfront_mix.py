@@ -5,6 +5,8 @@ import os, sys, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np, better as B
 W = {'VTI': .43, 'VNQ': .14, 'LQD': .13, 'VEA': .13, 'VWO': .11, 'SCHP': .06}
+if len(sys.argv) > 1 and sys.argv[1] == 'classic':   # the 'Classic portfolio mix' the owner pasted afterwards
+    W = {'VTI': .45, 'VEA': .18, 'VWO': .16, 'LQD': .12, 'SCHP': .06, 'VIG': .03}
 BF = {'VEA': 'EFA', 'SCHP': 'TIP'}; ORD = {'LQD', 'SCHP', 'VNQ'}
 ix = {d: i for i, d in enumerate(B.dates)}
 def series(sym):

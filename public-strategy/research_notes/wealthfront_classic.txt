@@ -1,0 +1,9 @@
+Jul 2007 - 19 Nov 2026     | before tax: CAGR Sharpe MaxDD worst yr | after tax | 2007-15 pre/after | 2016-26 pre/after | 2008  2020  2022  2026
+live rules                 |  12.8  0.83  -19.0  -13.5            |   8.8     |  12.4 /   8.5     |  13.3 /   9.0     |   +15   +24   -14    -4 | avg below high -5.5%
+mix, held                  |   7.8  0.54  -48.5  -32.9            |   6.3     |   3.8 /   2.5     |  10.6 /   8.8     |   -33   +17   -18    +5 | avg below high -6.7%
+mix, yearly rebalance      |   7.3  0.51  -49.8  -32.9            |   5.8     |   4.1 /   2.8     |  10.1 /   8.1     |   -33   +16   -18    +4 | avg below high -6.7%
+SPY held                   |  10.3  0.60  -55.2  -36.8            |   9.0     |   5.7 /   4.4     |  14.2 /  12.3     |   -37   +18   -18    +6 | avg below high -7.7%
+
+14 Oct - 18 Nov 2026 (the screenshot's window): mix -3.98% (screenshot shows -2.07%); VTI -4.6%, VEA -3.8%, VWO -8.7%, LQD +0.9%, SCHP +0.3%, VIG +1.8%; SPY -5.1%
+live rules over the same window (backtest): -10.57%
+daily correlation, mix vs live rules 0.61; mix vs SPY 0.98
