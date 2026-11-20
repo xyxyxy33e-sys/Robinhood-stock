@@ -118,3 +118,7 @@ date,symbol,side,quantity,fill_price,ref_price,ref_kind,slippage_bps,notional,no
 2026-11-19,QQQ,buy,490.0,647.215,645.1,signal_session_close,32.79,317135.35,,0
 2026-11-19,QQQ,buy,0.781509,647.465,645.1,signal_session_close,36.66,506.0,,0
 2026-11-19,QQQ,buy,0.904145,647.02,645.1,signal_session_close,29.76,585.0,,0
+2026-11-20,BOXX,sell,1373.0,119.125,119.13,signal_session_close,0.42,163558.62,,0
+2026-11-20,BOXX,sell,0.40627,119.1222,119.13,signal_session_close,0.65,48.4,,0
+2026-11-20,QQQ,buy,267.0,611.06,610.0425,signal_session_close,16.68,163153.02,,0
+2026-11-20,QQQ,buy,0.738904,610.3629,610.0425,signal_session_close,5.25,451.0,,0

@@ -53,3 +53,9 @@ date,basket,nav,week_return,turnover,cost_bp,n_names,note
 2026-11-13,SPMO,0.869759,0.064133,0,0,1,benchmark
 2026-11-13,QQQ,0.916963,0.036149,0,0,1,benchmark
 2026-11-13,SPY,0.975113,0.025577,0,0,1,benchmark
+2026-11-20,top5,0.703189,-0.138602,0.0772,0.3,5,"weekly mark; last regular-session trades; SNDK 8:1 split 20 Nov, prior price /8"
+2026-11-20,top10,0.712652,-0.139038,0.0825,0.3,10,"weekly mark; last regular-session trades; SNDK 8:1 split 20 Nov, prior price /8"
+2026-11-20,top15,0.710150,-0.133821,0.0751,0.3,15,"weekly mark; last regular-session trades; SNDK 8:1 split 20 Nov, prior price /8"
+2026-11-20,SPMO,0.775471,-0.108407,0,0,1,benchmark
+2026-11-20,QQQ,0.822748,-0.102747,0,0,1,benchmark
+2026-11-20,SPY,0.893225,-0.083977,0,0,1,benchmark
