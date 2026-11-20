@@ -16,6 +16,9 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
                        above 30 turns it on, a close below 25 off; today's live VIX counts as today's close, and stays the
                        reading for that day on later runs, from data/public/runs/), 25% of the
                        trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
+                       SSO volatility target (owner 2026-11-20): while the trend is on, SSO is scaled by
+                       min(1, 30% / (2 x S&P vol)) in quarter steps (floor one quarter), S&P vol = the larger of the
+                       10- and 30-session figures; the rest of the trend half sits in BOXX. A step change trades.
   ROTATION sleeve 50%: the 2 strongest of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return at the last completed
                        month-end close, 25% each; a pick that does not beat T-bills over the same 6 months is held
                        in BOXX instead. Changes take effect at the first 15:50 run of the new month.
@@ -45,6 +48,7 @@ UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
 FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the other two strategies (BOXX is shared on purpose)
 HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.01, 0.20, 0.005, 0.003
 PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.25
+VOL_TARGET = 0.30      # owner 2026-11-20: SSO volatility target; None switches it off
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 assert not set(UNIVERSE) & set(FORBIDDEN)
 
@@ -80,6 +84,32 @@ def trend_on(spy, today):
         sma = sum(spy[x] for x in ds[i - 199:i + 1]) / 200; gap = spy[ds[i]] / sma - 1
         on = (gap > HYST) if on is None else ((gap > -HYST) if on else (gap > HYST))
     return on, gap, sma
+
+
+def sso_scale(spy, today):
+    """SSO volatility target (owner 2026-11-20), used only while the trend is on: the share of the trend half held
+    in SSO is min(1, 30% / (2 x S&P vol)), rounded to the nearest quarter and never below a quarter; S&P vol is the
+    larger of the 10- and 30-session annualized volatility of SPY's adjusted log returns, today's live price included.
+    Returns (scale, vol)."""
+    ds = [d for d in sorted(spy) if d <= today]
+    lr = [math.log(spy[b] / spy[a]) for a, b in zip(ds[-31:-1], ds[-30:])]
+    sd = lambda x: (sum((v - sum(x) / len(x)) ** 2 for v in x) / (len(x) - 1)) ** 0.5
+    vol = max(sd(lr[-10:]), sd(lr)) * 252 ** 0.5
+    if not VOL_TARGET or vol <= 0:
+        return 1.0, vol
+    return max(0.25, round(min(1.0, VOL_TARGET / (2 * vol)) * 4) / 4), vol
+
+
+def last_run_value(key, today):
+    """The value of `key` in the most recent 15:50 run file before today, or None."""
+    for f in sorted((x for x in (os.listdir(RUNS) if os.path.isdir(RUNS) else []) if x.endswith('.json') and x[:-5] < today), reverse=True):
+        try:
+            v = json.load(open(os.path.join(RUNS, f))).get(key)
+        except Exception:  # noqa: BLE001
+            continue
+        if v is not None:
+            return v
+    return None
 
 
 def vix_panic(today, vix_now=None):
@@ -265,10 +295,11 @@ def rotation(series, sgov, today):
     return picks, mom, hurdle, e, s
 
 
-def targets(on, picks, ief_ok=True, panic=False):
+def targets(on, picks, ief_ok=True, panic=False, scale=1.0):
     w = {s: 0.0 for s in UNIVERSE}
     if on:
-        w['SSO'] += 0.5
+        w['SSO'] += 0.5 * scale
+        w[CASH] += 0.5 * (1 - scale)
     else:
         k = PANIC_SHARE if panic else 0.0          # 1x S&P on k of the trend half = SSO at half that weight
         w['IEF' if ief_ok else CASH] += 0.5 * (1 - k)
@@ -291,11 +322,12 @@ def compute(inp, need_account=True):
     ief_mom = ief[asof] / ief[start] - 1; ief_ok = ief_mom > hurdle
     fallback = 'IEF' if ief_ok else CASH
     panic, vix_used, vix_note = vix_panic(today, inp.get('vix'))
-    w = targets(on, picks, ief_ok, panic)
+    scale, spy_vol = sso_scale(spy, today)
+    w = targets(on, picks, ief_ok, panic, scale)
     out = dict(date=today, time=inp.get('time'), trend_on=on, gap200=gap, spy_sma200_adj=sma, picks=picks,
                rotation_asof=asof, momentum=[(x, m) for m, x in mom], hurdle=hurdle, target=w,
                ief_mom=ief_mom, ief_ok=ief_ok, fallback=fallback, trend_holding='SSO' if on else fallback,
-               vix=vix_used, vix_panic=panic, panic_leg=bool(panic and not on), vix_note=vix_note, enabled=bool(cfg.get('enabled')))
+               vix=vix_used, sso_scale=scale, spy_vol=spy_vol, vix_panic=panic, panic_leg=bool(panic and not on), vix_note=vix_note, enabled=bool(cfg.get('enabled')))
     if not need_account:
         return out, cfg
     acct = {s: float(v) for s, v in inp.get('positions', {}).items()}
@@ -320,8 +352,11 @@ def compute(inp, need_account=True):
     drift = sum(abs(w[s] - held[s]) for s in UNIVERSE)
     missing = [s for s in UNIVERSE if w[s] > 0 and held[s] < DUST]
     extra = [s for s in UNIVERSE if w[s] == 0 and held[s] >= DUST]
-    do = bool(missing or extra or drift > DRIFT_BAND)
+    prev_scale = last_run_value('sso_scale', today) if on else None
+    step = bool(on and prev_scale is not None and abs(float(prev_scale) - scale) > 1e-9 and last_run_value('trend_on', today))
+    do = bool(missing or extra or drift > DRIFT_BAND or step)
     why = (f"target not held: {missing}" if missing else f"non-target held: {extra}" if extra else
+           f"SSO volatility step changed {float(prev_scale):.2f} -> {scale:.2f}" if step else
            f"drift {drift:.1%} > {DRIFT_BAND:.0%}" if do else f"holdings match the targets (drift {drift:.1%})")
     orders = []
     if do:
@@ -429,6 +464,8 @@ def main(argv):
           f"(flips {'below -1%' if out['trend_on'] else 'above +1%'})")
     print(f"FALLBACK: IEF 6-month {out['ief_mom']:+.2%} vs T-bills {out['hurdle']:+.2%} -> "
           f"{'IEF' if out['ief_ok'] else CASH} when the trend is off")
+    print(f"SSO VOL TARGET: S&P vol {out['spy_vol']:.1%} (x2 = {2 * out['spy_vol']:.1%} vs {VOL_TARGET:.0%} target) -> SSO at "
+          f"{out['sso_scale']:.0%} of the trend half" + ('' if out['trend_on'] else ' when the trend is on (no effect now)'))
     print("VIX PANIC: " + (out['vix_note'] or (f"VIX {out['vix']:.2f}, latch {'ON' if out['vix_panic'] else 'off'} "
           f"(on at {PANIC_ON:.0f}, off below {PANIC_OFF:.0f}) -> " + ('25% of the trend half in 1x S&P' if out['panic_leg'] else
           ('no effect while the trend is on' if out['vix_panic'] else 'no panic leg')))))

@@ -57,3 +57,7 @@ Section 1's fetch (quotes, VIX, `get_portfolio`; add `"account_value"`), then
 targets and the signals. Post the printed review in chat with a two-line plain reading of it (what moved the result,
 anything that needs the owner), send ONE push with its `PUSH:` line, refresh the dashboard as in section 4, and commit
 `data/public/weekly.csv`. If the market was closed on Friday, run it all the same on the last session's prices.
+
+## 6. Backtest figures on the dashboard — only after a rule change
+`PUB_OUT=<dir> python3 public-strategy/backtest.py` (downloads Yahoo data; `PUB_END=<date>` fixes the last session)
+writes `stats.csv`, `nav.csv` and `years.csv`; upload them to the dashboard datasets of the same names as in section 4.

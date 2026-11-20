@@ -1,6 +1,6 @@
 # Public.com taxable account (5OG87042) — trend + rotation strategy
 
-Status: **LIVE since 2026-11-20** with $15,000 (`data/public/config.json` `enabled=true`, `max_capital` 15000). Owner request 2026-11-19. Separate from the
+Status: **LIVE since 2026-11-20** with $15,000, SSO volatility target 30% (`data/public/config.json` `enabled=true`, `max_capital` 15000). Owner request 2026-11-19. Separate from the
 Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
 
 ## Rules
@@ -233,3 +233,24 @@ instruction is costed at the strategy's average price and marked `average`). The
 Every Friday after the close a scheduled task runs `public_run.py review`: the strategy's value against SPY for the
 week and since the $15,000 start, the week's orders, realized gains, holdings against targets and the signals, with one
 push and a dashboard refresh. Values are kept in `data/public/weekly.csv`. The first review (2026-11-20) is the baseline.
+
+## Owner decisions 2026-11-20: rotation score stays 6 months; SSO volatility target 30% ADOPTED
+
+- **Rotation score:** 6 months alone. The 3/6/12 blend is not adopted.
+- **SSO volatility target 30%:** while the trend is on, the SSO share of the trend half is min(1, 30% / (2 x S&P vol)),
+  rounded to the nearest quarter and never below a quarter; S&P vol is the larger of the 10- and 30-session annualized
+  volatility; the rest of the trend half sits in BOXX. A change of step trades and resets everything to target. The
+  panic-leg SSO (trend off) is not scaled. `public_run.py` (`VOL_TARGET`, `sso_scale`) and `backtest.py` both apply it.
+- **Backtest rebuilt.** `backtest.py` no longer needs the private price harness: it downloads Yahoo adjusted closes and
+  uses the 13-week T-bill yield for cash. On this data every return is about 0.3 points a year lower than the figures in
+  "Evidence" above (SPY 10.3% against 10.5%), so compare like with like, Jul 2007 - 19 Nov 2026:
+
+| | CAGR | Sharpe | Max DD | Worst year | After tax | 2007-2015 | 2016-2026 |
+|---|---|---|---|---|---|---|---|
+| Without the vol target | 12.0% | 0.75 | -22.8% | -16.9% | 8.9% | 9.7% / 0.61 | 13.9% / 0.88 |
+| With the 30% vol target (live) | 12.0% | 0.79 | -20.0% | -14.5% | 8.5% | 10.3% / 0.67 | 13.3% / 0.90 |
+| SPY buy & hold | 10.3% | 0.60 | -55.2% | -36.8% | 9.0% | 5.7% / 0.36 | 14.1% / 0.83 |
+
+  Same return before tax, higher Sharpe in both halves, 2.8 points less drawdown; it costs about 0.4 points a year after
+  tax (more short-term trades), which leaves the strategy about half a point behind SPY after tax. This matches the
+  earlier study (12.2% / 0.80 / -20.0%, 8.7% after tax against 9.3%). The dashboard's backtest figures are these.
