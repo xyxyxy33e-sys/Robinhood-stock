@@ -175,7 +175,13 @@ carry on.
   Replace the whole `const CUM = [...];` line in the page script with the printed one; set the three figures
   (`id="cum-s"`, `cum-q`, `cum-m`, sign class `pos`/`neg`), their sub-lines (NAV and distance from its high;
   strategy vs QQQ and vs SPMO in points) and the month line (`id="cum-months"`) from the same block.
-- Leave the backtest charts alone.
+- **Yearly backtest bars** (card "Design of 11 Nov ... real instruments by year, daily"; owner 2026-11-20: update daily).
+  Run `python3 paper-track/dashboard_years.py` (research harness, reads `data/`, writes nothing, ~3 s). It prints three lines:
+  replace the whole `const years = [...];` line of the page script with the `YEARS` line (without the `YEARS ` prefix), and
+  the inner text of `<span id="yr-asof">` and `<span id="yr-full">` with the `ASOF` and `FULL` lines. If it raises (stale
+  research data: a price, VIX or T-bill file more than a few sessions behind), leave the bars as they are and add one
+  line to the push: "yearly bars not updated: <first line of the error>". Never edit the research data by hand from a run.
+- Leave the other backtest charts alone.
 
 2.6 **One push** per trading day: `PushNotification`, proactive, one line, at most about 250 characters, figures only.
 - **Lead with whatever needs the owner:**
