@@ -1,0 +1,10 @@
+trend half alone, 1960-2007     | before tax: CAGR Sharpe MaxDD | after tax CAGR | 1960-1983 pre/after | 1984-2007 pre/after | switches/yr
+band 1%, vol target 30%         |  13.6  0.77  -37.9            |  10.8          |   9.8 /   7.4       |  17.8 /  14.5       |  2.2
+band 2%, vol target 30%         |  14.3  0.79  -34.6            |  11.2          |  10.3 /   7.6       |  18.5 /  15.1       |  1.2
+band 3%, vol target 30%         |  13.6  0.76  -34.7            |  10.7          |   9.0 /   6.4       |  18.6 /  15.3       |  1.0
+band 4%, vol target 30%         |  15.0  0.82  -31.1            |  11.8          |  10.0 /   7.1       |  20.4 /  16.7       |  0.7
+band 1%, vol target off         |  14.8  0.76  -44.9            |  12.2          |  10.7 /   8.5       |  19.2 /  16.2       |  2.2
+band 2%, vol target off         |  15.4  0.79  -35.9            |  12.8          |  11.4 /   9.3       |  19.7 /  16.6       |  1.2
+band 3%, vol target off         |  14.5  0.75  -35.9            |  12.1          |   9.7 /   7.8       |  19.6 /  16.6       |  1.0
+band 4%, vol target off         |  16.0  0.80  -37.1            |  13.5          |  10.8 /   8.6       |  21.6 /  18.8       |  0.7
+S&P buy and hold                |  10.3  0.74  -45.6            |   9.8          |   7.5 /   6.7       |  13.2 /  12.3       |  0.0

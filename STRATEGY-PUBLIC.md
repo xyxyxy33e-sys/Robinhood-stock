@@ -254,3 +254,32 @@ push and a dashboard refresh. Values are kept in `data/public/weekly.csv`. The f
   Same return before tax, higher Sharpe in both halves, 2.8 points less drawdown; it costs about 0.4 points a year after
   tax (more short-term trades), which leaves the strategy about half a point behind SPY after tax. This matches the
   earlier study (12.2% / 0.80 / -20.0%, 8.7% after tax against 9.3%). The dashboard's backtest figures are these.
+
+## Search for something better (2026-11-20): nothing structural; a 2% band is the one candidate
+
+Owner: "find something better than this". `research_notes/better.py` (results `better.txt`) runs eleven designs, named
+before any was run, through one engine with the same costs and taxes; `better_long.py` (`better_long.txt`) checks the
+band on 1960-2007. The engine also taxes fund distributions (18.8% stock-fund dividends, 38.8% bond and REIT income),
+which the earlier after-tax figures left out: **the live strategy is 8.0% a year after tax, not 8.5%, against 9.0% for
+SPY bought and held.** Jul 2007 - 19 Nov 2026:
+
+| | CAGR | Sharpe | Max DD | After tax | 2007-15 pre / after | 2016-26 pre / after |
+|---|---|---|---|---|---|---|
+| Live | 11.9% | 0.79 | -20.0% | 8.0% | 10.1 / 6.3 | 13.5 / 9.2 |
+| Live, 2% band | 12.8% | 0.83 | -19.0% | 8.8% | 12.4 / 8.5 | 13.3 / 9.0 |
+| Live, 3% band | 12.9% | 0.83 | -20.0% | 9.0% | 12.5 / 8.5 | 13.4 / 9.5 |
+| 50% VTI held + 50% live | 11.1% | 0.76 | -28.4% | 8.5% | 8.2 / 5.5 | 13.6 / 10.7 |
+| Live trend half + 7-fund trend | 9.4% | 0.73 | -18.9% | 7.0% | 6.7 / 4.6 | 11.7 / 8.8 |
+| Trend rule unlevered (VTI) | 7.8% | 0.66 | -22.5% | 5.7% | | |
+| Dual momentum (VTI/EFA/IEF) | 6.0% | 0.44 | -35.0% | 3.9% | | |
+| 7 funds, each above its 10-month average | 5.7% | 0.72 | -12.3% | 4.2% | | |
+| Static VTI 45 / EFA 15 / IEF 25 / GLD 15 | 8.1% | 0.73 | -27.7% | 6.8% | | |
+| SPY bought and held | 10.3% | 0.60 | -55.2% | 9.0% | 5.7 / 4.4 | 14.2 / 12.3 |
+
+- **No different design is better.** Every structural alternative returns less, and none beats SPY after tax.
+- **2% band (candidate, not adopted).** Trend half alone on 1960-2007, with the vol target: 14.3% / 0.79 / -34.6%, 11.2%
+  after tax, against 13.6% / 0.77 / -37.9%, 10.8% for 1%; better in 1960-1983 and 1984-2007, before and after tax, with
+  1.2 switches a year against 2.2. On 2007-2026 it is ahead in the first half and 0.2 points behind in the second. The
+  bands are not monotonic (3% is worse than 2% and 4% on 1960-2007; 4% is best), so the return gain is within noise;
+  what is solid is about half the switching. The earlier "wider band" entry tested 2.5-3%, not 2%.
+- **In a taxable account the strategy costs about 1 point a year against SPY** for a worst drop of -20% instead of -55%.
