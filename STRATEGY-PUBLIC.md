@@ -396,3 +396,16 @@ it is more than 0.025 above the boundary of the higher step. The live script rep
 and takes yesterday's step from yesterday's run file when there is one; it matches the backtest's step on all of the
 last 250 sessions. Live rules now, Jul 2007 - 19 Nov 2026: 12.9% / 0.84 / -19.3%, worst year -13.8%, 8.8% after tax
 with distributions taxed (SPY 9.0%). The trend was off at the change, so nothing traded on it.
+
+## Holding 1x in place of SSO at certain times (tested 2026-11-20): rejected
+
+Owner: "consider times hold 1x?". `research_notes/one_x.py`, `one_x.txt`; live rules otherwise. (A middle 1x step by
+distance from the 200-day and a 1.5x fund were already logged as rejected.) Whole strategy Jul 2007 - 19 Nov 2026,
+live 12.8% / 0.83 / -19.3%, 8.8% after tax; trend half alone 1960 - Jun 2007, live 14.1% / 0.78 / -34.5%, 11.2%:
+- Same exposure with less borrowing (VTI where the vol target has SSO at half size, half and half at three-quarters):
+  12.7%, 8.2% after tax; 14.0%, 10.4%. The swaps between the two funds cost more in tax than the borrowing saved.
+- VTI while T-bills yield more than 3 / 4 / 5%: 12.3% to 12.5%, 8.4% to 8.7% after tax; 11.9% to 13.1%, 9.4% to 9.9%
+  on 1960-2007, where rates were above 4% on 62% of days. Sharpe a little higher, return lower in both periods.
+- VTI while S&P volatility is above 18 / 22%: 12.2% to 12.5%, 7.5% to 8.1%; 12.9% to 13.8%, 9.3% to 10.6%.
+- VTI always (no leverage): 10.2% / 0.86 / -16.3%, 6.7% after tax; 11.2% / 1.06 / -19.1%, 9.0%.
+Every version is less return for less risk; none is ahead after tax in either period. No change.
