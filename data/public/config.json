@@ -1,1 +1,1 @@
-{"enabled": false, "max_capital": 15000, "note": "enabled=false: dry run, orders are printed and never placed. Owner sets enabled=true to go live. max_capital (owner 2026-11-20): $15,000."}
+{"enabled": false, "max_capital": 15000, "note": "enabled=false: dry run, orders are printed and never placed. Owner sets enabled=true to go live. max_capital (owner 2026-11-20): $15,000, the starting cash of data/public/ledger.json. The rest of the account is the owner's autopilot basket."}

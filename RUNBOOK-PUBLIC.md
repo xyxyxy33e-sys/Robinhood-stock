@@ -1,7 +1,9 @@
 # RUNBOOK — Public.com taxable account 5OG87042
 
 `public-strategy/public_run.py` computes everything; STRATEGY-PUBLIC.md says what and why. Account `5OG87042` only.
-Never trade any ticker outside the script's printed orders. Never sell the account's individual stocks.
+Never trade any ticker outside the script's printed orders. Never touch the autopilot basket (about $50,000 of
+individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The strategy owns only what
+`data/public/ledger.json` lists (before the first trade: no shares, cash = `max_capital`).
 
 ## 0. Rules
 1. `git pull --ff-only` first.
@@ -26,4 +28,6 @@ Never trade any ticker outside the script's printed orders. Never sell the accou
 - `NO TRADE` or `DRY RUN`: place nothing.
 - `TRADE` and enabled: `preflight_order` then `place_order` for each printed line, sells first, limit orders, regular
   hours, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
-- Commit `data/public/runs/<today>.json`. One push only on a trade or a guard.
+- After the orders fill: write the fills as `[{"side","symbol","quantity","price"}]` (actual filled quantity and
+  average price, filled orders only) and run `python3 public-strategy/public_run.py record <fills.json>`.
+- Commit `data/public/runs/<today>.json` and `data/public/ledger.json`. One push only on a trade or a guard.

@@ -2,6 +2,7 @@
 
     python3 public-strategy/public_run.py brief  <input.json>    # read-only, prints a PUSH line
     python3 public-strategy/public_run.py signal <input.json>    # prints the decision and the orders
+    python3 public-strategy/public_run.py record <fills.json>    # after fills: updates data/public/ledger.json
 
 DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared with the Robinhood strategy
 (SPY TQQQ QLD QQQ VIXY XLU) or the IRA (SPMO); BOXX, the cash fund, is shared with Robinhood on purpose:
@@ -17,9 +18,10 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
                        in BOXX instead. Changes take effect at the first 15:50 run of the new month.
   TRADE when a target holding is missing, a non-target holding is still held, or L1 drift exceeds 20%.
   Otherwise hold (no calendar rebalancing: fewer taxable sales).
-The strategy manages ONLY its own tickers (UNIVERSE) plus positive cash; every other position in the account is
-ignored. data/public/config.json: {"enabled": false} = dry run (orders printed, never placed); "max_capital" caps
-the dollars the strategy may deploy. SPY is read as a signal only and never traded here.
+The strategy manages ONLY the shares and cash in its own ledger (data/public/ledger.json, updated with `record`
+after every fill); the rest of the account, including the autopilot basket and its BOXX, is ignored.
+data/public/config.json: {"enabled": false} = dry run (orders printed, never placed); "max_capital" is the
+starting cash of the ledger. SPY is read as a signal only and never traded here.
 
 Input JSON: {"date","time","quotes":{SYM:{"last","bid","ask"}} for UNIVERSE + SPY, "positions":{SYM:qty},"cash":x}
 Exit codes: 0 ok, 2 guard (do not trade), 3 market closed.
@@ -29,6 +31,7 @@ import csv, datetime as dt, json, math, os, sys, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 CONFIG = os.path.join(ROOT, 'data', 'public', 'config.json')
 RUNS = os.path.join(ROOT, 'data', 'public', 'runs')
+LEDGER = os.path.join(ROOT, 'data', 'public', 'ledger.json')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
 UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
@@ -96,6 +99,33 @@ def vix_panic(today, vix_now=None):
     return on, now, None
 
 
+def load_ledger(cfg):
+    """The strategy's own shares and cash. Before the first trade: no shares, cash = max_capital."""
+    if os.path.exists(LEDGER):
+        return json.load(open(LEDGER))
+    if cfg.get('max_capital') is None:
+        raise Guard('no ledger and no max_capital: the owner must set the starting capital')
+    return {'positions': {}, 'cash': float(cfg['max_capital'])}
+
+
+def record(path):
+    """public_run.py record <fills.json>: [{"side","symbol","quantity","price"}] of FILLED strategy orders."""
+    cfg = json.load(open(CONFIG)); led = load_ledger(cfg)
+    for f in json.load(open(path)):
+        if f['symbol'] not in UNIVERSE:
+            raise Guard(f"{f['symbol']} is not a strategy ticker")
+        sgn = 1 if f['side'].upper() == 'BUY' else -1
+        qty, px = float(f['quantity']), float(f['price'])
+        led['positions'][f['symbol']] = round(led['positions'].get(f['symbol'], 0.0) + sgn * qty, 6)
+        led['cash'] = round(led['cash'] - sgn * qty * px, 2)
+        if led['positions'][f['symbol']] < -1e-6 or led['cash'] < -0.01:
+            raise Guard(f'fill would take the ledger negative: {f}')
+    led['positions'] = {s: v for s, v in led['positions'].items() if abs(v) > 1e-6}
+    os.makedirs(os.path.dirname(LEDGER), exist_ok=True)
+    json.dump(led, open(LEDGER, 'w'), indent=1)
+    print('LEDGER:', json.dumps(led))
+
+
 def tbill_6m(sgov, a, b):
     return sgov[b] / sgov[a] - 1
 
@@ -148,16 +178,20 @@ def compute(inp, need_account=True):
                vix=vix_used, vix_panic=panic, panic_leg=bool(panic and not on), vix_note=vix_note, enabled=bool(cfg.get('enabled')))
     if not need_account:
         return out, cfg
-    pos = {s: float(v) for s, v in inp.get('positions', {}).items()}
-    bad = [s for s in pos if s in FORBIDDEN and pos[s] > 0]
+    acct = {s: float(v) for s, v in inp.get('positions', {}).items()}
+    bad = [s for s in acct if s in FORBIDDEN and acct[s] > 0]
     if bad:
         raise Guard(f'account holds tickers reserved for the other strategies: {bad}')
-    val = {s: pos.get(s, 0.0) * float(q[s]['last']) for s in UNIVERSE}
-    cash = max(0.0, float(inp.get('cash', 0.0)))
+    # The account also holds a Public autopilot basket that trades on its own (owner 2026-11-20), BOXX included.
+    # The strategy therefore counts only what its own ledger says it bought, never the account's whole position.
+    led = load_ledger(cfg)
+    pos = {s: float(led['positions'].get(s, 0.0)) for s in UNIVERSE}
+    short = [f"{s}: ledger {pos[s]:g}, account {acct.get(s, 0.0):g}" for s in UNIVERSE if pos[s] > acct.get(s, 0.0) + 1e-6]
+    if short:
+        raise Guard(f'account holds fewer shares than the strategy ledger ({"; ".join(short)})')
+    val = {s: pos[s] * float(q[s]['last']) for s in UNIVERSE}
+    cash = max(0.0, min(float(led['cash']), float(inp.get('cash', 0.0))))
     total = sum(val.values()) + cash
-    cap = cfg.get('max_capital')
-    if cap is not None and total > float(cap) * 1.25 and sum(val.values()) < 1:
-        total = float(cap)                         # first deployment: never more than the cap
     out.update(values=val, cash=cash, total=total)
     if total < 500:
         out.update(decision=False, why=f'strategy capital ${total:,.2f} (its own ETFs + positive cash) is below $500: nothing to trade', orders=[])
@@ -194,8 +228,13 @@ def describe(w):
 
 
 def main(argv):
-    if len(argv) != 3 or argv[1] not in ('brief', 'signal'):
+    if len(argv) != 3 or argv[1] not in ('brief', 'signal', 'record'):
         print(__doc__); return 1
+    if argv[1] == 'record':
+        try:
+            record(argv[2]); return 0
+        except Guard as e:
+            print(f'GUARD: {e}'); return 2
     inp = json.load(open(argv[2])); q = inp['quotes']
     if q['SPY'].get('last_trade_date') and q['SPY']['last_trade_date'] != inp['date']:
         print(f"MARKET CLOSED: SPY last trade {q['SPY']['last_trade_date']} != {inp['date']}. No action."); return 3
