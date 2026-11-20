@@ -196,3 +196,12 @@ The deep drawdowns start with SSO above the line, where none of these rules act.
 The owner sold most of the individual stocks during the morning and then instructed the agent to sell the rest: 46
 positions (about $19,190) sold with market orders at about 11:15 ET, all filled. The account holds no positions and
 $65,362.52 cash. `enabled` is still false: with no `max_capital` set, enabling it would deploy the whole cash balance.
+
+## Account state 2026-11-20, 11:33 ET: not all cash; owner sets max_capital $15,000
+
+Minutes after the liquidation, 93 dollar-amount market buys (11:17-11:23 ET, $49,999.89 in total) put 77 individual
+stocks and 14.97 BOXX back in the account; who placed them is not visible in the order records and it was not this
+strategy. Account: $15,362.60 cash, $49,730.85 in 78 positions, no open orders. The owner then said "set up with
+15000": `max_capital` is 15000, `enabled` is still false. The script counts cash plus the BOXX already held ($1,784)
+as strategy capital, $17,146; that is under 125% of the cap, so the cap does not bind and the first deployment would
+spend about $15,090 of the cash. The individual stocks are ignored by the script and are never sold by it.
