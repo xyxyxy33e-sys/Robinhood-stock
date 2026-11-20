@@ -308,3 +308,33 @@ bet that the Nasdaq keeps leading, not a rule improvement. It also needs QLD (no
 the agent), which the Robinhood strategy trades: that ends the no-shared-ticker rule for this account (wash sales
 between the two taxable accounts defer losses and must be tracked by hand), and both accounts would then hold levered
 Nasdaq at the same times. Not applied; the live rules are unchanged.
+
+## Structural port of the Robinhood (QQQ) strategy onto non-overlapping funds (tested 2026-11-20): owner decision pending
+
+Owner: lean towards the QQQ strategy "structurally, no overlapping etf". `research_notes/regime_port.py`,
+`regime_port.txt`. Ported from `paper-track/state.py` (read only): the six-state 50/200 classifier, the 20/100 fast
+re-entry, rows A 40% core / 60% 3x, B 50% core / 50% cash, C core, D 2x (cash under 2% above the 200-day), E and F cash,
+extension trim v2, the 20% vol target, trade on a regime change or 5% drift. Not ported: VIXM sleeve, breadth gate,
+D ladder, deep-E, VIX-panic. Funds: VTI for SPMO, UPRO for TQQQ, SSO for QLD, BOXX. **The port is faithful:** run on
+the original's own funds for Nov 2015 - Nov 2026 it gives 35.4% / 1.58 / -19.2% (A 50/50) against about 37% / 1.48 /
+-18.6% documented for that strategy.
+
+| Jul 2007 - 19 Nov 2026 | CAGR | Sharpe | Max DD | After tax | 2007-15 pre / after | 2016-26 pre / after | Turnover a year |
+|---|---|---|---|---|---|---|---|
+| Live | 11.9% | 0.79 | -20.0% | 8.0% | 10.1 / 6.3 | 13.5 / 9.2 | 7x |
+| Port, signals on SPY | 15.9% | 0.79 | -48.8% | 10.6% | 8.4 / 4.6 | 22.0 / 14.9 | 18x |
+| Port, signals on QQQ (read only), S&P funds | 18.1% | 0.98 | -36.1% | 11.4% | 8.5 / 5.0 | 26.7 / 16.7 | 16x |
+| Half live + half port (QQQ signals) | 15.8% | 1.01 | -21.8% | 9.9% | 9.3 / 5.6 | 21.8 / 13.6 | 11x |
+| SPY held | 10.3% | 0.60 | -55.2% | 9.0% | 5.7 / 4.4 | 14.2 / 12.3 | 0 |
+
+Earlier history, S&P 500 funds built from the index (no rotation funds exist, so the comparison is the live trend half):
+- 1960 - Jun 2007, signals on the S&P: port 13.2% / 0.78 / -59.9%, 8.5% after tax; live trend half 13.6% / 0.77 /
+  -38.0%, 10.8% after tax; S&P held 10.3%, 9.8% after tax. 2000-2002: port -42%, trend half -22%.
+- 1972 - Jun 2007, signals on the Nasdaq Composite: port 15.4% / 0.94 / -43.3%, 9.8% after tax; trend half 14.0% /
+  0.74 / -37.8%, 11.2% after tax; S&P held 11.1%, 10.4% after tax. 2000-2002: port -8%, trend half -22%.
+- Dec 1999 - Jun 2007, real QQQ as signal: port 10.0% / 0.78 / -14.6%, 6.4% after tax; trend half 5.7%, 4.0% after tax.
+
+Reading: on S&P signals the structure is worse than what is live (deeper falls, lower after-tax return on 1960-2007).
+On Nasdaq signals it has the better Sharpe before tax in every period tested, but it turns the account over 13 to 16
+times a year, so after tax it is ahead of the live strategy only since 2016 and behind on 1972-2007, and its worst fall
+is -36% to -43% against -20%. Both accounts would then act on the same QQQ signals. Not applied; live rules unchanged.

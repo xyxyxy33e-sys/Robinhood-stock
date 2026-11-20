@@ -1,0 +1,40 @@
+A. Jul 2007 - 19 Nov 2026
+          | before tax: CAGR Sharpe MaxDD worst yr | after tax CAGR MaxDD | 2007-2015 pre/after | 2016-9999 pre/after | trade days/yr turnover
+live      |  11.9  0.79  -20.0  -14.5            |   8.0  -24.3       |  10.1 /   6.3      |  13.5 /   9.2      |  21.1    699%
+port-spy  |  15.9  0.79  -48.8  -33.6            |  10.6  -49.2       |   8.4 /   4.6      |  22.0 /  14.9      |  30.5   1815%
+port-qqq  |  18.1  0.98  -36.1  -28.4            |  11.4  -38.6       |   8.5 /   5.0      |  26.7 /  16.7      |  39.7   1594%
+port-2x   |  13.3  0.80  -43.6  -28.2            |   9.0  -44.0       |   7.7 /   4.9      |  17.9 /  12.0      |  29.5   1360%
+port-5050 |  15.0  0.79  -47.2  -32.0            |   9.9  -47.6       |   8.2 /   4.5      |  20.5 /  13.8      |  30.7   1790%
+live+port |  14.2  0.84  -24.9  -20.5            |   9.5  -30.7       |   9.3 /   5.5      |  18.5 /  12.4      |  51.6   1257%
+live+portq|  15.8  1.01  -21.8  -11.8            |   9.9  -23.2       |   9.3 /   5.6      |  21.8 /  13.6      |  60.8   1147%
+SPY held  |  10.3  0.60  -55.2  -36.8            |   9.0  -55.5       |   5.7 /   4.4      |  14.2 /  12.3      |   0.0      0%
+   days in each state (SPY signal): A 66%, B 1%, C 7%, D 14%, E 4%, F 8%
+   daily correlation of port-spy with live: 0.73
+
+B. 1960 - Jun 2007 on the S&P 500 index (2x and 3x funds built; no rotation funds exist, so 'live trend' is the live trend half alone)
+          | before tax: CAGR Sharpe MaxDD worst yr | after tax CAGR MaxDD | 1960-1983 pre/after | 1984-2007 pre/after | trade days/yr turnover
+live trend|  13.6  0.77  -38.0  -26.8            |  10.8  -38.5       |   9.7 /   7.4      |  17.7 /  14.5      |   9.0    570%
+port-spy  |  13.2  0.78  -59.9  -43.0            |   8.5  -61.6       |  10.4 /   6.3      |  16.0 /  10.4      |  24.1   1622%
+port-2x   |  11.9  0.84  -45.7  -32.0            |   7.8  -48.2       |   9.0 /   5.7      |  14.9 /   9.8      |  23.3   1293%
+port-5050 |  12.8  0.80  -55.6  -39.6            |   8.3  -57.6       |  10.1 /   6.2      |  15.6 /  10.2      |  24.3   1591%
+S&P held  |  10.3  0.74  -45.6  -27.6            |   9.8  -45.6       |   7.5 /   6.7      |  13.2 /  12.3      |   0.0      0%
+   1973-01-02 to 1974-12-31: live trend -23%, port-spy -28%, port-2x -24%, port-5050 -27%, S&P held -39%
+   1987-10-01 to 1987-10-30: live trend -20%, port-spy -17%, port-2x -15%, port-5050 -16%, S&P held -23%
+   2000-03-24 to 2002-10-09: live trend -22%, port-spy -42%, port-2x -29%, port-5050 -38%, S&P held -45%
+
+C. 1999-12-23 - Jun 2007, real SPY and QQQ; S&P funds only
+          | before tax: CAGR Sharpe MaxDD worst yr | after tax CAGR MaxDD | 1999-2002 pre/after | 2003-2007 pre/after | trade days/yr turnover
+live trend|   5.7  0.40  -23.8  -17.2            |   4.0  -24.8       |  -8.2 /  -8.8      |  16.2 /  11.5      |  11.6    614%
+port-spy  |  -3.4 -0.06  -60.7  -42.3            |  -3.8  -61.7       | -24.2 / -24.8      |  13.6 /   9.0      |  32.2   1797%
+port-qqq  |  10.0  0.78  -14.6   -6.6            |   6.4  -19.1       |   0.7 /  -0.5      |  16.7 /  10.8      |  33.9   1269%
+SPY held  |   1.9  0.20  -47.5  -21.6            |   1.6  -47.5       | -14.4 / -14.4      |  13.8 /  11.7      |   0.0      0%
+
+D. 1972-02-15 - Jun 2007: signals on the Nasdaq Composite price index ('port-nasdaq'), S&P 500 funds built
+          | before tax: CAGR Sharpe MaxDD worst yr | after tax CAGR MaxDD | 1972-1989 pre/after | 1990-2007 pre/after | trade days/yr turnover
+live trend|  14.0  0.74  -37.8  -26.9            |  11.2  -38.7       |  14.1 /  11.1      |  13.7 /  11.3      |  10.5    570%
+port-spy  |  12.4  0.70  -59.9  -43.0            |   8.0  -61.6       |  11.4 /   7.1      |  13.2 /   8.7      |  26.7   1750%
+port-nasdaq|  15.4  0.94  -43.3  -32.6            |   9.8  -44.8       |  14.2 /   8.9      |  16.7 /  10.7      |  25.0   1298%
+S&P held  |  11.1  0.75  -45.6  -27.6            |  10.4  -45.6       |  10.3 /   9.2      |  11.8 /  10.7      |   0.0      0%
+   1973-01-02 to 1974-12-31: live trend -22%, port-spy -28%, port-nasdaq -25%, S&P held -39%
+   1987-10-01 to 1987-10-30: live trend -20%, port-spy -17%, port-nasdaq -14%, S&P held -23%
+   2000-03-24 to 2002-10-09: live trend -22%, port-spy -42%, port-nasdaq -8%, S&P held -45%
