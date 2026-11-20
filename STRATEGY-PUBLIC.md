@@ -338,3 +338,19 @@ Reading: on S&P signals the structure is worse than what is live (deeper falls, 
 On Nasdaq signals it has the better Sharpe before tax in every period tested, but it turns the account over 13 to 16
 times a year, so after tax it is ahead of the live strategy only since 2016 and behind on 1972-2007, and its worst fall
 is -36% to -43% against -20%. Both accounts would then act on the same QQQ signals. Not applied; live rules unchanged.
+
+## Berkshire and a defensive fund (tested 2026-11-20): only a held Berkshire slice helps, a little; owner decision pending
+
+Owner: "add Berkshire as a position, and something defensive like XLU". `research_notes/defensive.py`,
+`defensive.txt`. XLU is reserved for the Robinhood strategy; its prices stand in for a utilities fund (VPU would be the
+one traded) and XLP for staples. Three roles, Jul 2007 - 19 Nov 2026 (live: 11.9% / 0.79 / -20.0%, 8.0% after tax, 2008 +15%):
+- **Added to the rotation list** (top 2 of 8-10): 11.1% to 11.8%, Sharpe 0.74 to 0.78, drawdown -21% to -24%, after
+  tax 7.6% to 8.1%. No gain from any of the five combinations.
+- **Held by the trend half while the S&P trend is off**, in place of IEF/BOXX: 11.9% to 12.5%, drawdown -23%, and 2008
+  goes from +15% to -1% (utilities), +11% (staples), +8% (Berkshire): defensive stocks still fall in a bear market.
+  On 2000 - Jun 2007 utilities helped (10.4% against 7.6% for T-bills) and Berkshire deepened the drawdown. Rejected.
+- **A slice bought once and held**, the rest on the live rules: 20% Berkshire 11.8% / 0.82 / -18.9%, 8.6% after tax
+  (both halves no worse after tax; 2008 +3%); 30% Berkshire and 20% plain VTI are in `defensive.txt` for reference;
+  20% utilities 11.3% / 0.79 / -17.7%, 7.7% after tax. Berkshire pays no dividend and a held slice is never sold, so
+  the gain is mostly tax; Berkshire itself returned 11.3% a year with a -54% fall, about the S&P's.
+Not applied; live rules unchanged.
