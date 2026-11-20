@@ -387,3 +387,12 @@ than a buffer past the boundary. Whole strategy, Jul 2007 - 19 Nov 2026: live 12
 Trend half alone, 1960 - Jun 2007: live 14.3% / 0.79 / -34.6%, 11.2% after tax, 5.8 size changes a year; buffer 0.025
 14.1% / 0.78 / -34.5%, 11.2%, 3.8; buffer 0.05 14.0%, 11.2%, 2.9. No effect on return or drawdown beyond noise; a
 0.025 buffer removes about a third of the size changes. Not applied.
+
+## Owner decision 2026-11-20: 0.025 buffer on the vol-target steps ADOPTED
+
+"add the small buffer". `VT_BUFFER = 0.025` in `public_run.py` and `backtest.py`: a step of the SSO volatility target
+moves down only when 30% / (2 x vol) is more than 0.025 below the boundary under the current step, and up only when
+it is more than 0.025 above the boundary of the higher step. The live script replays the step from the price history
+and takes yesterday's step from yesterday's run file when there is one; it matches the backtest's step on all of the
+last 250 sessions. Live rules now, Jul 2007 - 19 Nov 2026: 12.9% / 0.84 / -19.3%, worst year -13.8%, 8.8% after tax
+with distributions taxed (SPY 9.0%). The trend was off at the change, so nothing traded on it.

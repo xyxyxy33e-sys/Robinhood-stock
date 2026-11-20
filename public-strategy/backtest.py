@@ -10,6 +10,7 @@ or the IRA (SPMO).
    SSO VOLATILITY TARGET (owner 2026-11-20): while the trend is on, the SSO weight is scaled by
    min(1, 30% / (2 x S&P vol)), rounded to the nearest quarter, never below a quarter; S&P vol is the larger of the
    10- and 30-session annualized volatility. The rest of the trend half is cash. A change of step trades.
+   Step buffer 0.025 (owner 2026-11-20): a step holds until the reading is that far past its boundary.
  ROTATION: top 2 of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return, 25% each, each must beat T-bills else that
    slot in T-bills. Last session of each month.
  Sleeves are reset to 50/50 only when a signal trades (no calendar rebalance). 5bp/side.
@@ -46,6 +47,7 @@ C = np.array([cashd[d] for d in dates]); me = [i for i in range(n - 1) if dates[
 c = np.cumsum(np.insert(X['SPY'], 0, 0)); sma = np.full(n, np.nan); sma[199:] = (c[200:] - c[:-200]) / 200
 FB_FILTER = True; PANIC_SHARE = 0.25
 BAND = 0.02
+VT_BUFFER = 0.025  # owner 2026-11-20: a step of the vol target holds until the reading is this far past its boundary
 VOL_TARGET = 0.30   # owner 2026-11-20; None switches the SSO volatility target off
 import csv as _csv
 _vx = {}
@@ -62,8 +64,15 @@ _lr = np.log(1 + R['SPY']); _vol = np.full(n, np.nan)
 for _i in range(31, n): _vol[_i] = max(_lr[_i-9:_i+1].std(ddof=1), _lr[_i-29:_i+1].std(ddof=1)) * 252 ** .5
 def _vsq(T):
     if not T: return np.ones(n)
-    sc = np.minimum(1.0, T / (2 * np.where(_vol > 0, _vol, np.nan))); q = np.nan_to_num(np.round(sc * 4) / 4, nan=1.0); q[q < 0.25] = 0.25
-    return q
+    out = np.ones(n); cur = 1.0
+    for i in range(n):
+        v = _vol[i]
+        if not np.isnan(v) and v > 0:
+            raw = T / (2 * v); tgt = max(0.25, round(min(1.0, raw) * 4) / 4)
+            if tgt < cur and raw < cur - 0.125 - VT_BUFFER: cur = tgt
+            elif tgt > cur and raw > tgt - 0.125 + VT_BUFFER: cur = tgt
+        out[i] = cur
+    return out
 VSQ = _vsq(VOL_TARGET)
 def run(start, mode='P', tax=False):
     iefok = True; pan = False; vsp = 1.0

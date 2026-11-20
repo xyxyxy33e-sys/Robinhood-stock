@@ -18,7 +18,8 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
                        trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
                        SSO volatility target (owner 2026-11-20): while the trend is on, SSO is scaled by
                        min(1, 30% / (2 x S&P vol)) in quarter steps (floor one quarter), S&P vol = the larger of the
-                       10- and 30-session figures; the rest of the trend half sits in BOXX. A step change trades.
+                       10- and 30-session figures; the rest of the trend half sits in BOXX. A step change trades;
+                       a step holds until the reading is 0.025 past its boundary (no flicker).
   ROTATION sleeve 50%: the 2 strongest of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return at the last completed
                        month-end close, 25% each; a pick that does not beat T-bills over the same 6 months is held
                        in BOXX instead. Changes take effect at the first 15:50 run of the new month.
@@ -49,6 +50,7 @@ FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the
 HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.02, 0.20, 0.005, 0.003   # HYST: 2% since 2026-11-20 (owner), 1% before
 PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.25
 VOL_TARGET = 0.30      # owner 2026-11-20: SSO volatility target; None switches it off
+VT_BUFFER = 0.025      # owner 2026-11-20: buffer on the volatility-target steps (0 = none)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 assert not set(UNIVERSE) & set(FORBIDDEN)
 
@@ -88,16 +90,45 @@ def trend_on(spy, today):
 
 def sso_scale(spy, today):
     """SSO volatility target (owner 2026-11-20), used only while the trend is on: the share of the trend half held
-    in SSO is min(1, 30% / (2 x S&P vol)), rounded to the nearest quarter and never below a quarter; S&P vol is the
-    larger of the 10- and 30-session annualized volatility of SPY's adjusted log returns, today's live price included.
-    Returns (scale, vol)."""
+    in SSO follows raw = 30% / (2 x S&P vol) in quarter steps, never below a quarter; S&P vol is the larger of the
+    10- and 30-session annualized volatility of SPY's adjusted log returns, today's live price included.
+    Step buffer (owner 2026-11-20): the step moves down only when raw is more than VT_BUFFER below the boundary
+    under the current step, and up only when raw is more than VT_BUFFER above the boundary of the higher step, so a
+    reading that sits on a boundary no longer flips the size every few days. The step is replayed from the price
+    history; yesterday's step is taken from yesterday's 15:50 run file when there is one. Returns (scale, vol)."""
     ds = [d for d in sorted(spy) if d <= today]
-    lr = [math.log(spy[b] / spy[a]) for a, b in zip(ds[-31:-1], ds[-30:])]
+    lr = [math.log(spy[b] / spy[a]) for a, b in zip(ds[:-1], ds[1:])]
     sd = lambda x: (sum((v - sum(x) / len(x)) ** 2 for v in x) / (len(x) - 1)) ** 0.5
-    vol = max(sd(lr[-10:]), sd(lr)) * 252 ** 0.5
-    if not VOL_TARGET or vol <= 0:
-        return 1.0, vol
-    return max(0.25, round(min(1.0, VOL_TARGET / (2 * vol)) * 4) / 4), vol
+    def vol_at(k):                               # k = index into ds; uses the 30 returns ending at ds[k]
+        w = lr[k - 30:k]
+        return max(sd(w[-10:]), sd(w)) * 252 ** 0.5
+    def move(cur, vol):
+        if not VOL_TARGET or vol <= 0:
+            return 1.0
+        raw = VOL_TARGET / (2 * vol); tgt = max(0.25, round(min(1.0, raw) * 4) / 4)
+        if tgt < cur and raw < cur - 0.125 - VT_BUFFER:
+            return tgt
+        if tgt > cur and raw > tgt - 0.125 + VT_BUFFER:
+            return tgt
+        return cur
+    cur = 1.0
+    for k in range(31, len(ds) - 1):
+        cur = move(cur, vol_at(k))
+    prev = last_run(today)
+    if prev and len(ds) > 1 and prev[0] == ds[-2] and prev[1].get('sso_scale') is not None:
+        cur = float(prev[1]['sso_scale'])
+    vol = vol_at(len(ds) - 1)
+    return move(cur, vol), vol
+
+
+def last_run(today):
+    """(date, contents) of the most recent 15:50 run file before today, or None."""
+    for f in sorted((x for x in (os.listdir(RUNS) if os.path.isdir(RUNS) else []) if x.endswith('.json') and x[:-5] < today), reverse=True):
+        try:
+            return f[:-5], json.load(open(os.path.join(RUNS, f)))
+        except Exception:  # noqa: BLE001
+            continue
+    return None
 
 
 def last_run_value(key, today):
