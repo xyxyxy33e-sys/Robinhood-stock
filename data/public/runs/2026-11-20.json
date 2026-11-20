@@ -1,0 +1,125 @@
+{
+ "date": "2026-11-20",
+ "time": "15:51",
+ "trend_on": false,
+ "gap200": -0.05196358564776371,
+ "spy_sma200_adj": 730.2989521484375,
+ "picks": [
+  "DBC",
+  "VTI"
+ ],
+ "rotation_asof": "2026-10-30",
+ "momentum": [
+  [
+   "DBC",
+   0.08070740186798742
+  ],
+  [
+   "VTI",
+   0.054772406170860766
+  ],
+  [
+   "EFA",
+   0.02624885569753177
+  ],
+  [
+   "VNQ",
+   -0.007682801597713285
+  ],
+  [
+   "TLT",
+   -0.021750669445797732
+  ],
+  [
+   "EEM",
+   -0.041142852622889414
+  ],
+  [
+   "GLD",
+   -0.1602228303263442
+  ]
+ ],
+ "hurdle": 0.019651599927195784,
+ "target": {
+  "SSO": 0.0625,
+  "IEF": 0.0,
+  "VTI": 0.25,
+  "EFA": 0.0,
+  "EEM": 0.0,
+  "TLT": 0.0,
+  "GLD": 0.0,
+  "DBC": 0.25,
+  "VNQ": 0.0,
+  "BOXX": 0.4375
+ },
+ "ief_mom": -0.013995187444844515,
+ "ief_ok": false,
+ "fallback": "BOXX",
+ "trend_holding": "BOXX",
+ "vix": 38.19,
+ "sso_scale": 0.5,
+ "spy_vol": 0.2587331064893686,
+ "vix_panic": true,
+ "panic_leg": true,
+ "vix_note": null,
+ "enabled": true,
+ "values": {
+  "SSO": 0.0,
+  "IEF": 0.0,
+  "VTI": 0.0,
+  "EFA": 0.0,
+  "EEM": 0.0,
+  "TLT": 0.0,
+  "GLD": 0.0,
+  "DBC": 0.0,
+  "VNQ": 0.0,
+  "BOXX": 0.0
+ },
+ "cash": 15000.0,
+ "total": 15000.0,
+ "held": {
+  "SSO": 0.0,
+  "IEF": 0.0,
+  "VTI": 0.0,
+  "EFA": 0.0,
+  "EEM": 0.0,
+  "TLT": 0.0,
+  "GLD": 0.0,
+  "DBC": 0.0,
+  "VNQ": 0.0,
+  "BOXX": 0.0
+ },
+ "drift": 1.0,
+ "decision": true,
+ "why": "target not held: ['SSO', 'VTI', 'DBC', 'BOXX']",
+ "orders": [
+  {
+   "side": "BUY",
+   "symbol": "SSO",
+   "quantity": 16,
+   "limit": 56.31,
+   "dollars": 900.96
+  },
+  {
+   "side": "BUY",
+   "symbol": "VTI",
+   "quantity": 10,
+   "limit": 341.07,
+   "dollars": 3410.7
+  },
+  {
+   "side": "BUY",
+   "symbol": "DBC",
+   "quantity": 127,
+   "limit": 29.36,
+   "dollars": 3728.72
+  },
+  {
+   "side": "BUY",
+   "symbol": "BOXX",
+   "quantity": 55,
+   "limit": 119.12,
+   "dollars": 6551.6
+  }
+ ]
+}
