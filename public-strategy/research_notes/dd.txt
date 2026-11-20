@@ -1,0 +1,25 @@
+A. ANATOMY: the deepest drawdowns of the current strategy
+   -22.8%  peak 2018-09-20 trough 2018-12-24 (65 sessions) recovered 2020-01-17 | trend half -17.2 pts, rotation half  -8.2 pts | held at peak: SSO 51%, VTI 25%, VNQ 24%
+   -22.0%  peak 2010-04-23 trough 2010-08-12 (77 sessions) recovered 2011-02-16 | trend half -16.8 pts, rotation half  -6.5 pts | held at peak: SSO 50%, VNQ 25%, VTI 24%
+   -21.3%  peak 2022-01-03 trough 2023-03-17 (302 sessions) recovered 2024-05-14 | trend half -23.6 pts, rotation half  -0.6 pts | held at peak: SSO 50%, VTI 25%, VNQ 25%
+   -21.2%  peak 2015-03-20 trough 2016-01-04 (199 sessions) recovered 2017-02-10 | trend half -15.6 pts, rotation half  -6.9 pts | held at peak: SSO 50%, VNQ 25%, TLT 25%
+   -19.5%  peak 2020-02-19 trough 2020-03-18 (20 sessions) recovered 2020-07-29 | trend half -19.3 pts, rotation half  -1.8 pts | held at peak: SSO 52%, GLD 24%, TLT 24%
+   -16.2%  peak 2008-07-14 trough 2009-07-08 (248 sessions) recovered 2009-07-31 | trend half -10.0 pts, rotation half  -6.4 pts | held at peak: IEF 45%, DBC 30%, GLD 25%
+   -15.2%  peak 2018-01-26 trough 2018-02-08 (9 sessions) recovered 2018-08-28 | trend half -10.4 pts, rotation half  -5.6 pts | held at peak: SSO 52%, EEM 25%, DBC 23%
+
+B. FIXES on the Public strategy, Jul 2007 - Nov 2026
+  variant                               | CAGR Sharpe MaxDD AvgDD | days<=-15% | worst day | worst month | aftertax | 2008  2011  2015  2018  2020  2022
+  current                               |  12.3  0.77  -22.8  -6.6 |  11.1%     |   -6.0%   |  -12.7%     |   9.3    | +14.8  -2.4 -15.5 -10.3 +27.8 -16.9
+  SSO vol target 40% (2x fund vol)      |  12.4  0.79  -21.8  -6.3 |   8.1%     |   -5.9%   |  -11.6%     |   9.2    | +14.8  +0.0 -15.5 -10.2 +24.7 -16.0
+  SSO vol target 30%                    |  12.2  0.80  -20.0  -5.8 |   4.2%     |   -5.9%   |  -11.4%     |   8.7    | +14.9  +1.9 -14.5  -7.4 +25.5 -13.8
+  SSO vol target 25%                    |  11.5  0.80  -18.9  -5.3 |   1.5%     |   -4.9%   |   -9.6%     |   8.1    | +14.9  +3.6 -14.4  -5.8 +23.2 -11.0
+  1.5x instead of 2x                    |  11.0  0.79  -19.3  -5.2 |   3.3%     |   -5.0%   |  -10.3%     |   8.0    | +14.9  +0.1 -13.0  -8.0 +25.3 -13.0
+  1x instead of 2x                      |   9.6  0.82  -15.7  -4.0 |   0.0%     |   -4.4%   |   -8.0%     |   6.8    | +14.9  +2.6 -10.3  -5.7 +22.7  -8.9
+  split 40 trend / 60 rotation          |  12.1  0.78  -21.4  -5.9 |   6.2%     |   -5.7%   |  -11.5%     |   8.8    | +16.9  +0.4 -14.1  -9.3 +28.9 -14.9
+  split 30 / 70                         |  11.8  0.79  -20.0  -5.5 |   3.4%     |   -5.4%   |  -10.3%     |   8.3    | +19.0  +3.2 -12.7  -8.4 +29.9 -12.9
+  rotation stop: fund -8% from pick     |  11.5  0.73  -23.5  -7.2 |  15.2%     |   -6.0%   |  -14.4%     |   8.7    | +14.8  -4.1 -17.7 -12.9 +27.8 -18.0
+  rotation stop: fund -12% from pick    |  12.0  0.75  -22.3  -6.8 |  13.7%     |   -6.0%   |  -12.7%     |   9.0    | +14.1  -2.2 -15.5 -11.2 +27.8 -17.8
+  vol target 30% + split 40/60          |  12.0  0.81  -18.8  -5.4 |   2.1%     |   -5.5%   |  -10.5%     |   8.3    | +16.9  +3.8 -13.3  -7.0 +26.9 -12.5
+  account brake: half size at -10%      |   9.5  0.67  -22.1  -7.3 |   7.1%     |   -6.0%   |  -16.3%     |   n/a    |  +8.7  -4.8 -10.4  -6.9 +21.2 -12.4
+  account brake: half size at -12%      |   9.8  0.67  -22.3  -7.4 |   9.3%     |   -6.0%   |  -16.4%     |   n/a    | +14.8  -1.5 -11.9  -9.3 +20.5 -13.5
+  account brake: half size at -15%      |  10.8  0.71  -21.6  -7.3 |  15.0%     |   -6.0%   |  -13.5%     |   n/a    | +14.8  -2.4 -13.1 -11.4 +23.1 -15.1

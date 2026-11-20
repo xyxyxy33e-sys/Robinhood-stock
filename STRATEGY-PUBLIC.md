@@ -137,3 +137,19 @@ above VIX3M (10.9% to 11.9% against 12.0%), tilting scores toward bonds and gold
 12.0%), and switching the lookback on VIX. Only "3-month lookback when VIX is 20/25 or more" is ahead (12.4% to 12.7%,
 Sharpe 0.76 to 0.78), and it gets there by giving up the 2008 gain (+6% to +8% against +17%) and taking the rotation
 half's drawdown from -20% to -34%. No change.
+
+## Deep-drawdown study (2026-11-20): no free fix; two dials offered to the owner
+
+`research_notes/dd.py`, `dd_long.py`. Current: 12.3% / 0.77 / -22.8%, 11% of days 15% or more below the high.
+- **Anatomy.** The five deepest drops (-19.5% to -22.8%: 2018 Q4, 2010, 2022, 2015, 2020) all began with SSO at 50%;
+  the trend half lost 16 to 24 points in each, the rotation half 1 to 8. The 200-day rule cannot react to a fast fall
+  from above the line.
+- **Rejected.** Account-level brake (half size at -10/-12/-15%): 9.5% to 10.8%, drawdown no better (it sells after the
+  fall and misses the rebound). Rotation stop-loss (-8/-12% from the pick): return and drawdown both worse.
+- **Dials (cost return for depth, Sharpe unchanged).** SSO volatility target 30% (SSO share cut in quarter steps when
+  S&P vol x2 is above 30%): 12.2% / 0.80 / -20.0%, 4% of days below -15%, after tax 8.7% against 9.3%; on the 75-year
+  2x S&P rule it costs about 1 point a year on the trend half (14.5% against 15.5%) for -31.9% against -39.3%, Sharpe
+  0.60 both. Split 40/60: 12.1% / 0.78 / -21.4%, after tax 8.8%. Both together: 12.0% / 0.81 / -18.8%, after tax 8.3%.
+  1.5x instead of 2x: 11.0% / -19.3%.
+- **October 1987.** The 200-day rule had already left the S&P before the 19 October crash (0% that day); the month
+  still cost the 2x rule -23% on the way out.
