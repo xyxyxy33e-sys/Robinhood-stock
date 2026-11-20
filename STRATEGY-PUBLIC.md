@@ -376,3 +376,14 @@ months unless something breaks.
   30/20 12.6% / 0.68 / -36.8%, 10.5%; 35/28 13.2% / 0.70 / -34.3%, 10.9%; no leg 12.7% / 0.68 / -33.8%, 10.4%.
 The lower exits are 0.1 to 0.3 points ahead after tax on the recent period and 0.2 to 0.3 behind, with a deeper
 drawdown, on the earlier one: no difference beyond noise. 30/25 kept.
+
+## Buffer on the SSO volatility-target steps (tested 2026-11-20): less trading, same result; owner decision pending
+
+The step flickers when volatility sits on a rounding boundary (January 2015: eight flips between full and three-quarter
+size in a month). `research_notes/vt_buffer.py`, `vt_buffer.txt`: keep the current step until 30% / (2 x vol) is more
+than a buffer past the boundary. Whole strategy, Jul 2007 - 19 Nov 2026: live 12.8% / 0.83 / -19.0%, 8.8% after tax,
+10.8 size changes and 19.9 trade days a year; buffer 0.025 12.8% / 0.83 / -19.3%, 8.8%, 7.7 and 16.9; buffer 0.05
+12.7% / 0.83 / -20.6%, 8.8%, 6.5 and 15.8; buffering only the step back up (0.05, 0.10) 12.5% to 12.7%, 8.6% to 8.7%.
+Trend half alone, 1960 - Jun 2007: live 14.3% / 0.79 / -34.6%, 11.2% after tax, 5.8 size changes a year; buffer 0.025
+14.1% / 0.78 / -34.5%, 11.2%, 3.8; buffer 0.05 14.0%, 11.2%, 2.9. No effect on return or drawdown beyond noise; a
+0.025 buffer removes about a third of the size changes. Not applied.
