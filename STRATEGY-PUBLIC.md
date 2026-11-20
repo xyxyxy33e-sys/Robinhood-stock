@@ -217,3 +217,13 @@ The 15:50 run treats the live VIX as that day's close. Later runs now replay tha
 `data/public/runs/<date>.json`) instead of the official close, so a 30.1 at 15:50 followed by a 29.8 close no longer
 buys the panic leg one day and sells it the next. Thresholds are unchanged (on at 30, off below 25). The run files are
 therefore part of the strategy's state: always commit them.
+
+## Tax lots and realized gains (owner 2026-11-20)
+
+Sells name their tax lots, highest cost first, from all the account's lots of that ticker, the autopilot's included
+(owner: "you can sell autopilot's lot, its fine"); the number of shares sold still comes from the strategy's ledger.
+Public's lot data is as of the previous night and allows at most 8 lots per order; when the lots do not cover a sale or
+the broker refuses the instruction, the sell goes without one. `record` appends every sale to
+`data/public/realized.csv` (proceeds, cost of the lots named, gain, short or long term; a sale without a lot
+instruction is costed at the strategy's average price and marked `average`). The dashboard has a tax section fed by
+`tax.csv` (`public_run.py dash`): realized gain or loss per ETF for the tax year.

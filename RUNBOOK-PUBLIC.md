@@ -28,7 +28,24 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 - `NO TRADE` or `DRY RUN`: place nothing.
 - `TRADE` and enabled: `place_order` (it preflights itself) for each printed line, sells first, whole-share LIMIT,
   DAY, `equity_market_session` CORE, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
+- **Sells and tax lots (owner 2026-11-20: highest cost first, any of the account's lots).** If the output says
+  `LOTS NEEDED`, call `get_tax_lots_for_symbol` for each ticker it names, add `"tax_lots": {SYM: <the "lots" list>}` to
+  the input and run `signal` again. Place each sell with the printed `tax_lot_matching_instructions` and
+  `open_close_indicator` CLOSE. If the broker refuses the lot instruction (its lot data is a day old, and it refuses
+  after another trade in that ticker the same day), place the same sell without it.
 - Keep the order IDs `place_order` returns and read the fills with `get_order` on those IDs only (the autopilot's
-  orders are in the same account). Write the fills as `[{"side","symbol","quantity","price"}]` (actual filled quantity and
-  average price, filled orders only) and run `python3 public-strategy/public_run.py record <fills.json>`.
-- Commit `data/public/runs/<today>.json` and `data/public/ledger.json`. One push only on a trade or a guard.
+  orders are in the same account). Write the fills as `[{"side","symbol","quantity","price"}]` (actual filled quantity
+  and average price, filled orders only; add `"lots": "default"` to a sell that went without a lot instruction) and run
+  `python3 public-strategy/public_run.py record <fills.json>`. It updates `data/public/ledger.json` and appends each
+  sale to `data/public/realized.csv`.
+- Commit `data/public/runs/<today>.json`, `data/public/ledger.json` and `data/public/realized.csv`. One push only on a
+  trade or a guard.
+
+## 4. Dashboard — after a trade run that traded (not time-critical)
+`python3 public-strategy/public_run.py dash <input.json> <outdir>` (add `"account_value"` from `get_portfolio` to the
+input; run it after `record`, with the positions and cash read again after the fills) writes `status.csv`,
+`holdings.csv` and `tax.csv`. For each: Artifact publish with `url` = the dashboard, `asset: true`, `file_path` = the
+file; ArtifactData `get` `datasets/<id>` (ids `status`, `holdings`, `tax`) for its version and old `source.url`; one
+ArtifactData `batch` of `update`s pinned with `if_version`: `{source: {kind: "file", url: "<new /_blob url>", name,
+format: "csv"}, updated: {at: "<ISO now>", by: "Claude"}}`; then delete each old asset (Artifact `delete`, `path` = the
+32-hex id in the old url). Never edit `files/index.html` from a run. If a step fails, say so and carry on.

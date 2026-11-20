@@ -2,7 +2,8 @@
 
     python3 public-strategy/public_run.py brief  <input.json>    # read-only, prints a PUSH line
     python3 public-strategy/public_run.py signal <input.json>    # prints the decision and the orders
-    python3 public-strategy/public_run.py record <fills.json>    # after fills: updates data/public/ledger.json
+    python3 public-strategy/public_run.py record <fills.json>    # after fills: ledger.json and realized.csv
+    python3 public-strategy/public_run.py dash   <input.json> <outdir>   # status, holdings and tax CSVs for the dashboard
 
 DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared with the Robinhood strategy
 (SPY TQQQ QLD QQQ VIXY XLU) or the IRA (SPMO); BOXX, the cash fund, is shared with Robinhood on purpose:
@@ -24,7 +25,9 @@ after every fill); the rest of the account, including the autopilot basket and i
 data/public/config.json: {"enabled": false} = dry run (orders printed, never placed); "max_capital" is the
 starting cash of the ledger. SPY is read as a signal only and never traded here.
 
-Input JSON: {"date","time","quotes":{SYM:{"last","bid","ask"}} for UNIVERSE + SPY, "positions":{SYM:qty},"cash":x}
+Input JSON: {"date","time","quotes":{SYM:{"last","bid","ask"}} for UNIVERSE + SPY, "positions":{SYM:qty},"cash":x,
+             "vix":x (optional), "tax_lots":{SYM:[broker lots]} (only when the run asks for it)}
+Sells name the tax lots to use, highest cost first, from all the account's lots of that ticker (owner 2026-11-20).
 Exit codes: 0 ok, 2 guard (do not trade), 3 market closed.
 """
 import csv, datetime as dt, json, math, os, sys, urllib.request
@@ -33,6 +36,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 CONFIG = os.path.join(ROOT, 'data', 'public', 'config.json')
 RUNS = os.path.join(ROOT, 'data', 'public', 'runs')
 LEDGER = os.path.join(ROOT, 'data', 'public', 'ledger.json')
+REALIZED = os.path.join(ROOT, 'data', 'public', 'realized.csv')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
 UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
@@ -121,21 +125,123 @@ def load_ledger(cfg):
 
 
 def record(path):
-    """public_run.py record <fills.json>: [{"side","symbol","quantity","price"}] of FILLED strategy orders."""
-    cfg = json.load(open(CONFIG)); led = load_ledger(cfg)
+    """public_run.py record <fills.json>: [{"side","symbol","quantity","price","lots"?}] of FILLED strategy orders.
+    Updates the ledger (shares, cash, cost) and appends every sale to data/public/realized.csv. A sale's cost is
+    the cost of the tax lots today's run named for it; with "lots":"default" (the order went without a lot
+    instruction) or no run file it is the strategy's average cost, marked "average"."""
+    cfg = json.load(open(CONFIG)); led = load_ledger(cfg); cost = led.setdefault('cost', {})
+    today = dt.datetime.now(dt.timezone(dt.timedelta(hours=-5))).date().isoformat()
+    run = os.path.join(RUNS, today + '.json')
+    planned = {o['symbol']: o for o in (json.load(open(run)).get('orders', []) if os.path.exists(run) else [])
+               if o['side'] == 'SELL' and o.get('tax_lots')}
+    rows = []
     for f in json.load(open(path)):
-        if f['symbol'] not in UNIVERSE:
-            raise Guard(f"{f['symbol']} is not a strategy ticker")
-        sgn = 1 if f['side'].upper() == 'BUY' else -1
+        s = f['symbol']
+        if s not in UNIVERSE:
+            raise Guard(f"{s} is not a strategy ticker")
+        buy = f['side'].upper() == 'BUY'; sgn = 1 if buy else -1
         qty, px = float(f['quantity']), float(f['price'])
-        led['positions'][f['symbol']] = round(led['positions'].get(f['symbol'], 0.0) + sgn * qty, 6)
-        led['cash'] = round(led['cash'] - sgn * qty * px, 2)
-        if led['positions'][f['symbol']] < -1e-6 or led['cash'] < -0.01:
+        held = led['positions'].get(s, 0.0)
+        if not buy and qty > held + 1e-6:
             raise Guard(f'fill would take the ledger negative: {f}')
+        if buy:
+            cost[s] = round(cost.get(s, 0.0) + qty * px, 2)
+        else:
+            avg = cost.get(s, 0.0) / held if held else px
+            cost[s] = round(cost.get(s, 0.0) - avg * qty, 2)
+            o = planned.get(s) if f.get('lots') != 'default' else None
+            if o:                                        # lots named by the run: split the fill across them in order
+                left = qty
+                for x in o['tax_lots']:
+                    t = min(float(x['quantity']), left); left -= t
+                    if t > 1e-6:
+                        days = (dt.date.fromisoformat(today) - dt.date.fromisoformat(x['open_date'])).days
+                        rows.append([today, s, f'{t:g}', f'{t * px:.2f}', f'{t * x["unit_cost"]:.2f}',
+                                     f'{t * (px - x["unit_cost"]):.2f}', 'LONG' if days > 365 else 'SHORT', 'lots'])
+            else:
+                rows.append([today, s, f'{qty:g}', f'{qty * px:.2f}', f'{qty * avg:.2f}', f'{qty * (px - avg):.2f}',
+                             'UNKNOWN', 'average'])
+        led['positions'][s] = round(held + sgn * qty, 6)
+        led['cash'] = round(led['cash'] - sgn * qty * px, 2)
+        if led['cash'] < -0.01:
+            raise Guard(f'fill would take the ledger cash negative: {f}')
     led['positions'] = {s: v for s, v in led['positions'].items() if abs(v) > 1e-6}
+    led['cost'] = {s: v for s, v in cost.items() if s in led['positions']}
     os.makedirs(os.path.dirname(LEDGER), exist_ok=True)
     json.dump(led, open(LEDGER, 'w'), indent=1)
+    if rows:
+        new = not os.path.exists(REALIZED)
+        with open(REALIZED, 'a', newline='') as fh:
+            w = csv.writer(fh)
+            if new:
+                w.writerow(['date', 'symbol', 'quantity', 'proceeds', 'cost', 'gain', 'term', 'basis'])
+            w.writerows(rows)
     print('LEDGER:', json.dumps(led))
+    for r in rows:
+        print('REALIZED:', ' '.join(r))
+
+
+def tax_table(year=None):
+    """Rows for the dashboard's tax dataset: realized gain/loss per strategy ETF for the tax year."""
+    year = year or dt.datetime.now(dt.timezone(dt.timedelta(hours=-5))).strftime('%Y')
+    t = {s: dict(short=0.0, long=0.0, unknown=0.0, proceeds=0.0, sales=0, last='') for s in UNIVERSE}
+    if os.path.exists(REALIZED):
+        for r in csv.DictReader(open(REALIZED)):
+            if r['date'][:4] == year and r['symbol'] in t:
+                x = t[r['symbol']]; x[r['term'].lower()] += float(r['gain']); x['proceeds'] += float(r['proceeds'])
+                x['sales'] += 1; x['last'] = max(x['last'], r['date'])
+    rows = [['etf', 'tax_year', 'sales', 'proceeds', 'short_term', 'long_term', 'unclassified', 'realized', 'last_sale']]
+    for s in UNIVERSE:
+        x = t[s]
+        rows.append([s, year, x['sales'], f"{x['proceeds']:.2f}", f"{x['short']:.2f}", f"{x['long']:.2f}",
+                     f"{x['unknown']:.2f}", f"{x['short'] + x['long'] + x['unknown']:.2f}", x['last']])
+    return rows
+
+
+NAMES = {'SSO': '2x S&P 500', 'IEF': '7-10 year Treasuries', 'VTI': 'US total market', 'EFA': 'Developed international',
+         'EEM': 'Emerging markets', 'TLT': 'Long Treasuries', 'GLD': 'Gold', 'DBC': 'Commodities', 'VNQ': 'Real estate',
+         'BOXX': 'T-bill-like cash fund'}
+
+
+def dash_files(inp, outdir):
+    """public_run.py dash <input.json> <outdir>: status.csv, holdings.csv and tax.csv for the dashboard."""
+    out, cfg = compute(inp)
+    mom = dict(out['momentum']); mom['IEF'] = out['ief_mom']
+    hold = out['trend_holding'] + (' + SSO (VIX leg)' if out['panic_leg'] else '')
+    w = lambda name, rows: csv.writer(open(os.path.join(outdir, name), 'w', newline='')).writerows(rows)
+    os.makedirs(outdir, exist_ok=True)
+    w('status.csv', [['as_of', 'spy_price', 'spy_gap_200d_pct', 'trend', 'trend_holding', 'flip_level', 'rotation_picks',
+                      'rotation_month_end', 'tbill_hurdle_pct', 'mode', 'strategy_capital', 'account_value', 'vix'],
+                     [out['date'], inp['quotes']['SPY']['last'], f"{out['gap200'] * 100:.1f}", 'On' if out['trend_on'] else 'Off',
+                      hold, '-1%' if out['trend_on'] else '+1%', ' + '.join(out['picks']), out['rotation_asof'],
+                      f"{out['hurdle'] * 100:.1f}", 'Live' if out['enabled'] else 'Dry run', f"{out['total']:.2f}",
+                      inp.get('account_value', ''), '' if out['vix'] is None else f"{out['vix']:.1f}"]])
+    w('holdings.csv', [['ticker', 'asset', 'sleeve', 'six_month_return_pct', 'target_weight_pct', 'held_value']] + [
+        [s, NAMES[s], 'Trend' if s in ('SSO', 'IEF') else 'Cash slot' if s == CASH else 'Rotation',
+         f"{mom[s] * 100:.1f}" if s in mom else '', f"{out['target'][s] * 100:.2f}", f"{out['values'][s]:.2f}"] for s in UNIVERSE])
+    w('tax.csv', tax_table(out['date'][:4]))
+
+
+def sell_lots(qty, broker):
+    """Tax lots for a sell, highest cost first (owner 2026-11-20). Any of the account's lots of the ticker may be
+    used, the autopilot's included (owner: "you can sell autopilot's lot"); the share count still comes from the
+    strategy's ledger. broker = the "lots" list of get_tax_lots_for_symbol (it is as of the previous night, so
+    shares bought today are not in it). Returns ([{"tax_lot_id","quantity"}], None) or (None, why not)."""
+    if broker is None:
+        return None, 'NEEDED'
+    lots = [b for b in broker if b.get('lotSelectionId') and float(b.get('quantity') or 0) > 0]
+    out, left = [], round(qty, 5)
+    for b in sorted(lots, key=lambda x: -float(x['unitCost'])):
+        if left <= 1e-6:
+            break
+        t = min(float(b['quantity']), left); left = round(left - t, 5)
+        out.append({'tax_lot_id': b['lotSelectionId'], 'quantity': f'{t:.5f}'.rstrip('0').rstrip('.'),
+                    'unit_cost': float(b['unitCost']), 'open_date': b.get('openDate')})
+    if left > 1e-6:
+        return None, "the broker's lots do not cover the sale yet"
+    if len(out) > 8:
+        return None, 'more than 8 lots'
+    return out, None
 
 
 def tbill_6m(sgov, a, b):
@@ -223,7 +329,9 @@ def compute(inp, need_account=True):
                 px = float(q[s]['bid'] or q[s]['last']); lim = max(px, float(q[s]['last']) * (1 - LIMIT_BAND))
                 qty = pos.get(s, 0.0) if w[s] == 0 else math.floor(-d / px)
                 if qty > 0:
-                    orders.append(dict(side='SELL', symbol=s, quantity=round(qty, 6), limit=math.floor(lim * 100) / 100, dollars=qty * px))
+                    tl, why_not = sell_lots(qty, (inp.get('tax_lots') or {}).get(s))
+                    orders.append(dict(side='SELL', symbol=s, quantity=round(qty, 6), limit=math.floor(lim * 100) / 100,
+                                       dollars=qty * px, tax_lots=tl, lots_note=why_not))
         for s in UNIVERSE:
             d = w[s] * total - val[s]
             if d > max(25.0, 0.002 * total):
@@ -240,6 +348,8 @@ def describe(w):
 
 
 def main(argv):
+    if len(argv) == 4 and argv[1] == 'dash':
+        dash_files(json.load(open(argv[2])), argv[3]); return 0
     if len(argv) != 3 or argv[1] not in ('brief', 'signal', 'record'):
         print(__doc__); return 1
     if argv[1] == 'record':
@@ -271,6 +381,15 @@ def main(argv):
     print(f"DECISION: {'TRADE' if out['decision'] else 'NO TRADE'} ({out['why']})")
     for o in out['orders']:
         print(f"  {o['side']:4s} {o['symbol']:5s} {o['quantity']} sh  LIMIT {o['limit']:.2f}  (~${o['dollars']:,.2f})")
+        if o.get('tax_lots'):
+            print('       tax_lot_matching_instructions: ' +
+                  json.dumps([{'tax_lot_id': x['tax_lot_id'], 'quantity': x['quantity']} for x in o['tax_lots']]))
+        elif o['side'] == 'SELL' and o.get('lots_note') != 'NEEDED':
+            print(f"       no lot instruction ({o.get('lots_note')}): place it without one (broker default)")
+    need = [o['symbol'] for o in out['orders'] if o.get('lots_note') == 'NEEDED']
+    if need:
+        print(f"LOTS NEEDED: call get_tax_lots_for_symbol for {' '.join(need)}, add \"tax_lots\": {{SYM: <its lots list>}} "
+              "to the input and run again before placing the sells.")
     if out['orders'] and not out['enabled']:
         print("DRY RUN: data/public/config.json has enabled=false. Do NOT place these orders.")
     if argv[1] == 'brief':
