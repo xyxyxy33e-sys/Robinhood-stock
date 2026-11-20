@@ -161,3 +161,11 @@ or monthly check looks better (13.0% to 14.0% against 12.3%), the same whipsaw a
 2x S&P rule for 1951-2007 it is worse (15.1% to 16.2% against 16.8%) and the worst drawdown goes from -37% to about
 -60%: in October 1987 the daily rule left the S&P before the 19th and lost -23% for the month; checking even every
 second day could still hold 2x through the crash and lose -55%. With a 2x fund the daily check is the protection.
+
+## Rebalancing only when the trend half trades: no gain (tested 2026-11-20)
+
+`research_notes/rebal_sso.py`, before tax. Resetting the two halves to 50/50 only when the trend half trades (4.7 times
+a year against 10.9): 12.4% / 0.75 / -23.7% against 12.3% / 0.77 / -22.8%; the trend half drifts up to 64% of the
+strategy. Reset only when SSO is bought: 12.4% / 0.75 / -24.0%. Once a year: 12.4% / 0.77 / -23.0%. Never: 11.8% / 0.74.
+Changing the rotation picks only on days the trend half trades: 9.5% / 0.62 / -41.4% (picks go stale for a year or more).
+No change.
