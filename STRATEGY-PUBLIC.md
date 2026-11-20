@@ -182,3 +182,11 @@ keeps the 1987 exposure found in the check-frequency test. No change.
 After the weekly and two-weekly tests the owner confirmed: rotation is read at month-end only, and whenever anything
 trades the whole strategy is brought back to its targets (50% trend / 50% rotation). This is what `public_run.py`
 already does: on a trade day it sizes every holding to target, not only the one that changed.
+
+## Cash in the rotation half while the S&P is below its 200-day line: rejected (tested 2026-11-20)
+
+`research_notes/downcash.py`. Current 12.3% / 0.77 / -22.8%. Rotation half all to cash: 10.4% / 0.69 / -25.1% (2008
++2.7% against +14.8%: it sells the Treasuries and gold that carried that year). Half to cash: 11.4% / 0.73. Stock funds
+only to cash or swapped for bonds/gold/commodities: 11.1% to 11.2% / -25%. Only when the S&P is more than 5% or 10%
+below the line: 12.0% to 12.5%, Sharpe 0.75 to 0.78, drawdown -22% to -23%, 2008 +6% to +13%: no better than noise.
+The deep drawdowns start with SSO above the line, where none of these rules act. No change.
