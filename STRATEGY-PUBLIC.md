@@ -350,7 +350,8 @@ one traded) and XLP for staples. Three roles, Jul 2007 - 19 Nov 2026 (live: 11.9
   goes from +15% to -1% (utilities), +11% (staples), +8% (Berkshire): defensive stocks still fall in a bear market.
   On 2000 - Jun 2007 utilities helped (10.4% against 7.6% for T-bills) and Berkshire deepened the drawdown. Rejected.
 - **A slice bought once and held**, the rest on the live rules: 20% Berkshire 11.8% / 0.82 / -18.9%, 8.6% after tax
-  (both halves no worse after tax; 2008 +3%); 30% Berkshire and 20% plain VTI are in `defensive.txt` for reference;
+  (both halves no worse after tax; 2008 +3%); 30% Berkshire 11.7% / 0.82 / -20.2%, 8.8% after tax (2008 -2%); 20% plain
+  VTI, as a reference, 11.6% / 0.79 / -19.7%, 8.2% after tax, so a third of the Berkshire gain is only the holding;
   20% utilities 11.3% / 0.79 / -17.7%, 7.7% after tax. Berkshire pays no dividend and a held slice is never sold, so
   the gain is mostly tax; Berkshire itself returned 11.3% a year with a -54% fall, about the S&P's.
 Not applied; live rules unchanged.

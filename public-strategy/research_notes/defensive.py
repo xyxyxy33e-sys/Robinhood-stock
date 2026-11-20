@@ -5,6 +5,8 @@ non-overlapping one) and XLP for staples. Named before running:
   fb=util / fb=stap / fb=brk     the trend half holds that fund when the S&P trend is off (if its 6-month return
                                  beats T-bills, else cash), in place of IEF
   brk20 / util20 / brk10+util10  that share of the money bought once and held, the rest on the live rules
+  vti20 (reference, added after the first run): the same with plain VTI, to see whether Berkshire matters or only
+  holding does; brk30
 Part B: the trend half alone on 2000 - Jun 2007 with each fallback."""
 import os, sys, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -65,6 +67,8 @@ V = {'live': S_(lambda: L2()),
      'brk20': lambda **k: B.blend([lambda: L2(), lambda: B.Static({'BRK': 1.0})], [.8, .2], **k),
      'util20': lambda **k: B.blend([lambda: L2(), lambda: B.Static({'UTIL': 1.0})], [.8, .2], **k),
      'brk10+util10': lambda **k: B.blend([lambda: L2(), lambda: B.Static({'BRK': .5, 'UTIL': .5})], [.8, .2], **k),
+     'vti20 (ref)': lambda **k: B.blend([lambda: L2(), lambda: B.Static({'VTI': 1.0})], [.8, .2], **k),
+     'brk30': lambda **k: B.blend([lambda: L2(), lambda: B.Static({'BRK': 1.0})], [.7, .3], **k),
      'BRK held': S_(lambda: B.Static({'BRK': 1.0})), 'utilities held': S_(lambda: B.Static({'UTIL': 1.0})), 'staples held': S_(lambda: B.Static({'STAP': 1.0})), 'SPY held': S_(lambda: B.Static({'SPY': 1.0}))}
 print("A. Whole strategy, Jul 2007 - 19 Nov 2026")
 table(V, '2007-07-02', '9999', [('2007-07-02', '2015-12-31'), ('2016-01-04', '9999')])
