@@ -365,3 +365,14 @@ back on above +2%. Live rules now, Jul 2007 - 19 Nov 2026 (`backtest.py`): **12.
 (`backtest.py`'s own after-tax line, 9.2%, leaves distributions out). The Nasdaq tilt, the regime port and the
 Berkshire / defensive ideas are not adopted. The agent's advice, accepted: no further rule changes for three to six
 months unless something breaks.
+
+## VIX-leg thresholds 25/20 and 30/20 against 30/25 (tested 2026-11-20): no change
+
+`research_notes/vix_levels.py`, `vix_levels.txt`; live rules otherwise. A VIX close of 30 or more is 8% of days since
+1990; the 30/25 latch starts about once a year and the leg is active on about 10% of days.
+- Jul 2007 - 19 Nov 2026, whole strategy: 30/25 12.8% / 0.83 / -19.0%, 8.8% after tax; 25/20 12.7% / 0.83 / -19.2%,
+  9.0%; 30/20 12.9% / 0.84 / -19.0%, 9.1%; 35/28 12.8% / 0.83 / -18.6%, 8.6%; no leg 12.5% / 0.81 / -18.6%, 8.3%.
+- 1990 - Jun 2007, trend half alone: 30/25 13.1% / 0.70 / -33.3%, 10.8% after tax; 25/20 12.7% / 0.68 / -36.0%, 10.6%;
+  30/20 12.6% / 0.68 / -36.8%, 10.5%; 35/28 13.2% / 0.70 / -34.3%, 10.9%; no leg 12.7% / 0.68 / -33.8%, 10.4%.
+The lower exits are 0.1 to 0.3 points ahead after tax on the recent period and 0.2 to 0.3 behind, with a deeper
+drawdown, on the earlier one: no difference beyond noise. 30/25 kept.
