@@ -165,7 +165,27 @@ carry on.
   Copy the saved page into the scratchpad and change it with the Edit tool (pre-approved), then publish with the Artifact tool.
   No inline `python3 -` scripts: they are not pre-approved and stop an unattended run at a permission prompt.
 - Account value is NET of the margin loan (the `NET` line `live_run.py record` prints: value minus loan + interest), with the gross value beside it.
-- Update: the as-of line; the four top cards; target vs held; the QQQ/SMA card and its threshold lines; the positions table; the NAV/footer.
+- **Daily checklist** (owner 2026-11-20, after a full review; every item, every trading day, whether or not the run traded):
+  1. As-of line: weekday + date, state and day count, the legs on, the weights; "next trade run" date; "unattended runs completed ... <today>".
+  2. Account value card: value, time, NAV index and day return, drawdown, QQQ day move, what traded.
+  3. Regime state card: day count, effective state, overlays on/off with their readings, breadth, the "Next:" levels.
+  4. Realized vol card: estimator %, multiplier, sleeve status with VIX / VIX3M / ratio, VIXY move, VIX-panic status.
+  5. Drift card: drift %, traded / no trade pill, held vs target weights, idle cash, fills.
+  6. Cumulative return: **all three** stat blocks (`cum-s` strategy, `cum-q`, `cum-m`) with their sub-lines, the `CUM` line, the month line.
+  7. Target vs held: the note (state, legs, held date, idle cash), the `legs` array in the script (target and held, every leg), the legend date.
+  8. QQQ vs SMA card: close / 50d / 200d, the regime strip label if the state changed, the distance and threshold sentence.
+  9. Yearly bars (`dashboard_years.py`, below).
+  10. Positions: the note (close date, target, tax-year realized from `get_realized_pnl` span `ytd`), every row's qty / avg / price /
+      value / weight / unrealized, the total row.
+  11. Footer: prepend today's line to the daily log; "State run lengths ... through <today>"; the NAV index sentence; the
+      "QQQ price return ... 2026 to <today>" and "live since 31 Aug: <x> to <today>" figures.
+  **On a day with any sell:** the Realized column (below) and the "Realized P&L, last 3 months" table (Robinhood monthly buckets,
+  `get_realized_pnl` span `all`, equity: the last three buckets, a last-3-months total and the all-time total).
+  **On a state change:** move `class="live-state"` in the six-states table to the new state's row.
+  **On a design or instrument change (owner decisions only):** the as-of design text, the six-states table rows, "Live design, at a
+  glance", the research notes. Never from a run.
+  **Before publishing:** search the page for the previous session's date (e.g. "19 Nov") and its NAV figure, and fix any hit that is
+  not part of the dated footer log.
 - **Realized column in the positions table** (added 2026-10-22, owner): on a day with any sell, refresh it from
   `get_pnl_trade_history(account_number='576391551', span='all')`: per-symbol sums of `realized_gain` for SPMO, QLD,
   TQQQ, VIXM (sleeve until 2026-11-10), VIXY (sleeve from 2026-11-11), QQQ (deep-E leg, from 2026-11-11), BOXX; the "closed earlier" row is everything else (gold, the 31 Aug stock mirror, pre-strategy trades);

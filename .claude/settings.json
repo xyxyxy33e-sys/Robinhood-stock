@@ -28,6 +28,7 @@
       "Artifact",
       "PushNotification",
       "Bash(python3 paper-track/dashboard_figures.py *)",
+      "Bash(python3 paper-track/dashboard_years.py)",
       "Edit(//tmp/claude-0/**)",
       "Read(//tmp/claude-0/**)",
       "Read(//root/.claude/projects/**)"
