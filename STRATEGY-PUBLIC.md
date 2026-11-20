@@ -190,3 +190,9 @@ already does: on a trade day it sizes every holding to target, not only the one 
 only to cash or swapped for bonds/gold/commodities: 11.1% to 11.2% / -25%. Only when the S&P is more than 5% or 10%
 below the line: 12.0% to 12.5%, Sharpe 0.75 to 0.78, drawdown -22% to -23%, 2008 +6% to +13%: no better than noise.
 The deep drawdowns start with SSO above the line, where none of these rules act. No change.
+
+## Account state 2026-11-20: all cash
+
+The owner sold most of the individual stocks during the morning and then instructed the agent to sell the rest: 46
+positions (about $19,190) sold with market orders at about 11:15 ET, all filled. The account holds no positions and
+$65,362.52 cash. `enabled` is still false: with no `max_capital` set, enabling it would deploy the whole cash balance.
