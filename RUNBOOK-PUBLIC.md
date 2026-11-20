@@ -41,7 +41,8 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 - Commit `data/public/runs/<today>.json`, `data/public/ledger.json` and `data/public/realized.csv`. One push only on a
   trade or a guard.
 
-## 4. Dashboard — after a trade run that traded (not time-critical)
+## 4. Dashboard — after every trade run, traded or not (owner 2026-11-20: update daily; not time-critical)
+On a no-trade day use the run's own input (with `"account_value"`); the refresh places no order and sends no push.
 `python3 public-strategy/public_run.py dash <input.json> <outdir>` (add `"account_value"` from `get_portfolio` to the
 input; run it after `record`, with the positions and cash read again after the fills) writes `status.csv`,
 `holdings.csv` and `tax.csv`. For each: Artifact publish with `url` = the dashboard, `asset: true`, `file_path` = the
