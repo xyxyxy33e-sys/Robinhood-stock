@@ -176,3 +176,9 @@ No change.
 (average 12.4% against 12.3%), Sharpe 0.72 to 0.80, maximum drawdown -23.2% to -35.4% depending on the weekday, 16 to 17
 trading days a year against 11. The result is a draw on return with a drawdown set by which weekday is chosen, and it
 keeps the 1987 exposure found in the check-frequency test. No change.
+
+## Owner decision 2026-11-20: rotation stays monthly, full reset on every trade
+
+After the weekly and two-weekly tests the owner confirmed: rotation is read at month-end only, and whenever anything
+trades the whole strategy is brought back to its targets (50% trend / 50% rotation). This is what `public_run.py`
+already does: on a trade day it sizes every holding to target, not only the one that changed.
