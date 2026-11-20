@@ -13,9 +13,9 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 
 ## 1. Fetch and write the input (both runs)
 - `get_quotes` (account `5OG87042`) for `SPY SSO IEF VTI EFA EEM TLT GLD DBC VNQ BOXX`.
-- VIX for the panic leg: the script reads Yahoo's `^VIX` itself (2 years of closes plus the live value). If a fresher
-  VIX reading is at hand, pass it as `"vix": <number>` in the input JSON; the script prints the VIX it used. If VIX
-  cannot be read it says so and runs with the panic leg off.
+- VIX for the panic leg: `get_quotes` for `VIX` with `instrument_type` INDEX and pass its last price as
+  `"vix": <number>` in the input JSON (Yahoo's live `^VIX` runs about ten minutes behind). Without it the script reads
+  Yahoo's value; it prints the VIX it used. If VIX cannot be read at all it says so and runs with the panic leg off.
 - `get_portfolio` for `5OG87042` (large: read positions for those tickers and `cash` with jq).
 - Write `/tmp/public_<today>.json`:
   `{"date","time","quotes":{SYM:{"last","bid","ask","close":<previousClose>,"last_trade_date":<date of lastTimestamp, ET>}},"positions":{SYM:qty},"cash":<cash>}`
@@ -26,8 +26,9 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 ## 3. Trade run — 15:50, Mon–Fri (12:50 on early-close days)
 `python3 public-strategy/public_run.py signal /tmp/public_<today>.json`.
 - `NO TRADE` or `DRY RUN`: place nothing.
-- `TRADE` and enabled: `preflight_order` then `place_order` for each printed line, sells first, limit orders, regular
-  hours, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
-- After the orders fill: write the fills as `[{"side","symbol","quantity","price"}]` (actual filled quantity and
+- `TRADE` and enabled: `place_order` (it preflights itself) for each printed line, sells first, whole-share LIMIT,
+  DAY, `equity_market_session` CORE, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
+- Keep the order IDs `place_order` returns and read the fills with `get_order` on those IDs only (the autopilot's
+  orders are in the same account). Write the fills as `[{"side","symbol","quantity","price"}]` (actual filled quantity and
   average price, filled orders only) and run `python3 public-strategy/public_run.py record <fills.json>`.
 - Commit `data/public/runs/<today>.json` and `data/public/ledger.json`. One push only on a trade or a guard.
