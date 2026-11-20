@@ -47,5 +47,5 @@ input; run it after `record`, with the positions and cash read again after the f
 `holdings.csv` and `tax.csv`. For each: Artifact publish with `url` = the dashboard, `asset: true`, `file_path` = the
 file; ArtifactData `get` `datasets/<id>` (ids `status`, `holdings`, `tax`) for its version and old `source.url`; one
 ArtifactData `batch` of `update`s pinned with `if_version`: `{source: {kind: "file", url: "<new /_blob url>", name,
-format: "csv"}, updated: {at: "<ISO now>", by: "Claude"}}`; then delete each old asset (Artifact `delete`, `path` = the
-32-hex id in the old url). Never edit `files/index.html` from a run. If a step fails, say so and carry on.
+format: "csv"}, updated: {at: "<ISO now>", by: "Claude"}}`. Leave the old files in place (deleting them is not
+permitted from a run; they are a few hundred bytes each). Never edit `files/index.html` from a run. If a step fails, say so and carry on.
