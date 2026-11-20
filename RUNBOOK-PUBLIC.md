@@ -1,7 +1,9 @@
 # RUNBOOK — Public.com taxable account 5OG87042
 
 `public-strategy/public_run.py` computes everything; STRATEGY-PUBLIC.md says what and why. Account `5OG87042` only.
-Never trade any ticker outside the script's printed orders. Never sell the account's individual stocks.
+Never trade any ticker outside the script's printed orders. Never touch the autopilot basket (about $50,000 of
+individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The strategy owns only what
+`data/public/ledger.json` lists (before the first trade: no shares, cash = `max_capital`).
 
 ## 0. Rules
 1. `git pull --ff-only` first.
@@ -11,9 +13,9 @@ Never trade any ticker outside the script's printed orders. Never sell the accou
 
 ## 1. Fetch and write the input (both runs)
 - `get_quotes` (account `5OG87042`) for `SPY SSO IEF VTI EFA EEM TLT GLD DBC VNQ BOXX`.
-- VIX for the panic leg: the script reads Yahoo's `^VIX` itself (2 years of closes plus the live value). If a fresher
-  VIX reading is at hand, pass it as `"vix": <number>` in the input JSON; the script prints the VIX it used. If VIX
-  cannot be read it says so and runs with the panic leg off.
+- VIX for the panic leg: `get_quotes` for `VIX` with `instrument_type` INDEX and pass its last price as
+  `"vix": <number>` in the input JSON (Yahoo's live `^VIX` runs about ten minutes behind). Without it the script reads
+  Yahoo's value; it prints the VIX it used. If VIX cannot be read at all it says so and runs with the panic leg off.
 - `get_portfolio` for `5OG87042` (large: read positions for those tickers and `cash` with jq).
 - Write `/tmp/public_<today>.json`:
   `{"date","time","quotes":{SYM:{"last","bid","ask","close":<previousClose>,"last_trade_date":<date of lastTimestamp, ET>}},"positions":{SYM:qty},"cash":<cash>}`
@@ -24,6 +26,38 @@ Never trade any ticker outside the script's printed orders. Never sell the accou
 ## 3. Trade run — 15:50, Mon–Fri (12:50 on early-close days)
 `python3 public-strategy/public_run.py signal /tmp/public_<today>.json`.
 - `NO TRADE` or `DRY RUN`: place nothing.
-- `TRADE` and enabled: `preflight_order` then `place_order` for each printed line, sells first, limit orders, regular
-  hours, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
-- Commit `data/public/runs/<today>.json`. One push only on a trade or a guard.
+- `TRADE` and enabled: `place_order` (it preflights itself) for each printed line, sells first, whole-share LIMIT,
+  DAY, `equity_market_session` CORE, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
+- **Sells and tax lots (owner 2026-11-20: highest cost first, any of the account's lots).** If the output says
+  `LOTS NEEDED`, call `get_tax_lots_for_symbol` for each ticker it names, add `"tax_lots": {SYM: <the "lots" list>}` to
+  the input and run `signal` again. Place each sell with the printed `tax_lot_matching_instructions` and
+  `open_close_indicator` CLOSE. If the broker refuses the lot instruction (its lot data is a day old, and it refuses
+  after another trade in that ticker the same day), place the same sell without it.
+- Keep the order IDs `place_order` returns and read the fills with `get_order` on those IDs only (the autopilot's
+  orders are in the same account). Write the fills as `[{"side","symbol","quantity","price"}]` (actual filled quantity
+  and average price, filled orders only; add `"lots": "default"` to a sell that went without a lot instruction) and run
+  `python3 public-strategy/public_run.py record <fills.json>`. It updates `data/public/ledger.json` and appends each
+  sale to `data/public/realized.csv`.
+- Commit `data/public/runs/<today>.json`, `data/public/ledger.json` and `data/public/realized.csv`. One push only on a
+  trade or a guard.
+
+## 4. Dashboard — after a trade run that traded (not time-critical)
+`python3 public-strategy/public_run.py dash <input.json> <outdir>` (add `"account_value"` from `get_portfolio` to the
+input; run it after `record`, with the positions and cash read again after the fills) writes `status.csv`,
+`holdings.csv` and `tax.csv`. For each: Artifact publish with `url` = the dashboard, `asset: true`, `file_path` = the
+file; ArtifactData `get` `datasets/<id>` (ids `status`, `holdings`, `tax`) for its version and old `source.url`; one
+ArtifactData `batch` of `update`s pinned with `if_version`: `{source: {kind: "file", url: "<new /_blob url>", name,
+format: "csv"}, updated: {at: "<ISO now>", by: "Claude"}}`. Leave the old files in place (deleting them is not
+permitted from a run; they are a few hundred bytes each). Never edit `files/index.html` from a run. If a step fails, say so and carry on.
+
+## 5. Weekly review — Fridays about 16:25, after the close (read-only, places no orders)
+Section 1's fetch (quotes, VIX, `get_portfolio`; add `"account_value"`), then
+`python3 public-strategy/public_run.py review <input.json>`. It appends the strategy's value to
+`data/public/weekly.csv` and prints the week against SPY, the orders of the week, realized gains, holdings against
+targets and the signals. Post the printed review in chat with a two-line plain reading of it (what moved the result,
+anything that needs the owner), send ONE push with its `PUSH:` line, refresh the dashboard as in section 4, and commit
+`data/public/weekly.csv`. If the market was closed on Friday, run it all the same on the last session's prices.
+
+## 6. Backtest figures on the dashboard — only after a rule change
+`PUB_OUT=<dir> python3 public-strategy/backtest.py` (downloads Yahoo data; `PUB_END=<date>` fixes the last session)
+writes `stats.csv`, `nav.csv` and `years.csv`; upload them to the dashboard datasets of the same names as in section 4.

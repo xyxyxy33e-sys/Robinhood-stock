@@ -1,6 +1,6 @@
 # Public.com taxable account (5OG87042) — trend + rotation strategy
 
-Status: **built, dry run** (`data/public/config.json` `enabled=false`). Owner request 2026-11-19. Separate from the
+Status: **LIVE since 2026-11-20** with $15,000, SSO volatility target 30% (`data/public/config.json` `enabled=true`, `max_capital` 15000). Owner request 2026-11-19. Separate from the
 Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
 
 ## Rules
@@ -182,3 +182,75 @@ keeps the 1987 exposure found in the check-frequency test. No change.
 After the weekly and two-weekly tests the owner confirmed: rotation is read at month-end only, and whenever anything
 trades the whole strategy is brought back to its targets (50% trend / 50% rotation). This is what `public_run.py`
 already does: on a trade day it sizes every holding to target, not only the one that changed.
+
+## Cash in the rotation half while the S&P is below its 200-day line: rejected (tested 2026-11-20)
+
+`research_notes/downcash.py`. Current 12.3% / 0.77 / -22.8%. Rotation half all to cash: 10.4% / 0.69 / -25.1% (2008
++2.7% against +14.8%: it sells the Treasuries and gold that carried that year). Half to cash: 11.4% / 0.73. Stock funds
+only to cash or swapped for bonds/gold/commodities: 11.1% to 11.2% / -25%. Only when the S&P is more than 5% or 10%
+below the line: 12.0% to 12.5%, Sharpe 0.75 to 0.78, drawdown -22% to -23%, 2008 +6% to +13%: no better than noise.
+The deep drawdowns start with SSO above the line, where none of these rules act. No change.
+
+## Account state 2026-11-20: all cash
+
+The owner sold most of the individual stocks during the morning and then instructed the agent to sell the rest: 46
+positions (about $19,190) sold with market orders at about 11:15 ET, all filled. The account holds no positions and
+$65,362.52 cash. `enabled` is still false: with no `max_capital` set, enabling it would deploy the whole cash balance.
+
+## Account state 2026-11-20, 11:33 ET: autopilot basket plus $15,000 for this strategy
+
+Minutes after the liquidation, 93 dollar-amount market buys (11:17-11:23 ET, $49,999.89) put 77 individual stocks and
+14.97 BOXX in the account. Owner 2026-11-20: that $50,000 is managed by Public's autopilot and trades on its own.
+Account: $15,362.60 cash, $49,730.85 in 78 positions. The owner set this strategy's capital at $15,000
+(`max_capital`) and told the agent to go live: `enabled=true`, first trade at the 15:50 run on 2026-11-20, with two
+weekday scheduled tasks in the Public strategy chat (about 10:00 brief, 15:50 trade run).
+
+Because the autopilot also holds BOXX, the account's positions cannot tell the two apart. `public_run.py` now counts
+only its own ledger (`data/public/ledger.json`: shares it bought and its cash, starting at `max_capital`), updated
+with `public_run.py record` after every fill. It refuses to run if the account holds fewer shares of a ticker than the
+ledger says. Dividends on strategy holdings land in account cash and are not added to the ledger. The Scope rule above
+("ten tickers plus positive cash") is replaced by the ledger.
+
+## VIX latch keeps the 15:50 reading (owner 2026-11-20)
+
+The 15:50 run treats the live VIX as that day's close. Later runs now replay that same reading for the day (from
+`data/public/runs/<date>.json`) instead of the official close, so a 30.1 at 15:50 followed by a 29.8 close no longer
+buys the panic leg one day and sells it the next. Thresholds are unchanged (on at 30, off below 25). The run files are
+therefore part of the strategy's state: always commit them.
+
+## Tax lots and realized gains (owner 2026-11-20)
+
+Sells name their tax lots, highest cost first, from all the account's lots of that ticker, the autopilot's included
+(owner: "you can sell autopilot's lot, its fine"); the number of shares sold still comes from the strategy's ledger.
+Public's lot data is as of the previous night and allows at most 8 lots per order; when the lots do not cover a sale or
+the broker refuses the instruction, the sell goes without one. `record` appends every sale to
+`data/public/realized.csv` (proceeds, cost of the lots named, gain, short or long term; a sale without a lot
+instruction is costed at the strategy's average price and marked `average`). The dashboard has a tax section fed by
+`tax.csv` (`public_run.py dash`): realized gain or loss per ETF for the tax year.
+
+## Weekly review (owner 2026-11-20)
+
+Every Friday after the close a scheduled task runs `public_run.py review`: the strategy's value against SPY for the
+week and since the $15,000 start, the week's orders, realized gains, holdings against targets and the signals, with one
+push and a dashboard refresh. Values are kept in `data/public/weekly.csv`. The first review (2026-11-20) is the baseline.
+
+## Owner decisions 2026-11-20: rotation score stays 6 months; SSO volatility target 30% ADOPTED
+
+- **Rotation score:** 6 months alone. The 3/6/12 blend is not adopted.
+- **SSO volatility target 30%:** while the trend is on, the SSO share of the trend half is min(1, 30% / (2 x S&P vol)),
+  rounded to the nearest quarter and never below a quarter; S&P vol is the larger of the 10- and 30-session annualized
+  volatility; the rest of the trend half sits in BOXX. A change of step trades and resets everything to target. The
+  panic-leg SSO (trend off) is not scaled. `public_run.py` (`VOL_TARGET`, `sso_scale`) and `backtest.py` both apply it.
+- **Backtest rebuilt.** `backtest.py` no longer needs the private price harness: it downloads Yahoo adjusted closes and
+  uses the 13-week T-bill yield for cash. On this data every return is about 0.3 points a year lower than the figures in
+  "Evidence" above (SPY 10.3% against 10.5%), so compare like with like, Jul 2007 - 19 Nov 2026:
+
+| | CAGR | Sharpe | Max DD | Worst year | After tax | 2007-2015 | 2016-2026 |
+|---|---|---|---|---|---|---|---|
+| Without the vol target | 12.0% | 0.75 | -22.8% | -16.9% | 8.9% | 9.7% / 0.61 | 13.9% / 0.88 |
+| With the 30% vol target (live) | 12.0% | 0.79 | -20.0% | -14.5% | 8.5% | 10.3% / 0.67 | 13.3% / 0.90 |
+| SPY buy & hold | 10.3% | 0.60 | -55.2% | -36.8% | 9.0% | 5.7% / 0.36 | 14.1% / 0.83 |
+
+  Same return before tax, higher Sharpe in both halves, 2.8 points less drawdown; it costs about 0.4 points a year after
+  tax (more short-term trades), which leaves the strategy about half a point behind SPY after tax. This matches the
+  earlier study (12.2% / 0.80 / -20.0%, 8.7% after tax against 9.3%). The dashboard's backtest figures are these.

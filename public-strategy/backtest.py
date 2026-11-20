@@ -7,41 +7,65 @@ or the IRA (SPMO).
    VIX-PANIC LEG (owner 2026-11-20): while the trend is off and the VIX latch is on (close >= 30 on, < 25 off),
    PANIC_SHARE (25%) of the trend half is 1x S&P, held as SSO at half weight; the fallback keeps the other 75%.
    Set PANIC_SHARE = 0 to switch it off.
+   SSO VOLATILITY TARGET (owner 2026-11-20): while the trend is on, the SSO weight is scaled by
+   min(1, 30% / (2 x S&P vol)), rounded to the nearest quarter, never below a quarter; S&P vol is the larger of the
+   10- and 30-session annualized volatility. The rest of the trend half is cash. A change of step trades.
  ROTATION: top 2 of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return, 25% each, each must beat T-bills else that
    slot in T-bills. Last session of each month.
  Sleeves are reset to 50/50 only when a signal trades (no calendar rebalance). 5bp/side.
 After-tax: average-cost lots per ticker; a sale realizes gain pro rata; short-term (38.8%) unless the position was
 opened more than 365 days earlier (18.8%); T-bill interest ordinary; tax paid at each year end; losses carried."""
-import sys, json, datetime as dt, warnings; warnings.filterwarnings('ignore')
-sys.path.insert(0, '/tmp/claude-0/-home-user-Robinhood-stock/e898e69c-6aab-5817-bca0-552f786d2da8/scratchpad/vol'); sys.path.insert(1, '/home/user/Robinhood-stock/paper-track')
-import numpy as np, harness as H
-from harness import S
-DL = '/tmp/claude-0/-home-user-Robinhood-stock/e898e69c-6aab-5817-bca0-552f786d2da8/scratchpad/ira/dl/'
+import sys, os, json, time, urllib.request, datetime as dt, warnings; warnings.filterwarnings('ignore')
+import numpy as np
+# Self-contained since 2026-11-20: prices from Yahoo (adjusted closes), cached for a day in PUB_CACHE; cash is the
+# 13-week T-bill yield (^IRX) / 252. The earlier version read a private price harness that no longer exists; on
+# this data every return figure is about 0.2-0.3 points a year lower than the earlier runs (SPY 10.3% against 10.5%).
+CACHE = os.environ.get('PUB_CACHE', os.path.join(os.path.expanduser('~'), '.cache', 'public_strategy'))
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
+def _dl(s):
+    os.makedirs(CACHE, exist_ok=True); f = os.path.join(CACHE, s.replace('^', '_') + '.json')
+    if not os.path.exists(f) or time.time() - os.path.getmtime(f) > 86400:
+        u = f"https://query2.finance.yahoo.com/v8/finance/chart/{s.replace('^', '%5E')}?period1=0&period2={int(time.time())}&interval=1d&events=div"
+        open(f, 'wb').write(urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=60).read())
+    return json.load(open(f))['chart']['result'][0]
 def yh(s):
-    d = json.load(open(DL + s + '.json'))['chart']['result'][0]
+    d = _dl(s)
     return {dt.datetime.utcfromtimestamp(t).date().isoformat(): v for t, v in zip(d['timestamp'], d['indicators']['adjclose'][0]['adjclose']) if v}
+def _raw(s):
+    d = _dl(s)
+    return {dt.datetime.utcfromtimestamp(t).date().isoformat(): v for t, v in zip(d['timestamp'], d['indicators']['quote'][0]['close']) if v}
+END = os.environ.get('PUB_END', '9999')
 ROT = ['VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ']; SY = ROT + ['SPY', 'SSO', 'IEF']
-px = {s: yh(s) for s in SY}; cashd = dict(zip(H.p['dates'], H.p['cash']))
-dates = [d for d in H.p['dates'] if d >= '2006-06-22' and all(d in px[s] for s in SY)]; n = len(dates)
+px = {s: yh(s) for s in SY}; _irx = _raw('^IRX')
+dates = [d for d in sorted(px['SPY']) if '2006-06-22' <= d <= END and all(d in px[s] for s in SY)]; n = len(dates)
+_y = 0.0; cashd = {}
+for _d0 in sorted(set(dates) | set(_irx)):
+    _y = _irx.get(_d0, _y); cashd[_d0] = _y / 100 / 252
 X = {s: np.array([px[s][d] for d in dates]) for s in SY}; R = {s: np.r_[0, X[s][1:] / X[s][:-1] - 1] for s in SY}
 C = np.array([cashd[d] for d in dates]); me = [i for i in range(n - 1) if dates[i][:7] != dates[i + 1][:7]]; mes = set(me)
 c = np.cumsum(np.insert(X['SPY'], 0, 0)); sma = np.full(n, np.nan); sma[199:] = (c[200:] - c[:-200]) / 200
 FB_FILTER = True; PANIC_SHARE = 0.25
+VOL_TARGET = 0.30   # owner 2026-11-20; None switches the SSO volatility target off
 import csv as _csv
 _vx = {}
-for _r in list(_csv.reader(open('/home/user/Robinhood-stock/data/vixcls_full.csv')))[1:]:
+for _r in list(_csv.reader(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'vixcls_full.csv'))))[1:]:
     try: _vx[_r[0]] = float(_r[1])
     except ValueError: pass
-_d = json.load(open(DL + 'VIX.json'))['chart']['result'][0]
-for _t, _v in zip(_d['timestamp'], _d['indicators']['quote'][0]['close']):
-    if _v: _vx.setdefault(dt.datetime.utcfromtimestamp(_t).date().isoformat(), _v)
+for _dd, _v in _raw('^VIX').items(): _vx.setdefault(_dd, _v)
 PANIC = np.zeros(n, bool); _p = False
 for _i, _dd in enumerate(dates):
     _v = _vx.get(_dd)
     if _v is not None: _p = (_v >= 25.0) if _p else (_v >= 30.0)
     PANIC[_i] = _p
+_lr = np.log(1 + R['SPY']); _vol = np.full(n, np.nan)
+for _i in range(31, n): _vol[_i] = max(_lr[_i-9:_i+1].std(ddof=1), _lr[_i-29:_i+1].std(ddof=1)) * 252 ** .5
+def _vsq(T):
+    if not T: return np.ones(n)
+    sc = np.minimum(1.0, T / (2 * np.where(_vol > 0, _vol, np.nan))); q = np.nan_to_num(np.round(sc * 4) / 4, nan=1.0); q[q < 0.25] = 0.25
+    return q
+VSQ = _vsq(VOL_TARGET)
 def run(start, mode='P', tax=False):
-    iefok = True; pan = False
+    iefok = True; pan = False; vsp = 1.0
     s0 = next(i for i, d in enumerate(dates) if d >= start)
     w = {}; on = None; rot = {}; V = 1.0; out = []; basis = {}; opened = {}; gst = glt = ordi = 0.0; cf = 0.0; yr = dates[s0][:4]
     for i in range(s0, n):
@@ -68,6 +92,8 @@ def run(start, mode='P', tax=False):
             if ok != iefok:
                 iefok = ok
                 if on is not None and not on: trade = True
+        vs = VSQ[i] if on else 1.0
+        if vs != vsp: vsp = vs; trade = True
         pn = bool(PANIC[i]) and on is not None and not on and PANIC_SHARE > 0
         if pn != pan: pan = pn; trade = True
         if trade or i == s0:
@@ -79,6 +105,7 @@ def run(start, mode='P', tax=False):
                 fb = 0.5 if mode == 'P' else 1.0
                 if 'IEF' in t: t['IEF'] *= 1 - PANIC_SHARE
                 t['SSO'] = t.get('SSO', 0) + fb * PANIC_SHARE * 0.5
+            if on and mode in ('P', 'T') and 'SSO' in t: t['SSO'] *= vsp
             for s in set(w) | set(t):
                 a, b = w.get(s, 0) * V, t.get(s, 0) * V
                 if b < a - 1e-12:      # sell
@@ -101,7 +128,6 @@ def st(r, ds):
     for d, x in zip(ds, r): yr.setdefault(d[:4], []).append(x)
     ann = {y: np.prod(1 + np.array(a)) - 1 for y, a in yr.items()}
     return f"{(nav[-1] ** (252 / len(r)) - 1) * 100:5.1f}% {r.mean() * 252 / v:5.2f} {dd * 100:6.1f}% worst yr {min(ann.values()) * 100:6.1f}%", ann
-main = H.run(False, d0='2007-07-02', cfg=dict(H.CUR, gross_cap=S.GROSS_CAP), vixm=False)
 s0 = next(i for i, d in enumerate(dates) if d >= '2007-07-02')
 for a, b, lab in (('2007-07-02', '2100', '2007-2026'), ('2007-07-02', '2016', '2007-2015'), ('2016', '2100', '2016-2026')):
     print(f"== {lab} ==")
@@ -114,8 +140,6 @@ print('after federal tax, combined:', st(rt, ds)[0])
 # buy & hold SPY after tax: dividends 1.9% taxed 18.8% yearly, LT at end
 nav = np.cumprod(1 + R['SPY'][s0 + 1:] - 0.019 * 0.188 / 252); fin = nav[-1] - (nav[-1] - 1) * 0.188
 print(f"after federal tax, SPY buy & hold: {(fin ** (252 / len(nav)) - 1) * 100:.1f}%")
-dm = dict(zip(main[1], main[0])); cd = [d for d in ds if d in dm]; dr = dict(zip(ds, r))
-print('corr of P to the Robinhood strategy (daily):', round(float(np.corrcoef([dr[d] for d in cd], [dm[d] for d in cd])[0, 1]), 2))
 ann = st(r, ds)[1]; sp = st(R['SPY'][s0 + 1:], dates[s0 + 1:])[1]
 print('years: ' + '  '.join(f"{y} {ann[y]*100:+.0f}/{sp[y]*100:+.0f}" for y in sorted(ann)))
 
