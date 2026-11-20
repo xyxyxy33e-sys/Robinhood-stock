@@ -169,3 +169,10 @@ a year against 10.9): 12.4% / 0.75 / -23.7% against 12.3% / 0.77 / -22.8%; the t
 strategy. Reset only when SSO is bought: 12.4% / 0.75 / -24.0%. Once a year: 12.4% / 0.77 / -23.0%. Never: 11.8% / 0.74.
 Changing the rotation picks only on days the trend half trades: 9.5% / 0.62 / -41.4% (picks go stale for a year or more).
 No change.
+
+## Every signal once a week: rejected (tested 2026-11-20)
+
+`research_notes/weekly_all.py`. Trend, VIX latch, IEF test and rotation all read on one weekday: 11.7% to 13.2% a year
+(average 12.4% against 12.3%), Sharpe 0.72 to 0.80, maximum drawdown -23.2% to -35.4% depending on the weekday, 16 to 17
+trading days a year against 11. The result is a draw on return with a drawdown set by which weekday is chosen, and it
+keeps the 1987 exposure found in the check-frequency test. No change.
