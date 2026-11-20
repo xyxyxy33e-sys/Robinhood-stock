@@ -11,7 +11,8 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
                        Fallback filter (owner 2026-11-19): IEF is held only if its 6-month total return at the last
                        completed month-end beats T-bills (the rotation's own test); otherwise the trend half is in BOXX.
                        VIX-panic leg (owner 2026-11-20): while the trend is off and the VIX latch is on (a close at or
-                       above 30 turns it on, a close below 25 off; today's live VIX counts as today's close), 25% of the
+                       above 30 turns it on, a close below 25 off; today's live VIX counts as today's close, and stays the
+                       reading for that day on later runs, from data/public/runs/), 25% of the
                        trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
   ROTATION sleeve 50%: the 2 strongest of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return at the last completed
                        month-end close, 25% each; a pick that does not beat T-bills over the same 6 months is held
@@ -90,6 +91,17 @@ def vix_panic(today, vix_now=None):
     ds = sorted(d for d in h if d < today)
     if len(ds) < 250 or (dt.date.fromisoformat(today) - dt.date.fromisoformat(ds[-1])).days > 5:
         return False, None, 'VIX history short or stale: panic leg off'
+    # A day the 15:50 run acted on keeps the VIX it used then, not the official close (owner 2026-11-20):
+    # otherwise 30.1 at 15:50 and a 29.8 close would buy the leg today and sell it tomorrow.
+    for f in (os.listdir(RUNS) if os.path.isdir(RUNS) else []):
+        d = f[:-5]
+        if f.endswith('.json') and d in h and d < today:
+            try:
+                v = json.load(open(os.path.join(RUNS, f))).get('vix')
+            except Exception:  # noqa: BLE001
+                v = None
+            if v:
+                h[d] = float(v)
     now = float(vix_now) if vix_now else (float(h[today]) if today in h else (float(live) if live else None))
     if now is None:
         return False, None, 'no VIX reading for today: panic leg off'

@@ -210,3 +210,10 @@ only its own ledger (`data/public/ledger.json`: shares it bought and its cash, s
 with `public_run.py record` after every fill. It refuses to run if the account holds fewer shares of a ticker than the
 ledger says. Dividends on strategy holdings land in account cash and are not added to the ledger. The Scope rule above
 ("ten tickers plus positive cash") is replaced by the ledger.
+
+## VIX latch keeps the 15:50 reading (owner 2026-11-20)
+
+The 15:50 run treats the live VIX as that day's close. Later runs now replay that same reading for the day (from
+`data/public/runs/<date>.json`) instead of the official close, so a 30.1 at 15:50 followed by a 29.8 close no longer
+buys the panic leg one day and sells it the next. Thresholds are unchanged (on at 30, off below 25). The run files are
+therefore part of the strategy's state: always commit them.
