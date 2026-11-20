@@ -11,6 +11,9 @@ Never trade any ticker outside the script's printed orders. Never sell the accou
 
 ## 1. Fetch and write the input (both runs)
 - `get_quotes` (account `5OG87042`) for `SPY SSO IEF VTI EFA EEM TLT GLD DBC VNQ BOXX`.
+- VIX for the panic leg: the script reads Yahoo's `^VIX` itself (2 years of closes plus the live value). If a fresher
+  VIX reading is at hand, pass it as `"vix": <number>` in the input JSON; the script prints the VIX it used. If VIX
+  cannot be read it says so and runs with the panic leg off.
 - `get_portfolio` for `5OG87042` (large: read positions for those tickers and `cash` with jq).
 - Write `/tmp/public_<today>.json`:
   `{"date","time","quotes":{SYM:{"last","bid","ask","close":<previousClose>,"last_trade_date":<date of lastTimestamp, ET>}},"positions":{SYM:qty},"cash":<cash>}`

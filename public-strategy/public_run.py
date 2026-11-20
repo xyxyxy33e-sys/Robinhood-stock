@@ -9,6 +9,9 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
                        (in above +1%, out below -1%); otherwise IEF. Read every day at 15:50 on the live price.
                        Fallback filter (owner 2026-11-19): IEF is held only if its 6-month total return at the last
                        completed month-end beats T-bills (the rotation's own test); otherwise the trend half is in BOXX.
+                       VIX-panic leg (owner 2026-11-20): while the trend is off and the VIX latch is on (a close at or
+                       above 30 turns it on, a close below 25 off; today's live VIX counts as today's close), 25% of the
+                       trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
   ROTATION sleeve 50%: the 2 strongest of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return at the last completed
                        month-end close, 25% each; a pick that does not beat T-bills over the same 6 months is held
                        in BOXX instead. Changes take effect at the first 15:50 run of the new month.
@@ -31,6 +34,7 @@ CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is 
 UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
 FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the other two strategies (BOXX is shared on purpose)
 HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.01, 0.20, 0.005, 0.003
+PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.25
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 assert not set(UNIVERSE) & set(FORBIDDEN)
 
@@ -68,6 +72,30 @@ def trend_on(spy, today):
     return on, gap, sma
 
 
+def vix_panic(today, vix_now=None):
+    """(latch on?, VIX used today, note). Replays about 2 years of VIX closes, then today's reading.
+    vix_now: the input's "vix" if given, else Yahoo's live ^VIX. If VIX cannot be read the leg is off and says so."""
+    try:
+        u = "https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?range=2y&interval=1d"
+        r = json.loads(urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=30).read())['chart']['result'][0]
+        off = r['meta'].get('gmtoffset', 0) or 0
+        h = {dt.datetime.utcfromtimestamp(t + off).date().isoformat(): c
+             for t, c in zip(r['timestamp'], r['indicators']['quote'][0]['close']) if c}
+        live = r['meta'].get('regularMarketPrice')
+    except Exception as e:  # noqa: BLE001
+        return False, None, f'VIX unavailable ({e}): panic leg off'
+    ds = sorted(d for d in h if d < today)
+    if len(ds) < 250 or (dt.date.fromisoformat(today) - dt.date.fromisoformat(ds[-1])).days > 5:
+        return False, None, 'VIX history short or stale: panic leg off'
+    now = float(vix_now) if vix_now else (float(h[today]) if today in h else (float(live) if live else None))
+    if now is None:
+        return False, None, 'no VIX reading for today: panic leg off'
+    on = False
+    for v in [h[d] for d in ds] + [now]:
+        on = (v >= PANIC_OFF) if on else (v >= PANIC_ON)
+    return on, now, None
+
+
 def tbill_6m(sgov, a, b):
     return sgov[b] / sgov[a] - 1
 
@@ -87,9 +115,15 @@ def rotation(series, sgov, today):
     return picks, mom, hurdle, e, s
 
 
-def targets(on, picks, ief_ok=True):
+def targets(on, picks, ief_ok=True, panic=False):
     w = {s: 0.0 for s in UNIVERSE}
-    w['SSO' if on else ('IEF' if ief_ok else CASH)] += 0.5
+    if on:
+        w['SSO'] += 0.5
+    else:
+        k = PANIC_SHARE if panic else 0.0          # 1x S&P on k of the trend half = SSO at half that weight
+        w['IEF' if ief_ok else CASH] += 0.5 * (1 - k)
+        w['SSO'] += 0.5 * k * 0.5
+        w[CASH] += 0.5 * k * 0.5
     for p in picks:
         w[p] += 0.25
     return w
@@ -106,10 +140,12 @@ def compute(inp, need_account=True):
     ief = adj_series('IEF', today, q['IEF']['last'])
     ief_mom = ief[asof] / ief[start] - 1; ief_ok = ief_mom > hurdle
     fallback = 'IEF' if ief_ok else CASH
-    w = targets(on, picks, ief_ok)
+    panic, vix_used, vix_note = vix_panic(today, inp.get('vix'))
+    w = targets(on, picks, ief_ok, panic)
     out = dict(date=today, time=inp.get('time'), trend_on=on, gap200=gap, spy_sma200_adj=sma, picks=picks,
                rotation_asof=asof, momentum=[(x, m) for m, x in mom], hurdle=hurdle, target=w,
-               ief_mom=ief_mom, ief_ok=ief_ok, fallback=fallback, trend_holding='SSO' if on else fallback, enabled=bool(cfg.get('enabled')))
+               ief_mom=ief_mom, ief_ok=ief_ok, fallback=fallback, trend_holding='SSO' if on else fallback,
+               vix=vix_used, vix_panic=panic, panic_leg=bool(panic and not on), vix_note=vix_note, enabled=bool(cfg.get('enabled')))
     if not need_account:
         return out, cfg
     pos = {s: float(v) for s, v in inp.get('positions', {}).items()}
@@ -173,6 +209,9 @@ def main(argv):
           f"(flips {'below -1%' if out['trend_on'] else 'above +1%'})")
     print(f"FALLBACK: IEF 6-month {out['ief_mom']:+.2%} vs T-bills {out['hurdle']:+.2%} -> "
           f"{'IEF' if out['ief_ok'] else CASH} when the trend is off")
+    print("VIX PANIC: " + (out['vix_note'] or (f"VIX {out['vix']:.2f}, latch {'ON' if out['vix_panic'] else 'off'} "
+          f"(on at {PANIC_ON:.0f}, off below {PANIC_OFF:.0f}) -> " + ('25% of the trend half in 1x S&P' if out['panic_leg'] else
+          ('no effect while the trend is on' if out['vix_panic'] else 'no panic leg')))))
     print(f"ROTATION (month-end {out['rotation_asof']}, hurdle {out['hurdle']:+.2%}): " +
           ', '.join(f"{x} {m:+.1%}" for x, m in out['momentum']) + f" -> {out['picks']}")
     print(f"target: {describe(out['target'])}")
@@ -186,7 +225,7 @@ def main(argv):
     if argv[1] == 'brief':
         spyq = q['SPY']; chg = f" {float(spyq['last']) / float(spyq['close']) - 1:+.1%}" if spyq.get('close') else ''
         push = (f"Public 10am: SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
-                f"flips at {'-1%' if out['trend_on'] else '+1%'} | rotation {'+'.join(out['picks'])} | 3:50 "
+                f"flips at {'-1%' if out['trend_on'] else '+1%'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rotation {'+'.join(out['picks'])} | 3:50 "
                 f"{'TRADE' if out['decision'] else 'no trade'} here" + ('' if out['enabled'] else ' (dry run)'))
         print('PUSH:', push[:199])
     else:

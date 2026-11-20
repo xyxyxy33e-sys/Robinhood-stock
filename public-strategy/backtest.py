@@ -4,6 +4,9 @@ or the IRA (SPMO).
  TREND: SSO (2x S&P) while SPY adj close is above its 200-day average (1% hysteresis), else IEF. Checked daily.
    FALLBACK FILTER (owner 2026-11-19): IEF only if its 6-month return at the last month-end beats T-bills, else cash.
    Set FB_FILTER = False for the original always-IEF rule.
+   VIX-PANIC LEG (owner 2026-11-20): while the trend is off and the VIX latch is on (close >= 30 on, < 25 off),
+   PANIC_SHARE (25%) of the trend half is 1x S&P, held as SSO at half weight; the fallback keeps the other 75%.
+   Set PANIC_SHARE = 0 to switch it off.
  ROTATION: top 2 of VTI EFA EEM TLT GLD DBC VNQ by 6-month total return, 25% each, each must beat T-bills else that
    slot in T-bills. Last session of each month.
  Sleeves are reset to 50/50 only when a signal trades (no calendar rebalance). 5bp/side.
@@ -23,9 +26,22 @@ dates = [d for d in H.p['dates'] if d >= '2006-06-22' and all(d in px[s] for s i
 X = {s: np.array([px[s][d] for d in dates]) for s in SY}; R = {s: np.r_[0, X[s][1:] / X[s][:-1] - 1] for s in SY}
 C = np.array([cashd[d] for d in dates]); me = [i for i in range(n - 1) if dates[i][:7] != dates[i + 1][:7]]; mes = set(me)
 c = np.cumsum(np.insert(X['SPY'], 0, 0)); sma = np.full(n, np.nan); sma[199:] = (c[200:] - c[:-200]) / 200
-FB_FILTER = True
+FB_FILTER = True; PANIC_SHARE = 0.25
+import csv as _csv
+_vx = {}
+for _r in list(_csv.reader(open('/home/user/Robinhood-stock/data/vixcls_full.csv')))[1:]:
+    try: _vx[_r[0]] = float(_r[1])
+    except ValueError: pass
+_d = json.load(open(DL + 'VIX.json'))['chart']['result'][0]
+for _t, _v in zip(_d['timestamp'], _d['indicators']['quote'][0]['close']):
+    if _v: _vx.setdefault(dt.datetime.utcfromtimestamp(_t).date().isoformat(), _v)
+PANIC = np.zeros(n, bool); _p = False
+for _i, _dd in enumerate(dates):
+    _v = _vx.get(_dd)
+    if _v is not None: _p = (_v >= 25.0) if _p else (_v >= 30.0)
+    PANIC[_i] = _p
 def run(start, mode='P', tax=False):
-    iefok = True
+    iefok = True; pan = False
     s0 = next(i for i, d in enumerate(dates) if d >= start)
     w = {}; on = None; rot = {}; V = 1.0; out = []; basis = {}; opened = {}; gst = glt = ordi = 0.0; cf = 0.0; yr = dates[s0][:4]
     for i in range(s0, n):
@@ -52,11 +68,17 @@ def run(start, mode='P', tax=False):
             if ok != iefok:
                 iefok = ok
                 if on is not None and not on: trade = True
+        pn = bool(PANIC[i]) and on is not None and not on and PANIC_SHARE > 0
+        if pn != pan: pan = pn; trade = True
         if trade or i == s0:
             t = {}
             if mode in ('P', 'T') and on is not None and (on or iefok): t['SSO' if on else 'IEF'] = 0.5 if mode == 'P' else 1.0
             if mode in ('P', 'R'):
                 for s, x in rot.items(): t[s] = t.get(s, 0) + x * (0.5 if mode == 'P' else 1.0)
+            if pan and mode in ('P', 'T'):
+                fb = 0.5 if mode == 'P' else 1.0
+                if 'IEF' in t: t['IEF'] *= 1 - PANIC_SHARE
+                t['SSO'] = t.get('SSO', 0) + fb * PANIC_SHARE * 0.5
             for s in set(w) | set(t):
                 a, b = w.get(s, 0) * V, t.get(s, 0) * V
                 if b < a - 1e-12:      # sell

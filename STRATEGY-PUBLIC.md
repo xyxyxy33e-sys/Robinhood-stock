@@ -8,6 +8,8 @@ Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
   hysteresis (in above +1%, out below -1%); otherwise IEF (7-10 year Treasuries). Read daily at 15:50.
   **Fallback filter (owner 2026-11-19):** IEF is held only if its 6-month total return at the last completed
   month-end beats T-bills, the same test the rotation uses; otherwise the trend half sits in BOXX.
+  **VIX-panic leg (owner 2026-11-20):** while the trend is off and the VIX latch is on (a close at or above 30 turns it
+  on, a close below 25 off), 25% of the trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
 - **Rotation sleeve, 50%.** The 2 strongest of VTI, EFA, EEM, TLT, GLD, DBC, VNQ by 6-month total return at the
   last completed month-end close, 25% each. A pick that does not beat T-bills (BOXX) over those 6 months is held in
   BOXX. Changes trade at the first 15:50 run of the new month.
@@ -30,16 +32,16 @@ ruled on it; a cautious reading avoids harvesting an SSO/VTI loss in a week the 
 ## Evidence (`public-strategy/backtest.py`, pre-registered, Jul 2007 - Nov 2026, adjusted closes, 5bp/side)
 | | CAGR | Sharpe | Max DD | Worst year |
 |---|---|---|---|---|
-| Combined 50/50 | 12.0% | 0.75 | -22.9% | -18.5% (2022) |
-| Trend sleeve alone | 12.3% | 0.61 | -40.2% | -29.0% |
+| Combined 50/50 | 12.3% | 0.77 | -22.8% | -16.9% (2022) |
+| Trend sleeve alone | 12.8% | 0.63 | -37.9% | -26.3% |
 | Rotation sleeve alone | 10.6% | 0.72 | -19.9% | -8.3% |
 | SPY buy & hold | 10.5% | 0.61 | -55.2% | -36.8% |
-2007-2015: 9.4% / 0.59 vs SPY 5.7% / 0.36. 2016-2026: 14.1% / 0.89 vs 14.4% / 0.85.
-These figures include the fallback filter. Before it (always IEF): 12.0% / 0.75 / -26.7%, worst year -23.5%, 2008 +22%;
+2007-2015: 9.7% / 0.61 vs SPY 5.7% / 0.36. 2016-2026: 14.4% / 0.91 vs 14.4% / 0.85.
+These figures include the fallback filter and the VIX-panic leg (filter alone: 12.0% / 0.75 / -22.9%, 2008 +17%). Before it (always IEF): 12.0% / 0.75 / -26.7%, worst year -23.5%, 2008 +22%;
 the research sections below that say "current" were run before the filter.
-After federal tax (38.8% short-term, 18.8% long-term, paid yearly): **9.0%** vs SPY buy & hold **9.2%**: in a
-taxable account the return ties the index; what it buys is the drawdown (-23% vs -55%; +17% in 2008) and a
-0.56 daily correlation to the Robinhood strategy. Behind SPY in 2010, 2015 (-16% vs +1%), 2019, 2022, 2023, 2026.
+After federal tax (38.8% short-term, 18.8% long-term, paid yearly): **9.3%** vs SPY buy & hold **9.2%**: in a
+taxable account the return ties the index; what it buys is the drawdown (-23% vs -55%; +15% in 2008) and a
+0.58 daily correlation to the Robinhood strategy. Behind SPY in 2010, 2015 (-16% vs +1%), 2019, 2022, 2023, 2026.
 Differences from the backtest when live: rotation changes trade one session after month-end; whole shares leave a
 little cash idle.
 
@@ -122,7 +124,7 @@ deeper drawdown (-47.5% against -37.1%). Golden cross: fewer trades but -59% dra
   11.1% to 11.7% against 11.7%, Sharpe 0.73 to 0.76 against 0.77; on 0.5% to 1.5% of days; cost up to 6.5 points in 2015.
   It would also need a VIX fund the Robinhood account does not trade.
 - **VIX-panic leg (VIX closes >= 30 on, < 25 off; that share of the fallback in 1x S&P, held as SSO at half weight):
-  candidate, owner to decide.** 2007-2026 at 25% / 50%: 12.3% / 0.77 / -22.8% and 12.6% / 0.78 / -23.0% against 12.0% /
+  ADOPTED at 25% by the owner 2026-11-20.** 2007-2026 at 25% / 50%: 12.3% / 0.77 / -22.8% and 12.6% / 0.78 / -23.0% against 12.0% /
   0.75 / -22.9%; both halves better; after tax 9.3% / 9.4% against 9.0%. On 2x S&P / T-bills for 1990-2007, untouched:
   13.4% and 14.0% against 12.8%, Sharpe 0.48 and 0.50 against 0.46, drawdown no worse; thresholds 25/20, 35/28 and 40/30
   also ahead. Cost: it buys into falling markets, so 2008 is +14.8% / +12.2% against +17.1%, and at 100% the drawdown
