@@ -14,7 +14,7 @@ Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
   last completed month-end close, 25% each. A pick that does not beat T-bills (BOXX) over those 6 months is held in
   BOXX. Changes trade at the first 15:50 run of the new month.
 - **Trading.** Trade only when a target holding is missing, a non-target holding is still held, or L1 drift is
-  above 20%. No calendar rebalancing (fewer taxable sales). Whole-share limit orders, at most 0.3% through the touch.
+  above 20%. No calendar rebalancing (fewer taxable sales). Fractional-share limit orders (4 decimals), at most 0.3% through the touch.
 - **Scope.** The strategy manages only its ten tickers plus positive cash. Every other position in the account
   (the existing individual stocks) is ignored. `max_capital` in the config caps what it deploys.
 
@@ -42,8 +42,7 @@ the research sections below that say "current" were run before the filter.
 After federal tax (38.8% short-term, 18.8% long-term, paid yearly): **9.3%** vs SPY buy & hold **9.2%**: in a
 taxable account the return ties the index; what it buys is the drawdown (-23% vs -55%; +15% in 2008) and a
 0.58 daily correlation to the Robinhood strategy. Behind SPY in 2010, 2015 (-16% vs +1%), 2019, 2022, 2023, 2026.
-Differences from the backtest when live: rotation changes trade one session after month-end; whole shares leave a
-little cash idle.
+Differences from the backtest when live: rotation changes trade one session after month-end.
 
 ## Running it
 `public-strategy/public_run.py` does every calculation; RUNBOOK-PUBLIC.md has the steps (10:00 brief, 15:50 trade
@@ -422,3 +421,12 @@ as VTI and as SSO at half weight. Live: 12.8% / 0.83 / -19.3%, 8.8% after tax (2
   1960-2007 drawdown to -26.6% (the 1987 re-entry) for 0.4 points of return.
 - Both together: 11.5% to 11.7%, 7.1% to 7.9%; 11.9% to 12.4%, 8.3% to 9.6%.
 All twelve versions return less before and after tax in both periods. No change.
+
+## Fractional shares (owner 2026-11-20)
+
+The first trade used whole shares and left $411.82 (2.7% of the strategy) idle, because one VTI share is over 2% of
+$15,000. From the next trade on, `public_run.py` sizes orders to 4 decimals, still as LIMIT / DAY / CORE orders
+(Public's preflight accepted fractional limit buys and sells for these ETFs; no fractional order has been placed yet,
+so the first one is the real test). Buys are scaled so they never cost more than the strategy's cash plus the sells at
+their limits, less $1. The trade triggers are unchanged, so this alone does not cause a trade: the idle cash is
+invested at the next trade day.

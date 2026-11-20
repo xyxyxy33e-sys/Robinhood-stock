@@ -26,7 +26,7 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 ## 3. Trade run — 15:50, Mon–Fri (12:50 on early-close days)
 `python3 public-strategy/public_run.py signal /tmp/public_<today>.json`.
 - `NO TRADE` or `DRY RUN`: place nothing.
-- `TRADE` and enabled: `place_order` (it preflights itself) for each printed line, sells first, whole-share LIMIT,
+- `TRADE` and enabled: `place_order` (it preflights itself) for each printed line, sells first, LIMIT with the fractional quantity exactly as printed (4 decimals; never an amount-based or MARKET order),
   DAY, `equity_market_session` CORE, done by 15:59 (12:59 on early closes). Never chase more than 0.3% past the printed limit.
 - **Sells and tax lots (owner 2026-11-20: highest cost first, any of the account's lots).** If the output says
   `LOTS NEEDED`, call `get_tax_lots_for_symbol` for each ticker it names, add `"tax_lots": {SYM: <the "lots" list>}` to

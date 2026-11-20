@@ -48,6 +48,7 @@ CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is 
 UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
 FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the other two strategies (BOXX is shared on purpose)
 HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.02, 0.20, 0.005, 0.003   # HYST: 2% since 2026-11-20 (owner), 1% before
+QTY_DP = 4                      # order quantities: fractional shares to 4 decimals
 PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.25
 VOL_TARGET = 0.30      # owner 2026-11-20: SSO volatility target; None switches it off
 VT_BUFFER = 0.025      # owner 2026-11-20: buffer on the volatility-target steps (0 = none)
@@ -391,22 +392,33 @@ def compute(inp, need_account=True):
            f"drift {drift:.1%} > {DRIFT_BAND:.0%}" if do else f"holdings match the targets (drift {drift:.1%})")
     orders = []
     if do:
+        # Fractional shares (owner 2026-11-20): quantities to 4 decimals, rounded down. Public takes fractional
+        # LIMIT orders for every ETF here (preflight checked 2026-11-20), so the price limits stay.
+        frac = lambda x: math.floor(x * 10 ** QTY_DP + 1e-9) / 10 ** QTY_DP
+        proceeds = 0.0
         for s in UNIVERSE:                           # sells first
             d = w[s] * total - val[s]
             if d < -max(25.0, 0.002 * total):
-                px = float(q[s]['bid'] or q[s]['last']); lim = max(px, float(q[s]['last']) * (1 - LIMIT_BAND))
-                qty = pos.get(s, 0.0) if w[s] == 0 else math.floor(-d / px)
+                px = float(q[s]['bid'] or q[s]['last']); lim = math.floor(max(px, float(q[s]['last']) * (1 - LIMIT_BAND)) * 100) / 100
+                qty = pos.get(s, 0.0) if w[s] == 0 else min(pos.get(s, 0.0), frac(-d / px))
                 if qty > 0:
                     tl, why_not = sell_lots(qty, (inp.get('tax_lots') or {}).get(s))
-                    orders.append(dict(side='SELL', symbol=s, quantity=round(qty, 6), limit=math.floor(lim * 100) / 100,
+                    orders.append(dict(side='SELL', symbol=s, quantity=round(qty, 6), limit=lim,
                                        dollars=qty * px, tax_lots=tl, lots_note=why_not))
+                    proceeds += qty * lim
+        buys = []
         for s in UNIVERSE:
             d = w[s] * total - val[s]
             if d > max(25.0, 0.002 * total):
-                px = float(q[s]['ask'] or q[s]['last']); lim = min(px, float(q[s]['last']) * (1 + LIMIT_BAND))
-                qty = math.floor(d / lim)
-                if qty > 0:
-                    orders.append(dict(side='BUY', symbol=s, quantity=qty, limit=math.ceil(lim * 100) / 100, dollars=qty * lim))
+                px = float(q[s]['ask'] or q[s]['last']); lim = math.ceil(min(px, float(q[s]['last']) * (1 + LIMIT_BAND)) * 100) / 100
+                buys.append((s, d, lim))
+        # Buys can never cost more than the strategy's cash plus the sells at their limits, less $1 for cent rounding.
+        budget = max(0.0, cash + proceeds - 1.0); want = sum(d for _, d, _ in buys)
+        k = min(1.0, budget / want) if want > 0 else 0.0
+        for s, d, lim in buys:
+            qty = frac(d * k / lim)
+            if qty > 0:
+                orders.append(dict(side='BUY', symbol=s, quantity=qty, limit=lim, dollars=qty * lim))
     out.update(held=held, drift=drift, decision=do, why=why, orders=orders)
     return out, cfg
 
@@ -507,7 +519,7 @@ def main(argv):
         print(f"held:   {describe(out['held']) or 'nothing'}; strategy capital ${out['total']:,.2f} (cash ${out['cash']:,.2f})")
     print(f"DECISION: {'TRADE' if out['decision'] else 'NO TRADE'} ({out['why']})")
     for o in out['orders']:
-        print(f"  {o['side']:4s} {o['symbol']:5s} {o['quantity']} sh  LIMIT {o['limit']:.2f}  (~${o['dollars']:,.2f})")
+        print(f"  {o['side']:4s} {o['symbol']:5s} {o['quantity']:g} sh  LIMIT {o['limit']:.2f}  (~${o['dollars']:,.2f})")
         if o.get('tax_lots'):
             print('       tax_lot_matching_instructions: ' +
                   json.dumps([{'tax_lot_id': x['tax_lot_id'], 'quantity': x['quantity']} for x in o['tax_lots']]))
