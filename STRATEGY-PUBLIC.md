@@ -153,3 +153,11 @@ half's drawdown from -20% to -34%. No change.
   1.5x instead of 2x: 11.0% / -19.3%.
 - **October 1987.** The 200-day rule had already left the S&P before the 19 October crash (0% that day); the month
   still cost the 2x rule -23% on the way out.
+
+## The daily 15:50 check stays (tested 2026-11-20)
+
+Checking the trend rule and the VIX latch less often (`research_notes/freq.py`, `freq_long.py`). On 2007-2026 a weekly
+or monthly check looks better (13.0% to 14.0% against 12.3%), the same whipsaw artifact as the wider band. On the
+2x S&P rule for 1951-2007 it is worse (15.1% to 16.2% against 16.8%) and the worst drawdown goes from -37% to about
+-60%: in October 1987 the daily rule left the S&P before the 19th and lost -23% for the month; checking even every
+second day could still hold 2x through the crash and lose -55%. With a 2x fund the daily check is the protection.
