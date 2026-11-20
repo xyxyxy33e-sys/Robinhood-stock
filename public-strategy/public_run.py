@@ -3,6 +3,7 @@
     python3 public-strategy/public_run.py brief  <input.json>    # read-only, prints a PUSH line
     python3 public-strategy/public_run.py signal <input.json>    # prints the decision and the orders
     python3 public-strategy/public_run.py record <fills.json>    # after fills: ledger.json and realized.csv
+    python3 public-strategy/public_run.py review <input.json>    # Friday after the close: weekly review, weekly.csv
     python3 public-strategy/public_run.py dash   <input.json> <outdir>   # status, holdings and tax CSVs for the dashboard
 
 DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared with the Robinhood strategy
@@ -37,6 +38,7 @@ CONFIG = os.path.join(ROOT, 'data', 'public', 'config.json')
 RUNS = os.path.join(ROOT, 'data', 'public', 'runs')
 LEDGER = os.path.join(ROOT, 'data', 'public', 'ledger.json')
 REALIZED = os.path.join(ROOT, 'data', 'public', 'realized.csv')
+WEEKLY = os.path.join(ROOT, 'data', 'public', 'weekly.csv')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
 UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
@@ -343,11 +345,68 @@ def compute(inp, need_account=True):
     return out, cfg
 
 
+def review(inp):
+    """public_run.py review <input.json>: the Friday after-close review. Appends the strategy's value to
+    data/public/weekly.csv (one row per date) and prints the week against SPY, trades, realized gains and signals."""
+    out, cfg = compute(inp); today = out['date']
+    spy = adj_series('SPY', today, inp['quotes']['SPY']['last'])
+    rows = list(csv.DictReader(open(WEEKLY))) if os.path.exists(WEEKLY) else []
+    rows = [r for r in rows if r['date'] != today]
+    prev = rows[-1] if rows else None
+    rows.append({'date': today, 'strategy_value': f"{out['total']:.2f}", 'spy_adj': f"{spy[today]:.4f}"})
+    os.makedirs(os.path.dirname(WEEKLY), exist_ok=True)
+    with open(WEEKLY, 'w', newline='') as fh:
+        w = csv.DictWriter(fh, ['date', 'strategy_value', 'spy_adj']); w.writeheader(); w.writerows(rows)
+    start = float(cfg.get('max_capital') or rows[0]['strategy_value']); first = rows[0]
+    spy_at = lambda d: spy.get(d) or spy[max(x for x in spy if x <= d)]
+    print(f"=== Public strategy weekly review {today} ===")
+    print(f"VALUE: ${out['total']:,.2f} (cash ${out['cash']:,.2f}); since the ${start:,.0f} start {out['total'] / start - 1:+.2%}"
+          + (f", SPY since {first['date']} {spy[today] / spy_at(first['date']) - 1:+.2%}" if first['date'] != today else ''))
+    wk = None
+    if prev:
+        wk = out['total'] / float(prev['strategy_value']) - 1; swk = spy[today] / spy_at(prev['date']) - 1
+        print(f"WEEK (since {prev['date']}): strategy {wk:+.2%}, SPY {swk:+.2%}, difference {wk - swk:+.2%}")
+    else:
+        print("WEEK: first review, this is the baseline; the first weekly comparison comes next Friday.")
+    since = prev['date'] if prev else '0000'
+    n = 0; days = []
+    for f in sorted(os.listdir(RUNS) if os.path.isdir(RUNS) else []):
+        if f.endswith('.json') and since < f[:-5] <= today:
+            o = json.load(open(os.path.join(RUNS, f))).get('orders') or []
+            if o:
+                n += len(o); days.append(f"{f[5:-5]} " + ', '.join(f"{x['side'].lower()} {x['quantity']:g} {x['symbol']}" for x in o))
+    print(f"ORDERS PRINTED THIS WEEK: {n}" + (' | ' + ' | '.join(days) if days else ''))
+    rw = ry = 0.0
+    if os.path.exists(REALIZED):
+        for r in csv.DictReader(open(REALIZED)):
+            if r['date'][:4] == today[:4]:
+                ry += float(r['gain']); rw += float(r['gain']) if since < r['date'] <= today else 0.0
+    print(f"REALIZED: this week ${rw:+,.2f}, tax year {today[:4]} ${ry:+,.2f}")
+    print("HOLDINGS (held vs target): " + ', '.join(f"{s} {out['held'][s]:.0%}/{out['target'][s]:.0%}" for s in UNIVERSE
+          if out['held'][s] >= DUST or out['target'][s] > 0) + f"; drift {out['drift']:.1%} (trades above {DRIFT_BAND:.0%})")
+    g = out['gap200']
+    print(f"SIGNALS: SPY {g:+.2%} vs 200-day, trend {'ON' if out['trend_on'] else 'OFF'} (flips {'below -1%' if out['trend_on'] else 'above +1%'}); "
+          + (f"VIX {out['vix']:.1f}, latch {'ON' if out['vix_panic'] else 'off'}; " if out['vix'] else 'VIX unavailable; ')
+          + f"rotation {' + '.join(out['picks'])} from {out['rotation_asof']}; next action here: {'TRADE' if out['decision'] else 'none'} ({out['why']})")
+    nxt = dt.date.fromisoformat(today) + dt.timedelta(days=7)
+    if nxt.month != dt.date.fromisoformat(today).month:
+        print("NEXT WEEK: a new month starts; the rotation is re-picked at its first 15:50 run.")
+    push = (f"Public week: ${out['total']:,.0f}" + (f" {wk:+.1%} vs SPY {swk:+.1%}" if prev else ' (baseline)')
+            + f" | since start {out['total'] / start - 1:+.1%} | trend {'ON' if out['trend_on'] else 'OFF'} {g:+.1%} | {' + '.join(out['picks'])} | realized YTD ${ry:+,.0f}")
+    print('PUSH:', push[:199])
+    return 0
+
+
 def describe(w):
     return ' / '.join(f"{s} {x:.0%}" for s, x in w.items() if x > 0)
 
 
 def main(argv):
+    if len(argv) == 3 and argv[1] == 'review':
+        try:
+            return review(json.load(open(argv[2])))
+        except Guard as e:
+            print(f'GUARD: {e}'); return 2
     if len(argv) == 4 and argv[1] == 'dash':
         dash_files(json.load(open(argv[2])), argv[3]); return 0
     if len(argv) != 3 or argv[1] not in ('brief', 'signal', 'record'):

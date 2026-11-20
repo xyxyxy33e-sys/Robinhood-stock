@@ -227,3 +227,9 @@ the broker refuses the instruction, the sell goes without one. `record` appends 
 `data/public/realized.csv` (proceeds, cost of the lots named, gain, short or long term; a sale without a lot
 instruction is costed at the strategy's average price and marked `average`). The dashboard has a tax section fed by
 `tax.csv` (`public_run.py dash`): realized gain or loss per ETF for the tax year.
+
+## Weekly review (owner 2026-11-20)
+
+Every Friday after the close a scheduled task runs `public_run.py review`: the strategy's value against SPY for the
+week and since the $15,000 start, the week's orders, realized gains, holdings against targets and the signals, with one
+push and a dashboard refresh. Values are kept in `data/public/weekly.csv`. The first review (2026-11-20) is the baseline.

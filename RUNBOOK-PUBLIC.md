@@ -49,3 +49,11 @@ file; ArtifactData `get` `datasets/<id>` (ids `status`, `holdings`, `tax`) for i
 ArtifactData `batch` of `update`s pinned with `if_version`: `{source: {kind: "file", url: "<new /_blob url>", name,
 format: "csv"}, updated: {at: "<ISO now>", by: "Claude"}}`. Leave the old files in place (deleting them is not
 permitted from a run; they are a few hundred bytes each). Never edit `files/index.html` from a run. If a step fails, say so and carry on.
+
+## 5. Weekly review — Fridays about 16:25, after the close (read-only, places no orders)
+Section 1's fetch (quotes, VIX, `get_portfolio`; add `"account_value"`), then
+`python3 public-strategy/public_run.py review <input.json>`. It appends the strategy's value to
+`data/public/weekly.csv` and prints the week against SPY, the orders of the week, realized gains, holdings against
+targets and the signals. Post the printed review in chat with a two-line plain reading of it (what moved the result,
+anything that needs the owner), send ONE push with its `PUSH:` line, refresh the dashboard as in section 4, and commit
+`data/public/weekly.csv`. If the market was closed on Friday, run it all the same on the last session's prices.
