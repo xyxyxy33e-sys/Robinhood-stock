@@ -409,3 +409,16 @@ live 12.8% / 0.83 / -19.3%, 8.8% after tax; trend half alone 1960 - Jun 2007, li
 - VTI while S&P volatility is above 18 / 22%: 12.2% to 12.5%, 7.5% to 8.1%; 12.9% to 13.8%, 9.3% to 10.6%.
 - VTI always (no leverage): 10.2% / 0.86 / -16.3%, 6.7% after tax; 11.2% / 1.06 / -19.1%, 9.0%.
 Every version is less return for less risk; none is ahead after tax in either period. No change.
+
+## 1x during a dip and while recovering from one (tested 2026-11-20): rejected
+
+Owner: "what about during a dip and when recovering from a dip". `research_notes/dip_1x.py`, `dip_1x.txt`; 1x tried
+as VTI and as SSO at half weight. Live: 12.8% / 0.83 / -19.3%, 8.8% after tax (2007-2026); trend half 14.1% / 0.78 /
+-34.5%, 11.2% (1960-2007).
+- **During a dip** (trend on, SPY more than 5% or 8% below its 252-session high): 12.1% to 12.4%, 7.5% to 8.4% after
+  tax, drawdown -20% to -21%; 1960-2007 12.6% to 14.0%, 8.8% to 11.0%.
+- **While recovering** (first 20 or 60 sessions after the trend turns back on, or until a new 252-session high):
+  11.8% to 12.4%, 7.8% to 8.5% after tax, drawdown -18%; 1960-2007 13.1% to 13.7%, 10.1% to 10.9%; 60 sessions cut the
+  1960-2007 drawdown to -26.6% (the 1987 re-entry) for 0.4 points of return.
+- Both together: 11.5% to 11.7%, 7.1% to 7.9%; 11.9% to 12.4%, 8.3% to 9.6%.
+All twelve versions return less before and after tax in both periods. No change.
