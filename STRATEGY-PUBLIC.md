@@ -127,3 +127,11 @@ deeper drawdown (-47.5% against -37.1%). Golden cross: fewer trades but -59% dra
   13.4% and 14.0% against 12.8%, Sharpe 0.48 and 0.50 against 0.46, drawdown no worse; thresholds 25/20, 35/28 and 40/30
   also ahead. Cost: it buys into falling markets, so 2008 is +14.8% / +12.2% against +17.1%, and at 100% the drawdown
   grows to -28%.
+
+## VIX as a factor in the rotation score: rejected (tested 2026-11-20)
+
+Thirteen versions on the month-end VIX (`research_notes/vixscore.py`): barring the four stock funds when VIX is high or
+above VIX3M (10.9% to 11.9% against 12.0%), tilting scores toward bonds and gold or toward stocks with VIX (10.7% to
+12.0%), and switching the lookback on VIX. Only "3-month lookback when VIX is 20/25 or more" is ahead (12.4% to 12.7%,
+Sharpe 0.76 to 0.78), and it gets there by giving up the 2008 gain (+6% to +8% against +17%) and taking the rotation
+half's drawdown from -20% to -34%. No change.
