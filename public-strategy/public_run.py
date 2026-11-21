@@ -42,6 +42,7 @@ CONFIG = os.path.join(ROOT, 'data', 'public', 'config.json')
 RUNS = os.path.join(ROOT, 'data', 'public', 'runs')
 LEDGER = os.path.join(ROOT, 'data', 'public', 'ledger.json')
 REALIZED = os.path.join(ROOT, 'data', 'public', 'realized.csv')
+DAILY = os.path.join(ROOT, 'data', 'public', 'daily.csv')
 WEEKLY = os.path.join(ROOT, 'data', 'public', 'weekly.csv')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
@@ -284,6 +285,27 @@ def dash_files(inp, outdir):
         [s, NAMES[s], 'Trend' if s in ('SSO', 'IEF') else 'Cash slot' if s == CASH else 'Rotation',
          f"{mom[s] * 100:.1f}" if s in mom else '', f"{out['target'][s] * 100:.2f}", f"{out['values'][s]:.2f}"] for s in UNIVERSE])
     w('tax.csv', tax_table(out['date'][:4]))
+    w('value.csv', value_rows(out['date'], out['total'], float(inp['quotes']['SPY']['last']), str(inp.get('time', '')) >= '16:00'))
+
+
+def value_rows(today, total, spy_last, after_close=False):
+    """Daily live value against SPY (owner 2026-11-20). Keeps one row per date in data/public/daily.csv
+    (date, strategy_value, spy_last as read at that run) and returns the dashboard rows: the strategy's value and
+    what the first row's dollars would be worth in SPY with dividends reinvested. A refresh after 16:00 (the
+    Friday review) does not replace the day's trade-run reading."""
+    rows = list(csv.DictReader(open(DAILY))) if os.path.exists(DAILY) else []
+    if not (after_close and any(r['date'] == today for r in rows)):   # an after-close refresh keeps the run's reading
+        rows = [r for r in rows if r['date'] != today] + [{'date': today, 'strategy_value': f'{total:.2f}', 'spy_last': f'{spy_last:.4f}'}]
+    rows.sort(key=lambda r: r['date'])
+    os.makedirs(os.path.dirname(DAILY), exist_ok=True)
+    with open(DAILY, 'w', newline='') as fh:
+        wr = csv.DictWriter(fh, ['date', 'strategy_value', 'spy_last']); wr.writeheader(); wr.writerows(rows)
+    h = history('SPY'); ds = sorted(h)
+    def factor(d):                       # adjusted / raw close: the dividend adjustment in force on that date
+        k = [x for x in ds if x <= d]; a, c = h[k[-1] if k else ds[0]]; return a / c
+    tr = lambda r: float(r['spy_last']) * factor(r['date'])
+    base = float(rows[0]['strategy_value']); t0 = tr(rows[0])
+    return [['date', 'strategy', 'spy']] + [[r['date'], r['strategy_value'], f"{base * tr(r) / t0:.2f}"] for r in rows]
 
 
 def sell_lots(qty, broker):
