@@ -1950,6 +1950,27 @@ DEEP_E_FROM_SESSION = '2026-11-11'
 # -18.3%: it keeps QQQ through bounces and second legs down, 2020 -14.7 pts).
 DEEP_E_HOLD_THROUGH_F = True
 DEEP_E_HOLD_FROM_SESSION = '2026-11-23'
+# ENTRY/EXIT BAND -- APPLIED 2026-11-23 (owner decision 2026-11-21: "Switch to -6/-4"). From DEEP_E_BAND_FROM_SESSION
+# the leg enters on an effective-E day with the 200-day gap at or below DEEP_E_ENTRY_GAP200 (-6%) and, once on,
+# stays on (any state, with the hold above) while the gap is at or below DEEP_E_EXIT_GAP200 (-4%). Before that
+# session both lines are DEEP_E_GAP200 (-5%), so replays of earlier runs are unchanged. Evidence (harness_live,
+# hold-through-F design, data to 2026-11-20): real 51.3% / 2.093 / -16.5% -> 51.0% / 2.088 / -16.8%; proxy 34.3% /
+# 1.484 / -22.1% -> 34.2% / 1.481 / -22.1%; round trips real 19 -> 10, proxy 34 -> 18 (spells of <= 3 sessions
+# 12 -> 5 / 22 -> 7, re-entries within 5 sessions 8 -> 3 / 13 -> 3) with the same days held. Adopted for fewer
+# ~half-book round trips and wash-sale chances in a taxable account (not in the backtest's 2bp cost); not for
+# return. Grid entry -4..-8% x exit: flat plateau, exit above -4% loses (research_notes/deep_e_hold_2026_11/).
+DEEP_E_ENTRY_GAP200 = -0.06
+DEEP_E_EXIT_GAP200 = -0.04
+DEEP_E_BAND_FROM_SESSION = '2026-11-23'
+
+
+def deep_e_lines(session=None):
+    """(entry line, exit line) for the deep-E leg's 200-day gap on `session`."""
+    if session is not None and session >= DEEP_E_BAND_FROM_SESSION:
+        return DEEP_E_ENTRY_GAP200, DEEP_E_EXIT_GAP200
+    return DEEP_E_GAP200, DEEP_E_GAP200
+
+
 LIVE_LEGS7 =('core', 'tqqq', 'qld', 'xlu', 'vixm', 'qqq', 'cash')
 
 # VIX-PANIC QQQ LEG -- APPLIED 2026-11-11 (owner decision 2026-11-10: "QQQ with 25% of the cash leg
@@ -2007,7 +2028,7 @@ def deep_e_active(state, fast_state, gaps, session=None, latched=None):
         return False
     if latched is not None:
         return bool(latched)
-    return effective_state(state, fast_state) == 'E' and g <= DEEP_E_GAP200
+    return effective_state(state, fast_state) == 'E' and g <= deep_e_lines(session)[0]
 
 
 def deep_e_series(dates, states, fast_states, gaps_by_date):
@@ -2021,10 +2042,14 @@ def deep_e_series(dates, states, fast_states, gaps_by_date):
         if d < DEEP_E_FROM_SESSION:
             continue
         g = (gaps_by_date.get(d) or {}).get(200)
-        deep = g is not None and g == g and g <= DEEP_E_GAP200
+        ok = g is not None and g == g
+        entry, exit_ = deep_e_lines(d)
         is_e = effective_state(st, fast_states.get(d)) == 'E'
         hold = DEEP_E_HOLD_THROUGH_F and d >= DEEP_E_HOLD_FROM_SESSION
-        on = bool(deep and (is_e or (hold and on)))
+        if on:       # held: stays while the gap is at or below the exit line (and, before the hold, only in E)
+            on = bool(ok and g <= exit_ and (is_e or hold))
+        else:        # enters only on an effective-E day at or below the entry line
+            on = bool(ok and is_e and g <= entry)
         out[d] = on
     return out
 

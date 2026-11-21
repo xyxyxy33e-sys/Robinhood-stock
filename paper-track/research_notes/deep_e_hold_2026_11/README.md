@@ -28,4 +28,7 @@ Hold-through-F design, entry on effective E at gap <= ENTRY, held while gap <= E
 Real Sharpe: a flat plateau 2.07-2.12 for entry -4..-7% with exit <= -4%; a cliff at exit -3/-2% (~-0.06 Sharpe, ~-1.5 pts CAGR);
 exit -1%/0% doubles the proxy max drawdown to -38.1% (rides failed rallies in 2001/2008). Pairs: live -5/-5 51.3% / 2.093 / -16.5%
 (proxy 34.3% / 1.484); -6/-4 51.0% / 2.088 / -16.8% (34.2% / 1.481); -5.5/-4.5 50.4% / 2.067 / -16.8% (33.9% / 1.471);
-best cell -6/-6 51.5% / 2.115 (proxy 1.489), +0.02 Sharpe, picked after the grid: noise. Owner: keep -5/-5.
+best cell -6/-6 51.5% / 2.115 (proxy 1.489), +0.02 Sharpe, picked after the grid: noise.
+Round trips (`chop.py`): -5/-5 real 19 spells (12 of <= 3 sessions, 8 re-entries within 5 sessions), proxy 34 (22, 13);
+-6/-4 real 10 (5, 3), proxy 18 (7, 3), same days held. **ADOPTED -6/-4 (owner, 2026-11-21), live from 2026-11-23**, for fewer
+round trips and wash-sale chances, not for return.

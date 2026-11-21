@@ -622,8 +622,9 @@ def cmd_signal(inp, write=True):
         print(f"      latch {'ON' if vz['on'] else 'off'}, stress {'yes' if vz['stress'] else 'no'}, "
               f"allowed {'YES' if vz['allowed'] else 'no'}{', faded' if vz.get('faded') else ''}{hi}")
     de_on = S.deep_e_active(r['state'], r['fast'], g, r['date'], latched=r.get('deep_e'))
-    print(f"deep-E QQQ: {'ON' if de_on else 'off'} (effective {r['eff']}, 200d gap {g[200]*100:+.1f}% vs "
-          f"{S.DEEP_E_GAP200*100:.0f}% line" + ("; held through F until the gap recovers"
+    print(f"deep-E QQQ: {'ON' if de_on else 'off'} (effective {r['eff']}, 200d gap {g[200]*100:+.1f}%; "
+          + ("in at %+.0f%%, out above %+.0f%%" % tuple(x * 100 for x in S.deep_e_lines(r['date'])))
+          + ("; held through F until the gap recovers"
                                                 if de_on and r['eff'] != 'E' else '')
           + ('' if r['date'] >= S.DEEP_E_FROM_SESSION else
                                                 f"; live from {S.DEEP_E_FROM_SESSION}") + ")")

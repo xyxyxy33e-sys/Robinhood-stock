@@ -1350,13 +1350,17 @@ def check_deep_e_hold():
     Before DEEP_E_HOLD_FROM_SESSION the one-day rule (sell at F) still applies, so replays of old runs are unchanged."""
     import state as S
     assert S.DEEP_E_HOLD_THROUGH_F and S.DEEP_E_HOLD_FROM_SESSION == '2026-11-23'
-    ds = ['2026-11-20', '2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27']
-    st = ['E', 'F', 'F', 'F', 'F', 'E']
+    assert (S.DEEP_E_ENTRY_GAP200, S.DEEP_E_EXIT_GAP200, S.DEEP_E_BAND_FROM_SESSION) == (-0.06, -0.04, '2026-11-23')
+    assert S.deep_e_lines('2026-11-20') == (-0.05, -0.05) and S.deep_e_lines('2026-11-23') == (-0.06, -0.04)
+    ds = ['2026-11-20', '2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27', '2026-11-30', '2026-12-01']
+    st = ['E', 'F', 'F', 'F', 'F', 'E', 'E', 'E']
     fast = {d: 'F' for d in ds}
-    gp = [-0.10, -0.08, -0.06, -0.04, -0.07, -0.06]
+    gp = [-0.10, -0.08, -0.04, -0.035, -0.07, -0.055, -0.065, -0.045]
     gaps = {d: {200: g} for d, g in zip(ds, gp)}
     on = S.deep_e_series(ds, st, fast, gaps)
-    assert [on[d] for d in ds] == [True, True, True, False, False, True], on   # held into F; off at -4%; no re-entry in F
+    # held into F; still held at exactly -4%; off above -4%; no re-entry in F; no entry in E at -5.5%; entry at -6.5%;
+    # held at -4.5% (inside the band)
+    assert [on[d] for d in ds] == [True, True, True, False, False, False, True, True], on
     # before the hold session: E -> F sells (old rule)
     ds0 = ['2026-11-19', '2026-11-20']; on0 = S.deep_e_series(ds0, ['E', 'F'], {d: 'F' for d in ds0},
                                                              {d: {200: -0.08} for d in ds0})
@@ -1369,7 +1373,7 @@ def check_deep_e_hold():
     w = S.live_target_weights7('F', False, 0.40, 'F', {100: -0.1, 150: -0.1, 200: -0.08}, 0.1, _at('F'), off,
                                session='2026-11-24')
     assert w[5] == 0.0, w
-    print("OK  deep-E hold through F: enters on E only, held in F while the 200d gap <= -5%, off when it recovers")
+    print("OK  deep-E hold through F + band: enters on E at -6% (from 2026-11-23; -5% before), held in any state while the 200d gap <= -4%, off above it")
 
 
 def check_deep_e():

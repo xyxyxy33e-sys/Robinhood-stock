@@ -146,13 +146,15 @@ def build(track='real', **kw):
         allowed = _latch(real, sg) & ~((eff == 3) & ~gate & (z == 2)) & np.array([d >= vfirst for d in ds])
         v = np.where(allowed, cash * c['sleeve_share'], 0.0)
         legs.append(vr); W.append(v); names.append('vixy'); used = v.copy(); key = key + allowed.astype(np.int64) * 100000
-    g_deep = np.nan_to_num(sg['gaps'][200][0]) <= S.DEEP_E_GAP200
-    if S.DEEP_E_HOLD_THROUGH_F:     # live from 2026-11-23 (state.deep_e_series): enter on effective E, hold in any
-        on = np.zeros(len(eff), bool); st = False   # state while the gap stays at or below the line
-        for i in range(len(eff)):
-            st = bool(g_deep[i]) and (st or eff[i] == 4); on[i] = st
-    else:
-        on = (eff == 4) & g_deep
+    gp = np.nan_to_num(sg['gaps'][200][0], nan=9.0)
+    # live from 2026-11-23 (state.deep_e_series, deep_e_lines): enter on effective E at the entry line (-6%), then
+    # held in any state (DEEP_E_HOLD_THROUGH_F) while the gap stays at or below the exit line (-4%)
+    en, ex = S.DEEP_E_ENTRY_GAP200, S.DEEP_E_EXIT_GAP200
+    on = np.zeros(len(eff), bool); st = False
+    for i in range(len(eff)):
+        if st: st = gp[i] <= ex and (S.DEEP_E_HOLD_THROUGH_F or eff[i] == 4)
+        else:  st = eff[i] == 4 and gp[i] <= en
+        on[i] = st
     deep = on.astype(float) * S.DEEP_E_CASH_SHARE
     pan = H.panic_series(ds)
     for j, sh in enumerate((deep, pan)):
