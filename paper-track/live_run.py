@@ -193,9 +193,12 @@ def reading(dates, qqq, qqew, as_of, qqq_high=None):
     """Every step-1 input for one session, from the given closes series.
     qqq_high: QQQ intraday high up to the run (D gate on the high, 2026-11-11)."""
     i = dates.index(as_of)
-    state = S.compute_states(dates, qqq)[i]
-    fast = S.compute_fast_states(dates, qqq)[as_of]
-    gaps = S.compute_extension_gaps(dates, qqq)[as_of]
+    states_all = S.compute_states(dates, qqq)
+    fast_all = S.compute_fast_states(dates, qqq)
+    gaps_all = S.compute_extension_gaps(dates, qqq)
+    state, fast, gaps = states_all[i], fast_all[as_of], gaps_all[as_of]
+    # deep-E leg with its hold-through-F latch (2026-11-23), replayed from the closes
+    deep_e = S.deep_e_series(dates[:i + 1], states_all[:i + 1], fast_all, gaps_all).get(as_of, False)
     micro = S.compute_micro_agreement(dates, qqq)[as_of]
     vol = S.realized_vol_live(dates, qqq, as_of=as_of)
     cd = [d for d in dates if d in qqew]
@@ -214,7 +217,7 @@ def reading(dates, qqq, qqew, as_of, qqq_high=None):
                 d_flags=S.d_gate_flags(br['pct'], g200),
                 qqq_high=qqq_high, gap200_gate=g200,
                 d_gate=gate,
-                raw_votes=S.extension_votes(eff, gaps), a_trim=a_trim)
+                raw_votes=S.extension_votes(eff, gaps), a_trim=a_trim, deep_e=deep_e)
 
 
 def _wgaps(r):
@@ -240,7 +243,8 @@ def weights6(r, vx):
 def weights7(r, vx):
     """The live weights from 2026-11-11 (deep-E QQQ leg), LEGS7 order."""
     return S.live_target_weights7(r['state'], r['micro'], r['vol'], r['fast'], _wgaps(r),
-                                  r['breadth_pct'], r['a_trim'], vx, zone=_zone(r), session=r['date'])
+                                  r['breadth_pct'], r['a_trim'], vx, zone=_zone(r), session=r['date'],
+                                  deep_e=r.get('deep_e'))
 
 
 def to7(w):
@@ -523,7 +527,8 @@ def cmd_signal(inp, write=True):
             changed.append(f"D zone {rp.get('d_zone')}->{r.get('d_zone')}")
         if bool(vx.get('allowed')) != bool(vx_prev.get('allowed')):
             changed.append(f"VIXM {'in' if vx.get('allowed') else 'out'}")
-        de, de_prev = (S.deep_e_active(x['state'], x['fast'], x['gaps'], x['date']) for x in (r, rp))
+        de, de_prev = (S.deep_e_active(x['state'], x['fast'], x['gaps'], x['date'], latched=x.get('deep_e'))
+                       for x in (r, rp))
         if de != de_prev:
             changed.append(f"deep-E QQQ {'in' if de else 'out'}")
         vp, vp_prev = S.vix_panic_active(vx, r['date']), S.vix_panic_active(vx_prev, rp['date'])
@@ -616,9 +621,11 @@ def cmd_signal(inp, write=True):
         hi = f", VIX high since entry {vz['vix_high']:.2f}" if vz.get('vix_high') else ''
         print(f"      latch {'ON' if vz['on'] else 'off'}, stress {'yes' if vz['stress'] else 'no'}, "
               f"allowed {'YES' if vz['allowed'] else 'no'}{', faded' if vz.get('faded') else ''}{hi}")
-    de_on = S.deep_e_active(r['state'], r['fast'], g, r['date'])
+    de_on = S.deep_e_active(r['state'], r['fast'], g, r['date'], latched=r.get('deep_e'))
     print(f"deep-E QQQ: {'ON' if de_on else 'off'} (effective {r['eff']}, 200d gap {g[200]*100:+.1f}% vs "
-          f"{S.DEEP_E_GAP200*100:.0f}% line" + ('' if r['date'] >= S.DEEP_E_FROM_SESSION else
+          f"{S.DEEP_E_GAP200*100:.0f}% line" + ("; held through F until the gap recovers"
+                                                if de_on and r['eff'] != 'E' else '')
+          + ('' if r['date'] >= S.DEEP_E_FROM_SESSION else
                                                 f"; live from {S.DEEP_E_FROM_SESSION}") + ")")
     vp_on = S.vix_panic_active(vx, r['date'])
     print(f"VIX-panic QQQ: {'ON' if vp_on else 'off'} (latch {'on' if vx.get('panic') else 'off'}: in at VIX >= "

@@ -1344,6 +1344,34 @@ def json_copy(x):
 check_margin_funding()
 
 
+def check_deep_e_hold():
+    """Deep-E hold through F (owner 2026-11-21, live from the 2026-11-23 session): enters only on effective E with
+    the 200-day gap <= -5%; once on, stays on in any state while the gap stays <= -5%; off when the gap recovers.
+    Before DEEP_E_HOLD_FROM_SESSION the one-day rule (sell at F) still applies, so replays of old runs are unchanged."""
+    import state as S
+    assert S.DEEP_E_HOLD_THROUGH_F and S.DEEP_E_HOLD_FROM_SESSION == '2026-11-23'
+    ds = ['2026-11-20', '2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27']
+    st = ['E', 'F', 'F', 'F', 'F', 'E']
+    fast = {d: 'F' for d in ds}
+    gp = [-0.10, -0.08, -0.06, -0.04, -0.07, -0.06]
+    gaps = {d: {200: g} for d, g in zip(ds, gp)}
+    on = S.deep_e_series(ds, st, fast, gaps)
+    assert [on[d] for d in ds] == [True, True, True, False, False, True], on   # held into F; off at -4%; no re-entry in F
+    # before the hold session: E -> F sells (old rule)
+    ds0 = ['2026-11-19', '2026-11-20']; on0 = S.deep_e_series(ds0, ['E', 'F'], {d: 'F' for d in ds0},
+                                                             {d: {200: -0.08} for d in ds0})
+    assert on0 == {'2026-11-19': True, '2026-11-20': False}, on0
+    # the latch overrides the one-day rule inside the weight function
+    off = dict(allowed=False, available=True)
+    w = S.live_target_weights7('F', False, 0.40, 'F', {100: -0.1, 150: -0.1, 200: -0.08}, 0.1, _at('F'), off,
+                               session='2026-11-24', deep_e=True)
+    assert abs(w[5] - 0.5) < 1e-9, w
+    w = S.live_target_weights7('F', False, 0.40, 'F', {100: -0.1, 150: -0.1, 200: -0.08}, 0.1, _at('F'), off,
+                               session='2026-11-24')
+    assert w[5] == 0.0, w
+    print("OK  deep-E hold through F: enters on E only, held in F while the 200d gap <= -5%, off when it recovers")
+
+
 def check_deep_e():
     """Deep-E QQQ leg (owner 2026-11-10, live from the 2026-11-11 session): on an effective-E day
     with QQQ >= 5% under its 200-day, 50% of the cash leg (BOXX + VIXM) is QQQ, after VIXM takes
@@ -1400,6 +1428,7 @@ def check_deep_e():
 
 
 check_deep_e()
+check_deep_e_hold()
 
 
 def check_vix_panic():

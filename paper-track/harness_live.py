@@ -49,7 +49,7 @@ LIVE_CFG = {
                          "False = qqq_ohlc.csv only (50 sessions after 2026-09-04 read the close): this is what the recorded L1 references (52.9%/2.136, STRATEGY.md 53.0%/2.139) had"),
     # inherited unchanged from harness.CUR / monte_carlo.LIVE (live values)
     'inherited': ('H.CUR', 'B 50/50 SPMO/BOXX, C 100% SPMO, D ladder state.D_LADDER_ROWS + zone buffer state.D_ZONE_BUFFER, E/F cash, fast 20/100, trim v2, '
-                           'band state.REBALANCE_DRIFT_BAND 5%, cost MC.COST 2bp/side, deep-E state.DEEP_E_*, VIX-panic state.VIX_PANIC_*, VIXM latch state.vixm_series (+ off in ungated D2)'),
+                           'band state.REBALANCE_DRIFT_BAND 5%, cost MC.COST 2bp/side, deep-E state.DEEP_E_* (held through F while the gap stays <= -5%, DEEP_E_HOLD_THROUGH_F), VIX-panic state.VIX_PANIC_*, VIXM latch state.vixm_series (+ off in ungated D2)'),
 }
 DEFAULTS = {k: v[0] for k, v in LIVE_CFG.items() if k != 'inherited'}
 
@@ -146,7 +146,14 @@ def build(track='real', **kw):
         allowed = _latch(real, sg) & ~((eff == 3) & ~gate & (z == 2)) & np.array([d >= vfirst for d in ds])
         v = np.where(allowed, cash * c['sleeve_share'], 0.0)
         legs.append(vr); W.append(v); names.append('vixy'); used = v.copy(); key = key + allowed.astype(np.int64) * 100000
-    deep = ((eff == 4) & (np.nan_to_num(sg['gaps'][200][0]) <= S.DEEP_E_GAP200)).astype(float) * S.DEEP_E_CASH_SHARE
+    g_deep = np.nan_to_num(sg['gaps'][200][0]) <= S.DEEP_E_GAP200
+    if S.DEEP_E_HOLD_THROUGH_F:     # live from 2026-11-23 (state.deep_e_series): enter on effective E, hold in any
+        on = np.zeros(len(eff), bool); st = False   # state while the gap stays at or below the line
+        for i in range(len(eff)):
+            st = bool(g_deep[i]) and (st or eff[i] == 4); on[i] = st
+    else:
+        on = (eff == 4) & g_deep
+    deep = on.astype(float) * S.DEEP_E_CASH_SHARE
     pan = H.panic_series(ds)
     for j, sh in enumerate((deep, pan)):
         x = np.minimum(cash * sh, cash - used); used = used + x

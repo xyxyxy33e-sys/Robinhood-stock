@@ -1938,7 +1938,19 @@ DEEP_E_ENABLED = True
 DEEP_E_GAP200 = -0.05
 DEEP_E_CASH_SHARE = 0.50
 DEEP_E_FROM_SESSION = '2026-11-11'
-LIVE_LEGS7 = ('core', 'tqqq', 'qld', 'xlu', 'vixm', 'qqq', 'cash')
+# HOLD THROUGH F -- APPLIED 2026-11-23 (owner decision 2026-11-21: "Go with option 1"). Once on, the leg
+# stays on while QQQ's 200-day gap is at or below DEEP_E_GAP200, in ANY effective state (so a turn from E to
+# F no longer sells it); it still enters only on an effective-E day, and it leaves only when the gap rises
+# above the line (the -5% recovery exit is kept). Evidence (harness_live, live design, data to 2026-11-20):
+# real 2015-11..2026-11 50.9% / 2.09 / -16.5% -> 51.3% / 2.09 / -16.5%; proxy 2001-2026 34.1% / 1.48 /
+# -22.1% -> 34.3% / 1.48 / -22.1%; years that differ: 2003 +2.0, 2006 +1.7, 2008 -0.1, 2016 +0.7, 2022 +0.7,
+# 2025 +1.4. Costs, stated: it binds on a handful of spells only (too few to call it evidence), and in a slide
+# that stays 5%+ under the 200-day into F the leg rides it until the gap recovers. Rejected the same day:
+# entering in F too (proxy max drawdown -38.5%) and holding until the state leaves E/F (real 49.8% / 2.02 /
+# -18.3%: it keeps QQQ through bounces and second legs down, 2020 -14.7 pts).
+DEEP_E_HOLD_THROUGH_F = True
+DEEP_E_HOLD_FROM_SESSION = '2026-11-23'
+LIVE_LEGS7 =('core', 'tqqq', 'qld', 'xlu', 'vixm', 'qqq', 'cash')
 
 # VIX-PANIC QQQ LEG -- APPLIED 2026-11-11 (owner decision 2026-11-10: "QQQ with 25% of the cash leg
 # when VIX >= 30"). A latch on VIX closes: ON when VIX closes at or above VIX_PANIC_ON (30), OFF when
@@ -1980,9 +1992,12 @@ def vix_panic_active(vixm, session=None):
     return session is None or session >= VIX_PANIC_FROM_SESSION
 
 
-def deep_e_active(state, fast_state, gaps, session=None):
+def deep_e_active(state, fast_state, gaps, session=None, latched=None):
     """True when the deep-E QQQ leg is on for this reading: effective state E and
-    QQQ's 200-day gap at or below DEEP_E_GAP200, from DEEP_E_FROM_SESSION on."""
+    QQQ's 200-day gap at or below DEEP_E_GAP200, from DEEP_E_FROM_SESSION on.
+    `latched` (from deep_e_series, hold through F from DEEP_E_HOLD_FROM_SESSION) overrides the
+    one-day rule when given: the leg is then on if it was on yesterday and the gap is still at or
+    below the line, whatever the state."""
     if not DEEP_E_ENABLED or not isinstance(gaps, dict):
         return False
     if session is not None and session < DEEP_E_FROM_SESSION:
@@ -1990,7 +2005,28 @@ def deep_e_active(state, fast_state, gaps, session=None):
     g = gaps.get(200)
     if g is None or g != g:
         return False
+    if latched is not None:
+        return bool(latched)
     return effective_state(state, fast_state) == 'E' and g <= DEEP_E_GAP200
+
+
+def deep_e_series(dates, states, fast_states, gaps_by_date):
+    """Replay the deep-E leg over `dates` (ascending): {date: bool}, from DEEP_E_FROM_SESSION.
+    states: list aligned with dates (compute_states); fast_states / gaps_by_date: {date: ...}.
+    Before DEEP_E_HOLD_FROM_SESSION (or with DEEP_E_HOLD_THROUGH_F off) a day is on only when it is
+    effective E with the 200-day gap at or below DEEP_E_GAP200. From that session, a day is on when the
+    gap is at or below the line AND (it is effective E OR the leg was on the previous session)."""
+    out, on = {}, False
+    for d, st in zip(dates, states):
+        if d < DEEP_E_FROM_SESSION:
+            continue
+        g = (gaps_by_date.get(d) or {}).get(200)
+        deep = g is not None and g == g and g <= DEEP_E_GAP200
+        is_e = effective_state(st, fast_states.get(d)) == 'E'
+        hold = DEEP_E_HOLD_THROUGH_F and d >= DEEP_E_HOLD_FROM_SESSION
+        on = bool(deep and (is_e or (hold and on)))
+        out[d] = on
+    return out
 
 
 def apply_deep_e(weights6, active, panic=False):
@@ -2005,7 +2041,7 @@ def apply_deep_e(weights6, active, panic=False):
 
 
 def live_target_weights7(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm, *,
-                         zone=None, session=None):
+                         zone=None, session=None, deep_e=None):
     """THE live weight function from 2026-11-11: live_target_weights_with_vixm() (every guard and
     overlay, unchanged) followed by apply_deep_e(). Returns 7 legs in LIVE_LEGS7 order.
     `session` (the reading's date) is REQUIRED so a replay of a day before
@@ -2014,7 +2050,8 @@ def live_target_weights7(state, micro_agrees, vol, fast_state, gaps, breadth_pct
         raise MissingOverlayInputs("session is required: pass the reading's date")
     w6 = live_target_weights_with_vixm(state, micro_agrees, vol, fast_state, gaps, breadth_pct, a_trim, vixm,
                                        zone=zone)
-    return apply_deep_e(w6, deep_e_active(state, fast_state, gaps, session), vix_panic_active(vixm, session))
+    return apply_deep_e(w6, deep_e_active(state, fast_state, gaps, session, latched=deep_e),
+                        vix_panic_active(vixm, session))
 
 
 def validate_weights_live7(state, core, tqqq, qld, xlu, vixm, qqq, cash, tol=0.005):
