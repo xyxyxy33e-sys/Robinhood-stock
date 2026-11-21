@@ -21,3 +21,11 @@ Hold through F vs live, pts by year: real 2016 +0.7, 2022 +0.7, 2025 +1.4; proxy
 Enter in F: 2001 -24.5, 2002 -16.3, 2008 -11.3 pts (proxy). Hold until D: real 2020 -14.7, 2022 -2.2, 2025 -3.1, 2018 +6.9.
 The -5% line over the next months: the 200-day sheds Feb-May 2026 closes (~$613 average), so the line stays ~$645-650 for
 ~40-60 sessions even with QQQ flat at $580-610; it drops under the 2026-11-20 average cost ($634.47) only after ~54-87 sessions.
+
+## Asymmetric entry / exit lines (2026-11-21, owner question; not adopted)
+Hold-through-F design, entry on effective E at gap <= ENTRY, held while gap <= EXIT. `entry_exit_grid.py` (results in
+`entry_exit_grid.json`), `entry_exit_pairs.py`, `asym_exit.py`.
+Real Sharpe: a flat plateau 2.07-2.12 for entry -4..-7% with exit <= -4%; a cliff at exit -3/-2% (~-0.06 Sharpe, ~-1.5 pts CAGR);
+exit -1%/0% doubles the proxy max drawdown to -38.1% (rides failed rallies in 2001/2008). Pairs: live -5/-5 51.3% / 2.093 / -16.5%
+(proxy 34.3% / 1.484); -6/-4 51.0% / 2.088 / -16.8% (34.2% / 1.481); -5.5/-4.5 50.4% / 2.067 / -16.8% (33.9% / 1.471);
+best cell -6/-6 51.5% / 2.115 (proxy 1.489), +0.02 Sharpe, picked after the grid: noise. Owner: keep -5/-5.
