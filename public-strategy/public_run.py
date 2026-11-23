@@ -311,7 +311,13 @@ def dash_files(inp, outdir):
     w('holdings.csv', [['ticker', 'asset', 'sleeve', 'six_month_return_pct', 'target_weight_pct', 'held_value']] + [
         [s, NAMES[s], 'Trend' if s in ('SSO', 'IEF') else 'Cash slot' if s == CASH else 'Rotation',
          f"{mom[s] * 100:.1f}" if s in mom else '', f"{out['target'][s] * 100:.2f}", f"{out['values'][s]:.2f}"] for s in UNIVERSE])
-    w('tax.csv', tax_table(out['date'][:4]))
+    # realized (tax year) plus unrealized on what the strategy holds now: ledger cost against current value
+    cost = load_ledger(cfg).get('cost', {}); tax = tax_table(out['date'][:4])
+    tax[0] += ['cost_basis', 'market_value', 'unrealized', 'unrealized_pct']
+    for r in tax[1:]:
+        c, v = float(cost.get(r[0], 0.0)), out['values'][r[0]]
+        r += [f'{c:.2f}', f'{v:.2f}', f'{v - c:.2f}', f'{(v / c - 1) * 100:.2f}' if c > 0 else '']
+    w('tax.csv', tax)
     w('value.csv', value_rows(out['date'], out['total'], float(inp['quotes']['SPY']['last']), str(inp.get('time', '')) >= '16:00'))
 
 
