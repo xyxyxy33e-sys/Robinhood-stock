@@ -22,6 +22,8 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 
 ## 2. Morning brief — about 10:00, Mon–Fri (read-only)
 `python3 public-strategy/public_run.py brief /tmp/public_<today>.json`, then ONE push with its `PUSH:` line, as printed.
+Then refresh the dashboard as in section 4 from the same input (owner 2026-11-23); the morning value point is
+replaced by the 15:50 reading later that day.
 
 ## 3. Trade run — 15:50, Mon–Fri (12:50 on early-close days)
 `python3 public-strategy/public_run.py signal /tmp/public_<today>.json`.
@@ -41,7 +43,7 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 - Commit `data/public/runs/<today>.json`, `data/public/ledger.json` and `data/public/realized.csv`. One push only on a
   trade or a guard.
 
-## 4. Dashboard — after every trade run, traded or not (owner 2026-11-20: update daily; not time-critical)
+## 4. Dashboard — after the morning brief and after every trade run, traded or not (owner 2026-11-20: update daily; not time-critical)
 On a no-trade day use the run's own input (with `"account_value"`); the refresh places no order and sends no push.
 `python3 public-strategy/public_run.py dash <input.json> <outdir>` (add `"account_value"` from `get_portfolio` to the
 input; run it after `record`, with the positions and cash read again after the fills) writes `status.csv`,
