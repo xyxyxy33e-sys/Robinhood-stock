@@ -51,6 +51,8 @@ file; ArtifactData `get` `datasets/<id>` (ids `status`, `holdings`, `tax`, `valu
 ArtifactData `batch` of `update`s pinned with `if_version`: `{source: {kind: "file", url: "<new /_blob url>", name,
 format: "csv"}, updated: {at: "<ISO now>", by: "Claude"}}`. Leave the old files in place (deleting them is not
 permitted from a run; they are a few hundred bytes each). Never edit `files/index.html` from a run. If a step fails, say so and carry on.
+**Every chat message that reports a dashboard refresh or change ends with the link (owner 2026-11-23):**
+https://claude.ai/artifact/Ut3LWwtHC9ztXDCviogdZK
 
 ## 5. Weekly review — Fridays about 16:25, after the close (read-only, places no orders)
 Section 1's fetch (quotes, VIX, `get_portfolio`; add `"account_value"`), then
