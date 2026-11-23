@@ -430,3 +430,11 @@ $15,000. From the next trade on, `public_run.py` sizes orders to 4 decimals, sti
 so the first one is the real test). Buys are scaled so they never cost more than the strategy's cash plus the sells at
 their limits, less $1. The trade triggers are unchanged, so this alone does not cause a trade: the idle cash is
 invested at the next trade day.
+
+## Capital added 2026-11-23 (owner: "apply all buying power into the strategy")
+
+The account's cash went from $774.42 to $50,201.09 over the weekend. The $49,426.67 of new cash was added to the
+strategy's ledger (total put in $64,426.67). "Buying power" was read as the account's cash: the $182,646 margin
+figure was not used and the strategy never borrows. Invested all at once at the 23 Nov 15:50 run, through the normal
+drift rule (44% of it goes to BOXX while the trend is off). The value line and the weekly review treat added money
+as capital, not gain (`data/public/flows.csv`).

@@ -63,3 +63,9 @@ anything that needs the owner), send ONE push with its `PUSH:` line, refresh the
 ## 6. Backtest figures on the dashboard — only after a rule change
 `PUB_OUT=<dir> python3 public-strategy/backtest.py` (downloads Yahoo data; `PUB_END=<date>` fixes the last session)
 writes `stats.csv`, `nav.csv` and `years.csv`; upload them to the dashboard datasets of the same names as in section 4.
+
+## 7. Adding or removing strategy money — only on the owner's instruction in chat
+`python3 public-strategy/public_run.py deposit <dollars> "<note>"` (negative takes money out of the strategy's cash).
+It changes only the ledger's cash, logs the flow in `data/public/flows.csv` and makes `max_capital` the total put in.
+Place no order for it: the next trade run sees the drift and prints the orders. Use the account's cash only
+(`cashOnlyBuyingPower`), never margin buying power. Commit ledger, flows and config.

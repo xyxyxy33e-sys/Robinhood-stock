@@ -43,6 +43,7 @@ RUNS = os.path.join(ROOT, 'data', 'public', 'runs')
 LEDGER = os.path.join(ROOT, 'data', 'public', 'ledger.json')
 REALIZED = os.path.join(ROOT, 'data', 'public', 'realized.csv')
 DAILY = os.path.join(ROOT, 'data', 'public', 'daily.csv')
+FLOWS = os.path.join(ROOT, 'data', 'public', 'flows.csv')
 WEEKLY = os.path.join(ROOT, 'data', 'public', 'weekly.csv')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
@@ -189,6 +190,32 @@ def load_ledger(cfg):
     return {'positions': {}, 'cash': float(cfg['max_capital'])}
 
 
+def flows():
+    """[(date, amount)] of money the owner added to (+) or took out of (-) the strategy after the start."""
+    return [(r['date'], float(r['amount'])) for r in csv.DictReader(open(FLOWS))] if os.path.exists(FLOWS) else []
+
+
+def deposit(amount, note=''):
+    """public_run.py deposit <dollars> [note]: the owner adds cash to the strategy (negative takes it out). Only the
+    ledger's cash changes; the next trade run sees the drift and brings everything back to target. max_capital in
+    the config becomes the total put in. Never run this without the owner's instruction in chat."""
+    cfg = json.load(open(CONFIG)); led = load_ledger(cfg); amount = round(float(amount), 2)
+    if led['cash'] + amount < -0.01:
+        raise Guard(f"cannot take ${-amount:,.2f} out: the strategy's cash is ${led['cash']:,.2f}")
+    led['cash'] = round(led['cash'] + amount, 2)
+    today = dt.datetime.now(dt.timezone(dt.timedelta(hours=-5))).date().isoformat()
+    new = not os.path.exists(FLOWS)
+    with open(FLOWS, 'a', newline='') as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(['date', 'amount', 'note'])
+        w.writerow([today, f'{amount:.2f}', note])
+    json.dump(led, open(LEDGER, 'w'), indent=1)
+    cfg['max_capital'] = round(float(cfg.get('max_capital') or 0) + amount, 2)
+    json.dump(cfg, open(CONFIG, 'w'))
+    print('LEDGER:', json.dumps(led)); print(f"TOTAL PUT IN: ${cfg['max_capital']:,.2f}")
+
+
 def record(path):
     """public_run.py record <fills.json>: [{"side","symbol","quantity","price","lots"?}] of FILLED strategy orders.
     Updates the ledger (shares, cash, cost) and appends every sale to data/public/realized.csv. A sale's cost is
@@ -304,8 +331,13 @@ def value_rows(today, total, spy_last, after_close=False):
     def factor(d):                       # adjusted / raw close: the dividend adjustment in force on that date
         k = [x for x in ds if x <= d]; a, c = h[k[-1] if k else ds[0]]; return a / c
     tr = lambda r: float(r['spy_last']) * factor(r['date'])
-    base = float(rows[0]['strategy_value']); t0 = tr(rows[0])
-    return [['date', 'strategy', 'spy']] + [[r['date'], r['strategy_value'], f"{base * tr(r) / t0:.2f}"] for r in rows]
+    fl = flows(); put = float(rows[0]['strategy_value']); units = put / tr(rows[0]); prev = rows[0]['date']
+    out = [['date', 'strategy', 'spy', 'put_in']]
+    for r in rows:                       # money added later buys SPY at that day's reading, like the strategy's cash
+        add = sum(a for d, a in fl if prev < d <= r['date']) if r is not rows[0] else 0.0
+        put += add; units += add / tr(r); prev = r['date']
+        out.append([r['date'], r['strategy_value'], f"{units * tr(r):.2f}", f"{put:.2f}"])
+    return out
 
 
 def sell_lots(qty, broker):
@@ -460,11 +492,15 @@ def review(inp):
     start = float(cfg.get('max_capital') or rows[0]['strategy_value']); first = rows[0]
     spy_at = lambda d: spy.get(d) or spy[max(x for x in spy if x <= d)]
     print(f"=== Public strategy weekly review {today} ===")
-    print(f"VALUE: ${out['total']:,.2f} (cash ${out['cash']:,.2f}); since the ${start:,.0f} start {out['total'] / start - 1:+.2%}"
+    print(f"VALUE: ${out['total']:,.2f} (cash ${out['cash']:,.2f}); on the ${start:,.0f} put in {out['total'] / start - 1:+.2%}"
           + (f", SPY since {first['date']} {spy[today] / spy_at(first['date']) - 1:+.2%}" if first['date'] != today else ''))
     wk = None
     if prev:
-        wk = out['total'] / float(prev['strategy_value']) - 1; swk = spy[today] / spy_at(prev['date']) - 1
+        added = sum(a for d, a in flows() if prev['date'] < d <= today)     # money added this week counts as capital, not gain
+        wk = (out['total'] - added) / (float(prev['strategy_value']) + added) + added / (float(prev['strategy_value']) + added) - 1
+        swk = spy[today] / spy_at(prev['date']) - 1
+        if added:
+            print(f"ADDED THIS WEEK: ${added:,.2f} (the week's return is on last week's value plus this money)")
         print(f"WEEK (since {prev['date']}): strategy {wk:+.2%}, SPY {swk:+.2%}, difference {wk - swk:+.2%}")
     else:
         print("WEEK: first review, this is the baseline; the first weekly comparison comes next Friday.")
@@ -509,6 +545,11 @@ def main(argv):
             print(f'GUARD: {e}'); return 2
     if len(argv) == 4 and argv[1] == 'dash':
         dash_files(json.load(open(argv[2])), argv[3]); return 0
+    if len(argv) in (3, 4) and argv[1] == 'deposit':
+        try:
+            deposit(argv[2], argv[3] if len(argv) == 4 else ''); return 0
+        except Guard as e:
+            print(f'GUARD: {e}'); return 2
     if len(argv) != 3 or argv[1] not in ('brief', 'signal', 'record'):
         print(__doc__); return 1
     if argv[1] == 'record':
