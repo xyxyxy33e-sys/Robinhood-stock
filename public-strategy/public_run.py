@@ -14,8 +14,8 @@ DESIGN (owner request 2026-11-19; STRATEGY-PUBLIC.md). ETFs only, none shared wi
                        completed month-end beats T-bills (the rotation's own test); otherwise the trend half is in BOXX.
                        VIX-panic leg (owner 2026-11-20): while the trend is off and the VIX latch is on (a close at or
                        above 30 turns it on, a close below 25 off; today's live VIX counts as today's close, and stays the
-                       reading for that day on later runs, from data/public/runs/), 25% of the
-                       trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
+                       reading for that day on later runs, from data/public/runs/), 50% of the
+                       trend half (owner 2026-11-24; 25% before) is 1x S&P: SSO 12.5% of the strategy, fallback 25%, BOXX 12.5%.
                        SSO volatility target (owner 2026-11-20): while the trend is on, SSO is scaled by
                        min(1, 30% / (2 x S&P vol)) in quarter steps (floor one quarter), S&P vol = the larger of the
                        10- and 30-session figures; the rest of the trend half sits in BOXX. A step change trades;
@@ -53,7 +53,7 @@ UNIVERSE = ('SSO', 'IEF') + ROT + (CASH,)
 FORBIDDEN = ('SPY', 'TQQQ', 'QLD', 'QQQ', 'VIXY', 'VIXM', 'XLU', 'SPMO')   # the other two strategies (BOXX is shared on purpose)
 HYST, DRIFT_BAND, DUST, LIMIT_BAND = 0.02, 0.20, 0.005, 0.003   # HYST: 2% since 2026-11-20 (owner), 1% before
 QTY_DP = 4                      # order quantities: fractional shares to 4 decimals
-PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.25
+PANIC_ON, PANIC_OFF, PANIC_SHARE = 30.0, 25.0, 0.50      # share 25% -> 50% (owner 2026-11-24)
 VOL_TARGET = 0.30      # owner 2026-11-20: SSO volatility target; None switches it off
 VT_BUFFER = 0.025      # owner 2026-11-20: buffer on the volatility-target steps (0 = none)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
@@ -634,7 +634,7 @@ def main(argv):
     print(f"SSO VOL TARGET: S&P vol {out['spy_vol']:.1%} (x2 = {2 * out['spy_vol']:.1%} vs {VOL_TARGET:.0%} target) -> SSO at "
           f"{out['sso_scale']:.0%} of the trend half" + ('' if out['trend_on'] else ' when the trend is on (no effect now)'))
     print("VIX PANIC: " + (out['vix_note'] or (f"VIX {out['vix']:.2f}, latch {'ON' if out['vix_panic'] else 'off'} "
-          f"(on at {PANIC_ON:.0f}, off below {PANIC_OFF:.0f}) -> " + ('25% of the trend half in 1x S&P' if out['panic_leg'] else
+          f"(on at {PANIC_ON:.0f}, off below {PANIC_OFF:.0f}) -> " + (f'{PANIC_SHARE:.0%} of the trend half in 1x S&P' if out['panic_leg'] else
           ('no effect while the trend is on' if out['vix_panic'] else 'no panic leg')))))
     print(f"ROTATION (month-end {out['rotation_asof']}, hurdle {out['hurdle']:+.2%}): " +
           ', '.join(f"{x} {m:+.1%}" for x, m in out['momentum']) + f" -> {out['picks']}")

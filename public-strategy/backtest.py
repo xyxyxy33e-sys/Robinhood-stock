@@ -5,7 +5,7 @@ or the IRA (SPMO).
    FALLBACK FILTER (owner 2026-11-19): IEF only if its 6-month return at the last month-end beats T-bills, else cash.
    Set FB_FILTER = False for the original always-IEF rule.
    VIX-PANIC LEG (owner 2026-11-20): while the trend is off and the VIX latch is on (close >= 30 on, < 25 off),
-   PANIC_SHARE (25%) of the trend half is 1x S&P, held as SSO at half weight; the fallback keeps the other 75%.
+   PANIC_SHARE (50% since 2026-11-24, 25% before) of the trend half is 1x S&P, held as SSO at half weight; the fallback keeps the rest.
    Set PANIC_SHARE = 0 to switch it off.
    SSO VOLATILITY TARGET (owner 2026-11-20): while the trend is on, the SSO weight is scaled by
    min(1, 30% / (2 x S&P vol)), rounded to the nearest quarter, never below a quarter; S&P vol is the larger of the
@@ -45,7 +45,7 @@ for _d0 in sorted(set(dates) | set(_irx)):
 X = {s: np.array([px[s][d] for d in dates]) for s in SY}; R = {s: np.r_[0, X[s][1:] / X[s][:-1] - 1] for s in SY}
 C = np.array([cashd[d] for d in dates]); me = [i for i in range(n - 1) if dates[i][:7] != dates[i + 1][:7]]; mes = set(me)
 c = np.cumsum(np.insert(X['SPY'], 0, 0)); sma = np.full(n, np.nan); sma[199:] = (c[200:] - c[:-200]) / 200
-FB_FILTER = True; PANIC_SHARE = 0.25
+FB_FILTER = True; PANIC_SHARE = 0.50
 BAND = 0.02
 VT_BUFFER = 0.025  # owner 2026-11-20: a step of the vol target holds until the reading is this far past its boundary
 VOL_TARGET = 0.30   # owner 2026-11-20; None switches the SSO volatility target off

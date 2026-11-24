@@ -8,7 +8,7 @@ Robinhood Agentic strategy (STRATEGY.md) and the IRA (buy-and-hold SPMO).
   hysteresis (in above +2%, out below -2%; 1% until 2026-11-20); otherwise IEF (7-10 year Treasuries). Read daily at 15:50.
   **Fallback filter (owner 2026-11-19):** IEF is held only if its 6-month total return at the last completed
   month-end beats T-bills, the same test the rotation uses; otherwise the trend half sits in BOXX.
-  **VIX-panic leg (owner 2026-11-20):** while the trend is off and the VIX latch is on (a close at or above 30 turns it
+  **(Share raised from 25% to 50% on 2026-11-24, see the last section.)** **VIX-panic leg (owner 2026-11-20):** while the trend is off and the VIX latch is on (a close at or above 30 turns it
   on, a close below 25 off), 25% of the trend half is 1x S&P: SSO 6.25% of the strategy, fallback 37.5%, BOXX 6.25%.
 - **Rotation sleeve, 50%.** The 2 strongest of VTI, EFA, EEM, TLT, GLD, DBC, VNQ by 6-month total return at the
   last completed month-end close, 25% each. A pick that does not beat T-bills (BOXX) over those 6 months is held in
@@ -448,3 +448,20 @@ Reason: the wait costs a few dollars a year (dividends are roughly $300-650 a ye
 adds a tax lot, and a sell can name at most 8 lots for highest-cost-first. Backstop: if idle cash passes 1% of the
 strategy, it is bought into the target holdings furthest below target (buys only, no taxable sale).
 Dividends count as gain in the value line; they are not in the realized-gain table.
+
+## VIX-panic leg share 25% -> 50% (owner 2026-11-24)
+
+`research_notes/panic_share.py`, live rules otherwise, Jul 2007 - 19 Nov 2026 (after tax includes distributions):
+
+| share | CAGR | Sharpe | MaxDD | worst yr | after tax | 2007-15 CAGR / after tax | 2016-26 CAGR / after tax |
+|---|---|---|---|---|---|---|---|
+| 0% | 12.5 | 0.81 | -19.0 | -15.1 | 8.4 | 12.2 / 8.2 | 12.8 / 8.5 |
+| 25% (before) | 12.8 | 0.83 | -19.3 | -13.8 | 8.8 | 12.4 / 8.6 | 13.2 / 9.0 |
+| 50% (now) | 13.1 | 0.84 | -19.6 | -12.6 | 9.0 | 12.6 / 8.7 | 13.6 / 9.3 |
+| 75% | 13.4 | 0.84 | -22.8 | -11.4 | 9.2 | 12.8 / 8.8 | 14.0 / 9.6 |
+| 100% | 13.6 | 0.84 | -28.1 | -10.2 | 9.4 | 12.9 / 8.8 | 14.3 / 9.9 |
+
+50% is better in both halves by 0.2 to 0.4 points with the drawdown 0.3 worse; the Sharpe gain (0.83 to 0.84) is within
+noise. Above 50% the 2008-09 drawdown grows quickly (-22.8% at 75%, -28.1% at 100%). 2008 itself: about +15% at 25%,
++12% at 50%. While the leg is on the strategy holds SSO 12.5%, BOXX 12.5% + the 25% fallback. Live: no trade is forced;
+the larger SSO position is bought at the next trade day (the 6-point gap is inside the 20% drift band).
