@@ -439,11 +439,12 @@ figure was not used and the strategy never borrows. Invested all at once at the 
 drift rule (44% of it goes to BOXX while the trend is off). The value line and the weekly review treat added money
 as capital, not gain (`data/public/flows.csv`).
 
-## Dividends reinvested at the next run (owner 2026-11-23)
+## Dividends: credited on arrival, reinvested on strategy trading days (owner 2026-11-23/24)
 
-Public pays dividends as cash (no automatic reinvestment in this account). The 15:50 run reads the account history,
-credits each new dividend on a strategy ETF to the strategy's cash once, and buys with that cash the same day it
-shows up: into the most underweight target holding, or split by shortfall across the targets when it is $100 or
-more. Buys only, no sells, so it creates no taxable sale. If a regular trade is due that day, the dividend cash simply
-goes into it. This brings the live account closer to the backtest, which assumes dividends are reinvested.
+Public pays dividends as cash (no automatic reinvestment in this account). The 15:50 run reads the account history
+and credits each new dividend on a strategy ETF to the strategy's cash once. First version (23 Nov) bought the same
+day; changed on 24 Nov to spend the cash only when a regular trade is due, when everything resets to target anyway.
+Reason: the wait costs a few dollars a year (dividends are roughly $300-650 a year, estimate), while every small buy
+adds a tax lot, and a sell can name at most 8 lots for highest-cost-first. Backstop: if idle cash passes 1% of the
+strategy, it is bought into the target holdings furthest below target (buys only, no taxable sale).
 Dividends count as gain in the value line; they are not in the realized-gain table.

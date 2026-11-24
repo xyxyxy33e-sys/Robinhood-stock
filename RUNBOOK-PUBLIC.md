@@ -20,11 +20,11 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 - Write `/tmp/public_<today>.json`:
   `{"date","time","quotes":{SYM:{"last","bid","ask","close":<previousClose>,"last_trade_date":<date of lastTimestamp, ET>}},"positions":{SYM:qty},"cash":<cash>}`
 
-- **Dividends (trade run only; owner 2026-11-23: reinvest at the next run).** `get_history` for the last 10 days
-  (large: parse with python, never print). Add `"dividends": [{"id","symbol","amount","date"}]` for rows with
-  `subType` DIVIDEND on a strategy ticker. `signal` credits each new one once to the ledger's cash
-  (`data/public/dividends.csv`) and, when no other trade is due, prints a buy of the strategy's free cash into the
-  most underweight target holding (split across them when it is $100 or more). The brief never credits.
+- **Dividends (trade run only; owner 2026-11-24: reinvest on strategy trading days only).** `get_history` for the
+  last 10 days (large: parse with python, never print). Add `"dividends": [{"id","symbol","amount","date"}]` for rows
+  with `subType` DIVIDEND on a strategy ticker. `signal` credits each new one once to the ledger's cash
+  (`data/public/dividends.csv`; commit it and the ledger even when nothing trades). The cash is spent when a regular
+  trade is due. Only if idle cash passes 1% of the strategy does `signal` print a buy on its own. The brief never credits.
 
 ## 2. Morning brief — about 10:00, Mon–Fri (read-only)
 `python3 public-strategy/public_run.py brief /tmp/public_<today>.json`, then ONE push with its `PUSH:` line, as printed.

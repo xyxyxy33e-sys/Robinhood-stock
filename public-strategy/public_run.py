@@ -45,7 +45,7 @@ REALIZED = os.path.join(ROOT, 'data', 'public', 'realized.csv')
 DAILY = os.path.join(ROOT, 'data', 'public', 'daily.csv')
 FLOWS = os.path.join(ROOT, 'data', 'public', 'flows.csv')
 DIVS = os.path.join(ROOT, 'data', 'public', 'dividends.csv')
-REINVEST_MIN = 1.0              # dividend cash below this waits for more
+IDLE_CASH_MAX = 0.01            # dividend cash waits for the next regular trade unless idle cash passes 1% of the strategy
 WEEKLY = os.path.join(ROOT, 'data', 'public', 'weekly.csv')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
@@ -219,10 +219,10 @@ def deposit(amount, note=''):
 
 
 def credit_dividends(inp):
-    """Owner 2026-11-23: dividends are reinvested at the next trade run. inp["dividends"] = the account's DIVIDEND
+    """Owner 2026-11-24: dividends are reinvested on the next strategy trading day. inp["dividends"] = the account's DIVIDEND
     rows from get_history ([{"id","symbol","amount","date"}]). Each new one on a strategy ETF is added to the
     ledger's cash (the strategy's share of the account's shares of that ETF, in case the autopilot holds it too),
-    logged in data/public/dividends.csv, and marked for reinvestment. Called by `signal` only, when live."""
+    logged in data/public/dividends.csv; it is spent at the next regular trade (or the 1% idle-cash backstop). Called by `signal` only, when live."""
     cfg = json.load(open(CONFIG))
     if not cfg.get('enabled') or not inp.get('dividends'):
         return 0.0
@@ -515,9 +515,10 @@ def compute(inp, need_account=True):
             if qty > 0:
                 orders.append(dict(side='BUY', symbol=s, quantity=qty, limit=lim, dollars=qty * lim))
     pend = float(led.get('reinvest', 0.0))
-    if not do and pend >= REINVEST_MIN and cash - 1.0 >= REINVEST_MIN:
-        # Dividend reinvestment (owner 2026-11-23): buys only, with the strategy's free cash, into the target
-        # holdings that are furthest below target. Small amounts go to the single most underweight one.
+    if not do and cash >= IDLE_CASH_MAX * total:
+        # Owner 2026-11-24: dividends are credited when they arrive but spent only on regular trade days (a trade
+        # resets everything to target, cash included). Backstop: once idle cash passes 1% of the strategy it is
+        # bought into the target holdings furthest below target, buys only.
         spend = cash - 1.0
         gaps = sorted(((w[s] * total - val[s], s) for s in UNIVERSE if w[s] > 0 and w[s] * total - val[s] > 0), reverse=True)
         if gaps:
@@ -530,7 +531,7 @@ def compute(inp, need_account=True):
                 if qty * lim >= 1.0:
                     orders.append(dict(side='BUY', symbol=s, quantity=qty, limit=lim, dollars=qty * lim))
             if orders:
-                do = True; why = f"reinvesting ${pend:,.2f} of dividends (cash ${cash:,.2f})"
+                do = True; why = f"idle cash ${cash:,.2f} is over {IDLE_CASH_MAX:.0%} of the strategy (dividends pending ${pend:,.2f})"
     out.update(held=held, drift=drift, decision=do, why=why, orders=orders)
     return out, cfg
 
