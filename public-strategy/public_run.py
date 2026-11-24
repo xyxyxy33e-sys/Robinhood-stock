@@ -669,9 +669,12 @@ def main(argv):
     if argv[1] == 'brief':
         spyq = q['SPY']; chg = f" {float(spyq['last']) / float(spyq['close']) - 1:+.1%}" if spyq.get('close') else ''
         sl = since_last(out['date'], out['total']) if 'total' in out else None
-        bal = f"${out['total'] / 1000:.1f}K" + (f" {sl:+.2%}" if sl is not None else '') + ' | ' if 'total' in out else ''
-        push = (f"Public 10am: {bal}SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
-                f"flips at {f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rot {'+'.join(out['picks'])} | 3:50 "
+        if 'total' in out:                 # for the chat summary, not the push (owner 2026-11-24)
+            put = float(cfg.get('max_capital') or 0)
+            print(f"BALANCE: ${out['total']:,.2f}" + (f", {sl:+.2%} since the last daily balance" if sl is not None else '')
+                  + (f", {out['total'] / put - 1:+.2%} on the ${put:,.0f} put in" if put > 0 else ''))
+        push = (f"Public 10am: SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
+                f"flips at {f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rotation {'+'.join(out['picks'])} | 3:50 "
                 f"{'TRADE' if out['decision'] else 'no trade'} here" + ('' if out['enabled'] else ' (dry run)'))
         print('PUSH:', push[:199])
     else:
