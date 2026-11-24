@@ -28,6 +28,7 @@ individual stocks plus some BOXX, owner 2026-11-20): it trades on its own. The s
 
 ## 2. Morning brief — about 10:00, Mon–Fri (read-only)
 `python3 public-strategy/public_run.py brief /tmp/public_<today>.json`, then ONE push with its `PUSH:` line, as printed.
+The line starts with the strategy's value and its change since the last recorded daily balance (owner 2026-11-24).
 
 ## 3. Trade run — 15:50, Mon–Fri (12:50 on early-close days)
 `python3 public-strategy/public_run.py signal /tmp/public_<today>.json`.

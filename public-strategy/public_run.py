@@ -356,6 +356,17 @@ def dash_files(inp, outdir):
     w('value.csv', value_rows(out['date'], out['total'], float(inp['quotes']['SPY']['last']), str(inp.get('time', '')) >= '16:00'))
 
 
+def since_last(today, total):
+    """Change of the strategy's value since the last recorded daily balance before today (data/public/daily.csv,
+    the 15:50 readings), with money added in between left out. None if there is no earlier balance."""
+    rows = [r for r in csv.DictReader(open(DAILY)) if r['date'] < today] if os.path.exists(DAILY) else []
+    if not rows:
+        return None
+    prev = rows[-1]; added = sum(a for d, a in flows() if prev['date'] < d <= today)
+    base = float(prev['strategy_value']) + added
+    return (total - base) / base if base > 0 else None
+
+
 def value_rows(today, total, spy_last, after_close=False):
     """Daily live value against SPY (owner 2026-11-20). Keeps one row per date in data/public/daily.csv
     (date, strategy_value, spy_last as read at that run) and returns the dashboard rows: the strategy's value and
@@ -657,8 +668,10 @@ def main(argv):
         print("DRY RUN: data/public/config.json has enabled=false. Do NOT place these orders.")
     if argv[1] == 'brief':
         spyq = q['SPY']; chg = f" {float(spyq['last']) / float(spyq['close']) - 1:+.1%}" if spyq.get('close') else ''
-        push = (f"Public 10am: SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
-                f"flips at {f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rotation {'+'.join(out['picks'])} | 3:50 "
+        sl = since_last(out['date'], out['total']) if 'total' in out else None
+        bal = f"${out['total'] / 1000:.1f}K" + (f" {sl:+.2%}" if sl is not None else '') + ' | ' if 'total' in out else ''
+        push = (f"Public 10am: {bal}SPY {float(spyq['last']):.0f}{chg}, {g:+.1%} vs 200d | trend {'ON SSO' if out['trend_on'] else 'OFF ' + out['fallback']}, "
+                f"flips at {f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}'} | " + (f"VIX {out['vix']:.0f}{' PANIC leg on' if out['panic_leg'] else ''} | " if out['vix'] else '') + f"rot {'+'.join(out['picks'])} | 3:50 "
                 f"{'TRADE' if out['decision'] else 'no trade'} here" + ('' if out['enabled'] else ' (dry run)'))
         print('PUSH:', push[:199])
     else:
