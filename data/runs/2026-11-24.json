@@ -212,7 +212,7 @@
  "orders": [],
  "sweep": {},
  "pushes": [],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-11-24",
   "time": "15:50 ET",
@@ -290,5 +290,11 @@
   },
   "idle_cash": 0.98,
   "total_value": 639087.5964603
+ },
+ "record": {
+  "fills": [],
+  "nav_return": -0.014778167716918228,
+  "tier": null,
+  "session_lag": 0
  }
 }
