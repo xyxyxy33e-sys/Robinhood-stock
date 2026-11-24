@@ -44,6 +44,8 @@ LEDGER = os.path.join(ROOT, 'data', 'public', 'ledger.json')
 REALIZED = os.path.join(ROOT, 'data', 'public', 'realized.csv')
 DAILY = os.path.join(ROOT, 'data', 'public', 'daily.csv')
 FLOWS = os.path.join(ROOT, 'data', 'public', 'flows.csv')
+DIVS = os.path.join(ROOT, 'data', 'public', 'dividends.csv')
+REINVEST_MIN = 1.0              # dividend cash below this waits for more
 WEEKLY = os.path.join(ROOT, 'data', 'public', 'weekly.csv')
 ROT = ('VTI', 'EFA', 'EEM', 'TLT', 'GLD', 'DBC', 'VNQ')
 CASH = 'BOXX'    # cash slot (owner 2026-11-19: BOXX, not SGOV -- its return is a capital gain that losses can offset)
@@ -216,6 +218,37 @@ def deposit(amount, note=''):
     print('LEDGER:', json.dumps(led)); print(f"TOTAL PUT IN: ${cfg['max_capital']:,.2f}")
 
 
+def credit_dividends(inp):
+    """Owner 2026-11-23: dividends are reinvested at the next trade run. inp["dividends"] = the account's DIVIDEND
+    rows from get_history ([{"id","symbol","amount","date"}]). Each new one on a strategy ETF is added to the
+    ledger's cash (the strategy's share of the account's shares of that ETF, in case the autopilot holds it too),
+    logged in data/public/dividends.csv, and marked for reinvestment. Called by `signal` only, when live."""
+    cfg = json.load(open(CONFIG))
+    if not cfg.get('enabled') or not inp.get('dividends'):
+        return 0.0
+    seen = {r['id'] for r in csv.DictReader(open(DIVS))} if os.path.exists(DIVS) else set()
+    led = load_ledger(cfg); acct = inp.get('positions', {}); rows = []; got = 0.0
+    for d in inp['dividends']:
+        s = d.get('symbol')
+        if d['id'] in seen or s not in UNIVERSE or float(d['amount']) <= 0:
+            continue
+        mine, total = float(led['positions'].get(s, 0.0)), float(acct.get(s, 0.0))
+        share = min(1.0, mine / total) if total > 0 else 0.0
+        amt = round(float(d['amount']) * share, 2); seen.add(d['id'])
+        rows.append([d['id'], str(d.get('date', ''))[:10], s, f"{float(d['amount']):.2f}", f'{share:.4f}', f'{amt:.2f}']); got += amt
+    if rows:
+        new = not os.path.exists(DIVS)
+        with open(DIVS, 'a', newline='') as fh:
+            w = csv.writer(fh)
+            if new:
+                w.writerow(['id', 'date', 'symbol', 'account_amount', 'strategy_share', 'strategy_amount'])
+            w.writerows(rows)
+        led['cash'] = round(led['cash'] + got, 2); led['reinvest'] = round(float(led.get('reinvest', 0.0)) + got, 2)
+        json.dump(led, open(LEDGER, 'w'), indent=1)
+        print(f"DIVIDENDS: ${got:,.2f} credited to the strategy (" + ', '.join(f'{r[2]} ${r[5]}' for r in rows) + ")")
+    return got
+
+
 def record(path):
     """public_run.py record <fills.json>: [{"side","symbol","quantity","price","lots"?}] of FILLED strategy orders.
     Updates the ledger (shares, cash, cost) and appends every sale to data/public/realized.csv. A sale's cost is
@@ -258,6 +291,8 @@ def record(path):
         if led['cash'] < -0.01:
             raise Guard(f'fill would take the ledger cash negative: {f}')
     led['positions'] = {s: v for s, v in led['positions'].items() if abs(v) > 1e-6}
+    if any(f['side'].upper() == 'BUY' for f in json.load(open(path))):
+        led.pop('reinvest', None)          # dividend cash has been put to work
     led['cost'] = {s: v for s, v in cost.items() if s in led['positions']}
     os.makedirs(os.path.dirname(LEDGER), exist_ok=True)
     json.dump(led, open(LEDGER, 'w'), indent=1)
@@ -451,10 +486,10 @@ def compute(inp, need_account=True):
            f"SSO volatility step changed {float(prev_scale):.2f} -> {scale:.2f}" if step else
            f"drift {drift:.1%} > {DRIFT_BAND:.0%}" if do else f"holdings match the targets (drift {drift:.1%})")
     orders = []
+    frac = lambda x: math.floor(x * 10 ** QTY_DP + 1e-9) / 10 ** QTY_DP
     if do:
         # Fractional shares (owner 2026-11-20): quantities to 4 decimals, rounded down. Public takes fractional
         # LIMIT orders for every ETF here (preflight checked 2026-11-20), so the price limits stay.
-        frac = lambda x: math.floor(x * 10 ** QTY_DP + 1e-9) / 10 ** QTY_DP
         proceeds = 0.0
         for s in UNIVERSE:                           # sells first
             d = w[s] * total - val[s]
@@ -479,6 +514,23 @@ def compute(inp, need_account=True):
             qty = frac(d * k / lim)
             if qty > 0:
                 orders.append(dict(side='BUY', symbol=s, quantity=qty, limit=lim, dollars=qty * lim))
+    pend = float(led.get('reinvest', 0.0))
+    if not do and pend >= REINVEST_MIN and cash - 1.0 >= REINVEST_MIN:
+        # Dividend reinvestment (owner 2026-11-23): buys only, with the strategy's free cash, into the target
+        # holdings that are furthest below target. Small amounts go to the single most underweight one.
+        spend = cash - 1.0
+        gaps = sorted(((w[s] * total - val[s], s) for s in UNIVERSE if w[s] > 0 and w[s] * total - val[s] > 0), reverse=True)
+        if gaps:
+            if spend < 100 or len(gaps) == 1:
+                gaps = gaps[:1]
+            tot = sum(g for g, _ in gaps)
+            for g, s in gaps:
+                px = float(q[s]['ask'] or q[s]['last']); lim = math.ceil(min(px, float(q[s]['last']) * (1 + LIMIT_BAND)) * 100) / 100
+                qty = frac(spend * g / tot / lim)
+                if qty * lim >= 1.0:
+                    orders.append(dict(side='BUY', symbol=s, quantity=qty, limit=lim, dollars=qty * lim))
+            if orders:
+                do = True; why = f"reinvesting ${pend:,.2f} of dividends (cash ${cash:,.2f})"
     out.update(held=held, drift=drift, decision=do, why=why, orders=orders)
     return out, cfg
 
@@ -566,6 +618,8 @@ def main(argv):
     inp = json.load(open(argv[2])); q = inp['quotes']
     if q['SPY'].get('last_trade_date') and q['SPY']['last_trade_date'] != inp['date']:
         print(f"MARKET CLOSED: SPY last trade {q['SPY']['last_trade_date']} != {inp['date']}. No action."); return 3
+    if argv[1] == 'signal':
+        credit_dividends(inp)
     try:
         out, cfg = compute(inp)
     except Guard as e:

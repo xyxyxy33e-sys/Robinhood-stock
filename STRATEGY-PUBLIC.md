@@ -438,3 +438,12 @@ strategy's ledger (total put in $64,426.67). "Buying power" was read as the acco
 figure was not used and the strategy never borrows. Invested all at once at the 23 Nov 15:50 run, through the normal
 drift rule (44% of it goes to BOXX while the trend is off). The value line and the weekly review treat added money
 as capital, not gain (`data/public/flows.csv`).
+
+## Dividends reinvested at the next run (owner 2026-11-23)
+
+Public pays dividends as cash (no automatic reinvestment in this account). The 15:50 run reads the account history,
+credits each new dividend on a strategy ETF to the strategy's cash once, and buys with that cash the same day it
+shows up: into the most underweight target holding, or split by shortfall across the targets when it is $100 or
+more. Buys only, no sells, so it creates no taxable sale. If a regular trade is due that day, the dividend cash simply
+goes into it. This brings the live account closer to the backtest, which assumes dividends are reinvested.
+Dividends count as gain in the value line; they are not in the realized-gain table.
