@@ -1,0 +1,74 @@
+== real baseline CAGR 51.48 Sh 2.097 MDD -16.80 tpy 46.1 ShEx2020 2.044
+  rebalance days 509 (46.1/yr); engine tpy 46.1
+  macro state (1% hyst lines)            flips/yr  11.2 spells  125 short<=3  22/123 (  18%) reflip<=5  21
+  eff state (macro+fast 20/100)          flips/yr  13.9 spells  154 short<=3  31/152 (  20%) reflip<=5  29
+  fast overlay active (eff!=macro)       flips/yr   5.7 spells   32 short<=3   7/ 31 (  23%) reflip<=5  13
+  D gate (effective, key)                flips/yr   9.6 spells   54 short<=3  30/ 54 (  56%) reflip<=5  53
+    gate_b breadth (macro D)             flips/yr   4.0 spells   22 short<=3  17/ 22 (  77%) reflip<=5  28
+    gate_g gap200<2% (macro D)           flips/yr   4.3 spells   24 short<=3  19/ 24 (  79%) reflip<=5  30
+  D zone (buffered, when D ungated)      flips/yr  14.8 spells  164 short<=3  82/162 (  51%) reflip<=5  62
+  VIXY sleeve allowed                    flips/yr   7.8 spells   43 short<=3  17/ 43 (  40%) reflip<=5  34
+  VIX-panic                              flips/yr   5.2 spells   29 short<=3   6/ 28 (  21%) reflip<=5  13
+  deep-E                                 flips/yr   4.3 spells   24 short<=3   9/ 23 (  39%) reflip<=5  16
+  A trim votes (held)                    flips/yr   5.3 spells   60 short<=3  17/ 58 (  29%) reflip<=5  10
+  rebalance-day attribution (key components changed; a day may have several):
+    eff     153 days (13.9/yr)  sole cause 36
+    held     59 days ( 5.3/yr)  sole cause 19
+    gate    106 days ( 9.6/yr)  sole cause 0
+    zone    163 days (14.8/yr)  sole cause 42
+    vixy     86 days ( 7.8/yr)  sole cause 35
+    deep     47 days ( 4.3/yr)  sole cause 17
+    panic    57 days ( 5.2/yr)  sole cause 25
+    drift-only (no key change) 164 (14.9/yr); key-change days 345
+    eff-change rebalance days with macro also changed 109, overlay-only 44
+== proxy baseline CAGR 34.40 Sh 1.485 MDD -22.12 tpy 42.3 ShEx2020 1.439
+  rebalance days 1094 (42.3/yr); engine tpy 42.3
+  macro state (1% hyst lines)            flips/yr  11.7 spells  304 short<=3  64/302 (  21%) reflip<=5  51
+  eff state (macro+fast 20/100)          flips/yr  15.1 spells  390 short<=3  94/388 (  24%) reflip<=5  76
+  fast overlay active (eff!=macro)       flips/yr   7.8 spells  101 short<=3  31/101 (  31%) reflip<=5  64
+  D gate (effective, key)                flips/yr   8.9 spells  118 short<=3  64/118 (  54%) reflip<=5 116
+    gate_b breadth (macro D)             flips/yr   3.8 spells   49 short<=3  39/ 49 (  80%) reflip<=5  64
+    gate_g gap200<2% (macro D)           flips/yr   4.6 spells   60 short<=3  47/ 60 (  78%) reflip<=5  73
+  D zone (buffered, when D ungated)      flips/yr  12.7 spells  329 short<=3 164/327 (  50%) reflip<=5 114
+  VIXY sleeve allowed                    flips/yr   5.3 spells   69 short<=3  27/ 69 (  39%) reflip<=5  54
+  VIX-panic                              flips/yr   5.4 spells   71 short<=3  18/ 69 (  26%) reflip<=5  36
+  deep-E                                 flips/yr   4.4 spells   57 short<=3  21/ 56 (  38%) reflip<=5  39
+  A trim votes (held)                    flips/yr   5.5 spells  142 short<=3  40/140 (  29%) reflip<=5  32
+  rebalance-day attribution (key components changed; a day may have several):
+    eff     389 days (15.1/yr)  sole cause 131
+    held    141 days ( 5.5/yr)  sole cause 35
+    gate    231 days ( 8.9/yr)  sole cause 0
+    zone    328 days (12.7/yr)  sole cause 75
+    vixy    138 days ( 5.3/yr)  sole cause 37
+    deep    113 days ( 4.4/yr)  sole cause 30
+    panic   139 days ( 5.4/yr)  sole cause 47
+    drift-only (no key change) 369 (14.3/yr); key-change days 725
+    eff-change rebalance days with macro also changed 252, overlay-only 137
+
+
+######## PART 2: buffers (patched in memory only) ########
+BASE (live)                      real  CAGR  51.48 Sh 2.097 ShEx20 2.044 MDD  -16.80 tpy  46.1 | gate flips 106 on-spells  54 short  30 | zone flips 163 short  82
+BASE (live)                      proxy CAGR  34.40 Sh 1.485 ShEx20 1.439 MDD  -22.12 tpy  42.3 | gate flips 231 on-spells 118 short  64 | zone flips 328 short 164
+gate_g enter<1.5% leave>2.5%     real  CAGR  52.86 Sh 2.137 ShEx20 2.087 MDD  -18.84 tpy  45.8 | gate flips  96 on-spells  49 short  25 | zone flips 161 short  78
+gate_g enter<1.5% leave>2.5%     proxy CAGR  34.91 Sh 1.502 ShEx20 1.457 MDD  -22.12 tpy  41.7 | gate flips 207 on-spells 106 short  51 | zone flips 313 short 145
+gate_g enter<1.0% leave>3.0%     real  CAGR  52.65 Sh 2.120 ShEx20 2.069 MDD  -18.84 tpy  45.9 | gate flips  90 on-spells  46 short  23 | zone flips 168 short  83
+gate_g enter<1.0% leave>3.0%     proxy CAGR  34.70 Sh 1.491 ShEx20 1.445 MDD  -22.29 tpy  41.5 | gate flips 195 on-spells 100 short  47 | zone flips 316 short 148
+gate_g min-hold 2                real  CAGR  51.94 Sh 2.104 ShEx20 2.051 MDD  -16.54 tpy  45.9 | gate flips  94 on-spells  48 short  23 | zone flips 167 short  81
+gate_g min-hold 2                proxy CAGR  34.90 Sh 1.497 ShEx20 1.451 MDD  -22.12 tpy  42.1 | gate flips 207 on-spells 106 short  51 | zone flips 336 short 164
+gate_g min-hold 3                real  CAGR  48.88 Sh 2.001 ShEx20 1.940 MDD  -16.54 tpy  45.9 | gate flips  88 on-spells  45 short  20 | zone flips 166 short  80
+gate_g min-hold 3                proxy CAGR  33.08 Sh 1.435 ShEx20 1.387 MDD  -22.12 tpy  41.8 | gate flips 197 on-spells 101 short  46 | zone flips 328 short 156
+zone buffer 0.75%                real  CAGR  50.90 Sh 2.083 ShEx20 2.028 MDD  -16.80 tpy  45.3 | gate flips 106 on-spells  54 short  30 | zone flips 150 short  68
+zone buffer 0.75%                proxy CAGR  34.21 Sh 1.478 ShEx20 1.432 MDD  -22.12 tpy  41.5 | gate flips 231 on-spells 118 short  64 | zone flips 304 short 137
+zone buffer 1.0%                 real  CAGR  50.74 Sh 2.070 ShEx20 2.014 MDD  -18.54 tpy  44.6 | gate flips 106 on-spells  54 short  30 | zone flips 142 short  59
+zone buffer 1.0%                 proxy CAGR  34.12 Sh 1.473 ShEx20 1.426 MDD  -22.12 tpy  41.3 | gate flips 231 on-spells 118 short  64 | zone flips 297 short 131
+zone buffer 1.5%                 real  CAGR  49.87 Sh 2.031 ShEx20 1.972 MDD  -18.54 tpy  44.2 | gate flips 106 on-spells  54 short  30 | zone flips 129 short  49
+zone buffer 1.5%                 proxy CAGR  33.58 Sh 1.452 ShEx20 1.404 MDD  -22.12 tpy  40.8 | gate flips 231 on-spells 118 short  64 | zone flips 274 short 107
+
+--- bar check (vs BASE) ---
+gate_g enter<1.5% leave>2.5%     PASS=False  real: dSh +0.040 dMDD -2.05 tpy_cut +0.4 RT_cut +17% [100] | proxy: dSh +0.017 dMDD +0.00 tpy_cut +0.7 RT_cut +20% [110]
+gate_g enter<1.0% leave>3.0%     PASS=False  real: dSh +0.023 dMDD -2.05 tpy_cut +0.3 RT_cut +23% [100] | proxy: dSh +0.005 dMDD -0.17 tpy_cut +0.8 RT_cut +27% [110]
+gate_g min-hold 2                PASS=False  real: dSh +0.006 dMDD +0.25 tpy_cut +0.2 RT_cut +23% [110] | proxy: dSh +0.011 dMDD +0.00 tpy_cut +0.2 RT_cut +20% [110]
+gate_g min-hold 3                PASS=False  real: dSh -0.096 dMDD +0.25 tpy_cut +0.3 RT_cut +33% [011] | proxy: dSh -0.051 dMDD +0.00 tpy_cut +0.5 RT_cut +28% [010]
+zone buffer 0.75%                PASS=False  real: dSh -0.014 dMDD -0.00 tpy_cut +0.8 RT_cut +17% [010] | proxy: dSh -0.007 dMDD +0.00 tpy_cut +0.8 RT_cut +16% [110]
+zone buffer 1.0%                 PASS=False  real: dSh -0.027 dMDD -1.74 tpy_cut +1.5 RT_cut +28% [000] | proxy: dSh -0.013 dMDD +0.00 tpy_cut +1.0 RT_cut +20% [010]
+zone buffer 1.5%                 PASS=False  real: dSh -0.066 dMDD -1.74 tpy_cut +1.9 RT_cut +40% [001] | proxy: dSh -0.034 dMDD +0.00 tpy_cut +1.5 RT_cut +35% [011]
