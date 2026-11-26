@@ -338,11 +338,12 @@ def dash_files(inp, outdir):
     w = lambda name, rows: csv.writer(open(os.path.join(outdir, name), 'w', newline='')).writerows(rows)
     os.makedirs(outdir, exist_ok=True)
     w('status.csv', [['as_of', 'spy_price', 'spy_gap_200d_pct', 'trend', 'trend_holding', 'flip_level', 'rotation_picks',
-                      'rotation_month_end', 'tbill_hurdle_pct', 'mode', 'strategy_capital', 'account_value', 'vix'],
+                      'rotation_month_end', 'tbill_hurdle_pct', 'mode', 'strategy_capital', 'account_value', 'vix', 'updated_et'],
                      [out['date'], inp['quotes']['SPY']['last'], f"{out['gap200'] * 100:.1f}", 'On' if out['trend_on'] else 'Off',
                       hold, f'-{HYST:.0%}' if out['trend_on'] else f'+{HYST:.0%}', ' + '.join(out['picks']), out['rotation_asof'],
                       f"{out['hurdle'] * 100:.1f}", 'Live' if out['enabled'] else 'Dry run', f"{out['total']:.2f}",
-                      inp.get('account_value', ''), '' if out['vix'] is None else f"{out['vix']:.1f}"]])
+                      inp.get('account_value', ''), '' if out['vix'] is None else f"{out['vix']:.1f}",
+                      f"{out['date']} {inp.get('time') or ''}".strip()]])     # when the prices were read, Eastern time
     w('holdings.csv', [['ticker', 'asset', 'sleeve', 'six_month_return_pct', 'target_weight_pct', 'held_value']] + [
         [s, NAMES[s], 'Trend' if s in ('SSO', 'IEF') else 'Cash slot' if s == CASH else 'Rotation',
          f"{mom[s] * 100:.1f}" if s in mom else '', f"{out['target'][s] * 100:.2f}", f"{out['values'][s]:.2f}"] for s in UNIVERSE])
