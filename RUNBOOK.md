@@ -145,6 +145,11 @@ carry on.
     K-1s in mid-March and that the 1099-B for these funds needs the K-1 basis adjustment. The owner is in New
     York City: state and city tax treat all capital gains as ordinary income, so the 60/40 saving is federal
     only.
+    **Lot method: Highest cost** (owner 2026-11-27, set in the Robinhood app under Tax lots disposal method
+    for this account only). Sells dispose of the highest-cost lots first, so the run places orders without
+    `tax_lots` and never picks lots by hand. When estimating a sale's realized gain, use the highest-cost open
+    lots from `get_equity_tax_lots`, not `average_buy_price` (e.g. 2026-11-27: 259 QQQ sold from the $647.22 lot
+    for +$55.49, where the $634.47 average would have suggested about +$3,370).
   - **December year-end wash check** (owner 2026-11-11; every Friday report from the first Friday of December
     through the last Friday of January). List each loss sale in the prior 30 days that is still open to a wash
     (symbol, date, shares, realized loss, the date its 30-day window closes) and say, for each, whether the
