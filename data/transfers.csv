@@ -1,0 +1,21 @@
+date,amount,direction,source,note
+2026-05-15,15800.00,in,inferred,"money in before the strategy, not itemized (screenshots stopped at 30 Jul): Robinhood net deposits $644,200.00 (owner screenshot 2026-11-27) minus every itemized row; dated at the chart's first point"
+2026-07-30,-800.00,out,app,Transfer to individual from MCP
+2026-08-19,35000.00,in,app,Transfer to MCP from individual
+2026-08-29,10000.00,in,app,Transfer to MCP from individual
+2026-08-29,20000.00,in,app,Transfer to MCP from individual
+2026-09-01,5000.00,in,app,Transfer to MCP from individual
+2026-09-01,20000.00,in,app,Transfer to MCP from individual
+2026-09-07,100000.00,in,app,Transfer to MCP from individual
+2026-09-16,5000.00,in,app,Transfer to MCP from individual
+2026-09-16,-1000.00,out,app,Transfer to individual from MCP
+2026-09-24,100000.00,in,app,Transfer to MCP from individual (1 of 3)
+2026-09-24,100000.00,in,app,Transfer to MCP from individual (2 of 3)
+2026-09-24,100000.00,in,app,Transfer to MCP from individual (3 of 3)
+2026-10-13,10300.00,in,app,Transfer to MCP from individual (margin-funded draw; loan repaid in 6826 on 2026-10-19)
+2026-10-15,9400.00,in,app,Transfer to MCP from individual (margin-funded draw; loan repaid in 6826 on 2026-10-19)
+2026-10-16,20000.00,in,app,Transfer to MCP from individual (margin-funded draw; margin_loan.json lists 20950.89 planned)
+2026-10-19,90000.00,in,app,Transfer to MCP from individual (6826 consolidation; a 95000.00 attempt the same day failed)
+2026-10-19,3500.00,in,app,Transfer to MCP from individual
+2026-10-23,1500.00,in,app,Transfer to MCP from individual
+2026-10-23,500.00,in,app,Transfer to MCP from individual
