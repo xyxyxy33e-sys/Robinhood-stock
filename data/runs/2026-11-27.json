@@ -243,7 +243,7 @@
  ],
  "sweep": {},
  "pushes": [],
- "status": "signal",
+ "status": "recorded",
  "input": {
   "date": "2026-11-27",
   "time": "12:51 ET",
@@ -321,5 +321,36 @@
   },
   "idle_cash": 0.98,
   "total_value": 645680.40143858
+ },
+ "record": {
+  "fills": [
+   {
+    "symbol": "QQQ",
+    "side": "sell",
+    "quantity": 259,
+    "price": 647.43
+   },
+   {
+    "symbol": "QQQ",
+    "side": "sell",
+    "quantity": 0.9106,
+    "price": 647.4174
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 1408,
+    "price": 119.2297
+   },
+   {
+    "symbol": "BOXX",
+    "side": "buy",
+    "quantity": 0.783728,
+    "price": 119.225
+   }
+  ],
+  "nav_return": 0.019911504424778792,
+  "tier": null,
+  "session_lag": 0
  }
 }
