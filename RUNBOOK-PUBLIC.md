@@ -64,7 +64,8 @@ https://claude.ai/artifact/Ut3LWwtHC9ztXDCviogdZK
 
 ## 5. Weekly review — Fridays about 16:25, after the close (read-only, places no orders)
 Section 1's fetch (quotes, VIX, `get_portfolio`; add `"account_value"`), then
-`python3 public-strategy/public_run.py review <input.json>`. It appends the strategy's value to
+`python3 public-strategy/public_run.py review <input.json>`. It values everything at the day's regular-session closes
+(from the price history, not the after-hours last trade; the dashboard refresh after 16:00 does the same). It appends the strategy's value to
 `data/public/weekly.csv` and prints the week against SPY, the orders of the week, realized gains, holdings against
 targets and the signals. Post the printed review in chat with a two-line plain reading of it (what moved the result,
 anything that needs the owner), send ONE push with its `PUSH:` line, refresh the dashboard as in section 4, and commit

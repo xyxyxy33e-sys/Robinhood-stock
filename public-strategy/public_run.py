@@ -73,6 +73,20 @@ def history(sym):
     return {dt.datetime.utcfromtimestamp(t + off).date().isoformat(): (x, c) for t, x, c in zip(r['timestamp'], a, q) if x and c}
 
 
+def session_closes(inp):
+    """After the close, replace each quote's last trade (an after-hours print by then) with the regular-session
+    close of inp['date'] from the price history (owner 2026-11-27). Returns the tickers that had no bar for that
+    date and so keep their last trade."""
+    missing = []
+    for s, q in inp['quotes'].items():
+        bar = history(s).get(inp['date'])
+        if bar:
+            q['last'] = round(bar[1], 4)
+        else:
+            missing.append(s)
+    return missing
+
+
 def adj_series(sym, today, last):
     """Adjusted closes before today, plus today's live price on the same adjusted scale."""
     h = {d: v for d, v in history(sym).items() if d < today}
@@ -332,6 +346,8 @@ NAMES = {'SSO': '2x S&P 500', 'IEF': '7-10 year Treasuries', 'VTI': 'US total ma
 
 def dash_files(inp, outdir):
     """public_run.py dash <input.json> <outdir>: status.csv, holdings.csv and tax.csv for the dashboard."""
+    if (inp.get('time') or '') >= '16:00':      # a refresh after the close shows closing prices, not after-hours ones
+        session_closes(inp)
     out, cfg = compute(inp)
     mom = dict(out['momentum']); mom['IEF'] = out['ief_mom']
     hold = out['trend_holding'] + (' + SSO (VIX leg)' if out['panic_leg'] else '')
@@ -551,6 +567,7 @@ def compute(inp, need_account=True):
 def review(inp):
     """public_run.py review <input.json>: the Friday after-close review. Appends the strategy's value to
     data/public/weekly.csv (one row per date) and prints the week against SPY, trades, realized gains and signals."""
+    missing = session_closes(inp)               # regular-session closes, not the after-hours last trade
     out, cfg = compute(inp); today = out['date']
     spy = adj_series('SPY', today, inp['quotes']['SPY']['last'])
     rows = list(csv.DictReader(open(WEEKLY))) if os.path.exists(WEEKLY) else []
@@ -563,6 +580,7 @@ def review(inp):
     start = float(cfg.get('max_capital') or rows[0]['strategy_value']); first = rows[0]
     spy_at = lambda d: spy.get(d) or spy[max(x for x in spy if x <= d)]
     print(f"=== Public strategy weekly review {today} ===")
+    print("PRICES: regular-session closes" + (f" (no closing bar yet for {', '.join(missing)}: last trade used)" if missing else ''))
     print(f"VALUE: ${out['total']:,.2f} (cash ${out['cash']:,.2f}); on the ${start:,.0f} put in {out['total'] / start - 1:+.2%}"
           + (f", SPY since {first['date']} {spy[today] / spy_at(first['date']) - 1:+.2%}" if first['date'] != today else ''))
     wk = None
